@@ -1,4 +1,4 @@
-# === macOS system files ===
+# macOS system files
 .DS_Store
 .AppleDouble
 .LSOverride
@@ -12,7 +12,7 @@
 .com.apple.timemachine.donotpresent
 *.icloud
 
-# === Python build / cache ===
+# Python build / cache
 __pycache__/
 *.py[cod]
 *$py.class
@@ -27,7 +27,7 @@ wheels/
 *.spec
 *.log
 
-# === Test / coverage ===
+# Test / coverage
 .coverage
 .cache/
 htmlcov/
@@ -38,16 +38,16 @@ htmlcov/
 .dmypy.json
 .mypy_cache/
 
-# === Databases / temp files ===
+# Databases / temp files
 *.db
 *.sqlite3
 *.sqlite3-journal
 
-# === Docs / notebooks ===
+# Docs / notebooks
 .ipynb_checkpoints/
 docs/_build/
 
-# === Virtual environments ===
+# Virtual environments
 .env
 .venv/
 venv/
@@ -58,19 +58,19 @@ venv.bak/
 micromamba/
 .mamba/
 
-# === Editor / IDE configs ===
+# Editor / IDE configs
 .idea/
 .vscode/
 .ropeproject/
 .spyproject/
 
-# === Shell history ===
+# Shell history
 .zsh_history
 .zsh_sessions
 .zcompdump*
 *.zwc
 
-# === Model / data (large files) ===
+# Model / data (large files)
 hf_models/
 models/
 checkpoints/
@@ -81,15 +81,22 @@ checkpoints/
 *.pth
 *.h5
 
-# === Logs / outputs ===
+# Logs / outputs
 logs/
 *.log
 *.out
 *.err
 
-# === Caches / misc ===
+# Caches / misc
 __pypackages__/
 tmp/
 *.tmp
 *.bak
 *.swp
+
+# llama.cpp build outputs
+llama.cpp/build/
+llama.cpp/bin/
+llama.cpp/main
+llama.cpp/quantize
+llama.cpp/server
