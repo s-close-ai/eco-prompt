@@ -1,0 +1,14 @@
+[project]
+name = "llm"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.119.0",
+    "gensim>=4.4.0",
+    "math-verify>=0.8.0",
+    "matplotlib>=3.10.7",
+    "qdrant-client>=1.15.1",
+    "vllm==0.10.2",
+]
