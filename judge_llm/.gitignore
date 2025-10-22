@@ -1,0 +1,102 @@
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+*.icloud
+
+# Python build / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+wheels/
+*.manifest
+*.spec
+*.log
+
+# Test / coverage
+.coverage
+.cache/
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+.hypothesis/
+.dmypy.json
+.mypy_cache/
+
+# Databases / temp files
+*.db
+*.sqlite3
+*.sqlite3-journal
+
+# Docs / notebooks
+.ipynb_checkpoints/
+docs/_build/
+
+# Virtual environments
+.env
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+micromamba/
+.mamba/
+
+# Editor / IDE configs
+.idea/
+.vscode/
+.ropeproject/
+.spyproject/
+
+# Shell history
+.zsh_history
+.zsh_sessions
+.zcompdump*
+*.zwc
+
+# Model / data (large files)
+hf_models/
+models/
+checkpoints/
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.h5
+
+# Logs / outputs
+logs/
+*.log
+*.out
+*.err
+
+# Caches / misc
+__pypackages__/
+tmp/
+*.tmp
+*.bak
+*.swp
+
+# llama.cpp build outputs
+llama.cpp/build/
+llama.cpp/bin/
+llama.cpp/main
+llama.cpp/quantize
+llama.cpp/server
