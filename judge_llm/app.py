@@ -22,7 +22,7 @@ PROMPT_A_MAX  = int(os.getenv("JUDGE_A_MAX_CHARS", "4000"))
 # total 정책: subs_pref | fs_if_zero
 TOTAL_POLICY  = os.getenv("JUDGE_TOTAL_PRIORITY", "fs_if_zero").lower()
 
-# 가중치(합 100)
+# 가중치(합 100) - Prometheus 2 모델의 기본 채점 체계
 W_CORRECTNESS  = int(os.getenv("JUDGE_W_CORRECTNESS", "45"))
 W_COMPLETENESS = int(os.getenv("JUDGE_W_COMPLETENESS", "25"))
 W_CLARITY      = int(os.getenv("JUDGE_W_CLARITY", "15"))
@@ -323,8 +323,8 @@ def judge_batch(req: JudgeRequest):
                           {"role": "user", "content": user_prompt}],
                 temperature=DEF_TEMP,
                 max_tokens=DEF_MAXTOK,
-                grammar=grammar_obj,
-                response_format={"type": "json_object"},
+                # grammar=grammar_obj,
+                # response_format={"type": "json_object"},
             )
             usage = out.get("usage", {}) or {}
             timings = out.get("timings", {}) or {}
