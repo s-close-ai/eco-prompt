@@ -1,6 +1,6 @@
 # app.py
-import os, json, re
-from typing import List, Optional, Dict, Any
+import os, json, re, concurrent.futures, threading
+from typing import List, Optional, Dict, Any, Callable
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from llama_cpp import Llama, LlamaGrammar
@@ -8,28 +8,38 @@ from llama_cpp import Llama, LlamaGrammar
 # 설정
 DEFAULT_MODEL = "./prom2-f16.gguf"
 DEF_THREADS   = int(os.getenv("JUDGE_N_THREADS", "8"))
-DEF_MAXTOK    = int(os.getenv("JUDGE_MAX_TOKENS", "192"))
+DEF_MAXTOK    = min(int(os.getenv("JUDGE_MAX_TOKENS", "192")), 512)  # 하드캡
 DEF_TEMP      = float(os.getenv("JUDGE_TEMPERATURE", "0"))
 DEF_GPU_LAY   = int(os.getenv("JUDGE_N_GPU_LAYERS", "-1"))
 DEF_SEED      = int(os.getenv("JUDGE_SEED", "0"))
+CALL_TIMEOUT  = int(os.getenv("JUDGE_TIMEOUT_S", "40"))  # 항목별 타임아웃(초)
+
+# 텍스트 길이 제한
+TEXT_LIMIT    = int(os.getenv("JUDGE_TEXT_LIMIT", "220"))
+PROMPT_Q_MAX  = int(os.getenv("JUDGE_Q_MAX_CHARS", "4000"))
+PROMPT_A_MAX  = int(os.getenv("JUDGE_A_MAX_CHARS", "4000"))
+
+# total 정책: subs_pref | fs_if_zero
+TOTAL_POLICY  = os.getenv("JUDGE_TOTAL_PRIORITY", "fs_if_zero").lower()
 
 # 가중치(합 100)
-W_CORRECTNESS  = int(os.getenv("JUDGE_W_CORRECTNESS", 45))
-W_COMPLETENESS = int(os.getenv("JUDGE_W_COMPLETENESS", 25))
-W_CLARITY      = int(os.getenv("JUDGE_W_CLARITY", 15))
-W_PRACTICES    = int(os.getenv("JUDGE_W_PRACTICES", 15))
+W_CORRECTNESS  = int(os.getenv("JUDGE_W_CORRECTNESS", "45"))
+W_COMPLETENESS = int(os.getenv("JUDGE_W_COMPLETENESS", "25"))
+W_CLARITY      = int(os.getenv("JUDGE_W_CLARITY", "15"))
+W_PRACTICES    = int(os.getenv("JUDGE_W_PRACTICES", "15"))
 assert W_CORRECTNESS + W_COMPLETENESS + W_CLARITY + W_PRACTICES == 100, "Rubric weights must sum to 100"
 
-# 시스템 프롬프트(코딩 중심, 한글 우선)
+# 시스템 프롬프트(간결+한글)
 BASE_SYSTEM_PROMPT = (
     'You are Prometheus 2 for coding tasks. '
     'Return ONLY a JSON: {"criteria":"string","final_score":1-5,"feedback":"string","subscores":{"correctness":0-100,"completeness":0-100,"clarity":0-100,"practices":0-100}}. '
     'If the Question or Answer is Korean, write criteria/feedback in natural Korean. '
     'No placeholders. No text outside JSON. '
+    f'Each of "criteria" and "feedback" MUST be concise (<= {TEXT_LIMIT} characters). '
     'Scoring focus: correctness, completeness, clarity, best practices & security.'
 )
 
-# JSON 문법(GBNF)
+# JSON 문법(GBNF) - 앞뒤 공백 허용
 JSON_GBNF = r"""
 ws              ::= (" " | "\n" | "\r" | "\t")*
 root            ::= ws object ws
@@ -54,6 +64,7 @@ char            ::= escape | ~["\\\x00-\x1F]
 escape          ::= "\\" ( "\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" )
 """
 
+# 최소 JSON(보급형) - subscores 제외
 JSON_GBNF_MIN = r"""
 ws      ::= (" " | "\n" | "\r" | "\t")*
 root    ::= ws object ws
@@ -68,8 +79,6 @@ chars   ::= ( char )*
 char    ::= escape | ~["\\\x00-\x1F]
 escape  ::= "\\" ( "\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" )
 """
-
-
 
 # 스키마
 class JudgeItem(BaseModel):
@@ -101,25 +110,40 @@ class JudgeResponse(BaseModel):
 def _is_korean(text: str) -> bool:
     return any('가' <= ch <= '힣' for ch in text)
 
+def _truncate(s: str, n: int) -> str:
+    s = (s or "").strip()
+    return s if len(s) <= n else s[:n]
+
+def _truncate_middle(text: str, max_chars: int) -> str:
+    text = text.strip()
+    if len(text) <= max_chars:
+        return text
+    keep = max_chars // 2
+    return text[:keep] + "\n...\n" + text[-keep:]
+
 def _extract_json_block(text: str) -> str:
     m = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.S | re.I)
     if m:
         return m.group(1)
-    # 스택 매칭
     start = text.find("{")
     if start == -1:
         raise ValueError(f"No JSON object found: head={text[:120]!r}")
-    depth = 0
-    for i in range(start, len(text)):
-        ch = text[i]
+    depth = 0; buf = []
+    s = text[start:]
+    for ch in s:
+        buf.append(ch)
         if ch == "{":
             depth += 1
         elif ch == "}":
             depth -= 1
             if depth == 0:
-                return text[start:i+1]
-    raise ValueError(f"No JSON object found: head={text[:120]!r}")
-
+                return "".join(buf)
+    repaired = "".join(buf) + ("}" * max(depth, 0))
+    try:
+        json.loads(repaired)
+        return repaired
+    except Exception:
+        raise ValueError(f"No JSON object found: head={text[:120]!r}")
 
 def _validate_and_normalize(data: Dict[str, Any]) -> Dict[str, Any]:
     if "criteria" not in data or "final_score" not in data or "feedback" not in data:
@@ -160,6 +184,9 @@ def _validate_and_normalize(data: Dict[str, Any]) -> Dict[str, Any]:
         if None not in (c1, c2, c3, c4):
             norm_subs = {"correctness": c1, "completeness": c2, "clarity": c3, "practices": c4}
 
+    data["criteria"] = _truncate(str(data.get("criteria","")), TEXT_LIMIT)
+    data["feedback"] = _truncate(str(data.get("feedback","")), TEXT_LIMIT)
+
     data["final_score"] = fs
     if norm_subs is not None:
         data["subscores"] = norm_subs
@@ -168,7 +195,10 @@ def _validate_and_normalize(data: Dict[str, Any]) -> Dict[str, Any]:
     return data
 
 def _to_total(fs: int, subs: Optional[Dict[str,int]]) -> int:
-    if subs:
+    if isinstance(subs, dict) and len(subs) == 4:
+        ssum = subs.get("correctness",0) + subs.get("completeness",0) + subs.get("clarity",0) + subs.get("practices",0)
+        if TOTAL_POLICY == "fs_if_zero" and ssum == 0:
+            return int(round((fs/5)*100))
         total = (
             subs.get("correctness", 0)  * W_CORRECTNESS +
             subs.get("completeness", 0) * W_COMPLETENESS +
@@ -207,14 +237,13 @@ GRAMMAR_OBJ_MIN: Optional[LlamaGrammar] = None
 @app.on_event("startup")
 def load_model():
     # 모델 로드
-    global llm, loaded_model_path, GRAMMAR_OBJ
+    global llm, loaded_model_path, GRAMMAR_OBJ, GRAMMAR_OBJ_MIN
     model_path   = os.getenv("JUDGE_MODEL", DEFAULT_MODEL)
     n_gpu_layers = int(os.getenv("JUDGE_N_GPU_LAYERS", str(DEF_GPU_LAY)))
     n_threads    = int(os.getenv("JUDGE_N_THREADS",  str(DEF_THREADS)))
     seed         = int(os.getenv("JUDGE_SEED",      str(DEF_SEED)))
 
-    # Grammar 객체 1회 생성
-    GRAMMAR_OBJ = LlamaGrammar.from_string(JSON_GBNF)
+    GRAMMAR_OBJ     = LlamaGrammar.from_string(JSON_GBNF)
     GRAMMAR_OBJ_MIN = LlamaGrammar.from_string(JSON_GBNF_MIN)
 
     if not os.path.exists(model_path):
@@ -225,8 +254,8 @@ def load_model():
         model_path=model_path,
         n_gpu_layers=n_gpu_layers,
         n_threads=n_threads,
-        n_ctx=int(os.getenv("JUDGE_N_CTX", "16384")),
-        n_batch=int(os.getenv("JUDGE_N_BATCH", "1024")),
+        n_ctx=int(os.getenv("JUDGE_N_CTX", "8192")),
+        n_batch=int(os.getenv("JUDGE_N_BATCH", "512")),
         n_parallel=int(os.getenv("JUDGE_N_PARALLEL", "1")),
         seed=seed,
         verbose=False
@@ -244,9 +273,14 @@ def health():
         "max_tokens": DEF_MAXTOK,
         "temperature": DEF_TEMP,
         "gpu_layers": DEF_GPU_LAY,
-        "n_ctx": int(os.getenv("JUDGE_N_CTX", "16384")),
-        "n_batch": int(os.getenv("JUDGE_N_BATCH", "1024")),
+        "n_ctx": int(os.getenv("JUDGE_N_CTX", "8192")),
+        "n_batch": int(os.getenv("JUDGE_N_BATCH", "512")),
         "n_parallel": int(os.getenv("JUDGE_N_PARALLEL", "1")),
+        "text_limit": TEXT_LIMIT,
+        "prompt_q_max": PROMPT_Q_MAX,
+        "prompt_a_max": PROMPT_A_MAX,
+        "timeout_s": CALL_TIMEOUT,
+        "total_policy": TOTAL_POLICY,
         "weights": {
             "correctness": W_CORRECTNESS,
             "completeness": W_COMPLETENESS,
@@ -254,6 +288,11 @@ def health():
             "practices": W_PRACTICES
         }
     }
+
+def _call_with_timeout(fn: Callable[[], Dict[str, Any]], timeout_s: int) -> Dict[str, Any]:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+        fut = ex.submit(fn)
+        return fut.result(timeout=timeout_s)
 
 @app.post("/api/judge/batch", response_model=JudgeResponse)
 def judge_batch(req: JudgeRequest):
@@ -265,9 +304,13 @@ def judge_batch(req: JudgeRequest):
     success = 0
 
     for it in req.items:
+        # 언어 힌트
         lang_hint = "Respond in Korean." if (_is_korean(it.question) or _is_korean(it.answer)) else "Respond in English."
-        q = it.question.strip()
-        a = it.answer.strip()
+
+        # 길이 가드
+        q = _truncate_middle(it.question, PROMPT_Q_MAX)
+        a = _truncate_middle(it.answer,   PROMPT_A_MAX)
+
         user_prompt = (
             f"Q:\n{q}\n\nA:\n{a}\n\n"
             "Evaluate for correctness, completeness, clarity, best practices & security.\n"
@@ -276,10 +319,8 @@ def judge_batch(req: JudgeRequest):
 
         def infer_once(sys_prompt: str, grammar_obj) -> Dict[str, Any]:
             out = llm.create_chat_completion(
-                messages=[
-                    {"role":"system","content": sys_prompt},
-                    {"role":"user","content": user_prompt},
-                ],
+                messages=[{"role": "system", "content": sys_prompt},
+                          {"role": "user", "content": user_prompt}],
                 temperature=DEF_TEMP,
                 max_tokens=DEF_MAXTOK,
                 grammar=grammar_obj,
@@ -294,23 +335,27 @@ def judge_batch(req: JudgeRequest):
             return _validate_and_normalize(data)
 
         try:
-            data = infer_once(BASE_SYSTEM_PROMPT, GRAMMAR_OBJ)
-            # placeholder 등 걸리면 except로 이동
+            data = _call_with_timeout(lambda: infer_once(BASE_SYSTEM_PROMPT, GRAMMAR_OBJ), CALL_TIMEOUT)
         except Exception:
             strict_sys = (
                 'Return ONLY valid JSON with keys {"criteria","final_score","feedback","subscores"}. '
-                "No extra text. No code fences. No placeholders. "
+                f'No extra text. No code fences. No placeholders. Each string <= {TEXT_LIMIT} chars. '
                 "final_score MUST be 1..5. If Korean appears, write Korean."
             )
             try:
-                data = infer_once(strict_sys, GRAMMAR_OBJ)
-            except Exception:
-                # 최후: 최소 JSON 강제 (subscores 제외)
+                data = _call_with_timeout(lambda: infer_once(strict_sys, GRAMMAR_OBJ), CALL_TIMEOUT)
+            except Exception as e2:
+                # 최후: 최소 JSON
                 minimal_sys = (
                     'Return ONLY valid JSON with EXACTLY keys {"criteria","final_score","feedback"}. '
-                    "No extra text. No code fences. No placeholders."
+                    f'No extra text. No code fences. No placeholders. Each string <= {TEXT_LIMIT} chars. '
+                    "final_score MUST be 1..5."
                 )
-                data = infer_once(minimal_sys, GRAMMAR_OBJ_MIN)
+                try:
+                    data = _call_with_timeout(lambda: infer_once(minimal_sys, GRAMMAR_OBJ_MIN), CALL_TIMEOUT)
+                except Exception as e3:
+                    results.append(JudgeResult(pair_id=it.pair_id, error=str(e3)))
+                    continue
 
         fs = data["final_score"]
         subs = data.get("subscores")
