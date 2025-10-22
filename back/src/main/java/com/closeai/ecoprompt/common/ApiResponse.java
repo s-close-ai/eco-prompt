@@ -29,4 +29,8 @@ public class ApiResponse<T> {
 		return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new ApiResponse<>("SUCCESS", data));
 	}
 
+	public static <T> ResponseEntity<ApiResponse<T>> BusinessException(HttpStatus httpStatus, T data) {
+		return ResponseEntity.status(httpStatus).body(new ApiResponse<>("FAIL",data));
+	}
+
 }
