@@ -26,7 +26,7 @@ RUN mkdir -p /out && cp build/libs/*.jar /out/app.jar
 # -------------------------------------------------------
 # 2) Runtime Stage: Liberica Runtime 17 (경량 JRE)
 # -------------------------------------------------------
-FROM bellsoft/liberica-runtime-alpine:17
+FROM bellsoft/liberica-openjre-alpine:17
 
 # 비루트 유저 설정
 #RUN addgroup -S spring && adduser -S spring -G spring
