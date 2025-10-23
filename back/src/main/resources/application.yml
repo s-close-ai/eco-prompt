@@ -15,5 +15,13 @@ spring:
             port: ${REDIS_PORT}
             password: ${REDIS_PASSWORD}
 
+    jpa:
+        show-sql: true
+        hibernate:
+            ddl-auto: create-drop
+        properties:
+            hibernate:
+                format_sql: true               # 🔹 SQL 문을 보기 좋게 정렬 출력
+
 springdoc:
     override-with-generic-response: false
