@@ -4,8 +4,8 @@ trigger:jenkins:
   stage: trigger_jenkins
   image: curlimages/curl:8.9.1
   rules:
-    # 머지 후 develop/master로 "푸시"될 때만
-    - if: '$CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == "master")'
+    # 머지 후 dev/master로 "푸시"될 때만
+    - if: '$CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "master")'
       when: on_success
     - when: never
   script: |
