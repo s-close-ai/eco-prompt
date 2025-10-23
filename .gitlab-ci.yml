@@ -19,7 +19,7 @@ trigger:jenkins:
       --data-urlencode "BRANCH=$CI_COMMIT_BRANCH" \
       --data-urlencode "HEAD=$CI_COMMIT_SHA" \
       --data-urlencode "PREV=$CI_COMMIT_BEFORE_SHA" \
-      --data-urlencode "REPO_URL=$CI_REPOSITORY_URL"
+      --data-urlencode "REPO_URL=https://lab.ssafy.com/s13-final/S13P31A309.git"
   variables:
     # GitLab → Jenkins 접속정보(프로젝트 CI/CD Variables에 정의해두기)
     JENKINS_URL: ${JENKINS_URL}
