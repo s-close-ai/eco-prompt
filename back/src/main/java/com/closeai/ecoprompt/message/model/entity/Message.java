@@ -21,6 +21,9 @@ public class Message extends BaseEntity {
     @Column(name = "sender_type", nullable = false) // 원 컬럼명 유지
     private MessageSender senderType;
 
+    @Column(name = "uuid", columnDefinition = "VARCHAR(36) comment '8-4-4-4-12'")
+    private String uuid;
+
     // FK: message.chatting_id -> chatting.chatting_id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chatting_id", nullable = false)

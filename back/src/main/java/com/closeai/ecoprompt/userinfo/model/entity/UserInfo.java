@@ -20,7 +20,7 @@ public class UserInfo extends BaseEntity {
     private Integer totalMileage;
 
     @Column(name = "high_score", nullable = false)
-    private Integer highScore;
+    private Double highScore;
 
     @Column(name = "personal_prompt", length = 1000)
     private String personalPrompt;

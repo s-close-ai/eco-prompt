@@ -13,7 +13,7 @@ import org.hibernate.annotations.Comment;
 public class Score extends BaseEntity {
 
     @Id
-    @Column(name = "score_id", nullable = false) // DDL 오타 그대로
+    @Column(name = "score_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

@@ -1,4 +1,4 @@
-package com.closeai.ecoprompt.library.model.entity;
+package com.closeai.ecoprompt.bookmark.model.entity;
 
 import com.closeai.ecoprompt.common.entity.BaseEntity;
 import com.closeai.ecoprompt.user.model.entity.User;
@@ -8,11 +8,11 @@ import lombok.*;
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 @Entity
-@Table(name = "library")
-public class Library extends BaseEntity {
+@Table(name = "bookmark")
+public class Bookmark extends BaseEntity {
 
     @Id
-    @Column(name = "library_id", nullable = false)
+    @Column(name = "bookmark_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -25,7 +25,7 @@ public class Library extends BaseEntity {
     @Column(name = "description", length = 100)
     private String description;
 
-    // FK: library.user_id -> user.user_id
+    // FK: bookmark.user_id -> user.user_id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User owner;
