@@ -25,6 +25,9 @@ public class Bookmark extends BaseEntity {
     @Column(name = "description", length = 100)
     private String description;
 
+    @Column(name = "sequence")
+    private Integer sequence;
+
     // FK: bookmark.user_id -> user.user_id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
