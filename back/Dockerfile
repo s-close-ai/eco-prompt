@@ -17,6 +17,7 @@ RUN ./gradlew dependencies --no-daemon || true
 
 # 소스 복사 후 빌드
 COPY . .
+RUN chmod +x gradlew
 RUN ./gradlew clean bootJar -x test --no-daemon
 
 # jar 파일을 별도 폴더로 이동
