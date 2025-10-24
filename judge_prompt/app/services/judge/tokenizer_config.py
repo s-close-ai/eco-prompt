@@ -66,3 +66,80 @@ def detect_lang(text: str) -> str:
     return "ko" if ratio >= 0.8 else "en"
 
 # 지표 함수
+def _stopword_ratio(tokens: Iterable[str], stopset: set[str]) -> float:
+    tokens = list(tokens)
+    if not tokens:
+        return 0.0
+    sw = sum(1 for t in tokens if t.lower() in stopset)
+    return sw / len(tokens)
+
+def _punct_ratio(text: str) -> float:
+    if not text:
+        return 0.0
+    puncts = RE_PUNCT.findall(text)
+    return len(puncts) / max(len(text), 1)
+
+def _is_question(text: str, lang: str) -> int:
+    # 1) 물음표
+    if RE_QMARK.search(text):
+        return 1
+    # 2) 언어별 패턴
+    for s in split_sentences(text):
+        if lang in ("ko", "mix"):
+            tail = s[-10:] if len(s) > 10 else s
+            if RE_Q_KO_TAIL.search(tail):
+                return 1
+        if lang in ("en", "mix"):
+            head = s[:40].lower()
+            if RE_Q_EN_LEAD.search(head):
+                return 1
+    return 0
+
+def _has_listy(text: str) -> int:
+    return 1 if RE_LISTY.search(text) else 0
+
+def _count_urls(text: str) -> int:
+    return len(RE_URL.findall(text))
+
+# 피처 추출
+def extract_features(text: str) -> Dict[str, float | int | str]:
+    lang = detect_lang(text)
+
+    # 토큰화: 언어 기준으로 선택
+    if lang == "ko":
+        tokens = tokenize_ko(text)
+        stopset = KO_STOPWORDS
+    elif lang == "en":
+        tokens = tokenize_en(text)
+        stopset = EN_STOPWORDS
+    else:  # mix/unknown → 두 쪽 모두 고려
+        # 한국어/영어 토큰 합치되 중복 방지 X (의도: 실제 길이·비율 반영)
+        tokens = tokenize_ko(text) + tokenize_en(text)
+        stopset = KO_STOPWORDS | EN_STOPWORDS
+
+    sents = split_sentences(text)
+    n_tok = len(tokens)
+    n_sent = len(sents)
+
+    uniq  = (len(set(t.lower() for t in tokens)) / n_tok) if n_tok else 0.0
+    avglen = (n_tok / n_sent) if n_sent else 0.0
+    tps    = avglen
+    stopr  = _stopword_ratio(tokens, stopset)
+    punct  = _punct_ratio(text)
+    quest  = _is_question(text, lang)
+    url    = _count_urls(text)
+    listy  = _has_listy(text)
+
+    return {
+        "uniq": round(uniq, 4),
+        "avglen": round(avglen, 2),
+        "tps": round(tps, 2),
+        "len_tok": n_tok,
+        "sent": n_sent,
+        "stopr": round(stopr, 4),
+        "punct": round(punct, 4),
+        "quest": int(quest),
+        "url": int(url),
+        "listy": int(listy),
+        "lang": lang,
+    }
