@@ -1,11 +1,7 @@
 # app/services/judge/judge_service.py
-import json, nltk
 from loguru import logger
-from app.services.judge.model_loader
-from app.services.judge.tokenizer_config import (
-    PUNCT_RE, SENT_SPLIT_RE, URL_RE, LISTY_RE, QUESTION_RE,
-    HANGUL_RE, ASCII_RE, TOKEN_RE, KO_STOPWORDS, EN_STOPWORDS
-)
+from app.services.judge.model_loader import get_llama_model
+from app.services.judge.tokenizer_config import extract_features
 
 # 모델 호출
 # 토크나이저 -> 자연어 메타 헤더 추출
@@ -14,37 +10,48 @@ from app.services.judge.tokenizer_config import (
     # user_personal_prompt는 미사용
 # 모델 추론
 
-def _tokenize(text: str):
-    return _TOKEN_RE.findall(text)
-
-def _split_sentences(text: str):
-    return [s.strip() for s in _SENT_SPLIT_RE.split(text) if s.strip()]
-
-def _lang_detect(text: str) -> str:
-    ko = len(_HANGUL_RE.findall(text))
-    en = len(_ASCII_RE.findall(text))
-    if ko > 0 and en == 0:
-        return "ko"
-    if en > 0 and ko == 0:
-        return "en"
-    if ko == 0 and en == 0:
-        return "unknown"
-    return "mix"
-
-def _stop_ratio(tokens: list[str]) -> float:
-    if not tokens:
-        return 0.0
-    lower = [t.lower() for t in tokens]
-    ko_cnt = sum(1 for t in lower if t in _KO_STOPWORDS)
-    en_cnt = sum(1 for t in lower if t in _EN_STOPWORDS)
-    return round((ko_cnt + en_cnt) / len(tokens), 4)
-
-def _punct_ratio(tokens: list[str]) -> float:
-    if not tokens:
-        return 0.0
-    punct_cnt = sum(1 for t in tokens if _PUNCT_RE.search(t))
-    return round(punct_cnt / len(tokens), 4)
 
 
 async def run_judge_model(user_input, user_personal_prompt):
     llm = await get_llama_model()
+
+    feats = extract_features(user_input)
+    logger.debug(f"[features] {feats}")
+
+    # 초기 모델 성능 테스트 시 메타 헤더 미반영
+    # meta_header = (
+    #     f"[META] quest={feats['quest']} listy={feats['listy']} "
+    #     f"sent={feats['sent']} uniq={feats['uniq']} lang={feats['lang']}"
+    # )
+    SYSTEM_PROMPT = """\
+    당신은 사용자 질의(prompt)의 품질을 평가하는 심사 모델입니다.
+    다음 항목별로 0~25점 사이에서 점수를 부여하세요.
+    - clarityScore (명확성): 질문의 의도와 목표가 얼마나 분명한가
+    - specificityScore (구체성): 필요한 정보, 조건, 제약이 구체적으로 제시되었는가
+    - formatScore (형식 준수): 출력 형식, 언어, 길이 등 지시가 명확하고 올바른가
+    - safetyScore (안전성): 부적절하거나 위험한 내용이 없는가
+
+    총점(score)은 네 항목 점수의 합(0~100점)입니다.
+    각 항목은 반드시 0~25점 사이로 정수 또는 소수점 1자리까지 부여하세요.
+
+    출력 형식은 반드시 아래 JSON 형태로만 반환하세요:
+    {
+    "summary": "<한 줄 요약>",
+    "scoreInfo": {
+        "score": <총합>,
+        "clarityScore": <값>,
+        "specificityScore": <값>,
+        "formatScore": <값>,
+        "safetyScore": <값>
+        }
+    }
+    """
+
+    prompt = (
+        f"{SYSTEM_PROMPT}\n\n"
+        f"[META]\n{meta_header}\n\n"
+        f"[USER PROMPT]\n{user_input}\n"
+    )
+
+    out = llm(prompt)
+    return out
