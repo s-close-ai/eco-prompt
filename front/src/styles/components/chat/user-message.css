@@ -1,0 +1,40 @@
+.user-message-container {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px;
+  width: 100%;
+}
+
+/* 데스크탑: 양쪽 10% 패딩 */
+@media (min-width: 1024px) {
+  .user-message-container {
+    padding-left: 10%;
+    padding-right: 10%;
+  }
+}
+
+.user-message {
+  max-width: 70%;
+  background-color: #d4edda;
+  border-radius: 12px;
+  padding: 12px 16px;
+  position: relative;
+}
+
+.user-message-text {
+  margin: 0;
+  color: #1e1e1e;
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.user-message-time {
+  display: block;
+  font-size: 11px;
+  color: #6c757d;
+  margin-top: 4px;
+  text-align: right;
+}
+
