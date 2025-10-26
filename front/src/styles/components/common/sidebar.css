@@ -1,0 +1,408 @@
+/* 사이드바 배경 오버레이 (모바일) */
+.sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1100;
+}
+
+/* 데스크탑에서는 배경 오버레이 숨김 (사이드바가 항상 열려있어서) */
+@media (min-width: 1024px) {
+    .sidebar-backdrop {
+        display: none;
+    }
+}
+
+/* 사이드바 기본 */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 280px;
+    background: #F5FAF4;
+    border-right: 1px solid #e5e7eb;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, width 0.3s ease;
+}
+
+/* 모바일/태블릿: 기본적으로 숨김, open 클래스로 표시 */
+@media (max-width: 1023px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    /* 모바일/태블릿에서는 collapsed 무시 */
+    .sidebar.collapsed {
+        width: 280px;
+    }
+}
+
+/* 데스크탑: 항상 표시, collapsed로 접기/펼치기 */
+@media (min-width: 1024px) {
+    .sidebar {
+        position: relative;
+        transform: translateX(0) !important;
+    }
+
+    .sidebar.collapsed {
+        width: 64px;
+    }
+}
+
+/* 접힌 사이드바 (데스크탑 전용) */
+.sidebar-collapsed {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    padding: 16px 0;
+    gap: 16px;
+}
+
+@media (min-width: 1024px) {
+    .sidebar.collapsed .sidebar-collapsed {
+        display: flex;
+    }
+    
+    .sidebar.collapsed .sidebar-content {
+        display: none;
+    }
+}
+
+.sidebar-logo-btn {
+    width: 40px;
+    height: 40px;
+    padding: 4px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+.sidebar-logo-btn:hover {
+    background: #f3f4f6;
+}
+
+.sidebar-logo-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.sidebar-collapsed-icons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.sidebar-icon-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    color: #6b7280;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.sidebar-icon-btn:hover {
+    background: #f3f4f6;
+    color: #16a34a;
+}
+
+.sidebar-icon-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.sidebar-explore-btn {
+    margin-top: auto;
+}
+
+/* 펼쳐진 사이드바 */
+.sidebar-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* 상단 고정 영역 */
+.sidebar-header {
+    flex-shrink: 0;
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.sidebar-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.sidebar-logo img {
+    height: 32px;
+    width: auto;
+}
+
+.sidebar-toggle-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: #6b7280;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+
+.sidebar-toggle-btn:hover {
+    background: #f3f4f6;
+    color: #16a34a;
+}
+
+/* 데스크탑 전용 토글 버튼 */
+.sidebar-toggle-desktop {
+    display: none;
+}
+
+@media (min-width: 1024px) {
+    .sidebar-toggle-desktop {
+        display: flex;
+    }
+}
+
+/* 모바일 전용 토글 버튼 */
+.sidebar-toggle-mobile {
+    display: flex;
+}
+
+@media (min-width: 1024px) {
+    .sidebar-toggle-mobile {
+        display: none;
+    }
+}
+
+/* 액션 버튼들 */
+.sidebar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 12px;
+}
+
+.sidebar-action-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #374151;
+    transition: all 0.2s;
+    cursor: pointer;
+    text-align: left;
+}
+
+.sidebar-action-btn:hover {
+    background: #f3f4f6;
+    color: #16a34a;
+}
+
+.sidebar-action-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: #9ca3af;
+}
+
+.sidebar-action-btn:hover svg {
+    color: #16a34a;
+}
+
+/* 검색창 */
+.sidebar-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    transition: border-color 0.2s;
+}
+
+.sidebar-search:focus-within {
+    border-color: #16a34a;
+    background: white;
+}
+
+.sidebar-search svg {
+    width: 18px;
+    height: 18px;
+    color: #9ca3af;
+    flex-shrink: 0;
+}
+
+.sidebar-search input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    color: #374151;
+}
+
+.sidebar-search input::placeholder {
+    color: #9ca3af;
+}
+
+/* 스크롤 영역 */
+.sidebar-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* 섹션 */
+.sidebar-section {
+    margin-bottom: 24px;
+}
+
+.sidebar-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    padding: 0 8px;
+}
+
+/* 목록 */
+.sidebar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sidebar-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #374151;
+    transition: all 0.2s;
+    cursor: pointer;
+    text-align: left;
+}
+
+.sidebar-list-item:hover {
+    background: #f3f4f6;
+    color: #16a34a;
+}
+
+.sidebar-list-item svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: #9ca3af;
+}
+
+.sidebar-list-item:hover svg {
+    color: #16a34a;
+}
+
+.sidebar-list-item-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 아이콘 없는 리스트 아이템 (채팅 목록용) */
+.sidebar-list-item-no-icon {
+    padding-left: 12px;
+}
+
+.sidebar-list-item-no-icon .sidebar-list-item-text {
+    padding-left: 0;
+}
+
+/* 하단 고정 영역 */
+.sidebar-footer {
+    flex-shrink: 0;
+    padding: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.sidebar-footer .sidebar-explore-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    color: #374151;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+    cursor: pointer;
+    text-align: left;
+}
+
+.sidebar-footer .sidebar-explore-btn:hover {
+    background: #f3f4f6;
+    color: #16a34a;
+}
+
+.sidebar-footer .sidebar-explore-btn svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: #9ca3af;
+}
+
+.sidebar-footer .sidebar-explore-btn:hover svg {
+    color: #16a34a;
+}
+
