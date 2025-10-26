@@ -4,9 +4,19 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import App from './App'
 import Home from './pages/Home'
 import About from './pages/About'
+import Login from './pages/Login'
+import OAuthCallback from './pages/OAuthCallback'
 import './index.css'
 
 const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: <Login />,
+  },
+  {
+    path: '/oauth/callback',
+    element: <OAuthCallback />,
+  },
   {
     path: '/',
     element: <App />,
