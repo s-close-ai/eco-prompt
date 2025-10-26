@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import App from './App'
 import Home from './pages/Home'
 import About from './pages/About'
+import Chat from './pages/Chat'
 import Login from './pages/Login'
 import OAuthCallback from './pages/OAuthCallback'
 import './index.css'
@@ -23,6 +24,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'about', element: <About /> },
+      { path: 'chat', element: <Chat /> },
     ],
   },
 ])
