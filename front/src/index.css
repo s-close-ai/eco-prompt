@@ -1,5 +1,53 @@
 @import "tailwindcss";
 
+/* Color Palette */
+:root {
+  /* Primary Colors */
+  --color-primary-50: #F5FAF4;
+  --color-primary-100: #CAE6CB;
+  --color-primary-200: #A8D4AA;
+  --color-primary-300: #8BBF8C;
+  --color-primary-400: #72A774;
+  --color-primary-500: #5E9462;
+  --color-primary-600: #528655;
+  --color-primary-700: #487C4E;
+  --color-primary-800: #3E6E44;
+  --color-primary-900: #335B38;
+  --color-primary-950: #26452C;
+  --color-primary-1000: #1B3221;
+
+  /* Base Colors */
+  --color-base-white: #FFFFFF;
+  --color-base-50: #CAE6CB;
+  --color-base-100: #A8D4AA;
+  --color-base-200: #8BBF8C;
+  --color-base-300: #72A774;
+  --color-base-400: #5E9462;
+  --color-base-500: #528655;
+  --color-base-600: #4B5563;
+  --color-base-700: #374151;
+  --color-base-800: #1F2937;
+  --color-base-900: #111827;
+  --color-base-black: #000000;
+
+  /* Status Colors */
+  --color-success: #10B981;
+  --color-success-light: #D1FAE5;
+  --color-success-dark: #065F46;
+
+  --color-error: #EF4444;
+  --color-error-light: #FEE2E2;
+  --color-error-dark: #991B1B;
+
+  --color-warning: #F59E0B;
+  --color-warning-light: #FEF3C7;
+  --color-warning-dark: #92400E;
+
+  --color-info: #3B82F6;
+  --color-info-light: #DBEAFE;
+  --color-info-dark: #1E40AF;
+}
+
 /* CSS Reset */
 * {
   margin: 0;
