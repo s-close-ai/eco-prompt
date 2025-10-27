@@ -5,7 +5,7 @@ import asyncio
 from app.core.config import settings
 
 _model_instance: Llama | None = None
-_model_lock = asyncio.lock()
+_model_lock = asyncio.Lock()
 
 async def get_llama_model():
     # lazy-load 방식으로 모델 가져오기
@@ -16,11 +16,11 @@ async def get_llama_model():
         return _model_instance
 
     async with _model_lock:
-        if _model_lock is None:
+        if _model_instance is None:
             logger.info("Judge Prompt 모델 로딩 중... ")
             _model_instance = Llama(
                 model_path = settings.MODEL_PATH,
-                n_ctx=2048,
+                n_ctx=8192,
                 n_gpu_layers=-1,
                 n_threads=8,
                 verbose=False,

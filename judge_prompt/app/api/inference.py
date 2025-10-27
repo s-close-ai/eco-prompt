@@ -6,16 +6,17 @@ from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import JSONResponse
 from app.schemas.request import PromptJudgeRequest
 from app.schemas.response import JudgeModelOutput
+from app.services.judge.judge_service import run_judge_model
 
 router = APIRouter()
 
 @router.post("/prompt-judge", response_model=JudgeModelOutput,)
 async def prompt_judge(payload: PromptJudgeRequest):
     try:
-        result = run_judge_model(payload.userInput, payload.userPersonalPrompt)
+        result = await run_judge_model(payload.userInput, payload.userPersonalPrompt)
         # 사용자 질의 평가에서는 사용자 지침을 사용하지 않을 것
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Judge model error: {e}")
+        raise HTTPException(status_code=500, detail=f"Judge model error: {e.__class__.__name__}: {e}")

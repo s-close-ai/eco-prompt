@@ -3,11 +3,12 @@ import re
 from typing import List, Dict, Iterable
 from kiwipiepy import Kiwi
 from nltk.corpus import stopwords
+from loguru import logger
 
 _kiwi = Kiwi()
 
 # 영어 불용어
-EN_STOPWORDS: set(map(str.lower, stopwords.words("english")))
+EN_STOPWORDS = set(map(str.lower, stopwords.words("english")))
 
 # 한국어 불용어 -> 불용어 사전 업데이트..?
 KO_STOPWORDS: set[str] = {
@@ -32,12 +33,13 @@ RE_Q_EN_LEAD = re.compile(
 
 # 문장 분리 / 토크나이즈
 def split_sentences(text):
+    logger.debug("split_sentences 실행")
     # kiwi 문장 분리 사용
     sents = [s.text.strip() for s in _kiwi.split_into_sents(text)]
     # 줄바꿈/기호 분리 보강...?
     # if not sents:
         # sents = [s.strip() for s in re.split(r"[.?!\n]+", text) if s.strip()]
-    # return sents
+    return sents
 
 def tokenize_ko(text):
     tokens: List[str] = []
@@ -52,8 +54,10 @@ def tokenize_en(text: str) -> List[str]:
 
 # 언어 추정
 def detect_lang(text: str) -> str:
+    logger.debug("detect_lang 실행")
     ko = len(RE_HANGUL.findall(text))
     en = len(RE_LATIN.findall(text))
+    logger.debug("정규식 패턴 적용")
     if ko == 0 and en == 0:
         return "unknown"
     if ko > 0 and en == 0:
@@ -61,6 +65,7 @@ def detect_lang(text: str) -> str:
     if en > 0 and ko == 0:
         return "en"
     ratio = ko / (ko + en)
+    logger.debug(f"한글 비율: {ratio}")
     if 0.2 < ratio < 0.8:
         return "mix"
     return "ko" if ratio >= 0.8 else "en"
@@ -103,8 +108,9 @@ def _count_urls(text: str) -> int:
 
 # 피처 추출
 def extract_features(text: str) -> Dict[str, float | int | str]:
+    logger.debug("extract_features 실행")
     lang = detect_lang(text)
-
+    logger.debug(f"lang: {lang}")
     # 토큰화: 언어 기준으로 선택
     if lang == "ko":
         tokens = tokenize_ko(text)
@@ -120,7 +126,7 @@ def extract_features(text: str) -> Dict[str, float | int | str]:
     sents = split_sentences(text)
     n_tok = len(tokens)
     n_sent = len(sents)
-
+    logger.debug(f"토큰, 문장수: {n_tok}, {n_sent}")
     uniq  = (len(set(t.lower() for t in tokens)) / n_tok) if n_tok else 0.0
     avglen = (n_tok / n_sent) if n_sent else 0.0
     tps    = avglen
