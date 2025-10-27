@@ -1,4 +1,4 @@
-# eval_kosimple.py (전체 교체)
+# eval_kosimple.py
 import re, time, json, requests, random, os
 from datasets import load_dataset
 from tqdm import tqdm
