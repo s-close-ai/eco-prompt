@@ -1,0 +1,9 @@
+{
+  "config": "CLIcK",
+  "n_pairs": 100,
+  "pairwise_win_rate": 0.88,
+  "pairwise_auc_approx": 0.925,
+  "consistency_ok_true_bad_false": 0.89,
+  "latency_p50_s": 3.55,
+  "latency_p90_s": 6.638
+}

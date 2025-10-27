@@ -1,0 +1,501 @@
+q,opts_present,gold_text,wrong_text,ok_score,ok_correct,ok_reason,bad_score,bad_correct,bad_reason,lat_ok_s,lat_bad_s
+"방사선과 관련하여 반치사량(LD-50)이란 50% 사망할 수 있는 피폭선량을 말한다. 이는 몇 rem정도를 말하는가?
+1) 100rem
+2) 400rem
+3) 700rem
+4) 1000rem",True,400rem,이란 50% 사망할 수 있는 피폭선량을 말한다. 이는 몇 rem정도를 말하는가?,10,True,"The response correctly identifies the LD-50 value as 400rem, which is the correct answer according to the provided question.",0,False,"The response does not provide the correct answer to the question. The correct answer is 400rem, which is not mentioned in the response. Therefore, the response is incorrect.",2.79,1.854
+"일반 건축물의 변전실 층높이는 고압의 경우 건물의 보밑에서 얼마 이상이 요구되는가?
+1) 2m 이상
+2) 3m 이상
+3) 4m 이상
+4) 5m 이상",True,3m 이상,4m 이상,10,True,"The model correctly identified the minimum height requirement for the foundation of a building in high-pressure areas, which is 3m.",0,False,"The model's output does not match the correct answer. The correct answer is 3m 이상, while the model's output is 4m 이상. This indicates a misunderstanding of the question's requirements.",1.955,2.09
+"서로 다른 웹사이트의 콘텐츠나 서비스를 조합하여 새로운 차원의 콘텐츠나 웹사이트 혹은 웹 어플리케이션을 창출하는 것을 의미하는 용어는?
+1) 매시업
+2) RSS(Rich Site Summary)
+3) 마이크로블로깅
+4) 시멘틱웹",True,매시업,마이크로블로깅,10,True,The term '매시업' is the correct answer as it encompasses the concept of combining content from different websites to create a new dimension of content. This term is widely recognized and used in the context of web content aggregation and is not limited to RSS or other specific technologies. It is a ge,0,False,"The model's output does not match the correct answer. The correct answer is '매시업', but the model's output is '마이크로블로깅'. Therefore, the model's output is incorrect.",4.555,2.113
+"액체 침탄법에 사용되는 침탄제는?
+1) 탄산바륨
+2) 가성소다
+3) 시안화나트륨
+4) 탄산나트륨",True,시안화나트륨,탄산바륨,10,True,"The correct answer is 시안화나트륨, which is the only option that matches the description of the wax-based paint thinner used in the act of painting. The other options, such as 탄산바륨 and 가성소다, are not suitable for the task of painting, as they are not wax-based paint thinners. 탄산나트륨, while it is a suitable",0,False,"The model's output does not match the correct answer. The correct answer is 시안화나트륨, but the model's output is 탄산바륨. Therefore, the model's output is incorrect.",5.284,2.233
+"온도 30℃, 압력 350kPa에서 비체적이 0.449m3/kg인 이상기체의 기체 상수는 몇 kJ/kgㆍK인가?
+1) 0.143
+2) 0.287
+3) 0.518
+4) 2.077",True,0.518,0.287,10,True,"The given temperature and pressure are used to calculate the specific heat of the gas, which is 0.518 kJ/kgㆍK. This calculation is based on the ideal gas law, which is applicable to the given conditions. The specific heat of the gas is a constant that relates the change in temperature to the change ",2,False,"The model's output is incorrect. The correct answer is 0.518 kJ/kgㆍK, which is not provided in the options. The model's output of 0.287 kJ/kgㆍK is not the correct answer, as it does not match the given conditions of temperature and pressure.",5.072,2.856
+"[AT/Wb]의 단위와 같은 것은?
+1) [H]
+2) [H-1]
+3) [F]
+4) [F-1]",True,[H-1],[H],10,True,The model correctly identified the unit of [AT/Wb] as [H-1].,0,False,"The answer provided is incorrect. The correct answer is [H-1], which is the unit of [AT/Wb]. The answer given is [H], which is not the unit of [AT/Wb]. Therefore, the answer is incorrect.",1.52,2.172
+"바로크 건축에 대한 양식적 설명 중 거리가 먼 것은 어느 것인가?
+1) 엄격한 형식미를 추구한 양식이다.
+2) 곡면과 파동곡면을 사용하여 화려하고 동적이며 대조적인 효과를 도입한 양식이다.
+3) 건축의 구조, 표현, 장식 등 모든 것이 전체의 효과를 위해 사용되었다.
+4) 투시도법을 이용한 극적 효과를 추구하였다.",True,엄격한 형식미를 추구한 양식이다.,투시도법을 이용한 극적 효과를 추구하였다.,10,True,"The response correctly identifies the 'wz' (wz) as the '거리가 먼 것' (distance far) in the given context. It is the only option that aligns with the question's requirement for a '양식적 설명' (formal description) of the Baroque architecture. The other options, while they may be related to Baroque architectur",0,False,"The provided answer does not match the correct answer. The correct answer is '엄격한 형식미를 추구한 양식이다.'. The given answer, '투시도법을 이용한 극적 효과를 추구하였다.' is incorrect as it does not align with the question's requirement for a description of a building style that is characterized by a distant location.",5.943,3.61
+"체계이론이 사회복지실천에 미친 영향으로 옳지 않은 것은?
+1) 사고의 틀을 개인중심에서 전체체계로 확대하도록 유도함
+2) 경계, 환류, 엔트로피 등 기능적인 체계를 설명하는 개념을 제시함
+3) 문제현상에 대한 분석틀과 구체적 개입방법을 제시함으로써 적응적 변화를 유도함
+4) 사회현상을 분석함에 있어 체계를 둘러싼 변수들이 상호관련된 전체라는 시각을 갖게 함",True,문제현상에 대한 분석틀과 구체적 개입방법을 제시함으로써 적응적 변화를 유도함,사고의 틀을 개인중심에서 전체체계로 확대하도록 유도함,10,True,"The response correctly identifies the impact of systemic thinking on social problem analysis and the provision of specific intervention methods, which is the key aspect of the question.",0,False,The response does not align with the correct answer. It incorrectly identifies the impact of systemic thinking on social recovery efforts as being centered on individual perspectives rather than the collective system.,3.137,1.862
+"항공기의 감항성을 가장 올바르게 표현한 것은?
+1) 항공기가 안전운항을 할 수 있는 기능을 말한다.
+2) 항공기가 사용중 필연적으로 일어날수 있는 고장을 말한다.
+3) 항공기가 사용중 고장없이 그 기능을 다하여 안전 운항을 할 수 있는지의 여부를 말한다.
+4) 항공기가 고장이 발생하였을때 항상 완전한 기능을 가지도록 유지하게 하는 것을 말한다.",True,항공기가 사용중 고장없이 그 기능을 다하여 안전 운항을 할 수 있는지의 여부를 말한다.,항공기가 고장이 발생하였을때 항상 완전한 기능을 가지도록 유지하게 하는 것을 말한다.,10,True,"The response correctly identifies the key aspect of the question, which is the ability of an aircraft to operate safely without any malfunctions. This is the central theme of the question, and the response aligns with this theme. The other options, while related to the topic of aircraft safety, do n",0,False,"The provided answer does not align with the correct answer. The correct answer is that the aircraft should be able to operate safely without any malfunction. However, the provided answer suggests that the aircraft should be able to maintain full functionality even when a malfunction occurs. This is ",4.895,3.244
+"토양사료 중 페놀류의 시험법에 대한 설명으로 틀린 것은? (단, 기체크로마토그래피 적용)
+1) 토양 중 페놀 및 펜타켈로로페놀의 추출은 아세톤/노말헥산(1 : 1)을 이용한다.
+2) 농축장비로 구데르나다니쉬 농축기 또는 회전증발 농축기를 사용한다.
+3) 간섭물질 중 디클로로에탄과 같이 머무름 시간이 긴 화합물은 용매의 봉우리 면적이 넓어 분석을 방해한다.
+4) 불꽃이온화검출기에 검출되는 페놀의 정량한계는 0.02mg/kg 이다.",True,간섭물질 중 디클로로에탄과 같이 머무름 시간이 긴 화합물은 용매의 봉우리 면적이 넓어 분석을 방해한다.,농축장비로 구데르나다니쉬 농축기 또는 회전증발 농축기를 사용한다.,10,True,정답 후보 중 하나가 정답과 일치하여 최종 판정이 true 입니다.,0,False,"The response does not match the correct answer. The correct answer is the third point, which discusses the effect of certain materials on the analysis of soil samples. However, the response provided incorrectly identifies the second point as the correct answer, which discusses the equipment used for",3.559,3.288
+"코터핀의 장착 및 떼어낼 때의 주의사항 중 틀린 내용은?
+1) 한번 사용된 것은 재사용해서는 안된다.
+2) 핀끝을 절단할 때는 핀축에 직각으로 절단 해야한다.
+3) 핀끝을 접어 구부릴 때는 펼쳐지게 해야한다.
+4) 핀끝을 너트의 벽에 꼭 붙이기 위해 스틸햄머를 사용해야 한다.",True,핀끝을 너트의 벽에 꼭 붙이기 위해 스틸햄머를 사용해야 한다.,핀끝을 접어 구부릴 때는 펼쳐지게 해야한다.,10,True,정답 후보 중 하나가 정답과 일치하여 최종 판정이 true이다.,0,False,"The provided answer does not match the correct answer. The correct answer is that the pin end should be rammed into the wall with a staple gun, not that it should be expanded.",2.99,1.88
+"교차보호와 관계가 먼 것은 ?
+1) 약독바이러스 계통을 이용한다.
+2) 토마토의 TMV 방제에 이용되고 있다.
+3) 약독계통이 병원성화 될 염려는 없으므로 확대 이용되어야 한다.
+4) 약독바이러스 계통이 많지 않아 방제에 적극 이용되지 못하고 있다.",True,약독계통이 병원성화 될 염려는 없으므로 확대 이용되어야 한다.,토마토의 TMV 방제에 이용되고 있다.,10,True,"The response correctly identifies that there is no concern about the spread of the bacterial strain in the hospital setting, and therefore, the use of a broad-spectrum antibiotic is not necessary.",0,False,"The response does not align with the correct answer. The correct answer is that the concern of the spread of the pathogen in the hospital setting is not a significant issue. However, the response incorrectly suggests that the use of TMV in tomato is a significant issue, which is not related to the q",3.026,2.885
+"근로기준법령상 용어정의에 관한 설명으로 틀린 것은?
+1) “근로자”란 직업의 종류와 관계없이 임금을 목적으로 사업이나 사업장에 근로를 제공하는 자를 말한다.
+2) “근로”란 정신노동과 육체노동을 말한다.
+3) “통상임금”이란 이를 산정하여야 할 사유가 발생한 날 이전 3개월 동안 그 근로자에게 지급된 임금의 총액을 그 기간의 총일수로 나눈 금액을 말한다.
+4) “사용자”란 사업주 또는 사업 경영 담당자, 그 밖에 근로자에 관한 사항에 대하여 사업주를 위하여 행위하는 자를 말한다.",True,“통상임금”이란 이를 산정하여야 할 사유가 발생한 날 이전 3개월 동안 그 근로자에게 지급된 임금의 총액을 그 기간의 총일수로 나눈 금액을 말한다.,“근로”란 정신노동과 육체노동을 말한다.,10,True,정답 후보와 정답이 동일하여 일치하는 것이 정답입니다.,0,False,The provided definition for '근로' is incorrect. It should be defined as '근로자' rather than '근로'. The correct definition for '근로' is '근로자'.,3.794,1.981
+"상용압력이 6MPa의 고압설비에서 안전밸브의 작동압력은?
+1) 4.8MPa
+2) 6.0MPa
+3) 7.2MPa
+4) 9.0MPa",True,7.2MPa,9.0MPa,10,True,"The given pressure of 6MPa is the working pressure of the safety valve, which is 7.2MPa. This is because the safety valve is designed to operate at a pressure that is higher than the working pressure of the system it is protecting. The safety valve is intended to prevent overpressure, and thus, it m",0,False,no_json,4.297,1.764
+"완전 충전된 축전지가 낮은 충전율로 충전되고 있다면 조치사항은?
+1) 전압 설정을 재조정해야 한다.
+2) 전류 설정을 재조정해야 한다.
+3) 정상이므로 조치하지 않아도 된다.
+4) 전해액의 비중을 조정해야 한다.",True,정상이므로 조치하지 않아도 된다.,전압 설정을 재조정해야 한다.,10,True,"The given scenario is a complete charge, which means that the battery is fully charged. In this case, no adjustments are needed, as the battery is already at its optimal state. Therefore, the correct answer is 3, which aligns with the scenario provided.",0,False,"The response does not align with the correct answer, which is that no action is required as the battery is fully charged.",3.181,1.358
+"통신보안 교육기관으로 맞게 짝지어진 것은?
+1) 한국전파진흥협회, 중앙전파관리소
+2) 국립전파연구원, 중앙전파관리소
+3) 한국방송통신전파진흥원, 한국전파진흥협회
+4) 중앙전파관리소, 한국방송통신전파진흥원",True,"중앙전파관리소, 한국방송통신전파진흥원","국립전파연구원, 중앙전파관리소",10,True,"The model correctly identified the correct pair of the communication security education institution, which is the '중앙전파관리소' and the '한국방송통신전파진흥원'. This pair is the only one that aligns with the correct answer, as the other pairs are incorrect.",0,False,no_json,3.606,1.847
+"강용접 이음부의 방사선투과 시험방법(KS B 0845)에서 강판 촬영시 일반적인 계조계의 위치로 올바른 것은?
+1) 모재부 선원측 투과도계 바로 밑에 놓는다.
+2) 모재부 필름쪽 면과 필름 사이에 놓는다.
+3) 카세트 바로 밑에 놓는다.
+4) 시험부 선원측 투과도계 바로 위에 놓는다.",True,모재부 필름쪽 면과 필름 사이에 놓는다.,카세트 바로 밑에 놓는다.,10,True,"The correct answer is that the film side of the film should be placed against the film side of the film holder, which is the most accurate position for the film holder in the KS B 0845 standard.",0,False,"The correct answer is 2, which is the position of the film side and the film itself in the standard positioning for the X-ray film. However, the provided answer is 3, which is the position of the cassette. This indicates a clear misunderstanding of the standard positioning for the X-ray film in the ",3.294,3.059
+"병원체와 주요 전반수단이 잘못 짝지어진 것은?
+1) 물 – 밀 줄기녹병
+2) 바람 – 보리 겉깜부기병
+3) 곤충 – 오이 세균성시들음병
+4) 영양번식기관 – 감자 둘레썩음병",True,물 – 밀 줄기녹병,영양번식기관 – 감자 둘레썩음병,10,True,모든 정답 후보가 정답과 일치하여 완전 정답이 나왔습니다.,0,False,"The model's output does not match the correct answer. The correct answer is 물 – 밀 줄기녹병, but the model's output is 영양번식기관 – 감자 둘레썩음병. Therefore, the model's output is incorrect.",2.463,2.837
+"녹병의 방제법으로 중간기주를 제거하는 것이 중요 하다. 해당병의 기주와 중간기주의 연결이 바른 것은?
+1) 잣나무 털녹병 : 잣나무 - 뱀고사리
+2) 배나무 붉은별무늬병 : 향나무 - 장미
+3) 포플러 잎녹병 : 포플러 - 애기똥풀
+4) 소나무 잎녹병 : 소나무 - 쑥부쟁이",True,소나무 잎녹병 : 소나무 - 쑥부쟁이,잣나무 털녹병 : 잣나무 - 뱀고사리,10,True,"The model correctly identified the correct relationship between the host plant and the parasitic plant in the given examples. It accurately matched the host plant with the correct parasitic plant in each case, demonstrating a clear understanding of the topic.",0,False,no_json,3.294,1.888
+"프레스(press)의 용량을 선정할 때는 공칭 압력의 몇 ％를 계산 하중으로 선정하는가?
+1) 50∼60％
+2) 60∼70％
+3) 70∼80％
+4) 80∼90％",True,60∼70％,80∼90％,10,True,The model correctly identified the percentage range for the press's capacity based on the public pressure.,0,False,no_json,1.794,1.349
+"그 흐름이 완전하고 안전하며, 끊어짐이 없이 최적의 속도와 간격인 경우 교통의 1차선의 1시간 당 이론적인 수용력은 몇 대인가?
+1) 1,500대
+2) 1,600대
+3) 1,800대
+4) 2,000대",True,"2,000대","1,600대",10,True,"The model correctly identified the optimal number of passengers per hour for the 1st-class selection in traffic, which is 2,000.",1,False,"The model's output does not match the correct answer. The correct answer is 2,000대, but the model's output is 1,600대. This indicates a significant discrepancy between the model's output and the correct answer, which is why the score is 1.",2.18,2.649
+"정류에 있어서 전 응축기를 사용할 경우 환류비를 3으로 할 때 유출되는 탑위제품 1mol/h당 응축기에서 응축해야할 증기량은 몇 mol/h 인가?
+1) 3.5
+2) 4
+3) 4.5
+4) 5",True,4,3.5,0,False,no_json,0,False,"The model's output does not match the correct answer. The correct answer is 4 mol/h, but the model's output is 3.5 mol/h. This indicates a significant error in the model's calculation.",8.648,2.115
+"초음파의 파장이 1mm이고 진동자의 직경이 10mm인 탐촉자로 강재를 초음파탐상시 발생하는 근거리음장은 몇 mm인가？(단, 강재내에서 초음파의 속도는 5000m/sec로 가정)
+1) 0.25
+2) 2.5
+3) 25
+4) 250",True,25,250,10,True,"The given problem is a simple calculation problem. The correct answer is 25, which is the result of multiplying the initial frequency of the sound wave by the distance of the sound source from the receiver. The calculation is straightforward and does not require any complex mathematical concepts. Th",0,False,no_json,6.365,1.273
+"마이크로 오퍼레이션에 대한 정의로 가장 적합한 것은?
+1) 컴퓨터의 빠른 계산 동작
+2) 2진수 계산에서 쓰이는 동작
+3) 플립플롭 내에서 기억되는 동작
+4) 레지스터 상호간에 저장된 데이터의 이동에 의해 이루어지는 동작",True,레지스터 상호간에 저장된 데이터의 이동에 의해 이루어지는 동작,플립플롭 내에서 기억되는 동작,10,True,"The provided answer is the most suitable definition of micro-operation, as it accurately describes the movement of data between registers in a computer system.",2,False,"The provided answer does not match the correct answer. The correct answer is '레지스터 상호간에 저장된 데이터의 이동에 의해 이루어지는 동작', which is the operation that occurs within the registers when data is moved between them. The provided answer, '플립플롭 내에서 기억되는 동작', refers to the operation that occurs within the flip-flo",2.432,4.497
+"자동제어 형태에서 잔류편차가 형성되는 동작은?
+1) 온ㆍ오프도작
+2) 비례동작
+3) 적분동작
+4) 미분동작",True,비례동작,적분동작,10,True,"The response correctly identifies the type of dynamic behavior that occurs in a system with automatic control, which is '비례동작'. This is because the system's behavior is not directly proportional to the input, but rather it exhibits a non-linear relationship between the input and the output. The resp",0,False,"The model's output does not match the correct answer. The correct answer is '비례동작', but the model's output is '적분동작'. This indicates a misunderstanding of the concept of waning residual variance in the context of automatic control systems.",3.488,2.419
+"어떤 제어계의 출력 로 주어질 때 정상치는?
+1) 4
+2) 2
+3) 0.5
+4) 0.25",True,0.25,0.5,10,True,모델 출력이 정답과 일치하여 최종 판정이 true입니다.,2,False,"The model's output of 0.5 does not match the correct answer of 0.25. The model's output is higher than the correct answer, indicating a misunderstanding of the control system's output.",1.794,2.038
+"판 두께 0.8~1.2mm의 연강판을 점(spot)용접 할 경우 최소 피치로 가장 적당한 것은?
+1) 3~7mm
+2) 8~11mm
+3) 12~23mm
+4) 24~35mm",True,12~23mm,3~7mm,10,True,"The given answer is the correct one, as it aligns with the standard for the thickness of the spot welding plate. The answer is 12~23mm, which is the most suitable size for the given scenario.",0,False,"The given answer is not in line with the correct answer. The correct answer is 12~23mm, which is the most suitable size for a 0.8~1.2mm thick panel. The answer provided, 3~7mm, is too small and would not provide the necessary support for the panel. Therefore, the answer is incorrect.",2.55,2.916
+"강도 lo의 단색광이 정색액을 통과할 때 그 빛의 80%가 흡수되었다면 흡광도는?
+1) 0.823
+2) 0.768
+3) 0.699
+4) 0.597",True,0.699,0.597,10,True,"The model's output matches the correct answer, which is 0.699.",0,False,"The model's output does not match the correct answer. The correct answer is 0.699, but the model's output is 0.597. This indicates a significant discrepancy between the model's output and the correct answer, which is not acceptable in a scoring context.",1.685,2.585
+"A고등학교 1학년 학생 1000명의 성적분포가 평균 80점, 표준편차 20점인 정규 분포로 나타났다. 이 경우에 60점 이상 100점 이하의 점수를 얻은 학생은 약 몇 명인가?(단, P(Z≤0.5)=0.68, P(Z≤1.0)=0.84, P(Z≤1.5)=0.93, P(Z≤2.0)=0.98)
+1) 350
+2) 680
+3) 790
+4) 850",True,680,850,10,True,"The given answer is the correct one, as it matches the expected number of students who would score 60 points or higher. The answer is based on the provided probabilities and the standard normal distribution, which are essential for calculating the number of students in the given range. The answer is",0,False,"The model's output does not match the correct answer. The correct answer is 680, but the model's output is 850, which is not in line with the given probabilities. The model's output is too high, indicating a misunderstanding of the normal distribution and its associated probabilities.",4.935,2.709
+"(주)한국은 20× 1년 1월 초 A사 지분 상품을 ￦ 10,000 에 매입하면서 매입 수수료 ￦ 500을 현금으로 지급하고 , 기타 포괄손익 － 공정가치 측정 금융자산으로 분류하였다 . 20× 1년 12월 말 A사 지분 상품의 공정가치가 ￦8,000이라면 , 20× 1년 말 (주)한국이 인식할 A사 지분 상품 관련 평가손익은 ?
+1) 금융자산 평가손실 (당기손익 ) ￦2,000
+2) 금융자산 평가손실 (기타 포괄손익 ) ￦2,000
+3) 금융자산 평가손실 (당기손익 ) ￦2,500
+4) 금융자산 평가손실 (기타 포괄손익 ) ￦2,500",False,4,5,10,True,"The model correctly identifies the evaluation loss as ￦2,500, which is the correct answer according to the given scenario.",0,False,"The model's output does not match the correct answer. The correct answer is 4, but the model's output is 5, which is incorrect.",2.713,1.632
+"디젤전기기관차 유치시 또는 비상시 전동 방지를 목적으로 설치한 것은?
+1) 발전제동장치
+2) 공기제동장치
+3) 수용제동장치
+4) 혼합제동장치",True,수용제동장치,혼합제동장치,10,True,The model correctly identified the '수용제동장치' as the device installed to prevent the operation of a diesel engine during a blackout or emergency situation.,0,False,"The model's output does not match the correct answer. The correct answer is '수용제동장치', but the model's output is '혼합제동장치'. Therefore, the model's output is incorrect.",2.174,2.221
+"수축과 팽윤에서 이방성의 원인 인자가 아닌 것은?
+1) 피브릴의 경사각
+2) 춘추재의 구성
+3) 수선조직
+4) 목재수분",True,목재수분,피브릴의 경사각,0,False,no_json,0,False,피브릴의 경사각은 수축과 팽윤에서 이방성의 원인 인자이다.,8.592,1.875
+"주파수기 100[㎒]인 반송파를 3[㎑]의 신호파로 FM 변조했을 때 최대 주파수 편이가 ±15[㎑]이면 변조지수는?
+1) 3
+2) 5
+3) 10
+4) 15",True,5,15,0,False,no_json,0,False,"The model's output is incorrect. The correct answer is 5, not 15.",6.658,1.256
+"A지역의 쓰레기 수거량은 연간 3,500,000톤이다. 이 쓰레기를 5,000명이 수거한다면 수거능력은 얼마인가? (단, 1일 작업시간 8시간, 1년 작업일수 300일)
+1) 2.34 MHT
+2) 3.43 MHT
+3) 3.87 MHT
+4) 4.21 MHT",True,3.43 MHT,3.87 MHT,10,True,"The model's output matches the correct answer, which is 3.43 MHT.",9,False,"The model's output is not the same as the correct answer, which is 3.43 MHT. However, the model's output is close to the correct answer, which is 3.87 MHT. The difference is small, and the model's output is within the range of the correct answer. Therefore, the model's output is not completely incor",1.974,4.271
+"CSG 트리 자료구조의 일반적인 특징으로 틀린 것은?
+1) 자료구조가 간단하고 데이터의 양이 적다.
+2) CSG표현은 항상 대응되는 B-Rep모델로 치환 가능하다.
+3) 파라메트릭 모델링을 쉽게 구현할 수 있다.
+4) 리프팅이나 라운딩과 같이 편리한 국부 변형기능의 사용이 용이하다.",True,리프팅이나 라운딩과 같이 편리한 국부 변형기능의 사용이 용이하다.,자료구조가 간단하고 데이터의 양이 적다.,10,True,"The provided answer correctly identifies the feature of CSG tree that is not typically associated with it, which is the ease of use for certain transformations like refinement and rounding.",0,False,The first point is incorrect. CSG trees are not simple and their data size is not small. They are complex and can handle large data sets.,3.016,1.575
+"점착력 30kN/m2, 단위중량 20kN/m3인 연약점토에 60°의 각도로 사면을 굴착하는 경우 굴착할 수 있는 최대 깊이는 얼마인가? (단, 안정계수는 5.4이다.)
+1) 3.6m
+2) 5.6m
+3) 8.1m
+4) 11.2m",True,8.1m,5.6m,10,True,"The model correctly calculated the maximum depth of the foundation based on the given parameters, which is 8.1m.",2,False,"The model's output does not match the correct answer. The correct answer is 8.1m, while the model's output is 5.6m. This indicates a misunderstanding of the problem or a calculation error.",2.014,2.168
+"식초용 초산(acetic acid) 발효의 상업적인 생산에 주로 이용되고 있는 방법은?
+1) 적하식 발효법 (trickling generator)
+2) 미생물 고정화법 (whole cell immobilization)
+3) 표면발효법 (surface culture)
+4) 혐기발효법 (anaerobic culture)",False,1,2,10,True,"The model correctly identified the primary method of producing acetic acid for commercial use, which is the trickling generator method.",0,False,"The model's output does not match the correct answer. The correct answer is 1, which is the '적하식 발효법 (trickling generator)', but the model's output is 2, which is the '미생물 고정화법 (whole cell immobilization)'. Therefore, the model's output is incorrect and does not align with the correct answer.",1.857,3.362
+"동물성 식품의 부패로 생성되는 것과 가장 거리가 먼 것은?
+1) 암모니아(ammonia)
+2) 아민(amine)
+3) 저급지방산
+4) 스카톨(skatol)",True,저급지방산,없음,10,True,"The answer provided is the correct one, as it matches the reference answer. The reasoning behind this is that the question asks for the substance that is most distant from the substances listed, and the substance listed as the answer is indeed the most distant from the others. The substances listed ",10,True,"The model correctly identified the substance that is most distant from the concept of food spoilage, which is 저급지방산. This substance is not related to food spoilage, and therefore, it is not a part of the food spoilage process. The other substances listed are directly related to food spoilage, such a",4.863,4.429
+"프로드법으로 탐상할 때 시험체의 두께가 3/4인치보다 작을 경우 자화전류치를 프로드간격 1인치당 몇 Ampere로 하면 가장 적당한가?
+1) 50∼80A
+2) 80∼90A
+3) 90∼110A
+4) 110∼125A",True,90∼110A,110∼125A,10,True,"The given answer is in line with the correct answer, which is 90∼110A. The reasoning behind this answer is that the given answer is the most appropriate for the given scenario, as it considers the size of the sample and the current flowing through it. The answer is based on the principles of the pro",10,True,"The model's output aligns with the correct answer, which is 90∼110A. The model's output, 110∼125A, is also within the correct range, indicating a good understanding of the question. The model's output is slightly higher than the correct answer, but it is still within the acceptable range. Therefore,",4.802,3.594
+"교호대상개벌법을 적용할 때의 대폭 결정요인으로 옳지 않은 것은?
+1) 지형
+2) 내음력
+3) 모수와 수형
+4) 종자의 비산 능력",True,모수와 수형,내음력,10,True,모수와 수형은 교호대상개벌법에서 대폭 결정요인으로 옳지 않은 것입니다.,0,False,no_json,2.704,3.915
+"송전단 전압 161kV, 수전단 전압 155kV, 상차각 60도, 리액턴스가 50Ω일 때 선로 손실을 무시하면 송전전력은 약 몇 [MW]인가?
+1) 300
+2) 321
+3) 432
+4) 580",True,432,300,10,True,"The model correctly calculates the power loss in the transmission line, considering the given parameters such as the transmission line voltage, the receiving line voltage, the angle of incidence, and the reactance. The model's output is consistent with the expected answer, demonstrating a clear unde",0,False,"The model's output is not in line with the correct answer. The correct answer is 432 MW, but the model's output is 300 MW, which is a significant deviation from the correct answer. This deviation is due to the model's inability to accurately calculate the power loss in the transmission line, which i",3.52,4.745
+"지적삼각보조측량을 교회법으로 시행할 경우 수평각 관측방법으로 옳은 것은?
+1) 3배각법에 의한다.
+2) 3대회 방향관측법에 의한다.
+3) 2대회 방향관측법에 의한다.
+4) 각 관측법에 의한다.",True,2대회 방향관측법에 의한다.,3배각법에 의한다.,10,True,"The response correctly identifies the 2대회 방향관측법 as the appropriate method for observing the horizontal angle in the context of the church's methodology. This method is specifically designed for the church's needs and is therefore the most suitable choice. The other options, while related to the chur",0,False,"The response does not align with the correct answer, which is 2대회 방향관측법. The response incorrectly suggests 3배각법, which is not the correct method for observing the horizontal angle in the context of the church's methodology.",5.187,2.648
+"압력 2.5MPa일 때 포화수 엔탈피는 960kJ/kg, 포화수증기의 엔탈피는 2,800kJ/kg이다. 이때 동일 압력하에서 습증기 5kg의 엔탈피는 10,000kJ이다. 이 습증기의 건도는?
+1) 0.27
+2) 0.37
+3) 0.47
+4) 0.57",True,0.57,0.47,10,True,The model correctly calculates the enthalpy of the evaporator using the given data and the principles of thermodynamics. It correctly identifies the relationship between the enthalpy of the evaporator and the weight of the evaporator. The model also correctly applies the principle of conservation of,9,False,"The model's output does not match the correct answer. The correct answer is 0.57, while the model's output is 0.47. This indicates a significant discrepancy between the model's output and the correct answer, which is not acceptable in a scoring context.",4.814,2.768
+"흙의 함수비 측정시험을 하기 위하여 먼저 용기의 무게를 잰 결과 10g 이었다. 시료를 용기에 넣은 후 무게를 측정하니 40g, 그대로 건조시킨 후 무게는 30g 이었다. 이 흙의 함수비는?
+1) 25%
+2) 30%
+3) 50%
+4) 75%",True,50%,25%,0,False,no_json,0,False,no_json,9.776,1.381
+"무선통신에서 신호의 품질을 평가하는 척도는?
+1) 신호대 변조전력비
+2) 정보의 전송량
+3) 신호대 잡음비
+4) 전송 주파수",True,신호대 잡음비,신호대 변조전력비,0,False,no_json,0,False,"The model's output does not match the correct answer. The correct answer is the '신호대 잡음비', but the model's output is '신호대 변조전력비'. This indicates a complete misunderstanding of the question, which is about evaluating the quality of a signal in a wireless communication context, not the power ratio bet",1.61,3.478
+"방사선투과시험시 관용도가 큰 필름을 사용했을 때 나타나는 현상은?
+1) 관전압이 올라간다.
+2) 관전압이 내려간다.
+3) 콘트라스트가 높아진다.
+4) 콘트라스트가 낮아진다.",True,콘트라스트가 낮아진다.,관전압이 올라간다.,10,True,"The phenomenon described in the question is the result of a decrease in the condenser's vacuum pressure, which is directly related to the condenser's vacuum pressure. The decrease in vacuum pressure leads to a decrease in the condenser's temperature, which in turn leads to a decrease in the condense",0,False,"The response does not match the correct answer. The correct answer is that the wavelength of the X-rays is reduced, which is the opposite of the response provided. The response indicates that the wavelength of the X-rays is increased, which is incorrect.",6.176,2.607
+"6가 크롬(Cr6+)을 흡광광도법으로 분석하고자 할 때의 내용으로 틀린 것은?
+1) 디페닐카르바지드법
+2) 흡광도 : 357.9 nm
+3) 정량범위 : 0.002~0.05mg
+4) 적자색의 착화합물의 흡광도",True,흡광도 : 357.9 nm,디페닐카르바지드법,10,True,"The provided answer correctly identifies the correct value of the absorption spectrum of Cr6+, which is 357.9 nm.",0,False,"The model's output does not match the correct answer. The correct answer is the second point, which is the correct value of the absorption coefficient. However, the model's output incorrectly identifies the first point as the correct answer, which is the incorrect method for analyzing the absorption",2.644,2.793
+"연안의 어느 지점의 연평균 해면이 수준점(TBM) 하 250cm 이고, M2, S2, K1, O1 분조의 조차가 각각 120cm, 30cm, 10cm, 5cm라 하면 이 지점의 기본 수준면(DL)은 수준점(TBM) 하 얼마에 위치하는가?
+1) 250 cm
+2) 332.5 cm
+3) 415 cm
+4) 580 cm",True,332.5 cm,415 cm,10,True,"The model correctly calculates the basic level surface (DL) by adding the depths of the M2, S2, K1, and O1 layers to the TBM level. The model's output is consistent with the correct answer, which is 332.5 cm.",0,False,"The model's output does not match the correct answer. The correct answer is 332.5 cm, but the model's output is 415 cm, which is not in line with the correct answer. Therefore, the model's output is incorrect.",3.528,2.629
+"정보통신시스템에서 통신제어장치 및 주변제어장치와 비교할 때 중앙처리장치의 기능과 관계가 없는 것은?
+1) 시스템 전체를 제어한다.
+2) 통신회선을 설정하고 제어한다.
+3) 통신제어장치나 주변장치를 제어한다.
+4) 데이터의 축적, 검색, 변경 및 처리를 수행한다.",True,"데이터의 축적, 검색, 변경 및 처리를 수행한다.",통신제어장치나 주변장치를 제어한다.,10,True,"The response correctly identifies the function of the central processing unit in a communication system, which is to process data, including data collection, search, modification, and processing.",2,False,"The response does not align with the correct answer, which is the fourth option. The third option, which is the correct answer, is not selected. The response incorrectly suggests that the central processing unit controls the communication control unit and the surrounding control unit, which is not t",2.942,4.348
+"드로잉 가공된 용기의 바닥 부분 파단 대책으로 맞지 않는 것은?
+1) 펀치와 다이의 모서리 반지름을 크게 한다
+2) 블랭크 홀더의 압력을 조정하여 적당히 한다
+3) 블랭크 치수를 적당하게 하고 클리어런스를 작게한다
+4) 드로잉비를 적당히 하고 가공속도를 늦추며 적당한 윤활유를 선택한다",True,블랭크 치수를 적당하게 하고 클리어런스를 작게한다,드로잉비를 적당히 하고 가공속도를 늦추며 적당한 윤활유를 선택한다,10,True,The response correctly identifies the correct action to be taken when drawing on a drawing board with a drawing pen and a ballpoint pen. It is the only correct action among the four options provided. The other three options are incorrect and do not align with the correct procedure for drawing on a d,0,False,"The provided answer does not align with the correct answer. The correct answer is to adjust the block size and the clearance to the appropriate level. However, the answer provided suggests adjusting the drawing speed and the clearance to the appropriate level, which is not the correct approach. Ther",4.777,2.952
+"유기화합물에 대한 설명으로 틀린 것은?
+1) 벤젠은 방향족 탄화수소이다.
+2) 포화 탄화수소는 다중 결합이 없는 탄화수소를 말한다.
+3) 알데히드는 알코올을 산화시켜 얻을 수 있다.
+4) 물과는 달리 알코올은 수소결합을 하지 못한다.",True,물과는 달리 알코올은 수소결합을 하지 못한다.,포화 탄화수소는 다중 결합이 없는 탄화수소를 말한다.,10,True,The statement that water and alcohol cannot form a water-alcohol complex is correct.,0,False,no_json,2.452,8.992
+"최근 대형 항공기에 장착된 가스터빈기관의 점화계통으로 주로 사용되는 것은?
+1) Glow 플러그
+2) 유도형 점화계통
+3) Battery형 플러그
+4) 용량형 점화계통",True,용량형 점화계통,Battery형 플러그,10,True,"The model correctly identified the '용량형 점화계통' as the primary type of gas turbine used in large aircraft, which aligns with the correct answer provided in the reference.",0,False,"The model's output does not match the correct answer. The correct answer is '용량형 점화계통', but the model's output is 'Battery형 플러그'. This indicates a complete misalignment between the model's output and the correct answer.",2.601,2.776
+"Al-Si 합금의 강도와 인성을 개선하기 위해 금속나트륨, 불화알칼리 등을 첨가하여 공정의 Si상을 미세화시키는 처리는?
+1) 고용화처리
+2) 시효처리
+3) 탈산처리
+4) 개량처리",True,개량처리,시효처리,10,True,"The given answer is the correct one, as it aligns with the process of improving the strength and integrity of Al-Si alloy by adding elements such as gold, silver, and aluminum to the alloy. This process is known as '개량처리' in Korean, which is the correct term for the process described in the question",2,False,"The model's output is '시효처리', which is not the correct answer. The correct answer is '개량처리'. The model's output does not match the correct answer, and therefore, it does not meet the criteria for a higher score.",3.637,2.586
+"환경수용능력의 산정기준이 아닌 것은?
+1) 환경자본
+2) 환경 이슈와 지표
+3) 환경용량 기준
+4) 환경적 개발방식",True,환경적 개발방식,환경자본,10,True,"The provided answer correctly identifies that the '환경적 개발방식' is not a criterion for calculating the environmental capacity. This is because the environmental capacity is not directly related to the development methodology, but rather to the environmental resources and conditions available for use. T",0,False,"The provided answer does not match the correct answer. The correct answer is '환경적 개발방식', but the answer given is '환경자본'. Therefore, the answer is incorrect.",4.115,2.114
+"정보에 대응해서 변조된 레이저빔을 이용하여 매체면 위에 기록하고, 재생시에는 기록시보다 약한 레이저빔을 조사해서 정보를 읽어내는 장치는?
+1) 자기디스크 장치
+2) 마이크로필름 장치
+3) 광 디스크 장치
+4) 비디오 자기파일 장치",True,광 디스크 장치,비디오 자기파일 장치,10,True,"The device that uses a laser beam to record information on a medium and then reads it back with a weaker laser beam is the '광 디스ك 장치'. This is because it uses a laser beam to record and read information, which aligns with the description provided in the question. The other options do not fit the des",0,False,"The model's output does not match the correct answer. The correct answer is 광 디스크 장치, but the model's output is 비디오 자기파일 장치. This indicates a complete misunderstanding of the question's context and the technical aspects involved in the question. The model's output is not only incorrect but also irre",4.454,4.247
+"인지적 명확성 문제의 원인 중 경미한 정신건강 문제의 특성으로 옳은 것은?
+1) 심각한 약물남용 장애
+2) 잘못된 결정방식이 진지한 결정 방해
+3) 경험 부족에서 오는 고정관념
+4) 심한 가치관 고착에 따른 고정성",True,잘못된 결정방식이 진지한 결정 방해,심한 가치관 고착에 따른 고정성,10,True,"The model correctly identified the issue of '잘못된 결정방식이 진지한 결정 방해' as the cause of the problem. This is in line with the correct answer provided in the reference, which is the only correct answer among the options given. The other options, while related to the problem, do not accurately represent the",0,False,"The model's output does not match the correct answer. The correct answer is '잘못된 결정방식이 진지한 결정 방해', but the model's output is '심한 가치관 고착에 따른 고정성'. This indicates a significant discrepancy between the model's output and the correct answer, which is why the score is 0.",5.528,3.924
+"수형자의 수용형태에 대한 설명으로 타당한 것은?
+1) 혼거제의 장점은 자살방지와 개별처우가 가능하다는 점이다.
+2) 독거제의 장점은 악풍감염 방지와 사회적응능력 제고 등이 있다.
+3) 우리나라 행형법상 혼거수용은 원칙적으로 2년을 초과하지 못한다.
+4) 우리나라 행형법상의 수용형태는 원칙적으로 독거제 예외적으로 혼거제를 채택하고 있다.",True,우리나라 행형법상의 수용형태는 원칙적으로 독거제 예외적으로 혼거제를 채택하고 있다.,혼거제의 장점은 자살방지와 개별처우가 가능하다는 점이다.,10,True,"The response correctly identifies the exception of the use of the mixed-type facility in the Korean law, which is the correct answer to the question.",0,False,"The response does not address the question about the number of years for the use of the mixed-type system in our country. It only discusses the benefits of the mixed-type system, which is not relevant to the question asked.",3.421,2.375
+"방정식 x + y + z + w = 15를 만족시키는 x≥2, y≥2, z≥2, w≥2인 자연수 x, y, z, w의 순서쌍 (x, y, z, w)의 개수는?
+1) 120
+2) 140
+3) 160
+4) 180",True,120,140,0,False,no_json,0,False,"The model's output does not match the correct answer. The correct answer is 120, but the model's output is 140, which is incorrect.",9.437,1.938
+"인터넷 마케팅의 장점으로 가장 옳지 않은 것은?
+1) 고객과 일대일 상호의견을 전달함으로써 고객만족을 극대화할 수 있다.
+2) 가격, 품질, 정보 등에서 차별화되고 경쟁력 있는 제품과 서비스를 고객에게 제시할 수 있다.
+3) 고객의 정보를 활용하여 미래의 구매를 기대할 수 있는 고객 데이터베이스 마케팅을 할 수 있다.
+4) 글로벌 시장을 대상으로 한 판매망의 구축이 가능하고, 경쟁기업이 증가하므로 고객점유율 확대가 오프라인 마케팅에 비해 용이해 진다.",True,"글로벌 시장을 대상으로 한 판매망의 구축이 가능하고, 경쟁기업이 증가하므로 고객점유율 확대가 오프라인 마케팅에 비해 용이해 진다.","가격, 품질, 정보 등에서 차별화되고 경쟁력 있는 제품과 서비스를 고객에게 제시할 수 있다.",10,True,"The provided answer is identical to the reference answer, which is the correct answer according to the score rubric. The answer correctly identifies the global market as a significant advantage of internet marketing over traditional marketing methods. It also accurately points out the increased comp",2,False,"The provided answer does not align with the correct answer. The correct answer is that the internet marketing allows for the construction of a sales channel targeting the global market, which is a significant advantage over offline marketing. However, the provided answer focuses on the ability to di",6.236,4.985
+"BMS(Battery Management System)에서 제어하는 항목과 제어내용에 대한 설명으로 틀린 것은?
+1) 고장 진단 : 배터리 시스템 고장 진단
+2) 컨트롤 릴레이 제어 : 배터리 과열 시 컨트롤 릴레이 차단
+3) 셀 밸런싱 : 전압 편차가 생긴 셀을 동일한 전압으로 매칭
+4) SoC(state of charge)관리 : 배터리의 전압, 전류, 온도를 측정하여 적정 SoC 영역관리",True,컨트롤 릴레이 제어 : 배터리 과열 시 컨트롤 릴레이 차단,셀 밸런싱 : 전압 편차가 생긴 셀을 동일한 전압으로 매칭,10,True,The provided answer correctly identifies the item '컨트ROL 릴레이 제어' as the one that is incorrectly described in the question. The correct description of this item is that it involves controlling the relay to prevent overheating of the battery when the battery is overheating. This is in line with the co,0,False,The provided answer does not match the correct answer. The correct answer is '컨트ROL 릴레이 제어 : 배터리 과열 시 컨트ROL 릴레이 차단'.,5.576,2.608
+"이륙 활주거리를 짧게 하기 위한 조건으로 옳은 것은?
+1) 항력이 큰 활주 자세로 이륙한다.
+2) 비행기의 무게를 작게 한다.
+3) 기관의 출력을 작게 한다.
+4) 바람을 등지고 이륙한다.",True,비행기의 무게를 작게 한다.,항력이 큰 활주 자세로 이륙한다.,10,True,The model correctly identified the condition of reducing the weight of the aircraft as a means to achieve a shorter flight path.,0,False,"The model's output does not match the correct answer. The correct answer is 2, but the model's output is 1, which is incorrect.",2.374,1.788
+"표준신호발생기의 출력은 1[μV]를 0[dB]로 기준 삼는다. 피측정회로의 이득이 40[dB]이었다면 피측정전압은?
+1) 10[μV]
+2) 100[[μV]
+3) 0.01[μV]
+4) 0.1[μV]",True,100[[μV],0.1[μV],10,True,"The conversion from dB to μV is 20 log base 10, which means that 40 dB is equivalent to 100 μV. Therefore, the answer is 100 μV.",0,False,no_json,3.145,2.126
+"균형(balance)에 대한 설명 중 옳지 않은 것은?
+1) 대칭의 균형은 일반적으로 방계대칭과 방사대칭으로 나눈다.
+2) 방사대칭으로는 대칭형, 확대형, 회전형이 있다.
+3) 방계대칭은 상하 또는 좌우와 같이 한방향에 대한 대칭이다.
+4) 균제와 균형은 안정감을 주나 정연감이 지나쳐 자유롭고 경쾌하다.",True,균제와 균형은 안정감을 주나 정연감이 지나쳐 자유롭고 경쾌하다.,"방사대칭으로는 대칭형, 확대형, 회전형이 있다.",10,True,"The provided answer is identical to the reference answer, which is the correct answer according to the score rubric.",0,False,"The provided answer does not align with the correct answer. The correct answer is that 균제와 균형은 안정감을 주나 정연감이 지나쳐 자유롭고 경쾌하다. However, the answer provided does not address this point. Instead, it focuses on the types of 방사대칭. Therefore, the answer is incorrect and does not meet the criteria for a corre",3.059,4.37
+"냉동장치의 운전 중 압축기에 이상음이 발생했다. 그 원인으로 가장 적합한 것은?
+1) 크랭크케이스 내 유량이 감소하고 유면이 하한까지 낮아지고 있다.
+2) 실린더에 서리가 끼고 액백 현상이 일어나고 있다.
+3) 고압은 그다지 높지 않지만 저압이 높고 전동기의 전류는 전부하로 운전되고 있다.
+4) 유압펌프의 토출압력은 압축기의 흡입압력보다 높게 운전되고 있다.",True,실린더에 서리가 끼고 액백 현상이 일어나고 있다.,고압은 그다지 높지 않지만 저압이 높고 전동기의 전류는 전부하로 운전되고 있다.,10,True,The model correctly identified the issue with the compressor as the cause of the abnormal sound in the refrigeration system. It accurately described the problem of the compressor not being able to maintain the required pressure due to the presence of a leak in the refrigeration system. The model's r,0,False,"The model's output does not match the correct answer. The correct answer is that the issue is with the real runner and the actuator backflow, not the high and low pressure differences or the power supply of the compressor.",6.117,2.44
+"취성재료 압축시험에서 ASTM이 추천한 봉상 단주형 시편의 높이와 직영의 비는?
+1) h=10d
+2) h=5d
+3) h=3d
+4) h=0.9d",True,h=0.9d,h=5d,10,True,"The correct answer is h=0.9d, which is the recommended standard for the ridge-and-groove surface finish in ASTM specifications. The other options are incorrect because they do not align with the standard.",0,False,"The model's output does not match the correct answer. The correct answer is h=0.9d, while the model's output is h=5d. This indicates a significant discrepancy between the model's output and the correct answer, which is why the score is 0.",2.886,2.805
+"빛의 유무와 관계없이 종자가 발아하는 작물로 짝지은 것은?
+1) 옥수수, 담배, 딸기
+2) 옥수수, 오이, 보리
+3) 옥수수, 파, 양파
+4) 옥수수, 가지, 우엉",True,"옥수수, 오이, 보리","옥수수, 가지, 우엉",10,True,"The model correctly identified the correct answer, which is 옥수수, 오이, 보리. This answer aligns with the known fact that these three items are not related to the presence or absence of light, and thus, they are not affected by the light condition. The model's output is consistent with the known fact, de",0,False,"The model's output does not match the correct answer. The model's output is 옥수수, 가지, 우엉, which is incorrect as the correct answer is 옥수수, 오이, 보리.",4.691,2.713
+"“법률이 없으면 범죄도 없고 형벌도 없다”는 주장에 부합하는 범죄의 개념은?
+1) 형식적 의미의 범죄
+2) 실질적 의미의 범죄
+3) 자연적 의미의 범죄
+4) 사회적 의미의 범죄",True,형식적 의미의 범죄,자연적 의미의 범죄,10,True,"The statement '법률이 없으면 범죄도 없고 형벌도 없다' is a clear indication that the concept of crime is tied to the existence of law. This is because the law provides the framework for defining what constitutes a crime, and without law, there would be no clear definition of what is considered a crime. The statemen",0,False,"The provided answer does not align with the correct answer. The correct answer is '형식적 의미의 범죄', but the model's output is '자연적 의미의 범죄'. This indicates a misunderstanding of the concept of crime and its relation to law. The model's output does not reflect the necessary understanding of the subject ma",6.883,3.644
+"자연발화에 영향을 주는 인자가 아닌 것은?
+1) 수분
+2) 분해열
+3) 발열량
+4) 열전도율",True,분해열,발열량,10,True,"The model correctly identified the factor that does not influence natural convection, which is the division column.",0,False,no_json,1.827,1.798
+"구리의 용접에 관한 설명이다. 관계가 가장 먼 것은?
+1) 불활성 가스 텅스텐 아크 용접법은 판 두께 6mm 이하에 대하여 많이 사용된다.
+2) 구리의 용접은 불활성 가스 텅스텐 아크 용접법이 많이 사용된다.
+3) 용접용 구리재료로는 전해구리를 사용한다.
+4) 구리는 용융될 때 심한 산화를 일으킨다.",True,용접용 구리재료로는 전해구리를 사용한다.,불활성 가스 텅스텐 아크 용접법은 판 두께 6mm 이하에 대하여 많이 사용된다.,10,True,"The response correctly identifies the material used in the welding process, which is the main focus of the question. It is the only statement that directly addresses the question's main point, which is the material used in the welding process. The other statements, while related to welding, do not s",0,False,"The model's output does not match the correct answer. The correct answer is the third statement, which is about the use of 전해구리 as a material for the welding process. However, the model's output focuses on the first statement, which is about the use of 불활성 가스 텅스텐 아크 용접법. This indicates a misundersta",5.098,4.056
+"워크넷에서 제공하는 학과정보 중 공학계열에 해당하는 것은?
+1) 생명과학과
+2) 조경학과
+3) 통계학과
+4) 응용물리학과",True,조경학과,생명과학과,10,True,The model correctly identified the department of Environmental Science as the one that falls under the Engineering and Technology category in the Workforce Network.,0,False,"The provided answer does not match the correct answer. The correct answer is '조경학과', but the answer given is '생명과학과'. Therefore, the answer is incorrect.",2.061,2.004
+"적외선 분광기의 회절발이 72선/mm의 홈(groove)을 가지고 있을 때, 입사각이 30도이고 반사각이 0도라면 회절 스펙트럼의 파장(nm)은? (단, 회절차수는 1로 한다.)
+1) 6944
+2) 7944
+3) 8944
+4) 9944",True,6944,8944,10,True,"The given problem is a direct application of the formula for the wavelength of a diffraction grating, which is given by the formula λ = d/n, where λ is the wavelength, d is the distance between the grooves, and n is the number of grooves per unit length. In this case, the distance between the groove",0,False,"The model's output does not match the correct answer. The correct answer is 6944, while the model's output is 8944. This indicates a significant error in the model's calculation or understanding of the problem. The error is not minor and does not align with the correct answer. Therefore, the model's",6.631,3.644
+"9기통 성형기관에 장착된 마그네토의 2차회로에 있는 배전기 회전자 핑거가 7번 전극을 가리키고 있을 떄, 점화가 이루어져야 하는 실린더는?
+1) 2번 실린더
+2) 4번 실린더
+3) 7번 실린더
+4) 9번 실린더",True,4번 실린더,7번 실린더,0,False,no_json,0,False,"The model's output does not match the correct answer. The correct answer is 4번 실린더, but the model's output is 7번 실린더. This indicates a misunderstanding of the problem or a mistake in the model's logic.",9.682,2.833
+"표고 200m의 평탄한 토지를 축척 1:10,000으로 촬영한 항공사진의 촬영 기선길이는? (단, 사진크기 23cm×23cm, 종중복도 65%)
+1) 1,400m
+2) 1,150m
+3) 920m
+4) 805m",True,805m,"1,150m",10,True,"The model correctly calculated the scale of the photograph and applied it to the given distance, resulting in the correct answer of 805m.",0,False,"The model's output does not match the correct answer. The correct answer is 805m, but the model's output is 1,150m, which is a significant deviation from the correct answer. This deviation is due to the model's inability to accurately interpret the scale of the photograph and the size of the terrain",2.335,4.26
+"천연 생장조절제에 해당하는 것으로만 나열된 것은?
+1) NAA, IBA
+2) 에세폰, MCPA
+3) BA, CCC
+4) 제아틴, IPA",True,"제아틴, IPA","NAA, IBA",10,True,"The model correctly identified the items that are related to the natural growth regulation system. It accurately matched the items listed in the question with the correct items in the answer, demonstrating a clear understanding of the topic.",0,False,"NAA, IBA 이 정답 후보는 천연 생장조절제에 해당하는 것으로만 나열된 것이 아니다. 이 후보는 천연 생장조절제에 해당하는 것으로만 나열된 것이 제아틴, IPA 이다.",2.717,4.014
+"건축도면에서 각종 선의 용도로 옳지 않은 것은?
+1) 이점쇄선-상상선
+2) 일점쇄선-치수선
+3) 파선-숨은선
+4) 실선-단면선",True,일점쇄선-치수선,이점쇄선-상상선,10,True,The model correctly identified the incorrect use of the '일점쇄선-치수선' in the context of construction quality assessment.,0,False,이점쇄선-상상선 선택은 건축도면에서 각종 선의 용도로 옳지 않은 것입니다. 이 선택은 선의 용도 옳지 않은 것이 아니고 선의 용도 옳지 있습니다. 이 선택은 선의 용도 옳지 있으므로 정답이 아니다.,2.249,4.897
+"트러스를 종횡으로 배치하여 입체적으로 구성한 구조로서, 형강이나 강관을 사용하여 넓은 공간을 구성하는데 이용되는 것은?
+1) 셀 구조
+2) 돔 구조
+3) 현수 구조
+4) 스페이스프레임",True,스페이스프레임,셀 구조,10,True,"The structure described in the question is a Spaceframe structure, which is characterized by its use of trusses to create a three-dimensional structure. The trusses are used to form a network of interconnected members, which allows for the creation of a large, open space. This structure is commonly ",0,False,"The model's output does not match the correct answer. The correct answer is '스페이스프레임', but the model's output is '셀 구조'. Therefore, the model's output is incorrect.",5.322,2.443
+"흰가루병에 대한 설명으로 틀린 것은?
+1) 순활물기생균으로 일반적으로 인공배양을 할 수 없다.
+2) 광합성이 증가되고, 호흡과 증산이 증가하므로 식물의 생장이 저해되어 수량이 감소된다.
+3) 감수율이 경우에 따라 20~40%가 되는 경우도 있다.
+4) 병든 식물체에서는 백색 또한 회백색의 점 또는 얼룩이 나타난다.",True,"광합성이 증가되고, 호흡과 증산이 증가하므로 식물의 생장이 저해되어 수량이 감소된다.",병든 식물체에서는 백색 또한 회백색의 점 또는 얼룩이 나타난다.,10,True,"The provided answer is identical to the correct answer, which is the only correct answer among the four options. Therefore, the answer is completely accurate and aligns perfectly with the correct answer.",0,False,no_json,3.541,9.13
+"에크만 취송류 모델에서 마찰영향심도(frictional depth)는?
+1) 위도에 관계없으며 풍속이 커지면 증가한다.
+2) 풍속에 관계없으며 위도가 증가하면 감소한다.
+3) 같은 풍속이면 위도에 따라 증가한다.
+4) 풍속이 증가하면 증가하며, 위도가 증가하면 감소한다.",True,"풍속이 증가하면 증가하며, 위도가 증가하면 감소한다.",풍속에 관계없으며 위도가 증가하면 감소한다.,10,True,"The response correctly identifies the relationship between frictional depth and wind speed in the context of the Eckmann model. It accurately states that an increase in frictional depth leads to an increase in wind speed, and vice versa, which is consistent with the model's behavior. The response al",0,False,"The response does not align with the correct answer. It incorrectly states that the frictional depth is not related to the wind speed, which is not true in the context of the Eckmann model. The correct answer is that the frictional depth and wind speed are both related to each other, with an increas",5.673,3.57
+"최적의 조건에서 시각적 암호의 식별 가능 수준주가 가장 큰 것은?
+1) 숫자
+2) 면색(面色)
+3) 영문자
+4) 색광(色光)",True,영문자,숫자,10,True,"The model correctly identified the condition where the visual cryptography's identification capability is the highest, which is the use of English letters.",0,False,"The model's output does not match the correct answer. The correct answer is '영문자', but the model's output is '숫자'. Therefore, the model's output is incorrect.",2.066,2.117
+"강철제 증기보일러의 설치검사 기준상 안전밸브 작동시험을 하는 경우 안전밸브가 1개만 부착되어 있다면 그 분출압력은?
+1) 최고사용압력의 1.03배
+2) 최고사용압력 이하
+3) 최고사용압력의 1.2배
+4) 최고사용압력의 1.25배",True,최고사용압력 이하,최고사용압력의 1.2배,10,True,"The given answer is in line with the safety valve's operation, which is designed to operate at a pressure lower than the maximum operating pressure. This is a critical safety feature, and the answer correctly identifies that the valve should operate at a pressure lower than the maximum operating pre",2,False,"The response does not align with the correct answer. The correct answer is that the pressure of the safety valve should be less than the maximum operating pressure. However, the response suggests that the pressure should be 1.2 times the maximum operating pressure, which is incorrect.",3.841,2.615
+"조리 기구를 교체하려고 할 때 업체에 유익한지를 판단할 수 있는 결정 요소가 아닌 것은?
+1) 기기사용기간에 절약할 수 있는 인건비 총액
+2) 기기사용기간에 절약할 수 있는 총 세금액
+3) 기기사용기간 내의 수리비 및 보존 관리비
+4) 기기구입과 시설비로 인한 차용금의 이자",True,기기사용기간에 절약할 수 있는 총 세금액,기기사용기간 내의 수리비 및 보존 관리비,10,True,"The correct answer is the total tax amount that can be saved during the equipment usage period. This is because the tax amount is a direct cost associated with the equipment, and the decision to replace the equipment is based on the cost-saving potential. The other options, such as the total repair ",0,False,"The model's output does not align with the correct answer. The correct answer is the total taxable amount, which is the second option. However, the model's output is the sum of repair and preservation costs, which is the third option. This indicates a misunderstanding of the question's context and t",5.637,3.587
+"일반적인 텔레마케팅의 전개과정을 바르게 나열한 것은?
+1) 기획 → 실행 → 측정 → 반응 → 평가
+2) 기획 → 측정 → 실행 → 평가 → 반응
+3) 기획 → 측정 → 실행 → 반응 → 평가
+4) 기획 → 실행 → 반응 → 측정 → 평가",True,기획 → 실행 → 반응 → 측정 → 평가,기획 → 측정 → 실행 → 반응 → 평가,10,True,모든 후보가 정답과 일치하여 최종 판정이 true입니다.,0,False,The sequence of steps in the provided answer does not align with the standard procedure of telecom marketing. The correct sequence is 기획 → 실행 → 반응 → 측정 → 평가.,2.776,2.391
+"E=i+2j+3k[V/cm]로 표시되는 전계가 있다. 0.01[μC]의 전하를 원점으로부터 3i[m]로 움직이는데 필요한 일은 몇 [J] 인가?
+1) 3×10-8
+2) 3×10-7
+3) 3×10-6
+4) 3×10-5",True,3×10-6,3×10-7,10,True,"The correct answer is 3×10-6, which is the energy required to move 0.01[μC] from the origin to 3i[m].",2,False,"The model's output is incorrect. The correct answer is 3×10-6, but the model's output is 3×10-7. This indicates a misunderstanding of the problem or a calculation error.",2.738,2.335
+"일반적인 수퍼바이저의 주요 역할로 가장 거리가 먼 것은?
+1) 동기부여 및 프로모션 기획
+2) 상담업무 평가
+3) 통화품질관리
+4) 서비스 상담",True,서비스 상담,동기부여 및 프로모션 기획,10,True,The model correctly identified the role of a service supervisor as '서비스 상담'.,0,False,"The model's output does not match the correct answer. The correct answer is '서비스 상담', but the model's output is '동기부여 및 프로모션 기획'. Therefore, the model's output is incorrect and does not fulfill the task requirements.",1.977,2.958
+"생산함수 제 2영역에 대한 설명 중 옳은 것은?
+1) 생산요소 투입시부터 평균생산이 최고인 점까지의 범위
+2) 총생산이 최고인 수준이상까지의 범위
+3) 평균생산 및 한계생산이 증가하는 범위
+4) 총생산은 증가하지만 한계생산과 평균생산은 감소하는 범위",True,총생산은 증가하지만 한계생산과 평균생산은 감소하는 범위,평균생산 및 한계생산이 증가하는 범위,10,True,"The response correctly identifies the range of total production, average production, and maximum production capacity, which aligns with the concept of diminishing returns in production. The response also correctly notes that while total production increases, the production capacity and average produ",2,False,"The provided answer does not align with the correct answer. The correct answer is that the total production is increasing while the average production and the maximum production are decreasing. However, the provided answer suggests that both average and maximum production are increasing, which is in",5.14,2.613
+"우리나라 헌법의 기본 원리 중 국제평화주의에 대한 설명으로 옳지 않은 것은?
+1) 국민은 항구적인 세계평화와 인류공영에 이바지한다.
+2) 대한민국은 국제평화의 유지에 노력하고 일체의 전쟁을 부인 한다.
+3) 외국인은 국제법과 조약이 정하는 바에 의하여 그 지위가 보장된다.
+4) 헌법에 의하여 체결 ․ 공포된 조약과 일반적으로 승인된 국제법규는 국내법과 같은 효력을 가진다.",True,대한민국은 국제평화의 유지에 노력하고 일체의 전쟁을 부인 한다.,헌법에 의하여 체결 ․ 공포된 조약과 일반적으로 승인된 국제법규는 국내법과 같은 효력을 가진다.,10,True,"The provided answer is identical to the correct answer, which is the only correct answer among the four options. Therefore, the answer is completely accurate and aligns perfectly with the principles of the Korean Constitution.",0,False,"The model's output does not match the correct answer. The correct answer is that the Republic of Korea is not a party to the International Court of Justice, which is a key aspect of international law and peace. However, the model's output incorrectly states that the Republic of Korea is a party to t",3.708,3.771
+"DME(Dimethyl Ether) 연료에 관한 설명으로 옳지 않은 것은?
+1) 산소함유율이 34.8% 정도로 높아 연소시 매연이 적은 편이다.
+2) 점도가 경유에 비해 높으며, 금속의 부식성이 문제가 된다.
+3) 고무류와 반응하므로 재질에 주의해야 하며, 세탄가가 55 이상으로 높아 경유를 대체할 수 있다.
+4) 물성이 LPG와 유사한 특성이 있으며, 발열량은 경유에 비해 낮은 편이다.",True,"점도가 경유에 비해 높으며, 금속의 부식성이 문제가 된다.","고무류와 반응하므로 재질에 주의해야 하며, 세탄가가 55 이상으로 높아 경유를 대체할 수 있다.",10,True,"The provided answer is identical to the correct answer, which is the only correct answer among the four options. Therefore, the answer is completely accurate and aligns with the correct answer, fulfilling the criteria for a score of 10.",0,False,"The provided answer does not align with the correct answer. The correct answer is that the point score is higher than the reference fuel, and the issue with gold is not a problem. The provided answer incorrectly states that the point score is lower than the reference fuel and that gold is a problem.",4.254,3.242
+"좌표평면에서 원 x2+y2=4와 직선  ax+by+5=0 이 두 점 A, B에서 만난다. 선분 AB를 한 변으로 하는 정삼각형이 원 x2+y2=4에 내접하도록 하는 정수 a, b의 순서쌍 (a, b)의 개수는?
+1) 4
+2) 8
+3) 12
+4) 16",True,12,8,0,False,no_json,8,False,"The given problem involves a triangle with a side length of 2, and the sum of the squares of the two sides is 4. The correct answer should be 12, as it is the number of distinct points where the triangle intersects the circle. However, the model's output is 8, which is incorrect because it does not ",9.857,5.208
+"어떤 실제기체의 부피를 이상기체로 가정하여 계산하였을 때는 100cm3/mol이고 잔류부피가 10cm3/mol일 때, 실제기체의 압축인자는?
+1) 0.1
+2) 0.9
+3) 1.0
+4) 1.1",True,1.1,1.0,0,False,no_json,1,False,"The given answer is incorrect. The correct answer is 1.1, which is the ratio of the waking pressure to the standard pressure at the same temperature. The given answer of 1.0 is the ratio of the waking pressure to the standard pressure at the same temperature, which is not the correct answer. Therefo",8.358,3.237
+"어류의 수염의 기능으로 옳은 것은?
+1) 미각과 후각
+2) 미각과 청각
+3) 미각과 촉각
+4) 후각과 촉각",True,미각과 촉각,후각과 촉각,10,True,"The correct answer is '미각과 촉각' as it accurately describes the function of the sensory organ of the ear, which is responsible for both hearing and feeling vibrations.",0,False,"The model's output does not match the correct answer. The correct answer is '미각과 촉각', but the model's output is '후각과 촉각'. This indicates a complete misunderstanding of the question's requirements.",2.666,2.66
+"눈덩이표본추출(snowball sampling)에 관한 설명으로 틀린 것은?
+1) 사회적 연결망을 이용한 표본추출방법이다.
+2) 모집단의 구성비율을 이용해서 표본을 추출하는 방법이다.
+3) 희귀한 사건이나 현상에 대해 조사할 때 주로 사용한다.
+4) 확률적 표본추출방법이 아니므로 통계적 추론을 할 수 없다.",True,모집단의 구성비율을 이용해서 표본을 추출하는 방법이다.,희귀한 사건이나 현상에 대해 조사할 때 주로 사용한다.,0,False,no_json,0,False,"The provided answer does not match the correct answer. The correct answer is that the snowball sampling method uses the structure of social networks to extract samples, which is not mentioned in the provided answer. The provided answer incorrectly states that the method uses the composition of the p",3.202,3.356
+"논잡초의 군락천이의 발생요인과 가장 거리가 먼 것은?
+1) 제초제 연용
+2) 벼의 조기이식 재배
+3) 벼의 연작재배
+4) 다비 및 물관리 변경",True,벼의 연작재배,다비 및 물관리 변경,0,False,no_json,0,False,"The model's output does not match the correct answer. The correct answer is '벼의 연작재배', but the model's output is '다비 및 물관리 변경'. Therefore, the model's output is incorrect and does not align with the correct answer.",8.056,2.947
+"ABS 하이드로릭 유닛에서 펌프 모터에 압송되는 오일의 맥동을 감소시키고, 감압모드 시 발생하는 페달의 킥백(kick back)을 방지하는 것은?
+1) LPA(Low Pressure Accumulator)
+2) HPA(High Pressure Accumulator)
+3) NO(Normal Open) 솔레노이드밸브
+4) NC(Normal Close) 솔레노이드밸브",False,2,3,10,True,"The question asks for a solution to decrease the oil's macrodynamic motion in the ABS hydraulic unit and to prevent the kick back in the gearbox. The solution provided is the use of a High Pressure Accumulator (HPA), which is designed to maintain a high pressure level in the hydraulic system, thus r",0,False,"The provided answer does not match the correct answer. The correct answer is 2, which is HPA (High Pressure Accumulator), and the provided answer is 3, which is NO (Normal Open) 솔레노이드밸브. The difference between the two is crucial in understanding the function of the ABS system in preventing kickback.",6.036,5.437
+"입자가 잘거나 치밀하여 색은 검은색, 암회색이고 석질이 견고하여 토대석 석축으로 쓰이는 석재는?
+1) 안산암
+2) 현무암
+3) 점판암
+4) 사문암",True,현무암,사문암,10,True,"The answer is correct because the question specifically asks for the type of stone that is used in the construction of the tombstone, and the answer provided is the correct type of stone that is used in the construction of the tombstone.",0,False,"The model's output does not match the correct answer. The correct answer is 현무암, but the model's output is 사문암. Therefore, the model's output is incorrect.",2.752,2.187
+"민법상 법인에 관한 설명으로 옳은 것은? (다툼이 있으면 판례에 따름)
+1) 생전처분으로 재단법인을 설립하는 자가 서면으로 재산출연의 의사표시를 하였다면 착오를 이유로 이를 취소할 수 없다.
+2) 생전처분으로 지명채권을 출연하여 재단법인을 설립하는 경우, 그 지명채권은 대외적으로는 양도통지나 채무자의 승낙이 행해진 때 법인의 재산이 된다.
+3) 법인의 불법행위를 성립시키는 대표기관에는 법인을 실질적으로 운영하면서 그 법인을 사실상 대표하여 법인의 사무를 집행하는 사람이 포함된다.
+4) 법인의 대표기관은 정관 또는 사원총회에 의해 금지되지 않는 한 타인에게 포괄적인 대리권을 수여할 수 있다.",True,법인의 불법행위를 성립시키는 대표기관에는 법인을 실질적으로 운영하면서 그 법인을 사실상 대표하여 법인의 사무를 집행하는 사람이 포함된다.,법인의 대표기관은 정관 또는 사원총회에 의해 금지되지 않는 한 타인에게 포괄적인 대리권을 수여할 수 있다.,10,True,"The provided answer is identical to the reference answer, which is the correct answer according to the score rubric.",0,False,"The provided answer does not align with the correct answer. The correct answer is that the representative body or the board of directors of a corporation can delegate the power of representation to a third party, but only if the corporation is not prohibited from doing so by its articles of incorpor",4.292,4.717
+"암모니아 Gas purger의 작용에 대한 설명으로 가장 옳은 것은?
+1) 암모니아 가스는 냉각 응축되어 액이 된다.
+2) 분리된 암모니아 가스는 압축기로 돌려 보내진다.
+3) 분리된 공기에 암모니아 가스가 혼입되는 일은 없다.
+4) 공기를 냉각하여 암모니아 가스보다 무겁게 하여 분리한다.",True,암모니아 가스는 냉각 응축되어 액이 된다.,분리된 암모니아 가스는 압축기로 돌려 보내진다.,10,True,"The response correctly identifies the process of the cryptocurrency gas purger, which involves the gas being compressed and turned into a liquid state, and then being separated from the air.",0,False,"The response does not match the correct answer. The correct answer is that the cryptomonya gas is riced and liquefied, not that it is compressed and sent back to the separator.",3.33,2.233
+"식품공장의 작업장 구조와 설비를 설명한 것 중 틀린 것은?
+1) 바닥은 내수처리되어야 하며 1.5/100 내외의 경사를 두어 배수에 적당하도록 한다.
+2) 창 면적은 적절한 환기와 채광 등이 양호하도록 하나 곤충 등이 들지 않도록 방충망 시설을 한다.
+3) 건물기초는 면적에 비례하여 충분한 강도가 유지되도록 한다.
+4) 천장은 응축수가 맺히지 않도록 재질과 구조에 유의 한다.",True,건물기초는 면적에 비례하여 충분한 강도가 유지되도록 한다.,바닥은 내수처리되어야 하며 1.5/100 내외의 경사를 두어 배수에 적당하도록 한다.,10,True,정답 후보 중 하나 일치하여 정답이 되는 것이 이 문항입니다.,0,False,The response does not address the question about the structure and equipment of a food processing plant's work area. It only repeats the first point about the flooring.,3.696,1.966
+"초음파탐상시험시 거친 탐상후의 정밀탐상 내용으로 옳은 것은?
+1) 전부 자세히 정밀 탐상한다.
+2) 거친 탐상에서 표시된 곳을 대상으로 한다.
+3) 거친 탐상에서 표시된 곳을 제외하고 나머지 부분만 대상으로 한다.
+4) 시험편 제작시에만 정밀 탐상한다.",True,거친 탐상에서 표시된 곳을 대상으로 한다.,전부 자세히 정밀 탐상한다.,10,True,The response correctly identifies that the target of the precise scan should be the area marked during the rough scan.,0,False,"The response does not align with the correct answer. It suggests that all parts of the body should be examined in detail, which is not the case in a precise examination following a rough scan. The correct answer is that only the areas indicated by the rough scan should be examined in detail.",2.796,2.656
+"유통경로 구조를 결정하는데 여러 가지 고려해야할 요인들을 반영하여 중간상을 결정하는 방법인 체크리스트법에 대한 연결 요인 중 가장 옳은 것은?
+1) 시장요인 - 제품표준화
+2) 제품요인 - 기술적 복잡성
+3) 기업요인 - 시장규모
+4) 경로구성원요인 - 재무적 능력",True,제품요인 - 기술적 복잡성,경로구성원요인 - 재무적 능력,10,True,"The model correctly identified the most appropriate connection factor for the checklist method in determining the intermediate stage of the supply chain structure. It correctly selected the '기술적 복잡성' as the most relevant factor, which is in line with the established criteria for this method. The mod",0,False,"The model's output does not align with the correct answer. The correct answer is '제품요인 - 기술적 복잡성', but the model's output is '경로구성원요인 - 재무적 能력'. This indicates a significant deviation from the correct answer, which is why the score is 0.",4.587,3.522
+"나선철근의 정착은 나선철근의 끝에서 추가로 최소 몇 회전만큼 더 확보하여야 하는가?
+1) 1.0 회전
+2) 1,5 회전
+3) 2.0 회전
+4) 2.5 회전",True,"1,5 회전",1.0 회전,10,True,"The model correctly identified the number of rotations required for the stabilization of the needle in the needle-stabilizing device, which is 1,5 rotations.",0,False,"The model's output does not match the correct answer. The correct answer is 1,5 회전, but the model's output is 1.0 회전. Therefore, the model's output is incorrect.",2.481,2.473
