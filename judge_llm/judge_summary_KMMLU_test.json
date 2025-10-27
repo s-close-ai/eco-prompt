@@ -1,9 +1,0 @@
-{
-  "config": "KMMLU",
-  "n_pairs": 100,
-  "pairwise_win_rate": 0.87,
-  "pairwise_auc_approx": 0.925,
-  "consistency_ok_true_bad_false": 0.87,
-  "latency_p50_s": 2.955,
-  "latency_p90_s": 5.641
-}

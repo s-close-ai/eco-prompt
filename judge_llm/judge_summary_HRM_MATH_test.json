@@ -1,9 +1,0 @@
-{
-  "config": "HRM_MATH",
-  "n_pairs": 100,
-  "pairwise_win_rate": 0.81,
-  "pairwise_auc_approx": 0.885,
-  "consistency_ok_true_bad_false": 0.78,
-  "latency_p50_s": 2.188,
-  "latency_p90_s": 4.237
-}
