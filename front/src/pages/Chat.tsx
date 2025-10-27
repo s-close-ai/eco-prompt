@@ -7,7 +7,6 @@ import '@/styles/pages/chat.css';
 export default function Chat() {
   const [messages, setMessages] = useState<ChatMessage[]>(mockChatMessages);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const handleSendMessage = (message: string) => {
     // 새 사용자 메시지 추가
@@ -20,7 +19,6 @@ export default function Chat() {
 
     setMessages((prev) => [...prev, newUserMessage]);
     setIsLoading(true);
-    setError(null);
 
     // AI 응답 시뮬레이션 (2초 후)
     setTimeout(() => {
@@ -43,8 +41,10 @@ export default function Chat() {
     }, 2000);
   };
 
-  const handleRetry = () => {
-    setError(null);
+  const handleRetry = (errorMessageId: number) => {
+    // 에러 메시지를 제거
+    setMessages((prev) => prev.filter((msg) => msg.id !== errorMessageId));
+
     // 마지막 사용자 메시지를 다시 전송
     const lastUserMessage = [...messages].reverse().find((msg) => msg.type === 'user');
     if (lastUserMessage) {
@@ -75,12 +75,15 @@ export default function Chat() {
                 <AIMessage message={msg.message} timestamp={msg.timestamp} />
               </div>
             );
+          } else if (msg.type === 'loading') {
+            return <ChatLoading key={msg.id} />;
+          } else if (msg.type === 'error') {
+            return <ErrorMessage key={msg.id} message={msg.message} onRetry={() => handleRetry(msg.id)} />;
           }
           return null;
         })}
 
         {isLoading && <ChatLoading />}
-        {error && <ErrorMessage message={error} onRetry={handleRetry} />}
       </div>
 
       <ChatInput onSend={handleSendMessage} disabled={isLoading} />

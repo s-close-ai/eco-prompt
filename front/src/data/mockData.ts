@@ -100,4 +100,28 @@ export const mockChatMessages: ChatMessage[] = [
       totalScore: 89,
     },
   },
+  {
+    id: 7,
+    type: 'user',
+    message: '성능 최적화 방법도 알려주세요',
+    timestamp: new Date(2024, 0, 27, 14, 37),
+  },
+  {
+    id: 8,
+    type: 'loading',
+    message: '',
+    timestamp: new Date(2024, 0, 27, 14, 37, 5),
+  },
+  {
+    id: 9,
+    type: 'user',
+    message: '에러 처리는 어떻게 하나요?',
+    timestamp: new Date(2024, 0, 27, 14, 40),
+  },
+  {
+    id: 10,
+    type: 'error',
+    message: '메시지를 전송하는 중 오류가 발생했습니다.',
+    timestamp: new Date(2024, 0, 27, 14, 40, 5),
+  },
 ];
