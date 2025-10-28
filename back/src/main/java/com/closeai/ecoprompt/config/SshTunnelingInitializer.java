@@ -25,10 +25,18 @@ public class SshTunnelingInitializer {
 
     @NotNull
     private String remoteJumpHost;
-    @NotNull private String user;
-    @NotNull private int sshPort;
-    @NotNull private String privateKey;
-    @NotNull private int databasePort;
+
+    @NotNull 
+    private String user;
+
+    @NotNull 
+    private int sshPort;
+
+    @NotNull 
+    private String privateKey;
+
+    @NotNull 
+    private int databasePort;
     private String rdsEndpoint;
 
     private Session session;
@@ -75,4 +83,5 @@ public class SshTunnelingInitializer {
 
         return forwardedPort;
     }
+
 }

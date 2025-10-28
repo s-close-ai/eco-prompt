@@ -27,4 +27,5 @@ public class MessageController implements MessageControllerDocs{
 		SubmitMessageResponseDto responseDto = messageService.submitMessage(request);
 		return ApiResponse.success(responseDto);
 	}
+	
 }

@@ -28,4 +28,5 @@ public class Message extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chatting_id", nullable = false)
     private Chatting chatting;
+    
 }

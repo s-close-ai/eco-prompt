@@ -22,4 +22,5 @@ public class SwaggerConfig {
 			.info(info);
 
 	}
+	
 }

@@ -11,4 +11,5 @@ public class AiService {
 	public void callAIModel(String messageUUID, String content){
 
 	}
+	
 }

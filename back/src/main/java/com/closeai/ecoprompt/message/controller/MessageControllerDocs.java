@@ -14,5 +14,4 @@ public interface MessageControllerDocs {
 		description = "사용자 입력 후, 채팅방 ID값과, SSE 구독을 위한 메시지 UUID 값 전달")
 	ResponseEntity<ApiResponse<SubmitMessageResponseDto>> submitMessage(SubmitMessageRequestDto request);
 
-
 }

@@ -9,7 +9,7 @@ import lombok.Builder;
 @Builder
 @Document(collection = "message")
 public class MessageDocument extends BaseEntity {
-
+	
 	private String uuid;
 	private String content;
 	private Long chattingId;

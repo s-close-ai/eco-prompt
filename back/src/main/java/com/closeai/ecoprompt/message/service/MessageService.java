@@ -29,7 +29,6 @@ public class MessageService {
 	private final MessageJpaRepository messageJpaRepository;
 	private final MessageMongoRepository messageMongoRepository;
 
-
 	@Transactional
 	public SubmitMessageResponseDto submitMessage(SubmitMessageRequestDto messageCommand) {
 
@@ -58,14 +57,21 @@ public class MessageService {
 
 	private void saveMessage(String messageUUID, Chatting chatting, MessageSender messageSender, String content, MessageStatus messageStatus) {
 		Message message = Message.builder()
-			.uuid(messageUUID).chatting(chatting).senderType(messageSender).build();
+			.uuid(messageUUID)
+			.chatting(chatting)
+			.senderType(messageSender)
+			.build();
 
 		MessageDocument messageDocument = MessageDocument.builder()
-			.uuid(messageUUID).content(content).chattingId(chatting.getId())
-			.senderType(messageSender).status(messageStatus)
+			.uuid(messageUUID)
+			.content(content)
+			.chattingId(chatting.getId())
+			.senderType(messageSender)
+			.status(messageStatus)
 			.build();
 
 		messageJpaRepository.save(message);
 		messageMongoRepository.save(messageDocument);
 	}
+
 }
