@@ -6,9 +6,9 @@ from typing import Dict, Any, Optional
 
 from fastapi import FastAPI, Header, BackgroundTasks
 
-from judge.app.wiring import build_pipeline  # 현재는 더미 구현체로 조립
+from app.wiring import build_pipeline  # 현재는 더미 구현체로 조립
 
-app = FastAPI(title="A309 - Manual AI Training Trigger")
+app = FastAPI(title="메인 LLM 훈련 트리거")
 
 # Bearer 토큰 검사 (명세: Authorization: Bearer accessToken)
 AUTH_ENV = "AUTH_BEARER_TOKEN"  # .env에 설정하면 검사, 없으면 검사 생략
@@ -32,7 +32,7 @@ def raise_value_error():
 async def health():
     return {
         "ok": True,
-        "service": "manual-train",
+        "service": "메인 LLM 훈련 로직 서버 동작중",
         "auth": "bearer" if os.getenv(AUTH_ENV) else "disabled",
     }
 

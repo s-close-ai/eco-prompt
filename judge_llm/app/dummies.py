@@ -63,3 +63,16 @@ class DummyTrainRepository:
     # 디버그 용으로 현재 적재된 행을 볼 수 있게
     def snapshot(self) -> List[Dict[str, Any]]:
         return list(self._rows)
+
+class DummyMainLlmClient:
+    """
+    메인 LLM 훈련 API 호출 더미.
+    - 실제 연동 전까지는 개수/샘플만 회신.
+    """
+    async def train(self, items: List[Dict[str, Any]]) -> Dict[str, Any]:
+        await asyncio.sleep(0)
+        return {
+            "ok": True,
+            "received": len(items),
+            "sample": items[0] if items else None
+        }
