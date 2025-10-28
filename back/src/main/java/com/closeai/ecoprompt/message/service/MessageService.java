@@ -3,6 +3,7 @@ package com.closeai.ecoprompt.message.service;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.closeai.ecoprompt.ai.service.AiService;
 import com.closeai.ecoprompt.chatting.model.entity.Chatting;
@@ -16,11 +17,11 @@ import com.closeai.ecoprompt.message.model.entity.MessageStatus;
 import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MessageService {
 
 	private final AiService aiService;
@@ -28,7 +29,7 @@ public class MessageService {
 
 	private final MessageJpaRepository messageJpaRepository;
 	private final MessageMongoRepository messageMongoRepository;
-
+	
 	@Transactional
 	public SubmitMessageResponseDto submitMessage(SubmitMessageRequestDto messageCommand) {
 
