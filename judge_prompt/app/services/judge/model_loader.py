@@ -18,14 +18,18 @@ async def get_llama_model():
     async with _model_lock:
         if _model_instance is None:
             logger.info("Judge Prompt 모델 로딩 중... ")
-            _model_instance = Llama(
-                model_path = settings.MODEL_PATH,
-                n_ctx=8192,
-                n_gpu_layers=-1,
-                n_threads=8,
-                verbose=False,
-            )
-            logger.success("모델을 성공적으로 로드하였습니다.")
+            try: 
+                _model_instance = Llama(
+                    model_path = settings.MODEL_PATH,
+                    n_ctx=8192,
+                    n_gpu_layers=-1,
+                    n_threads=8,
+                    verbose=False,
+                )
+                logger.success("모델을 성공적으로 로드하였습니다.")
+            except Exception as e:
+                logger.exception(f"Llama init 실패: {e}")
+                raise
         else:
             logger.debug("모델이 이미 로드되어 있습니다.")
     return _model_instance
