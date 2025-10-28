@@ -227,4 +227,5 @@ public class AppLogger {
 	public static void fail(String operation, String reason) {
 		logger.error("[FAIL] [{}] 작업 실패 - {}", operation, reason);
 	}
+	
 }

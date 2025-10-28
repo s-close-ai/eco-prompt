@@ -23,4 +23,5 @@ public class Mileage extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_id", nullable = false)
     private Message message;
+    
 }
