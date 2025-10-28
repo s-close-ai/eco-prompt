@@ -16,12 +16,13 @@ def _norm_triplet(item: Dict[str, Any]) -> Tuple[str, str, str, Optional[str]]:
     pair_id = item.get("pair_id") or item.get("_id") or item.get("id")
     return str(p), str(a_user), str(a_train), (str(pair_id) if pair_id is not None else None)
 
+
 class ManualTrainPipeline:
     """
-    수동 AI 모델 학습 오케스트레이터(경량판).
-    - 반드시 payload.items가 있어야 함. 없으면 즉시 오류 반환(백엔드로 전달).
-    - Prometheus-2 출력은 재평가 없이 정규화만 수행.
-    - trainable = (final_score >= 3.5)  # 단일 기준
+    수동 AI 모델 학습 오케스트레이터 (Prometheus2 기반)
+    - 반드시 payload.items가 있어야 함. 없으면 즉시 오류 반환.
+    - Prometheus2 출력은 '정규화'만 수행하고 재평가 없음.
+    - trainable 기준: final_score >= 3.5
     """
 
     def __init__(self,
@@ -42,7 +43,6 @@ class ManualTrainPipeline:
         # 0) 필수: items 존재 여부 검증
         items: List[Dict[str, Any]] = list(payload.get("items") or [])
         if not items:
-            # 여기서 예외를 던지면 라우터(main.py)에서 400으로 변환해 응답하도록
             raise ValueError("NO_ITEMS: payload.items is required for manual training")
 
         results: List[Dict[str, Any]] = []
@@ -50,26 +50,29 @@ class ManualTrainPipeline:
         masked_for_train: List[Dict[str, Any]] = []
         success_eval = 0
 
-        # 1) 평가 → 정규화 → 임계점 판정(최종 점수만) → 마스킹 → 적재 후보 구성
+        # 1) 평가 → 정규화 → 임계점 판정(≥3.5) → 마스킹 → 적재 후보 구성
         for row in items:
             try:
                 prompt, ans_user, ans_train, pair_id = _norm_triplet(row)
                 pid = pair_id or row.get("pair_id") or row.get("_id") or "NA"
 
-                # Judge 호출
+                # Judge 호출 (Prometheus2)
                 jres = await self.judge.evaluate(prompt=prompt, answer=ans_user)
 
-                # 정규화(재평가 없음)
+                # 정규화 (타입/길이/total 등 보정)
                 norm = normalize_judge_json(jres.get("raw", jres))
-                final_score = float(norm.final_score)  # 0~5(소수 허용)
-                trainable = (final_score >= 3.5)       # 단일 기준
+                try:
+                    final_score = float(norm.final_score)
+                except Exception:
+                    final_score = 0.0
+                trainable = (final_score >= 3.5)
 
-                # 마스킹(세 항목 모두)
+                # 마스킹 (prompt, answerUser, answerTrain)
                 prompt_m   = self.masker.mask(prompt)
                 ans_user_m = self.masker.mask(ans_user)
                 ans_train_m= self.masker.mask(ans_train)
 
-                # DB upsert 후보(원본+마스킹본 모두 저장)
+                # DB 적재용
                 upsert_buffer.append({
                     "batch_id": batch_id,
                     "source": "payload_items",
@@ -80,8 +83,8 @@ class ManualTrainPipeline:
                     "prompt_masked": prompt_m,
                     "answer_user_masked": ans_user_m,
                     "answer_train_masked": ans_train_m,
-                    "final_score": final_score,      # 0~5
-                    "total": norm.total,             # 0~100(레거시 지표 유지)
+                    "final_score": final_score,      # 0~5 (소수 허용)
+                    "total": norm.total,             # 0~100
                     "criteria": norm.criteria,
                     "feedback": norm.feedback,
                     "subscores": (norm.subscores.dict() if norm.subscores else None),
@@ -89,7 +92,7 @@ class ManualTrainPipeline:
                     "trainable": trainable,
                 })
 
-                # 메인 LLM 학습 전달용(마스킹본)
+                # 학습용 마스킹본만 추출 (trainable만)
                 if trainable:
                     masked_for_train.append({
                         "pair_id": pid,
@@ -127,7 +130,9 @@ class ManualTrainPipeline:
         main_llm_ack = None
         if masked_for_train and self.main_llm:
             try:
-                main_llm_ack = await self.main_llm.trigger_training(batch_id=batch_id, items=masked_for_train)
+                main_llm_ack = await self.main_llm.trigger_training(
+                    batch_id=batch_id, items=masked_for_train
+                )
                 main_llm_triggered = True
             except Exception as e:
                 results.append({"error": f"MAIN_LLM_TRIGGER_FAILED: {e}"})
