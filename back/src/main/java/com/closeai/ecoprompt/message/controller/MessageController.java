@@ -21,7 +21,6 @@ public class MessageController implements MessageControllerDocs{
 
 	private final MessageService messageService;
 
-	@Override
 	@PostMapping("/input")
 	public ResponseEntity<ApiResponse<SubmitMessageResponseDto>> submitMessage(@RequestBody @Valid SubmitMessageRequestDto request) {
 
