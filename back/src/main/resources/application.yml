@@ -23,6 +23,9 @@ spring:
             hibernate:
                 format_sql: true               # 🔹 SQL 문을 보기 좋게 정렬 출력
 
+    profiles:
+        active: ${CUR_PROFILE}
+
 springdoc:
     override-with-generic-response: false
 
