@@ -15,9 +15,11 @@ pyvenv.cfg
 .venv
 .venv-judgeP
 pip-selfcheck.json
-.env
+*.env
 __pycache__/
 *.py[cod]
 *$py.class
-
+*.gguf
+.cache/
+model_server/logs/
 # End of https://www.toptal.com/developers/gitignore/api/venv
