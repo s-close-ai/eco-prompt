@@ -1,10 +1,11 @@
 # app/services/judge/judge_service.py
+import anyio, json
 from loguru import logger
+from llama_cpp import  LlamaGrammar
 from app.services.judge.model_loader import get_llama_model
 from app.services.judge.tokenizer_config import extract_features
 from app.schemas.response import JudgeModelOutput
-import anyio, json
-from app.services.judge.json_grammar import JUDGE_OBJECT_GRAMMAR
+from app.services.judge.json_grammar import JUDGE_JSON_SCHEMA
 # 모델 호출
 # 토크나이저 -> 자연어 메타 헤더 추출
 # 메타 헤더 적용
@@ -12,7 +13,7 @@ from app.services.judge.json_grammar import JUDGE_OBJECT_GRAMMAR
     # user_personal_prompt는 미사용
 # 모델 추론
 
-
+grammar = LlamaGrammar.from_json_schema(json.dumps(JUDGE_JSON_SCHEMA))
 
 async def run_judge_model(user_input, user_personal_prompt):
     logger.debug("run_judge_model 실행")
@@ -32,6 +33,7 @@ async def run_judge_model(user_input, user_personal_prompt):
         다음 4개 항목을 각각 0.00~25.00 범위의 연속형 점수(소수 2자리)로 채점하고, 항목별 근거(rationale)를 1~2문장으로 제시하세요.
         경계값(0.00, 12.50, 25.00) 남용 금지: 특별히 강한 근거가 있을 때만 사용하고, 그렇지 않으면 1.00~24.00 사이의 세밀한 값을 사용하세요.
 
+        summary: 사용자의 채팅방 제목 선정을 위한 userInput에 대한 10자 이내 한글 요약.
         ---
 
         [평가 항목 및 세부 조정 기준]
@@ -116,7 +118,7 @@ async def run_judge_model(user_input, user_personal_prompt):
 
         [출력 형식(JSON only)]
         {
-        "summary": "<한 줄 요약>",
+        "summary": "<userInput 10자 이내 요약 - 한국어>",
         "scoreInfo": {
             "clarityScore": <0.00~25.00>,
             "clarityReason": "<이유 1~2문장>",
@@ -137,13 +139,13 @@ async def run_judge_model(user_input, user_personal_prompt):
         {
             "summary": "AI 기반 스마트팩토리의 장점을 표 형식으로 3가지 요약 요청",
             "scoreInfo": {
-                "clarityScore": 24.20,
+                "clarityScore": 22.20,
                 "clarityReason": "질문의 목적(스마트팩토리 장점 요약)과 출력 형식(표로 정리)이 명확하게 제시되어 있습니다.",
-                "specificityScore": 23.10,
-                "specificityReason": "요약 개수(3가지)와 형식(표)이 구체적으로 지정되어 있습니다.",
-                "formatScore": 24.00,
+                "specificityScore": 19.10,
+                "specificityReason": "요약 개수(3가지)와 형식(표)이 구체적으로 지정되어 있습니다. 하지만, 표에 들어가야할 세부 항목이 주어지지 않았습니다.",
+                "formatScore": 22.00,
                 "formatReason": "표 형식과 '요약'이라는 출력 지침이 분명합니다.",
-                "safetyScore": 25.00,
+                "safetyScore": 23.00,
                 "safetyReason": "비논란적이며 안전한 정보 요청입니다."
             }
         }
@@ -156,50 +158,59 @@ async def run_judge_model(user_input, user_personal_prompt):
         f"[USER PROMPT]\n{user_input}\n"
     )
 
+    def _clamp2(x) -> float:
+        # 숫자 보장 + 0~25, 소수 2자리
+        try:
+            v = float(x)
+        except Exception:
+            v = 0.0
+        return round(max(0.0, min(25.0, v)), 2)
+
     def _infer():
-        return llm.create_chat_completion(
-            messages = [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": user_input}
-            ],
-            max_tokens=1024,
-            temperature=0.2,
-            stream=False,
-            # grammar=JUDGE_OBJECT_GRAMMAR,
-        )
+        logger.debug("[_infer] 실행")
+        try: 
+            out = llm.create_chat_completion(
+                messages = [
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": user_input}
+                ],
+                max_tokens=1024,
+                temperature=0.2,
+                stream=False,
+                grammar=grammar,
+            )
+            return out
+        except Exception as e:
+            logger.error(f"[_infer] exception : {e}")
+            raise
 
     result = await anyio.to_thread.run_sync(_infer)
     # out = llm(prompt)
     logger.success(f"[result]: {result}")
 
-    text = (result["choices"][0]["message"]["content"] or "").strip()
+    msg = result["choices"][0]["message"]
+    content = msg.get("content")
 
-    # start = text.find("{")
-    # end = text.rfind("}")
-    # if start == -1 or end == -1:
-    #     logger.error(f"JSON not found in model output: {text!r}")
-    #     raise ValueError("Judge output is not valid JSON.")
+    # logger.debug(f"result:{result}")
+    
+    # logger.debug(f"content:{content}")
+    # 1) dict/str 모두 처리
+    if isinstance(content, dict):
+        j = content
+    else:
+        text = (content or "").strip()
+        try:
+            j = json.loads(text)
+        except Exception as e:
+            logger.error(f"JSONDecodeError: raw={text!r} err={e}")
+            raise ValueError("Judge output is not valid JSON object.")
 
-    # json_str = text[start:end+1]
-
-    # try:
-    #     j = json.loads(json_str)
-    # except json.JSONDecodeError as e:
-    #     logger.error(f"JSONDecodeError: {e}; raw={text!r}")
-    #     raise
-
-    try:
-        j = json.loads(text)
-    except json.JSONDecodeError:
-        logger.error(f"JSONDecodeError: raw={text!r}")
-        raise ValueError("Judge output is not valid JSON object.")
-
+    # 2) 스키마 필드 접근 + 보정
     info = j["scoreInfo"]
-
-    clarity = float(info["clarityScore"])
-    specificity = float(info["specificityScore"])
-    format_ = float(info["formatScore"])
-    safety = float(info["safetyScore"])
+    clarity = _clamp2(info.get("clarityScore"))
+    specificity = _clamp2(info.get("specificityScore"))
+    format_ = _clamp2(info.get("formatScore"))
+    safety = _clamp2(info.get("safetyScore"))
     total = round(clarity + specificity + format_ + safety, 2)
 
     return JudgeModelOutput(
