@@ -19,6 +19,7 @@ class Subscores(BaseModel):
     practices: int = Field(ge=0, le=100)
 
 class JudgeNormalized(BaseModel):
+    version: str = 'judge:v1'
     # 원본 모델 점수 (소수 허용 0~5)
     final_score: float = Field(ge=0, le=5)
     subscores: Optional[Subscores] = None
@@ -107,6 +108,7 @@ def normalize_judge_json(raw: Dict[str, Any]) -> JudgeNormalized:
     lang = "ko" if any("가" <= ch <= "힣" for ch in txt) else "en"
 
     return JudgeNormalized(
+        version="judge:v1",
         final_score=fs,
         subscores=subs_model,
         criteria=criteria,

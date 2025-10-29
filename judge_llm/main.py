@@ -4,6 +4,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from fastapi import FastAPI, Header, BackgroundTasks
+from dotenv import load_dotenv; load_dotenv()
 from app.wiring import build_pipeline  # 현재는 더미 구현체로 조립
 
 app = FastAPI(title="메인 LLM 훈련 트리거")

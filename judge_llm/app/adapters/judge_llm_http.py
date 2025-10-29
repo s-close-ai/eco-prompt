@@ -114,24 +114,4 @@ class HttpJudgeClient:
 
         content = data["choices"][0]["message"]["content"]
         j = _extract_json_block(content)
-
-        # final_score 파싱 (0~5 float 허용)
-        fs_raw = j.get("final_score")
-        try:
-            fs = float(fs_raw)
-            if fs < 0 or fs > 5:
-                raise ValueError
-        except Exception:
-            raise ValueError(f"invalid final_score: {fs_raw}")
-
-        subs = j.get("subscores") if isinstance(j.get("subscores"), dict) else None
-        total = _to_total(fs, subs)
-        fb = str(j.get("feedback") or "").strip()
-
-        return {
-            "score": total,       # total (0~100)
-            "final_score": fs,    # raw float 0~5
-            "feedback": fb,
-            "subscores": subs,
-            "raw": j
-        }
+        return {"raw": j}

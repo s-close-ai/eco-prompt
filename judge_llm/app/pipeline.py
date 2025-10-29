@@ -97,10 +97,9 @@ class ManualTrainPipeline:
                     masked_for_train.append({
                         "pair_id": pid,
                         "prompt": prompt_m,
-                        "answerUser": ans_user_m,
-                        "answerTrain": ans_train_m,
+                        "answer_user": ans_user_m,
+                        "answer_train": ans_train_m,
                     })
-
                 results.append({
                     "pair_id": pid,
                     "final_score": final_score,
@@ -130,7 +129,7 @@ class ManualTrainPipeline:
         main_llm_ack = None
         if masked_for_train and self.main_llm:
             try:
-                main_llm_ack = await self.main_llm.trigger_training(
+                main_llm_ack = await self.main_llm.train(
                     batch_id=batch_id, items=masked_for_train
                 )
                 main_llm_triggered = True

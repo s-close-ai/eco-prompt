@@ -1,7 +1,7 @@
 # app/adapters/main_llm_http.py
 from __future__ import annotations
 from typing import Dict, Any, List, Optional
-import os, httpx
+import os, httpx, asyncio
 
 class HttpMainLlmClient:
     """
@@ -25,12 +25,12 @@ class HttpMainLlmClient:
         self.timeout_s = int(os.getenv("MAIN_LLM_TIMEOUT_S", "30"))
         self.retries = int(os.getenv("MAIN_LLM_RETRIES", "2"))
 
-    async def train(self, items: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def train(self, batch_id: str, items: List[Dict[str, Any]]) -> Dict[str, Any]:
         headers = {"Content-Type": "application/json"}
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
 
-        payload = {"items": items}
+        payload = {"batch_id": batch_id, "items": items}
 
         attempt = 0
         last_err: Optional[Exception] = None
@@ -43,8 +43,9 @@ class HttpMainLlmClient:
                     except Exception:
                         body = resp.text
                     ok = 200 <= resp.status_code < 300
-                    if not ok and resp.status_code >= 500:
+                    if not ok and (resp.status_code >= 500 or resp.status_code == 429):
                         attempt += 1
+                        await asyncio.sleep(min(2 ** attempt, 5))                   
                         continue
                     return {"ok": ok, "status_code": resp.status_code, "body": body}
                 except Exception as e:

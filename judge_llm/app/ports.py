@@ -33,9 +33,13 @@ class TrainRepository(Protocol):
         ...
 
 class MainLlmClient(Protocol):
-    async def train(self, items: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def train(self, batch_id: str, items: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        마스킹된 1-1, 2-1, 3-1 목록을 원본 payload와 동일한 키 구조로 전달.
-        예: [{"pair_id":"...", "prompt":"(1-1)", "answer_user":"(2-1)", "answer_train":"(3-1)"}]
+        마스킹된 학습 항목을 배치 단위로 전송합니다.
+        items 예:
+          [
+            {"pair_id":"...", "prompt":"...", "answer_user":"...", "answer_train":"..."},
+            ...
+          ]
         """
         ...
