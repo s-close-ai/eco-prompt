@@ -10,21 +10,6 @@
   flex-shrink: 0;
 }
 
-/* 데스크탑: 사이드바 펼쳐진 상태
-@media (min-width: 1024px) {
-  .chat-input-container.sidebar-expanded {
-  }
-
-  .chat-input-container.sidebar-collapsed {
-  }
-}
-
-모바일/태블릿: 사이드바는 오버레이이므로 left: 0
-@media (max-width: 1023px) {
-  .chat-input-container {
-  }
-} */
-
 .chat-input-wrapper {
   max-width: 48rem;
   margin: 0 auto;
