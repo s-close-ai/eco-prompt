@@ -1,8 +1,7 @@
-# start_server.sh
+# judge_llm/model/scripts/start_server.sh
 #!/usr/bin/env bash
 set -euo pipefail
 
-# BASE = scripts/.. (= judge_llm)
 BASE="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)"
 source "$BASE/.env"
 

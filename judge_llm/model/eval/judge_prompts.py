@@ -1,4 +1,4 @@
-# judge_prompts.py
+# judge_llm/model/eval/judge_prompts.py
 # 레퍼런스 기반 Judge 프롬프트 + (옵션) 쌍대비교 프롬프트
 
 JUDGE_SYSTEM = (

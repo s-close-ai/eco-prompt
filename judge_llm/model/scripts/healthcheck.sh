@@ -1,4 +1,4 @@
-# healthcheck.sh
+# judge_llm/model/scripts/healthcheck.sh
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -11,7 +11,7 @@ LOG="$BASE/logs/healthcheck.log"
 MAX_RETRIES=3
 RETRY_SLEEP=2
 WARMUP_WAIT=90
-DO_LONG_WARMUP=1
+DO_LONG_WARMUP="${DO_LONG_WARMUP:-1}"
 ts(){ date "+%Y-%m-%d %H:%M:%S"; }
 
 mkdir -p "$BASE/logs"

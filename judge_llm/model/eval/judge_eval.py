@@ -1,4 +1,4 @@
-# judge_eval.py
+# judge_llm/model/eval/judge_eval.py
 import os, re, json, time, random
 import numpy as np
 import pandas as pd

@@ -1,4 +1,4 @@
-# build_kosimpleeval_batch.py
+# judge_llm/model/eval/build_kosimpleeval_batch.py
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
