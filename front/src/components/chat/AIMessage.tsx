@@ -7,17 +7,10 @@ interface AIMessageProps {
   timestamp?: Date;
 }
 
-export default function AIMessage({ message, timestamp }: AIMessageProps) {
+export default function AIMessage({ message }: AIMessageProps) {
   const [copied, setCopied] = useState(false);
   const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
   const messageRef = useRef<HTMLDivElement>(null);
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
 
   const handleCopy = async () => {
     try {
@@ -35,7 +28,7 @@ export default function AIMessage({ message, timestamp }: AIMessageProps) {
     let codeBlockIndex = 0;
 
     // 코드 블록 처리 (```language\ncode\n```)
-    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+    html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, code) => {
       const trimmedCode = code.trim();
       const blockId = `code-block-${codeBlockIndex++}`;
       return `<pre data-code-id="${blockId}" data-code="${escapeHtml(trimmedCode).replace(/"/g, '&quot;')}"><code>${escapeHtml(trimmedCode)}</code></pre>`;

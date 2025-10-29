@@ -1,24 +1,40 @@
+.prompt-score-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 16px;
+  width: 100%;
+  max-width: 48rem;
+  margin: 0 auto;
+}
+
+/* 반응형 최대 너비 조정 */
+@media (min-width: 1280px) {
+  .prompt-score-wrapper {
+    max-width: 56rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .prompt-score-wrapper {
+    max-width: 100%;
+  }
+}
+
 .prompt-score-container {
-  margin: 0 24px 12px 24px;
+  margin: 8px 0;
   padding: 16px;
   background-color: #ffffff;
   border: 1px solid #e0e0e0;
   border-radius: 12px;
-  max-width: 400px;
-}
-
-/* 데스크탑: 양쪽 10% 여백 */
-@media (min-width: 1024px) {
-  .prompt-score-container {
-    margin-left: 10%;
-    margin-right: 10%;
-  }
+  min-width: 50%;
+  max-width: 48rem;
+  width: auto;
 }
 
 /* 모바일 */
 @media (max-width: 768px) {
   .prompt-score-container {
-    margin: 0 16px 12px 16px;
+    max-width: 85%;
   }
 }
 

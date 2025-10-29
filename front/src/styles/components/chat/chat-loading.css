@@ -2,19 +2,21 @@
   width: 100%;
   padding: 16px 24px;
   background-color: transparent;
+  max-width: 48rem;
+  margin: 0 auto;
 }
 
-/* 데스크탑: 양쪽 10% 패딩 */
-@media (min-width: 1024px) {
+/* 반응형 최대 너비 조정 */
+@media (min-width: 1280px) {
   .chat-loading-container {
-    padding-left: 10%;
-    padding-right: 10%;
+    max-width: 56rem;
   }
 }
 
 /* 모바일 */
 @media (max-width: 768px) {
   .chat-loading-container {
+    max-width: 100%;
     padding: 16px;
   }
 }
