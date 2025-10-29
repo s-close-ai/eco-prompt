@@ -6,7 +6,9 @@
   background-color: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  height: 10vh;
+  height: 8vh;
+  min-height: 60px;
+  max-height: 80px;
 }
 
 /* 데스크탑에서는 숨김 (모바일 + 태블릿에만 표시) */
@@ -36,6 +38,6 @@
 }
 
 .topbar-logo {
-  height: 6vh;
-  object-fit: contain;
+  width: 150px;
+    object-fit: contain;
 }

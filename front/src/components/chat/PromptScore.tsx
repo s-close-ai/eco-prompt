@@ -34,37 +34,39 @@ export default function PromptScore({ scores, totalScore }: PromptScoreProps) {
   ];
 
   return (
-    <div className="prompt-score-container">
-      <div className="prompt-score-header">
-        <span className="prompt-score-title">프롬프트 점수</span>
-        <span className="prompt-score-total">{totalScore.toFixed(2)}</span>
-      </div>
+    <div className="prompt-score-wrapper">
+      <div className="prompt-score-container">
+        <div className="prompt-score-header">
+          <span className="prompt-score-title">프롬프트 점수</span>
+          <span className="prompt-score-total">{totalScore.toFixed(2)}</span>
+        </div>
 
-      <div className="prompt-score-legend">
-        {categories.map((category) => (
-          <div key={category.key} className="prompt-score-legend-item">
-            <span
-              className="prompt-score-legend-color"
-              style={{ backgroundColor: category.color }}
-            ></span>
-            <span className="prompt-score-legend-label">{category.label}</span>
-          </div>
-        ))}
-      </div>
+        <div className="prompt-score-legend">
+          {categories.map((category) => (
+            <div key={category.key} className="prompt-score-legend-item">
+              <span
+                className="prompt-score-legend-color"
+                style={{ backgroundColor: category.color }}
+              ></span>
+              <span className="prompt-score-legend-label">{category.label}</span>
+            </div>
+          ))}
+        </div>
 
-      <div className="prompt-score-bar-container">
-        {categories.map((category) => (
-          <div
-            key={category.key}
-            className="prompt-score-bar-segment"
-            style={{
-              width: `${category.value}%`,
-              backgroundColor: category.color,
-            }}
-          >
-            <span className="prompt-score-bar-value">{category.value}</span>
-          </div>
-        ))}
+        <div className="prompt-score-bar-container">
+          {categories.map((category) => (
+            <div
+              key={category.key}
+              className="prompt-score-bar-segment"
+              style={{
+                width: `${category.value}%`,
+                backgroundColor: category.color,
+              }}
+            >
+              <span className="prompt-score-bar-value">{category.value}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
