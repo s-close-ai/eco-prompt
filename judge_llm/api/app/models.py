@@ -1,16 +1,14 @@
-# app/models.py
+# judge_llm/api/app/models.py
 from __future__ import annotations
 from typing import Optional, Dict, Any, Tuple
 from pydantic import BaseModel, Field
 import re, os
 
-# 가중치(합 100) — .env 오버라이드 지원
 W_CORRECTNESS  = int(os.getenv("JUDGE_W_CORRECTNESS",  "45"))
 W_COMPLETENESS = int(os.getenv("JUDGE_W_COMPLETENESS", "25"))
 W_CLARITY      = int(os.getenv("JUDGE_W_CLARITY",      "15"))
 W_PRACTICES    = int(os.getenv("JUDGE_W_PRACTICES",    "15"))
 
-# criteria/feedback 최대 길이 (JUDGE_FEEDBACK_MAXLEN 우선, 없으면 JUDGE_TEXT_LIMIT)
 TEXT_LIMIT = int(os.getenv("JUDGE_FEEDBACK_MAXLEN", os.getenv("JUDGE_TEXT_LIMIT", "220")))
 
 class Subscores(BaseModel):

@@ -1,4 +1,3 @@
-# app/adapters/main_llm_http.py
 from __future__ import annotations
 from typing import Dict, Any, List, Optional
 import os, httpx, asyncio
@@ -27,7 +26,7 @@ class HttpMainLlmClient:
     async def train(self, batch_id: str, items: List[Dict[str, Any]]) -> Dict[str, Any]:
         headers = {"Content-Type": "application/json"}
         if self.token:
-            headers["Authorization"] = f"Bearer {self.token}"}
+            headers["Authorization"] = f"Bearer {self.token}"  # ← 여분 } 제거
         payload = {"batch_id": batch_id, "items": items}
 
         attempt = 0

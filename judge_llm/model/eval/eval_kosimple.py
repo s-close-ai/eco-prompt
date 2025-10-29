@@ -1,4 +1,4 @@
-# eval_kosimple.py
+# judge_llm/model/eval/eval_kosimple.py
 import re, time, json, requests, random, os
 from datasets import load_dataset
 from tqdm import tqdm

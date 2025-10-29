@@ -1,8 +1,7 @@
 # 더미 구현체 4종 (Mongo/Judge/Masker/Repo/Main)
-# judge/app/dummies.py
+# judge_llm/api/app/dummies.py
 from typing import Dict, Any, Iterable, List, Tuple, Optional
-import re
-import asyncio
+import re, asyncio
 
 class DummyMongoReader:
     def __init__(self, seed: Iterable[Dict[str, Any]] = ()):
@@ -15,9 +14,6 @@ class DummyMongoReader:
         return [d for d in self._data if int(d.get("score", -1)) >= int(min_score)]
 
 class DummyJudgeClient:
-    """
-    아주 단순한 규칙 기반 더미 점수 (테스트 재현 목적)
-    """
     async def evaluate(self, prompt: str, answer: str) -> Dict[str, Any]:
         await asyncio.sleep(0)
         txt = (answer or "") + " " + (prompt or "")
@@ -59,7 +55,7 @@ class DummyTrainRepository:
         return list(self._rows)
 
 class DummyMainLlmClient:
-    async def train(self, items: List[Dict[str, Any]], batch_id: Optional[str] = None) -> Dict[str, Any]:
+    async def train(self, batch_id: str, items: List[Dict[str, Any]]) -> Dict[str, Any]:
         await asyncio.sleep(0)
         return {
             "ok": True,

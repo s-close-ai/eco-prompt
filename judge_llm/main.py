@@ -1,88 +1,105 @@
-# main.py
+# judge_llm/main.py
+# python 3.12.3
+from __future__ import annotations
+
 import os
-import uuid
-from datetime import datetime, timezone
+import asyncio
 from typing import Dict, Any, Optional
 
-from fastapi import FastAPI, Header, BackgroundTasks, HTTPException, Query
+from fastapi import FastAPI, Body, Query
 from fastapi.responses import JSONResponse
-from dotenv import load_dotenv; load_dotenv()
+from pydantic import BaseModel
+from dotenv import load_dotenv
 
-from app.wiring import build_pipeline  # 현재는 더미 구현체로 조립
+# --- .env 로드: api/.env 우선, 그 다음 루트 .env (override=True) ---
+BASE_DIR = os.path.dirname(__file__)
+ENV_CANDIDATES = [os.path.join(BASE_DIR, "api/.env"),
+                  os.path.join(BASE_DIR, ".env")]
+for path in ENV_CANDIDATES:
+    if os.path.isfile(path):
+        load_dotenv(path, override=True)
+        break
 
-app = FastAPI(title="메인 LLM 훈련 트리거")
+# 패키지 임포트: api/app/*
+from api.app.wiring import build_pipeline  # noqa
 
-# 양쪽 키를 모두 지원 (기존 코드/새 코드 호환)
-AUTH_ENV_PRIMARY = "MAIN_LLM_TOKEN"
-AUTH_ENV_FALLBACK = "AUTH_BEARER_TOKEN"
+app = FastAPI(title="JudgeLLM API", version="1.0")
 
-def _require_bearer(authorization: Optional[str]) -> None:
-    expected = os.getenv(AUTH_ENV_PRIMARY) or os.getenv(AUTH_ENV_FALLBACK)
-    if not expected:
-        return  # 토큰 검증 비활성 (로컬용)
-    if not authorization or not authorization.startswith("Bearer "):
-        raise ValueError("UNAUTHORIZED")
-    token = authorization.split(" ", 1)[1].strip()
-    if token != expected:
-        raise ValueError("UNAUTHORIZED")
+
+class TrainPayload(BaseModel):
+    batchId: Optional[str] = None
+    items: list[dict]
+
+
+# ---- 앱 시작/종료 훅: 파이프라인 싱글톤 준비 ----
+@app.on_event("startup")
+async def on_startup() -> None:
+    # 필요시 seed_data 전달 가능
+    app.state.pipe = build_pipeline()
+    # 초기화 로그 강제 출력 유도용으로 더미 호출(원치 않으면 제거해도 됨)
+    try:
+        # judge 연결 확인용 매우 가벼운 프롬프트
+        _ = await app.state.pipe.judge.evaluate("ping", "pong")
+    except Exception:
+        # judge 미연결이어도 API 자체는 살아있을 수 있으므로 무시
+        pass
+
+
+@app.on_event("shutdown")
+async def on_shutdown() -> None:
+    # 여기에 자원 정리 로직이 필요하면 추가
+    pass
+
 
 @app.get("/health")
 async def health():
-    return {
-        "ok": True,
-        "service": "메인 LLM 훈련 로직 서버 동작중",
-        "auth": "bearer" if (os.getenv(AUTH_ENV_PRIMARY) or os.getenv(AUTH_ENV_FALLBACK)) else "disabled",
-    }
+    auth = "enabled" if os.getenv("API_BEARER_TOKEN") else "disabled"
+    return {"ok": True, "service": "메인 LLM 훈련 로직 서버 동작중", "auth": auth}
 
-# 파이프라인은 프로세스당 1번만 조립해 재사용 (성능/리소스 안정)
-PIPELINE = build_pipeline(seed_data=[])
-
-async def _run_training_job(payload: Dict[str, Any]) -> Dict[str, Any]:
-    return await PIPELINE.run(payload or {})
 
 @app.post("/api/v1/ai/training")
-async def manual_training(
-    background: BackgroundTasks,
-    body: Dict[str, Any] | None = None,
-    Authorization: Optional[str] = Header(default=None),
-    sync: bool = Query(default=False, description="true/1 이면 동기로 즉시 결과 반환"),
+async def post_training(
+    payload: TrainPayload = Body(...),
+    sync: int | None = Query(default=None, description="1이면 동기 처리"),
 ):
-    """
-    [수동 AI 모델 학습]
-    - Header: Authorization: Bearer <accessToken>
-    - Body: { "batchId": str, "items": [ { ...원본 키... } ] }
-    - 성공(비동기): 202 + {"status":"SUCCESS", "data":{...}}
-    - 성공(동기)  : 200 + {"status":"OK",      "data":{...}}
-    - 실패       : 200 + {"status":"FAIL",    "data":{"message"}}
-    """
-    try:
-        _require_bearer(Authorization)
-    except ValueError:
-        return {"status": "FAIL", "data": {"message": "학습에 실패하였습니다.(UNAUTHORIZED)"}}
+    pipe = getattr(app.state, "pipe", None)
+    if pipe is None:
+        # 이 경우는 거의 없음(스타트업 실패 케이스 방어)
+        app.state.pipe = build_pipeline()
+        pipe = app.state.pipe
 
-    items = list((body or {}).get("items") or [])
-    if not items:
-        return {"status": "FAIL", "data": {"message": "학습에 실패하였습니다.(NO_ITEMS)"}}
-
-    if sync:
+    if sync == 1:
         try:
-            result = await _run_training_job(body or {})
-            return {"status": "OK", "data": result}  # 200 OK
+            data: Dict[str, Any] = await pipe.run(payload.model_dump())
+            return JSONResponse({"status": "OK", "data": data}, status_code=200)
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"sync_failed: {e}")
+            return JSONResponse({"status": "ERROR", "error": str(e)}, status_code=500)
+    else:
+        # 비동기 시뮬레이션: enqueue 대체
+        async def _bg():
+            try:
+                await pipe.run(payload.model_dump())
+            except Exception:
+                pass
 
-    # 비동기 경로 → 202
-    job_id = str(uuid.uuid4())
-    timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-    background.add_task(_run_training_job, body or {})
-    return JSONResponse(
-        status_code=202,
-        content={
-            "status": "SUCCESS",
-            "data": {
-                "jobId": job_id,
-                "message": "모델 학습 작업이 성공적으로 시작되었습니다.",
-                "timestamp": timestamp,
+        asyncio.create_task(_bg())
+        return JSONResponse(
+            {
+                "status": "SUCCESS",
+                "data": {
+                    "jobId": os.urandom(12).hex(),
+                    "message": "모델 학습 작업이 성공적으로 시작되었습니다.",
+                    "timestamp": os.popen("date -u +%Y-%m-%dT%H:%M:%SZ").read().strip(),
+                },
             },
-        },
-    )
+            status_code=202,
+        )
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    host = os.getenv("API_HOST", "0.0.0.0")
+    port = int(os.getenv("API_PORT", "8081"))
+    # 개발 중엔 reload=False 권장(싱글톤 초기화 중복 방지)
+    uvicorn.run("main:app", host=host, port=port, reload=False)

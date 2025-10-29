@@ -1,6 +1,6 @@
-# app/adapters/judge_llm_http.py
+# judge_llm/api/app/adapters/judge_llm_http.py
 from __future__ import annotations
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 import os, re, json, httpx
 
 def _extract_json_block(text: str) -> Dict[str, Any]:
