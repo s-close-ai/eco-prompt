@@ -20,7 +20,7 @@ export default defineConfig({
         name: 'Eco Prompt',
         short_name: 'EcoPrompt',
         description: 'Eco Prompt PWA',
-        theme_color: '#16a34a',
+        theme_color: '#ffffff',
         background_color: '#ffffff',
         display: 'standalone',
         scope: '/',
