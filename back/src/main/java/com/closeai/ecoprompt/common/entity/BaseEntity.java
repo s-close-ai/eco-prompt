@@ -31,7 +31,7 @@ public abstract class BaseEntity {
     }
 
     private String dateConverter(LocalDateTime time) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss");
         return time.format(formatter);
     }
     
