@@ -1,11 +1,12 @@
 # app/services/judge/judge_service.py
-import anyio, json
+import anyio, json, re
 from loguru import logger
 from llama_cpp import  LlamaGrammar
-from app.services.judge.model_loader import get_llama_model
+# from app.services.judge.model_loader import get_llama_model
 from app.services.judge.tokenizer_config import extract_features
 from app.schemas.response import JudgeModelOutput
 from app.services.judge.json_grammar import JUDGE_JSON_SCHEMA
+from app.services.judge.llama_client import request_judge_output
 # 모델 호출
 # 토크나이저 -> 자연어 메타 헤더 추출
 # 메타 헤더 적용
@@ -17,15 +18,15 @@ grammar = LlamaGrammar.from_json_schema(json.dumps(JUDGE_JSON_SCHEMA))
 
 async def run_judge_model(user_input, user_personal_prompt):
     logger.debug("run_judge_model 실행")
-    llm = await get_llama_model()
+    # llm = await get_llama_model()
 
-    feats = extract_features(user_input)
+    feats = extract_features(user_input) or {}
     logger.debug(f"[features] {feats}")
 
     # 초기 모델 성능 테스트 시 메타 헤더 미반영
     meta_header = (
-        f"[META] quest={feats['quest']} listy={feats['listy']} "
-        f"sent={feats['sent']} uniq={feats['uniq']} lang={feats['lang']}"
+        f"[META] quest={feats.get('quest', 0)} listy={feats.get('listy', 0)} "
+        f"sent={feats.get('sent', 0)} uniq={feats.get('uniq', 0)} lang={feats.get('lang', 'ko')}"
     )
 
     SYSTEM_PROMPT = """\
@@ -151,9 +152,14 @@ async def run_judge_model(user_input, user_personal_prompt):
         }
 
     """
+    # [META]
+    # {meta_header}
+
+    # [USER PROMPT]
+    # {user_input}
 
     prompt = (
-        f"{SYSTEM_PROMPT}\n\n"
+        # f"{SYSTEM_PROMPT}\n\n"
         f"[META]\n{meta_header}\n\n"
         f"[USER PROMPT]\n{user_input}\n"
     )
@@ -166,45 +172,50 @@ async def run_judge_model(user_input, user_personal_prompt):
             v = 0.0
         return round(max(0.0, min(25.0, v)), 2)
 
-    def _infer():
-        logger.debug("[_infer] 실행")
-        try: 
-            out = llm.create_chat_completion(
-                messages = [
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": user_input}
-                ],
-                max_tokens=1024,
-                temperature=0.2,
-                stream=False,
-                grammar=grammar,
-            )
-            return out
-        except Exception as e:
-            logger.error(f"[_infer] exception : {e}")
-            raise
+    # def _infer():
+    #     logger.debug("[_infer] 실행")
+    #     try: 
+    #         out = llm(
+    #             prompt,
+    #             max_tokens=1024,
+    #             temperature=0.2,
+    #             grammar=grammar
+    #         )
+    #         return out
+    #     except Exception as e:
+    #         logger.error(f"[_infer] exception : {e}")
+    #         raise
 
-    result = await anyio.to_thread.run_sync(_infer)
-    # out = llm(prompt)
-    logger.success(f"[result]: {result}")
+    # result = await anyio.to_thread.run_sync(_infer)
+    result = await request_judge_output(SYSTEM_PROMPT, prompt, grammar)
 
-    msg = result["choices"][0]["message"]
-    content = msg.get("content")
+    # logger.success(f"result: {result}")
+    try:
+        text = (result.get("choices", [{}])[0].get("text") or "").strip()
+        logger.success(f"[raw output] {text}")
+    except Exception as e:
+        logger.error(f"invalid result structure: {e}")
+        raise ValueError("Llama server output invalid")
 
+    # if not text:
+    #     logger.error(f"output 없음: {result}")
+    #     raise ValueError("Judge output 비어있음")
+    json_match = re.search(r"\{[\s\S]*\}", text)
+    if not json_match:
+        logger.error(f"JSON block not found in output: {text[:200]}")
+        raise ValueError("Judge output does not contain valid JSON structure")
+
+    json_str = json_match.group(0)
+
+    try:
+        j = json.loads(text)
+    except Exception as e:
+        logger.error(f"JSONDecodeError: raw={text!r} err={e}")
+        raise ValueError("Judge output is not valid JSON object")
     # logger.debug(f"result:{result}")
     
     # logger.debug(f"content:{content}")
-    # 1) dict/str 모두 처리
-    if isinstance(content, dict):
-        j = content
-    else:
-        text = (content or "").strip()
-        try:
-            j = json.loads(text)
-        except Exception as e:
-            logger.error(f"JSONDecodeError: raw={text!r} err={e}")
-            raise ValueError("Judge output is not valid JSON object.")
-
+   
     # 2) 스키마 필드 접근 + 보정
     info = j["scoreInfo"]
     clarity = _clamp2(info.get("clarityScore"))
