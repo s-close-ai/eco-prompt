@@ -103,3 +103,4 @@ if __name__ == "__main__":
     port = int(os.getenv("API_PORT", "8081"))
     # 개발 중엔 reload=False 권장(싱글톤 초기화 중복 방지)
     uvicorn.run("main:app", host=host, port=port, reload=False)
+ 
