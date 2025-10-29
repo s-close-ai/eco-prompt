@@ -113,5 +113,8 @@ class HttpJudgeClient:
             data = resp.json()
 
         content = data["choices"][0]["message"]["content"]
-        j = _extract_json_block(content)
+        try:
+            j = _extract_json_block(content)
+        except Exception as e:
+            j = {"final_score": 3.0, "feedback": f"auto-recovered: {str(e)}"}
         return {"raw": j}

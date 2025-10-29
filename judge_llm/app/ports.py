@@ -1,6 +1,6 @@
 # 외부 의존성 인터페이스
 # judge/app/ports.py
-from typing import Protocol, Iterable, Dict, Any, List, Tuple
+from typing import Protocol, Iterable, Dict, Any, List, Tuple, Optional
 
 class MongoReader(Protocol):
     async def fetch_pairs(self, min_score: int) -> Iterable[Dict[str, Any]]:
@@ -33,7 +33,7 @@ class TrainRepository(Protocol):
         ...
 
 class MainLlmClient(Protocol):
-    async def train(self, batch_id: str, items: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def train(self, items: List[Dict[str, Any]], batch_id: Optional[str] = None) -> Dict[str, Any]:
         """
         마스킹된 학습 항목을 배치 단위로 전송합니다.
         items 예:

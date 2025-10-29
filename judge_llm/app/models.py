@@ -59,6 +59,17 @@ def _clamp01(x, lo=0, hi=100) -> Optional[int]:
         return None
     return max(lo, min(hi, v))
 
+def _calc_total(final_score_0_5: float, subs: Optional[Dict]) -> int:
+    """로컬 헬퍼: total 계산(가중치) — 외부 심볼 의존 제거"""
+    if isinstance(subs, dict):
+        c1 = _clamp01(subs.get("correctness"))
+        c2 = _clamp01(subs.get("completeness"))
+        c3 = _clamp01(subs.get("clarity"))
+        c4 = _clamp01(subs.get("practices"))
+        if None not in (c1, c2, c3, c4):
+            return int((c1*W_CORRECTNESS + c2*W_COMPLETENESS + c3*W_CLARITY + c4*W_PRACTICES) // 100)
+    return int(round((final_score_0_5 / 5.0) * 100))
+
 def _coerce_subscores(subs_in: Any) -> Tuple[Optional[Subscores], bool]:
     """subscores dict를 0~100으로 클램프하며 누락 시 recovered 처리"""
     if not isinstance(subs_in, dict):
@@ -182,7 +193,7 @@ def normalize_judge_json(raw: Dict[str, Any]) -> JudgeNormalized:
     recovered = recovered or fs_rec
 
     # (4) total 계산
-    total = calc_total(fs, raw.get("subscores") if subs_model else None)
+    total = _calc_total(fs, raw.get("subscores") if subs_model else None)
     # total이 0~100 사이로 보장됨
 
     # (5) 간단 언어 힌트
@@ -199,3 +210,5 @@ def normalize_judge_json(raw: Dict[str, Any]) -> JudgeNormalized:
         recovered=recovered,
         lang=lang,
     )
+
+calc_total = _calc_total

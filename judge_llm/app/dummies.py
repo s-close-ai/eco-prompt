@@ -1,6 +1,6 @@
 # 더미 구현체 4종 (Mongo/Judge/Masker/Repo) - 추후 제거
 # judge/app/dummies.py
-from typing import Dict, Any, Iterable, List, Tuple
+from typing import Dict, Any, Iterable, List, Tuple, Optional
 import re
 import asyncio
 
@@ -69,10 +69,11 @@ class DummyMainLlmClient:
     메인 LLM 훈련 API 호출 더미.
     - 실제 연동 전까지는 개수/샘플만 회신.
     """
-    async def train(self, items: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def train(self, items: List[Dict[str, Any]], batch_id: Optional[str] = None) -> Dict[str, Any]:
         await asyncio.sleep(0)
         return {
             "ok": True,
             "received": len(items),
+            "batch_id": batch_id,
             "sample": items[0] if items else None
         }

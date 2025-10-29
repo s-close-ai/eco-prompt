@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Dict, Any, List, Tuple, Optional
 from .ports import MongoReader, JudgeClient, SensitiveMasker, TrainRepository, MainLlmClient
 from .models import normalize_judge_json  # 정규화(타입/길이 보정, total 계산 등)
+import os
 
 def _norm_triplet(item: Dict[str, Any]) -> Tuple[str, str, str, Optional[str]]:
     """
@@ -45,34 +46,41 @@ class ManualTrainPipeline:
         if not items:
             raise ValueError("NO_ITEMS: payload.items is required for manual training")
 
+        use_total  = os.getenv("JUDGE_USE_TOTAL", "false").lower() == "true"
+        thr_final  = float(os.getenv("JUDGE_FINAL_THRESHOLD", "3.5"))
+        thr_total  = int(os.getenv("JUDGE_PASS_MIN_TOTAL", "75"))
+        strict_rec = os.getenv("JUDGE_STRICT_RECOVERED", "false").lower() == "true"
+
         results: List[Dict[str, Any]] = []
         upsert_buffer: List[Dict[str, Any]] = []
         masked_for_train: List[Dict[str, Any]] = []
         success_eval = 0
 
-        # 1) 평가 → 정규화 → 임계점 판정(≥3.5) → 마스킹 → 적재 후보 구성
+        # 1) 평가 → 정규화 → 임계점 판정 → 마스킹 → 적재 후보 구성
         for row in items:
             try:
                 prompt, ans_user, ans_train, pair_id = _norm_triplet(row)
                 pid = pair_id or row.get("pair_id") or row.get("_id") or "NA"
 
-                # Judge 호출 (Prometheus2)
                 jres = await self.judge.evaluate(prompt=prompt, answer=ans_user)
 
-                # 정규화 (타입/길이/total 등 보정)
-                norm = normalize_judge_json(jres.get("raw", jres))
+                try:
+                    norm = normalize_judge_json(jres.get("raw", jres))
+                except Exception as e:
+                    norm = normalize_judge_json({"final_score": 3.0, "feedback": f"normalize-recovered: {e}"})
+
                 try:
                     final_score = float(norm.final_score)
                 except Exception:
                     final_score = 0.0
-                trainable = (final_score >= 3.5)
 
-                # 마스킹 (prompt, answerUser, answerTrain)
+                _trainable = (int(norm.total) >= thr_total) if use_total else (final_score >= thr_final)
+                trainable = (False if (strict_rec and norm.recovered) else _trainable)
+
                 prompt_m   = self.masker.mask(prompt)
                 ans_user_m = self.masker.mask(ans_user)
                 ans_train_m= self.masker.mask(ans_train)
 
-                # DB 적재용
                 upsert_buffer.append({
                     "batch_id": batch_id,
                     "source": "payload_items",
@@ -83,16 +91,15 @@ class ManualTrainPipeline:
                     "prompt_masked": prompt_m,
                     "answer_user_masked": ans_user_m,
                     "answer_train_masked": ans_train_m,
-                    "final_score": final_score,      # 0~5 (소수 허용)
-                    "total": norm.total,             # 0~100
+                    "final_score": final_score,
+                    "total": norm.total,
                     "criteria": norm.criteria,
                     "feedback": norm.feedback,
-                    "subscores": (norm.subscores.dict() if norm.subscores else None),
+                    "subscores": (norm.subscores.model_dump() if hasattr(norm.subscores, "model_dump") and norm.subscores else (norm.subscores.dict() if norm.subscores else None)),
                     "lang": norm.lang,
                     "trainable": trainable,
                 })
 
-                # 학습용 마스킹본만 추출 (trainable만)
                 if trainable:
                     masked_for_train.append({
                         "pair_id": pid,
@@ -100,6 +107,7 @@ class ManualTrainPipeline:
                         "answer_user": ans_user_m,
                         "answer_train": ans_train_m,
                     })
+
                 results.append({
                     "pair_id": pid,
                     "final_score": final_score,
@@ -124,9 +132,10 @@ class ManualTrainPipeline:
             except Exception as e:
                 results.append({"error": f"UPSERT_FAILED: {e}"})
 
-        # 3) (선택) 메인 LLM 학습 트리거
+        # 3) 메인 LLM 학습 트리거
         main_llm_triggered = False
         main_llm_ack = None
+        main_llm_error = None
         if masked_for_train and self.main_llm:
             try:
                 main_llm_ack = await self.main_llm.train(
@@ -134,18 +143,19 @@ class ManualTrainPipeline:
                 )
                 main_llm_triggered = True
             except Exception as e:
-                results.append({"error": f"MAIN_LLM_TRIGGER_FAILED: {e}"})
+                main_llm_error = f"MAIN_LLM_TRIGGER_FAILED: {e}"
 
         # 4) 요약 응답
         failed_eval_cnt = sum(1 for r in results if r.get("status") == "FAILED_EVAL")
         return {
             "batch_id": batch_id,
-            "processed": len(results),
+            "processed": len(items),
             "success_eval": success_eval,
             "failed_eval": failed_eval_cnt,
             "upserted": up_ok,
             "upsert_failed": up_fail,
             "main_llm_triggered": main_llm_triggered,
             "main_llm_ack": main_llm_ack,
+            "main_llm_error": main_llm_error,
             "results": results,
         }
