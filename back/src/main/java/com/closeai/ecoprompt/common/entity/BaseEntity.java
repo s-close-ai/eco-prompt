@@ -5,6 +5,7 @@ import lombok.Getter;
 import org.hibernate.annotations.Comment;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Getter
 @MappedSuperclass
@@ -12,21 +13,26 @@ public abstract class BaseEntity {
 
     @Column(name = "created_at", nullable = false)
     @Comment("생성일시")
-    protected LocalDateTime createdAt;
+    protected String createdAt;
 
     @Column(name = "updated_at", nullable = false)
     @Comment("수정일시")
-    protected LocalDateTime updatedAt;
+    protected String updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = dateConverter(LocalDateTime.now());
         this.updatedAt = this.createdAt;
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = dateConverter(LocalDateTime.now());
+    }
+
+    private String dateConverter(LocalDateTime time) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        return time.format(formatter);
     }
     
 }
