@@ -1,34 +1,20 @@
 .chat-page-container {
-  display: flex;
-  flex-direction: column;
-  position: absolute;
-  inset: 0;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 100%;
 }
 
 .chat-messages {
-  flex: 1;
-  overflow-y: auto;
-  padding: 24px 12px;
-  display: flex;
-  flex-direction: column;
+	flex: 1;
+	overflow-y: auto;
+	padding: 24px 12px;
+	display: flex;
+	flex-direction: column;
 }
 
-
-/* 스크롤바 스타일링
-.chat-messages::-webkit-scrollbar {
-  width: 8px;
+@media (max-width: 1023px) {
+	.chat-messages {
+		padding-top: 24px;
+	}
 }
-
-.chat-messages::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.chat-messages::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-.chat-messages::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-} */
