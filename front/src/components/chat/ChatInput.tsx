@@ -1,4 +1,5 @@
-import { useState, KeyboardEvent, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import type { KeyboardEvent } from 'react';
 import { useSidebarStore } from '@/stores/useSidebarStore';
 import '../../styles/components/chat/chat-input.css';
 
@@ -7,6 +8,8 @@ interface ChatInputProps {
   disabled?: boolean;
   placeholder?: string;
 }
+
+const MAX_CHARACTERS = 15000;
 
 export default function ChatInput({
   onSend,
@@ -21,9 +24,6 @@ export default function ChatInput({
     if (message.trim() && !disabled) {
       onSend(message.trim());
       setMessage('');
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-      }
     }
   };
 
@@ -35,15 +35,20 @@ export default function ChatInput({
   };
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
-    // Auto-resize textarea
-    e.target.style.height = 'auto';
-    e.target.style.height = e.target.scrollHeight + 'px';
+    const newValue = e.target.value;
+
+    // 15000자 제한
+    if (newValue.length > MAX_CHARACTERS) {
+      return;
+    }
+
+    setMessage(newValue);
   };
 
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [message]);
 
@@ -85,9 +90,11 @@ export default function ChatInput({
         </button>
       </div>
 
-      <p className="chat-input-disclaimer">
-        Eco Prompt는 실수를 할 수 있습니다. 중요한 정보는 확인하세요.
-      </p>
+      <div className="chat-input-footer">
+        <p className="chat-input-disclaimer">
+          Eco Prompt는 실수를 할 수 있습니다. 중요한 정보는 확인하세요.
+        </p>
+      </div>
     </div>
   );
 }
