@@ -1,0 +1,33 @@
+stages: [trigger_jenkins]
+
+trigger:jenkins:
+  stage: trigger_jenkins
+  image: curlimages/curl:8.9.1
+  rules:
+    # 머지 후 dev/master로 "푸시"될 때만
+    - if: '$CI_PIPELINE_SOURCE == "push" && ($CI_COMMIT_BRANCH == "dev" || $CI_COMMIT_BRANCH == "master")'
+      when: on_success
+    - when: never
+  script: |
+    PREV_SHA=$(git rev-parse HEAD~1)
+    echo "PREV_SHA=$PREV_SHA"
+    CRUMB=$(curl -s -u "$JENKINS_USER:$JENKINS_API_TOKEN" "$JENKINS_URL/crumbIssuer/api/json" | jq -r '.crumb' )
+
+    curl -X POST \
+      -u "$JENKINS_USER:$JENKINS_API_TOKEN" \
+      -H "Jenkins-Crumb: $CRUMB" \
+      "$JENKINS_URL/job/$JENKINS_JOB_NAME/buildWithParameters" \
+      --data-urlencode "token=$JENKINS_JOB_TOKEN" \
+      --data-urlencode "BRANCH=$CI_COMMIT_BRANCH" \
+      --data-urlencode "HEAD=$CI_COMMIT_SHA" \
+      --data-urlencode "PREV=$PREV_SHA" \
+      --data-urlencode "REPO_URL=https://lab.ssafy.com/s13-final/S13P31A309.git"
+  variables:
+    # GitLab → Jenkins 접속정보(프로젝트 CI/CD Variables에 정의해두기)
+    JENKINS_URL: ${JENKINS_URL}
+    JENKINS_JOB_NAME: ${JENKINS_JOB_NAME}
+    # Jenkins > Job에서 설정한 trigger token
+    JENKINS_JOB_TOKEN: ${JENKINS_JOB_TOKEN}
+    # Jenkins 사용자/API 토큰
+    JENKINS_USER: ${JENKINS_USER}
+    JENKINS_API_TOKEN: ${JENKINS_API_TOKEN}

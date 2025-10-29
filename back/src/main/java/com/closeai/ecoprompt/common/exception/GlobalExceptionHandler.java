@@ -14,6 +14,7 @@ import com.closeai.ecoprompt.common.ApiResponse;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
 	/**
 	 * Bean Validation 검증 실패 시
 	 */
@@ -68,4 +69,5 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ApiResponse<ErrorData>> handleGeneralException(Exception ex) {
 		return ApiResponse.BusinessException(HttpStatus.INTERNAL_SERVER_ERROR, new ErrorData("서버 오류가 발생했습니다."));
 	}
+	
 }

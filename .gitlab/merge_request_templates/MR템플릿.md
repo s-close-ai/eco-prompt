@@ -8,6 +8,10 @@
 
 - [ ] BE
 
+- [ ] AI
+
+- [ ] INFRA
+
 - [ ] Other
 
   <br/>

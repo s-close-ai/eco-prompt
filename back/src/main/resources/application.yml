@@ -15,5 +15,24 @@ spring:
             port: ${REDIS_PORT}
             password: ${REDIS_PASSWORD}
 
+    jpa:
+        show-sql: true
+        hibernate:
+            ddl-auto: create-drop
+        properties:
+            hibernate:
+                format_sql: true               # 🔹 SQL 문을 보기 좋게 정렬 출력
+
+    profiles:
+        active: ${CUR_PROFILE}
+
 springdoc:
     override-with-generic-response: false
+
+ssh:
+    remote-jump-host: ${REMOTE_JUMP_HOST} # ssh 연결할 중간 서버 주소
+    ssh-port:         ${SSH_PORT} # ssh 프로토콜 포트
+    user:             ${SSH_USER}  # ssh 연결할 사용자 계정
+    private-key:      ${PRIVATE_KEY} # ssh 연결 시 사용할 개인키 파일 경로
+    database-port:    ${DATABASE_PORT} # 원격서버에 있는 db 포트
+    rds-endpoint:     ${RDS_ENDPOINT}
