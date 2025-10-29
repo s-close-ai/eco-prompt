@@ -103,7 +103,13 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    flex: 1;
+}
+
+.sidebar-collapsed-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: auto;
 }
 
 .sidebar-icon-btn {
@@ -128,10 +134,6 @@
     height: 20px;
 }
 
-.sidebar-explore-btn {
-    margin-top: auto;
-}
-
 /* 펼쳐진 사이드바 */
 .sidebar-content {
     display: flex;
@@ -143,7 +145,7 @@
 /* 상단 고정 영역 */
 .sidebar-header {
     flex-shrink: 0;
-    padding: 16px;
+    padding: 16px 16px 0px 16px;
     border-bottom: 1px solid #e5e7eb;
 }
 
@@ -155,7 +157,7 @@
 }
 
 .sidebar-logo img {
-    height: 32px;
+    height: 48px;
     width: auto;
 }
 
@@ -216,6 +218,7 @@
     border: none;
     border-radius: 8px;
     font-size: 14px;
+    font-weight: 500;
     color: #374151;
     transition: all 0.2s;
     cursor: pointer;
@@ -247,12 +250,7 @@
     background: #f9fafb;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
-    transition: border-color 0.2s;
-}
-
-.sidebar-search:focus-within {
-    border-color: #16a34a;
-    background: white;
+    transition: all 0.2s;
 }
 
 .sidebar-search svg {
@@ -262,17 +260,69 @@
     flex-shrink: 0;
 }
 
-.sidebar-search input {
+/* 데스크탑 - 버튼 스타일 */
+.sidebar-search-desktop {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    transition: all 0.2s;
+    cursor: pointer;
+    text-align: left;
+}
+
+.sidebar-search-desktop:hover {
+    background: #f3f4f6;
+    color: #16a34a;
+}
+
+/* 모바일 - 입력창 스타일 */
+.sidebar-search-mobile:focus-within {
+    border-color: #16a34a;
+    background: white;
+    margin-bottom: 12px;
+}
+
+.sidebar-search-mobile input {
     flex: 1;
     background: transparent;
     border: none;
     outline: none;
     font-size: 14px;
+    font-weight: 500;
     color: #374151;
 }
 
-.sidebar-search input::placeholder {
+.sidebar-search-mobile input::placeholder {
     color: #9ca3af;
+}
+
+/* 반응형 - 데스크탑에서는 버튼만, 모바일에서는 입력창만 표시 */
+@media (min-width: 1024px) {
+    .sidebar-search-desktop {
+        display: flex;
+    }
+
+    .sidebar-search-mobile {
+        display: none;
+    }
+}
+
+@media (max-width: 1023px) {
+    .sidebar-search-desktop {
+        display: none;
+    }
+
+    .sidebar-search-mobile {
+        display: flex;
+    }
 }
 
 /* 스크롤 영역 */
@@ -301,16 +351,15 @@
 
 /* 섹션 */
 .sidebar-section {
-    margin-bottom: 24px;
+    margin-bottom: 4px;
 }
 
 .sidebar-section-title {
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 500;
     color: #9ca3af;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    margin-bottom: 8px;
     padding: 0 8px;
 }
 
@@ -324,11 +373,12 @@
 .sidebar-list-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     width: 100%;
     padding: 10px 12px;
     border-radius: 8px;
     font-size: 14px;
+    font-weight: 500;
     color: #374151;
     transition: all 0.2s;
     cursor: pointer;
@@ -370,7 +420,7 @@
 /* 하단 고정 영역 */
 .sidebar-footer {
     flex-shrink: 0;
-    padding: 16px;
+    padding: 0px 16px;
     border-top: 1px solid #e5e7eb;
 }
 
@@ -385,6 +435,7 @@
     color: #374151;
     border-radius: 8px;
     font-size: 14px;
+    font-weight: 500;
     transition: all 0.2s;
     cursor: pointer;
     text-align: left;
