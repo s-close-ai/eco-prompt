@@ -1,40 +1,39 @@
-# 더미 구현체 4종 (Mongo/Judge/Masker/Repo) - 추후 제거
+# 더미 구현체 4종 (Mongo/Judge/Masker/Repo/Main)
 # judge/app/dummies.py
 from typing import Dict, Any, Iterable, List, Tuple, Optional
 import re
 import asyncio
 
 class DummyMongoReader:
-    """
-    실제 Mongo 대신 메모리 리스트로 대체.
-    - 이후 실제 Mongo 구현체로 교체하면 됨.
-    """
     def __init__(self, seed: Iterable[Dict[str, Any]] = ()):
         self._data = list(seed)
 
     async def fetch_pairs(self, min_score: int) -> Iterable[Dict[str, Any]]:
-        await asyncio.sleep(0)  # 비동기 인터페이스 유지
-        # 기존 'score'가 min_score 이상인 데이터만 리턴(없으면 전부 리턴하도록 바꿔도 됨)
+        await asyncio.sleep(0)
         if not self._data:
             return []
         return [d for d in self._data if int(d.get("score", -1)) >= int(min_score)]
 
 class DummyJudgeClient:
     """
-    실제 Prometheus-2 대신 간단 점수 규칙:
-    - prompt/answer 길이 기반 가짜 점수(예: min(len)//5 제한 0~100)
-    - 이후 실제 llama-server 호출 구현체로 교체
+    아주 단순한 규칙 기반 더미 점수 (테스트 재현 목적)
     """
     async def evaluate(self, prompt: str, answer: str) -> Dict[str, Any]:
         await asyncio.sleep(0)
-        base = min(len(prompt), len(answer))
-        score = max(0, min(100, base // 5))
-        return {"score": score, "feedback": "dummy-eval"}
+        txt = (answer or "") + " " + (prompt or "")
+        txt_low = txt.lower()
+        if "42" in txt_low or "5*5" in txt_low or "25" in txt_low:
+            final = 5.0
+            subs = {"correctness": 95, "completeness": 90, "clarity": 90, "practices": 85}
+        elif any(k in txt_low for k in ["정답", "답은", "결과는"]):
+            final = 4.0
+            subs = {"correctness": 80, "completeness": 75, "clarity": 75, "practices": 70}
+        else:
+            final = 3.0
+            subs = {"correctness": 60, "completeness": 55, "clarity": 55, "practices": 50}
+        return {"final_score": final, "feedback": "dummy-eval", "subscores": subs}
 
 class RegexMasker:
-    """
-    아주 기본적인 마스킹 규칙. (스토리5에서 정식 규칙 확정)
-    """
     _rules = [
         (re.compile(r"\b\d{6}-\d{7}\b"), "<RRN>"),
         (re.compile(r"\b01[016789]-?\d{3,4}-?\d{4}\b"), "<PHONE>"),
@@ -48,10 +47,6 @@ class RegexMasker:
         return s
 
 class DummyTrainRepository:
-    """
-    실제 DB 대신 결과를 메모리에 적재하는 더미.
-    - upsert_many는 성공 건수만 반환.
-    """
     def __init__(self):
         self._rows: List[Dict[str, Any]] = []
 
@@ -60,15 +55,10 @@ class DummyTrainRepository:
         await asyncio.sleep(0)
         return (len(rows), 0)
 
-    # 디버그 용으로 현재 적재된 행을 볼 수 있게
     def snapshot(self) -> List[Dict[str, Any]]:
         return list(self._rows)
 
 class DummyMainLlmClient:
-    """
-    메인 LLM 훈련 API 호출 더미.
-    - 실제 연동 전까지는 개수/샘플만 회신.
-    """
     async def train(self, items: List[Dict[str, Any]], batch_id: Optional[str] = None) -> Dict[str, Any]:
         await asyncio.sleep(0)
         return {

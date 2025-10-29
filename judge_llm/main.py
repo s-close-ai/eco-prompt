@@ -1,10 +1,13 @@
-# main.py — 명세 반영: 수동 AI 모델 학습 트리거
+# main.py
 import os
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
+
 from fastapi import FastAPI, Header, BackgroundTasks, HTTPException, Query
+from fastapi.responses import JSONResponse
 from dotenv import load_dotenv; load_dotenv()
+
 from app.wiring import build_pipeline  # 현재는 더미 구현체로 조립
 
 app = FastAPI(title="메인 LLM 훈련 트리거")
@@ -42,14 +45,15 @@ async def manual_training(
     background: BackgroundTasks,
     body: Dict[str, Any] | None = None,
     Authorization: Optional[str] = Header(default=None),
-    sync: bool = Query(default=False, description="true/1 이면 동기로 즉시 결과 반환") 
+    sync: bool = Query(default=False, description="true/1 이면 동기로 즉시 결과 반환"),
 ):
     """
     [수동 AI 모델 학습]
     - Header: Authorization: Bearer <accessToken>
-    - Body: { "batchId": str, "items": [ {pair_id, prompt, answerUser, answerTrain} ] }
-    - 성공: 202 + {"status":"SUCCESS", "data":{...}}
-    - 실패: 200 + {"status":"FAIL", "data":{"message"}}
+    - Body: { "batchId": str, "items": [ { ...원본 키... } ] }
+    - 성공(비동기): 202 + {"status":"SUCCESS", "data":{...}}
+    - 성공(동기)  : 200 + {"status":"OK",      "data":{...}}
+    - 실패       : 200 + {"status":"FAIL",    "data":{"message"}}
     """
     try:
         _require_bearer(Authorization)
@@ -60,7 +64,6 @@ async def manual_training(
     if not items:
         return {"status": "FAIL", "data": {"message": "학습에 실패하였습니다.(NO_ITEMS)"}}
 
-    # 동기 실행 모드: 즉시 수행 후 결과 반환 (Story 4 검증용)
     if sync:
         try:
             result = await _run_training_job(body or {})
@@ -68,15 +71,18 @@ async def manual_training(
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"sync_failed: {e}")
 
+    # 비동기 경로 → 202
     job_id = str(uuid.uuid4())
     timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-
     background.add_task(_run_training_job, body or {})
-    return {
-        "status": "SUCCESS",
-        "data": {
-            "jobId": job_id,
-            "message": "모델 학습 작업이 성공적으로 시작되었습니다.",
-            "timestamp": timestamp
-        }
-    }, 202
+    return JSONResponse(
+        status_code=202,
+        content={
+            "status": "SUCCESS",
+            "data": {
+                "jobId": job_id,
+                "message": "모델 학습 작업이 성공적으로 시작되었습니다.",
+                "timestamp": timestamp,
+            },
+        },
+    )

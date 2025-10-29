@@ -7,14 +7,13 @@ class HttpMainLlmClient:
     """
     Main LLM 훈련 API 호출 어댑터(실연결).
     .env
-      MAIN_LLM_URL           # 예: http://backend-team:9090
-      MAIN_LLM_TRAIN_PATH    # 기본 /api/v1/ai/training
-      MAIN_LLM_TOKEN         # Bearer 토큰(옵션)
-      MAIN_LLM_TIMEOUT_S     # 기본 30
-      MAIN_LLM_RETRIES       # 기본 2
-    요청 바디: {"items": [...]}  # 백엔드가 처음 준 형식과 동일
+      MAIN_LLM_URL
+      MAIN_LLM_TRAIN_PATH   (default: /api/v1/ai/training)
+      MAIN_LLM_TOKEN
+      MAIN_LLM_TIMEOUT_S    (default: 30)
+      MAIN_LLM_RETRIES      (default: 2)
+    요청 바디: {"batch_id": str, "items": [...]}  # 백엔드가 처음 준 형식과 동일(원본 키 유지, 값만 마스킹)
     """
-
     def __init__(self) -> None:
         base = os.getenv("MAIN_LLM_URL", "").rstrip("/")
         path = os.getenv("MAIN_LLM_TRAIN_PATH", "/api/v1/ai/training")
@@ -28,8 +27,7 @@ class HttpMainLlmClient:
     async def train(self, batch_id: str, items: List[Dict[str, Any]]) -> Dict[str, Any]:
         headers = {"Content-Type": "application/json"}
         if self.token:
-            headers["Authorization"] = f"Bearer {self.token}"
-
+            headers["Authorization"] = f"Bearer {self.token}"}
         payload = {"batch_id": batch_id, "items": items}
 
         attempt = 0
@@ -45,7 +43,7 @@ class HttpMainLlmClient:
                     ok = 200 <= resp.status_code < 300
                     if not ok and (resp.status_code >= 500 or resp.status_code == 429):
                         attempt += 1
-                        await asyncio.sleep(min(2 ** attempt, 5))                   
+                        await asyncio.sleep(min(2 ** attempt, 5))
                         continue
                     return {"ok": ok, "status_code": resp.status_code, "body": body}
                 except Exception as e:

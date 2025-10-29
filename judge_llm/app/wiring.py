@@ -44,7 +44,7 @@ def build_pipeline(seed_data: Iterable[Dict[str, Any]] = ()) -> ManualTrainPipel
         print(f"[MainLLM] 메인 LLM HTTP 어댑터 활성화 → {os.getenv('MAIN_LLM_URL')}")
     else:
         main_llm = DummyMainLlmClient()
-        print("[MainLLM]  더미 메인 LLM 어댑터 사용 중 (MAIN_LLM_URL 미설정)")
+        print("[MainLLM] 더미 메인 LLM 어댑터 사용 중 (MAIN_LLM_URL 미설정)")
 
     return ManualTrainPipeline(
         mongo=mongo,
