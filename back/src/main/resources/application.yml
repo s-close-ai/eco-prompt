@@ -26,6 +26,28 @@ spring:
     profiles:
         active: ${CUR_PROFILE}
 
+    security:
+      oauth2:
+        client:
+            registration:
+                ssafy:
+                    client-id: ${CLIENT_ID}
+                    client-secret: ${CLIENT_SECRET}
+                    scope:
+                      - email
+                      - name
+                      - edu
+                    redirect-uri: "{baseUrl}/api/v1/users/sign-in"
+                    client-authentication-method: client_secret_post   # 또는 client_secret_basic
+                    authorization-grant-type: authorization_code       # ✅ 필수!
+            provider:
+                ssafy:
+                    authorization-uri: https://project.ssafy.com/oauth/sso-check
+                    token-uri: https://project.ssafy.com/ssafy/oauth2/token
+                    user-info-uri: https://project.ssafy.com/ssafy/resources/userInfo
+
+
+
 springdoc:
     override-with-generic-response: false
 
@@ -36,3 +58,9 @@ ssh:
     private-key:      ${PRIVATE_KEY} # ssh 연결 시 사용할 개인키 파일 경로
     database-port:    ${DATABASE_PORT} # 원격서버에 있는 db 포트
     rds-endpoint:     ${RDS_ENDPOINT}
+
+app:
+    ssafy:
+        openapi:
+            base-url: https://project.ssafy.com/ssafy/open-api/v1
+            api-key: ${SSAFY_API_KEY}
