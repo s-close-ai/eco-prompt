@@ -19,10 +19,15 @@ public abstract class BaseEntity {
     @Comment("수정일시")
     protected String updatedAt;
 
+    @Column(name = "is_deleted", nullable = false)
+    @Comment("삭제 여부")
+    protected char isDeleted;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = dateConverter(LocalDateTime.now());
         this.updatedAt = this.createdAt;
+        this.isDeleted = 'N';
     }
 
     @PreUpdate
