@@ -2,207 +2,207 @@
 *,
 *::before,
 *::after {
-	box-sizing: border-box;
+  box-sizing: border-box;
 }
 * {
-	margin: 0;
+  margin: 0;
 }
 html:focus-within {
-	scroll-behavior: smooth;
+  scroll-behavior: smooth;
 }
 img,
 picture,
 video,
 canvas,
 svg {
-	display: block;
-	max-width: 100%;
+  display: block;
+  max-width: 100%;
 }
 input,
 button,
 textarea,
 select {
-	font: inherit;
+  font: inherit;
 }
 
 /* Pretendard Variable (CDN) */
 @font-face {
-	font-family: 'Pretendard Variable';
-	font-weight: 45 920;
-	font-style: normal;
-	font-display: swap;
-	src: url('https://cdn.jsdelivr.net/npm/pretendard/dist/web/variable/woff2/PretendardVariable.woff2')
-		format('woff2-variations');
+  font-family: 'Pretendard Variable';
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/npm/pretendard/dist/web/variable/woff2/PretendardVariable.woff2')
+    format('woff2-variations');
 }
 
 :root {
-	--app-vh: 1vh;
-	--safe-top: env(safe-area-inset-top);
-	--safe-bottom: env(safe-area-inset-bottom);
-	--header-height: 56px;
-	--footer-height: 64px;
-	/* Sidebar layout variables */
-	--sidebar-width: 280px;
-	--sidebar-collapsed-width: 64px;
-	--sidebar-tablet-width: min(50vw, 280px);
+  --app-vh: 1vh;
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+  --header-height: 56px;
+  --footer-height: 64px;
+  /* Sidebar layout variables */
+  --sidebar-width: 280px;
+  --sidebar-collapsed-width: 64px;
+  --sidebar-tablet-width: min(50vw, 280px);
 
-	/* Color Palette */
-	/* Primary Colors */
-	--color-primary-50: #f5faf4;
-	--color-primary-100: #cae6cb;
-	--color-primary-200: #a8d4aa;
-	--color-primary-300: #8bbf8c;
-	--color-primary-400: #72a774;
-	--color-primary-500: #5e9462;
-	--color-primary-600: #528655;
-	--color-primary-700: #487c4e;
-	--color-primary-800: #3e6e44;
-	--color-primary-900: #335b38;
-	--color-primary-950: #26452c;
-	--color-primary-1000: #1b3221;
+  /* Color Palette */
+  /* Primary Colors */
+  --color-primary-50: #f5faf4;
+  --color-primary-100: #cae6cb;
+  --color-primary-200: #a8d4aa;
+  --color-primary-300: #8bbf8c;
+  --color-primary-400: #72a774;
+  --color-primary-500: #5e9462;
+  --color-primary-600: #528655;
+  --color-primary-700: #487c4e;
+  --color-primary-800: #3e6e44;
+  --color-primary-900: #335b38;
+  --color-primary-950: #26452c;
+  --color-primary-1000: #1b3221;
 
-	/* Base Colors */
-	--color-base-white: #ffffff;
-	--color-base-50: #cae6cb;
-	--color-base-100: #a8d4aa;
-	--color-base-200: #8bbf8c;
-	--color-base-300: #72a774;
-	--color-base-400: #5e9462;
-	--color-base-500: #528655;
-	--color-base-600: #4b5563;
-	--color-base-700: #374151;
-	--color-base-800: #1f2937;
-	--color-base-900: #111827;
-	--color-base-black: #000000;
+  /* Base Colors */
+  --color-base-white: #ffffff;
+  --color-base-50: #cae6cb;
+  --color-base-100: #a8d4aa;
+  --color-base-200: #8bbf8c;
+  --color-base-300: #72a774;
+  --color-base-400: #5e9462;
+  --color-base-500: #528655;
+  --color-base-600: #4b5563;
+  --color-base-700: #374151;
+  --color-base-800: #1f2937;
+  --color-base-900: #111827;
+  --color-base-black: #000000;
 
-	/* Status Colors */
-	--color-success: #10b981;
-	--color-success-light: #d1fae5;
-	--color-success-dark: #065f46;
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-success-light: #d1fae5;
+  --color-success-dark: #065f46;
 
-	--color-error: #ef4444;
-	--color-error-light: #fee2e2;
-	--color-error-dark: #991b1b;
+  --color-error: #ef4444;
+  --color-error-light: #fee2e2;
+  --color-error-dark: #991b1b;
 
-	--color-warning: #f59e0b;
-	--color-warning-light: #fef3c7;
-	--color-warning-dark: #92400e;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fef3c7;
+  --color-warning-dark: #92400e;
 
-	--color-info: #3b82f6;
-	--color-info-light: #dbeafe;
-	--color-info-dark: #1e40af;
+  --color-info: #3b82f6;
+  --color-info-light: #dbeafe;
+  --color-info-dark: #1e40af;
 
-	/* Derived tokens for current theme */
-	--bg: var(--color-base-900);
-	--fg: var(--color-base-white);
-	--surface: rgba(16, 16, 16, 0.9);
-	--border: rgba(255, 255, 255, 0.08);
+  /* Derived tokens for current theme */
+  --bg: var(--color-base-900);
+  --fg: var(--color-base-white);
+  --surface: rgba(16, 16, 16, 0.9);
+  --border: rgba(255, 255, 255, 0.08);
 }
 
 html,
 body,
 #app {
-	height: 100%;
+  height: 100%;
 }
 
 body {
-	margin: 0;
-	background: #ffffff;
-	color: #000000;
-	font-family:
-		'Pretendard Variable',
-		Pretendard,
-		-apple-system,
-		BlinkMacSystemFont,
-		'Segoe UI',
-		Roboto,
-		'Helvetica Neue',
-		Arial,
-		'Apple Color Emoji',
-		'Segoe UI Emoji',
-		'Segoe UI Symbol',
-		system-ui,
-		sans-serif;
-	-webkit-tap-highlight-color: transparent;
+  margin: 0;
+  background: #ffffff;
+  color: #000000;
+  font-family:
+    'Pretendard Variable',
+    Pretendard,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    'Apple Color Emoji',
+    'Segoe UI Emoji',
+    'Segoe UI Symbol',
+    system-ui,
+    sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .app-shell {
-	display: grid;
-	grid-template-rows: auto 1fr auto;
-	height: calc(var(--app-vh) * 100);
-	padding-top: max(var(--safe-top), 0px);
-	padding-bottom: max(var(--safe-bottom), 0px);
-	overflow: hidden;
-	gap: 0; /* ensure no column/row gap */
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: calc(var(--app-vh) * 100);
+  padding-top: max(var(--safe-top), 0px);
+  padding-bottom: max(var(--safe-bottom), 0px);
+  overflow: hidden;
+  gap: 0; /* ensure no column/row gap */
 }
 
 /* Desktop: sidebar + content 2열 레이아웃 */
 .app-shell.has-desktop-sidebar {
-	grid-template-columns: var(--sidebar-width) 1fr;
-	grid-template-rows: 1fr auto; /* topbar는 데스크탑에서 숨김 */
-	gap: 0; /* no gap between sidebar and main */
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: 1fr auto; /* topbar는 데스크탑에서 숨김 */
+  gap: 0; /* no gap between sidebar and main */
 }
 .app-shell.has-desktop-sidebar.is-sidebar-collapsed {
-	grid-template-columns: var(--sidebar-collapsed-width) 1fr;
+  grid-template-columns: var(--sidebar-collapsed-width) 1fr;
 }
 
 /* 데스크탑: 메인/바텀바는 오른쪽 컬럼에 표시 */
 .app-shell.has-desktop-sidebar .app-main {
-	grid-column: 2 / -1;
+  grid-column: 2 / -1;
 }
 
 /* Tablet: when sidebar open, allocate left column */
 .app-shell.has-tablet-sidebar-open {
-	grid-template-columns: var(--sidebar-tablet-width) 1fr;
-	gap: 0; /* no gap on tablet push layout */
+  grid-template-columns: var(--sidebar-tablet-width) 1fr;
+  gap: 0; /* no gap on tablet push layout */
 }
 
 /* 태블릿: 사이드바 열리면 메인은 오른쪽 컬럼에만 표시 */
 .app-shell.has-tablet-sidebar-open .app-main {
-	grid-column: 2 / -1;
-	padding-left: 0;
+  grid-column: 2 / -1;
+  padding-left: 0;
 }
 
 /* header/footer 기본 레이어 특성은 각 컴포넌트 CSS에서 정의 */
 
 .app-main {
-	overflow: auto;
-	-webkit-overflow-scrolling: touch;
-	overscroll-behavior: contain;
-	contain: content;
-	grid-column: 1 / -1; /* 기본은 전체 폭 */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  contain: content;
+  grid-column: 1 / -1; /* 기본은 전체 폭 */
 }
 
 .container {
-	max-width: 960px;
-	margin: 0 auto;
-	width: 100%;
-	padding-inline: 16px;
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+  padding-inline: 16px;
 }
 
 /* 메인 영역에서는 사이드바와의 간격(좌측 margin)을 없앱니다 */
 .app-main .container {
-	margin-left: 0;
+  margin-left: 0;
 }
 
 /* 태블릿 모드에서 전체 컨테이너 좌측 마진 제거 (사이드바와 정확히 맞닿도록) */
 .app-shell.has-tablet-sidebar-open .container {
-	margin-left: 0;
+  margin-left: 0;
 }
 
 .brand {
-	font-weight: 700;
-	letter-spacing: 0.2px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
 }
 
 .chat-input {
-	width: 100%;
-	max-width: 960px;
-	padding: 8px 12px;
-	border-radius: 12px;
-	border: 1px solid var(--border);
-	background: rgba(255, 255, 255, 0.02);
-	color: var(--fg);
+  width: 100%;
+  max-width: 960px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--fg);
 }
 
 /* 데스크탑에서 헤더 숨김은 topbar.css에서 처리 */
@@ -210,23 +210,23 @@ body {
 /* data-mode 기반의 간단한 유틸리티 (필요 시 제거/수정) */
 :root[data-mode='mobile'] .only-desktop,
 :root[data-mode='mobile'] .only-tablet {
-	display: none !important;
+  display: none !important;
 }
 
 :root[data-mode='tablet'] .only-desktop,
 :root[data-mode='tablet'] .only-mobile {
-	display: none !important;
+  display: none !important;
 }
 
 :root[data-mode='desktop'] .only-mobile,
 :root[data-mode='desktop'] .only-tablet {
-	display: none !important;
+  display: none !important;
 }
 
 /* 입력 특성 기반 보조 분기 */
 :root[data-pointer='coarse'] .needs-large-hit {
-	padding: 14px 16px;
+  padding: 14px 16px;
 }
 :root[data-hover='hover'] .show-on-hover:hover {
-	opacity: 1;
+  opacity: 1;
 }

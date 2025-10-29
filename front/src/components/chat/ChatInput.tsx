@@ -2,83 +2,83 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import '@/styles/components/chat/chat-input.css';
 
 interface ChatInputProps {
-	onSend: (message: string) => void;
-	disabled?: boolean;
-	placeholder?: string;
+  onSend: (message: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
 }
 
 const MAX_CHARACTERS = 15000;
 
 export default function ChatInput({
-	onSend,
-	disabled = false,
-	placeholder = 'Ask Eco prompt',
+  onSend,
+  disabled = false,
+  placeholder = 'Ask Eco prompt',
 }: ChatInputProps) {
-	const [message, setMessage] = useState('');
-	const [showAlert, setShowAlert] = useState(false);
-	const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [message, setMessage] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-	const handleSend = () => {
-		if (message.trim() && !disabled) {
-			const trimmed = message.trim();
-			onSend(trimmed);
-			// 전역 이벤트로도 송신 (페이지가 하단바를 통해 수신 가능하도록)
-			window.dispatchEvent(new CustomEvent('chat-send', { detail: { message: trimmed } }));
-			setMessage('');
-		}
-	};
+  const handleSend = () => {
+    if (message.trim() && !disabled) {
+      const trimmed = message.trim();
+      onSend(trimmed);
+      // 전역 이벤트로도 송신 (페이지가 하단바를 통해 수신 가능하도록)
+      window.dispatchEvent(new CustomEvent('chat-send', { detail: { message: trimmed } }));
+      setMessage('');
+    }
+  };
 
-	const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-		if (e.key === 'Enter' && !e.shiftKey) {
-			e.preventDefault();
-			handleSend();
-		}
-	};
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
 
-	const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-		const newValue = e.target.value;
-		if (newValue.length > MAX_CHARACTERS) {
-			setShowAlert(true);
-			return;
-		}
-		setMessage(newValue);
-	};
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    if (newValue.length > MAX_CHARACTERS) {
+      setShowAlert(true);
+      return;
+    }
+    setMessage(newValue);
+  };
 
-	useEffect(() => {
-		if (textareaRef.current) {
-			textareaRef.current.style.height = 'auto';
-			textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-		}
-	}, [message]);
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [message]);
 
-	return (
-		<div className="chat-input-container">
-			<div className="chat-input-wrapper">
-				<textarea
-					ref={textareaRef}
-					value={message}
-					onChange={handleInput}
-					onKeyDown={handleKeyDown}
-					placeholder={placeholder}
-					disabled={disabled}
-					className="chat-input-textarea"
-					rows={1}
-				/>
-				<button
-					onClick={handleSend}
-					disabled={!message.trim() || disabled}
-					className="chat-input-send-btn"
-					title="전송	"
-				>
-					<img src="/icons/send.svg" alt="전송" width={16} height={16} color="white" />
-				</button>
-			</div>
-			<div className="chat-input-footer">
-				<p className="chat-input-disclaimer">
-					Eco Prompt는 실수를 할 수 있습니다. 중요한 정보는 확인하세요.
-				</p>
-			</div>
-			{showAlert ? null : null}
-		</div>
-	);
+  return (
+    <div className="chat-input-container">
+      <div className="chat-input-wrapper">
+        <textarea
+          ref={textareaRef}
+          value={message}
+          onChange={handleInput}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={disabled}
+          className="chat-input-textarea"
+          rows={1}
+        />
+        <button
+          onClick={handleSend}
+          disabled={!message.trim() || disabled}
+          className="chat-input-send-btn"
+          title="전송	"
+        >
+          <img src="/icons/send.svg" alt="전송" width={16} height={16} color="white" />
+        </button>
+      </div>
+      <div className="chat-input-footer">
+        <p className="chat-input-disclaimer">
+          Eco Prompt는 실수를 할 수 있습니다. 중요한 정보는 확인하세요.
+        </p>
+      </div>
+      {showAlert ? null : null}
+    </div>
+  );
 }

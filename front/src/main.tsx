@@ -19,17 +19,17 @@ installAppViewportUnit();
 installDeviceMode({ mobileMax: 768, tabletMax: 1024 });
 
 const router = createBrowserRouter([
-	{
-		path: '/',
-		element: <AppShell />,
-		children: [
-			{ index: true, element: <Home /> },
-			{ path: 'chat', element: <Chat /> },
-		],
-	},
+  {
+    path: '/',
+    element: <AppShell />,
+    children: [
+      { index: true, element: <Home /> },
+      { path: 'chat', element: <Chat /> },
+    ],
+  },
 ]);
 
 const root = createRoot(document.getElementById('app')!);
 root.render(
-	React.createElement(React.StrictMode, null, React.createElement(RouterProvider, { router })),
+  React.createElement(React.StrictMode, null, React.createElement(RouterProvider, { router })),
 );

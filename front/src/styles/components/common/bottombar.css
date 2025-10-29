@@ -1,96 +1,96 @@
 .bottombar {
-	grid-column: 1 / -1;
+  grid-column: 1 / -1;
 }
 .bottombar--chat {
-	position: sticky;
-	bottom: 0;
-	background: transparent;
-	z-index: 20;
+  position: sticky;
+  bottom: 0;
+  background: transparent;
+  z-index: 20;
 }
 
 /* Mobile menu bottombar (non-chat) */
 .bottombar--menu {
-	position: fixed;
-	bottom: 0;
-	left: 0;
-	width: 100%;
-	background-color: #ffffff;
-	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
-	z-index: 1000;
-	height: 10vh;
-	min-height: 60px;
-	max-height: 80px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #ffffff;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  height: 10vh;
+  min-height: 60px;
+  max-height: 80px;
 }
 @media (min-width: 768px) {
-	.bottombar--menu {
-		display: none;
-	}
+  .bottombar--menu {
+    display: none;
+  }
 }
 .bottombar-content {
-	width: 100%;
-	height: 100%;
-	display: flex;
-	justify-content: space-around;
-	align-items: center;
-	padding: 0.5rem 1rem;
-	max-width: 600px;
-	margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  max-width: 600px;
+  margin: 0 auto;
 }
 .icon-button {
-	background: none;
-	border: none;
-	cursor: pointer;
-	padding: 0.75rem;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	border-radius: 12px;
-	transition: all 0.2s ease;
-	min-width: 48px;
-	min-height: 48px;
-	position: relative;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  min-width: 48px;
+  min-height: 48px;
+  position: relative;
 }
 .icon-button:active {
-	transform: scale(0.95);
-	background-color: rgba(0, 0, 0, 0.05);
+  transform: scale(0.95);
+  background-color: rgba(0, 0, 0, 0.05);
 }
 .icon-button img {
-	width: 24px;
-	height: 24px;
+  width: 24px;
+  height: 24px;
 }
 .bottombar__inner {
-	display: grid;
-	align-items: center;
-	padding: 8px 0;
+  display: grid;
+  align-items: center;
+  padding: 8px 0;
 }
 .bottombar__menu {
-	display: grid;
-	grid-auto-flow: column;
-	justify-content: space-between;
-	gap: 8px;
-	min-height: var(--footer-height);
-	align-items: center;
+  display: grid;
+  grid-auto-flow: column;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: var(--footer-height);
+  align-items: center;
 }
 .bottombar__menu-item {
-	text-decoration: none;
-	color: var(--fg);
-	padding: 8px 10px;
-	border-radius: 8px;
+  text-decoration: none;
+  color: var(--fg);
+  padding: 8px 10px;
+  border-radius: 8px;
 }
 .bottombar__menu-item:hover {
-	background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* 메뉴 하단바는 모바일 전용 표시 */
 :root[data-mode='desktop'] .bottombar[data-variant='menu'],
 :root[data-mode='tablet'] .bottombar[data-variant='menu'] {
-	display: none;
+  display: none;
 }
 
 /* 데스크탑/태블릿 2열 레이아웃일 때 채팅 하단바는 오른쪽 컬럼 */
 .app-shell.has-desktop-sidebar .bottombar--chat {
-	grid-column: 2 / -1;
+  grid-column: 2 / -1;
 }
 .app-shell.has-tablet-sidebar-open .bottombar--chat {
-	grid-column: 2 / -1;
+  grid-column: 2 / -1;
 }

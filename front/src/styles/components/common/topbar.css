@@ -1,42 +1,42 @@
 .topbar {
-	position: sticky;
-	top: 0;
-	width: 100%;
-	height: 64px;
-	background-color: var(--color-base-white);
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	z-index: 1000;
-	grid-column: 1 / -1;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 64px;
+  background-color: var(--color-base-white);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  grid-column: 1 / -1;
 }
 .topbar-content {
-	width: 100%;
-	height: 100%;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	padding: 0 1rem;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem;
 }
 .icon-button {
-	background: none;
-	border: none;
-	cursor: pointer;
-	padding: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .topbar-logo {
-	width: 150px;
-	object-fit: contain;
+  width: 150px;
+  object-fit: contain;
 }
 
 /* 데스크탑에서는 숨김 (모바일/태블릿 전용) */
 :root[data-mode='desktop'] .topbar {
-	display: none;
+  display: none;
 }
 
 /* 태블릿에서 사이드바 열림 시, 상단바는 오른쪽 컬럼에만 표시 */
 .app-shell.has-tablet-sidebar-open .topbar {
-	grid-column: 2 / -1;
-	padding-left: 0;
+  grid-column: 2 / -1;
+  padding-left: 0;
 }
