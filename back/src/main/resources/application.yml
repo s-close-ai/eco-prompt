@@ -18,7 +18,7 @@ spring:
     jpa:
         show-sql: true
         hibernate:
-            ddl-auto: create-drop
+            ddl-auto: update
         properties:
             hibernate:
                 format_sql: true               # 🔹 SQL 문을 보기 좋게 정렬 출력
@@ -64,3 +64,10 @@ app:
         openapi:
             base-url: https://project.ssafy.com/ssafy/open-api/v1
             api-key: ${SSAFY_API_KEY}
+
+ai:
+    model:
+        url:
+            judge-prompt: ""
+            llm: ""
+            judge-llm: ${JUDGE_LLM_URL}

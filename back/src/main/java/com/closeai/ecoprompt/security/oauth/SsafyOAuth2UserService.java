@@ -54,8 +54,7 @@ public class SsafyOAuth2UserService implements OAuth2UserService<OAuth2UserReque
 
         // loginAttrs 예: { "userId": "...", "email": "...", "name": "...", "edu": "13기" }
         String email = asString(loginAttrs.get("email"));
-        String name  = asString(loginAttrs.get("name"));
-        String edu   = asString(loginAttrs.get("edu"));
+        String name = asString(loginAttrs.get("name"));
         String userId = firstNonBlank(loginAttrs, "userId", "id", "uid"); // 문서에 “고유 식별 번호”라고 표기
 
         if (email == null || name == null) {
@@ -69,6 +68,7 @@ public class SsafyOAuth2UserService implements OAuth2UserService<OAuth2UserReque
             openApiProfile = fetchOpenApiUserProfile(userId); // 실패해도 로그인은 계속 진행
         }
 
+        String edu = (String) openApiProfile.get("edu");
         // 3) DB upsert (당신의 User 엔티티: employeeNumber/email/name/projectId)
         String employeeNumber = edu != null ? edu : "UNKNOWN";  // edu를 임시 사번으로 사용
         User user = userRepository.findByEmail(email)
@@ -139,7 +139,9 @@ public class SsafyOAuth2UserService implements OAuth2UserService<OAuth2UserReque
         return Collections.emptyMap();
     }
 
-    private static String asString(Object o) { return o == null ? null : String.valueOf(o); }
+    private static String asString(Object o) {
+        return o == null ? null : String.valueOf(o);
+    }
 
     private static String firstNonBlank(Map<String, Object> m, String... keys) {
         for (String k : keys) {

@@ -24,7 +24,7 @@ public class WebClientConfig {
 	@Qualifier("inputJudge")
 	public WebClient webClientInputJudge(
 		WebClient.Builder builder,
-		@Value("${ai.model.url.input-judge}") String baseUrl
+		@Value("${ai.model.url.judge-prompt}") String baseUrl
 	) {
 		return builder.baseUrl(baseUrl).build();
 	}
@@ -48,7 +48,7 @@ public class WebClientConfig {
 	@Qualifier("trainingJudge")
 	public WebClient webClientTrainingJudge(
 		WebClient.Builder builder,
-		@Value("${ai.model.url.training-judge}") String baseUrl
+		@Value("${ai.model.url.judge-llm}") String baseUrl
 	){
 		return builder.baseUrl(baseUrl).build();
 	}
