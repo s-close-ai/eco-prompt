@@ -171,11 +171,11 @@ def make_all_default() -> List[PatternRecognizer]:
         make_card_recognizer(),
         make_addr_recognizer(),
         make_secret_recognizer(),
-        KRAddressEnhancedRecognizer(),  # KR_ADDRESS (정교)
-        KREmailRecognizer(),            # EMAIL_ADDRESS (난독화 강화)
-        KRIPRecognizer(),               # IP_ADDRESS
-        HighEntropyRecognizer(),        # HIGH_ENTROPY_TOKEN
-        KRBankRecognizer(),             # KR_BANK_ACCOUNT
-        KRBizNoRecognizer(),            # KR_BIZNO (체크섬)
-        KRSecretExtRecognizer(),        # SENSITIVE_CONFIG (password=/token=/Bearer)
+        KRAddressEnhancedRecognizer(),
+        KREmailRecognizer(),            
+        KRIPRecognizer(),
+        HighEntropyRecognizer(),
+        KRBizNoRecognizer(),
+        KRBankRecognizer(),                                                                                      
+        KRSecretExtRecognizer(),
     ]

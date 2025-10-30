@@ -2,47 +2,41 @@
 """
 KRBankRecognizer
 - 한국 은행 계좌번호 탐지기 (Presidio PatternRecognizer 기반)
-- 은행명 및 계좌 관련 문맥과 함께 등장하는 숫자열(10~16자리)을 탐지
-- 주요 탐지 대상:
-    1. 은행명 + 계좌번호 조합 (예: 국민은행 110-234-567890)
-    2. 일반 계좌번호 표기 (예: 계좌번호 3333 12 345678)
-- 컨텍스트 기반: "은행", "계좌번호", "통장", "account" 등
+- 은행명/계좌 관련 문맥과 함께 등장하는 숫자열(10~16자리)을 탐지
+- 전화번호(010-xxxx-xxxx 등) 및 '사업자등록번호(3-2-5)' 오탐 방지 강화
 """
-
 from __future__ import annotations
 import re
 from presidio_analyzer import Pattern, PatternRecognizer
 
-# 한국 주요 은행명 목록 (컨텍스트 점수 보강용)
+# 한국 주요 은행명(컨텍스트 보강)
 _BANKS = [
     "국민","신한","우리","하나","농협","기업","대구","부산","광주","전북","제주",
     "SC제일","카카오","케이뱅크","토스","수협","산업","씨티","우체국"
 ]
+# 컨텍스트 단어(확장)
+BANK_WORDS = [
+    "은행","계좌","계좌번호","통장","입금","송금","이체",
+    "account","acct","account_no","accountNo","accountId","acctId"
+]
 
-# 계좌 관련 컨텍스트 단어
-BANK_WORDS = ["은행","계좌","계좌번호","통장","account","acct","account_no","입금"]
+# 기본 포맷(2~4)-(1~6)-(2~6) / 공백·하이픈 허용 / 총 10~16자리
+# 시작 위치에서 '3-2-5(사업자)'가 바로 이어지는 경우 제외(음수 전방 탐색)
+_RX = r"(?<!\d)(?!\d{3}-\d{2}-\d{5}\b)\d{2,4}[\-\s]?\d{1,6}[\-\s]?\d{2,6}(?!\d)"
 
-# 계좌번호 기본 포맷 (2~4)-(1~6)-(2~6) / 공백, 하이픈 허용 / 총 10~16자리
-_RX = r"(?<!\d)(?:\d{2,4}[\-\s]?\d{1,6}[\-\s]?\d{2,6})(?!\d)"
+# 전화번호 패턴(오탐 차단용)
+_RX_PHONE = re.compile(
+    r"^(?:0?10(?:[-.\s]?\d{4}){2}|0[2-6]\d?[-.\s]?\d{3,4}[-.\s]?\d{4})$"
+)
+
+# 사업자번호 3-2-5 포맷(오탐 차단용)
+_RX_BIZ_FMT = re.compile(r"^\d{3}-\d{2}-\d{5}$")
 
 
 class KRBankRecognizer(PatternRecognizer):
-    """
-    계좌번호 검출기:
-    - 하이픈/공백 포함된 숫자열을 탐지하고
-    - 은행명 또는 '계좌번호' 등의 문맥에서 탐지될 때 신뢰도 상승
-    """
-
     def __init__(self):
-        patterns = [
-            Pattern(
-                name="kr_bank_acct_loose",
-                regex=_RX,
-                score=0.40,  # 컨텍스트 있을 때만 가중치 상승
-            ),
-        ]
+        patterns = [Pattern("kr_bank_acct_loose", _RX, 0.35)]  # 살짝 상향(컨텍스트로 최종 보강)
         context = BANK_WORDS + _BANKS
-
         super().__init__(
             supported_entity="KR_BANK_ACCOUNT",
             name="KRBankRecognizer",
@@ -52,8 +46,12 @@ class KRBankRecognizer(PatternRecognizer):
 
     def validate_result(self, pattern_text: str) -> bool:
         """
-        탐지된 텍스트가 계좌번호로서 현실적인지 2차 검증
-        (숫자 길이 10~16 사이만 유효)
+        2차 검증:
+        - 숫자 길이 10~16
+        - 전화번호/사업자 포맷과 유사하면 배제
         """
-        digits = re.sub(r"\D", "", pattern_text)
+        text = pattern_text.strip()
+        if _RX_PHONE.match(text) or _RX_BIZ_FMT.match(text):
+            return False
+        digits = re.sub(r"\D", "", text)
         return 10 <= len(digits) <= 16

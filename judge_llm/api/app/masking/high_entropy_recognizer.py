@@ -2,47 +2,36 @@
 """
 HighEntropyTokenRecognizer
 - 길고 엔트로피가 높은 토큰/시크릿(베어 값) 탐지
-- Presidio PatternRecognizer 기반
+- 가벼운 규칙 기반: (길이 50+) & (문자 다양성 6종 이상)
 """
 from __future__ import annotations
-import re
 from typing import List
 from presidio_analyzer import Pattern, PatternRecognizer, RecognizerResult
 
-# 길이 50+의 base64-ish/URL-safe 문자들(스페이스/경계 포함)
-_HIGH_ENTROPY_RX = r"(?<![A-Za-z0-9/+=._-])[A-Za-z0-9/+=._~-]{50,}(?![A-Za-z0-9/+=._-])"
+# 길이 50+ base64/URL-safe 문자 — 경계 인식
+_HIGH_ENTROPY_RX = r"(?<![A-Za-z0-9/+=._~-])[A-Za-z0-9/+=._~-]{50,}(?![A-Za-z0-9/+=._-])"
 
 class HighEntropyTokenRecognizer(PatternRecognizer):
     def __init__(self):
-        patterns = [
-            Pattern("high_entropy_blob", _HIGH_ENTROPY_RX, 0.50),
-        ]
+        patterns = [Pattern("high_entropy_blob", _HIGH_ENTROPY_RX, 0.50)]
         super().__init__(
             supported_entity="HIGH_ENTROPY_TOKEN",
             name="HighEntropyTokenRecognizer",
             patterns=patterns,
-            context=["secret","token","key","credential","env","config","header"],
+            context=["secret","token","key","credential","env","config","header","bearer","auth"],
         )
 
     def analyze(self, text: str, entities: List[str] = None, nlp_artifacts=None) -> List[RecognizerResult]:
-        # Presidio v2 호환: supported_entities(list) 우선
-        target = None
-        if hasattr(self, "supported_entities") and self.supported_entities:
-            target = self.supported_entities[0]
-        else:
-            target = getattr(self, "supported_entity", None)
-
+        # Presidio v2 호환
+        target = self.supported_entities[0] if getattr(self, "supported_entities", None) else getattr(self, "supported_entity", None)
         if entities and (target not in entities):
             return []
-
-        # 기본 탐지
         results = super().analyze(text, entities, nlp_artifacts)
 
-        # 간단한 후처리(너무 반복적인 문자만 있는 경우 등은 버림)
-        filtered = []
+        # 저가변(aaaa…), 지나치게 단조로운 토큰 컷오프
+        filtered: List[RecognizerResult] = []
         for r in results:
             span = text[r.start:r.end]
-            # 예: aaaaa… 같은 저엔트로피 제거(고정 임계: 서로 다른 문자 6종 이상 요구)
             if len(set(span)) >= 6:
                 filtered.append(r)
         return filtered
