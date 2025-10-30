@@ -34,5 +34,24 @@ public class ChattingService {
 
 		return chattingRepository.save(chatting);
 	}
+
+	@Transactional
+	public void setChattingTitle(Long chattingId, String title){
+
+		Chatting chatting = chattingRepository.findById(chattingId)
+			.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
+
+		if(chatting.getTitle() == null){
+			updateChattingTitle(chatting, title);
+		}
+
+	}
+
+	private void updateChattingTitle(Chatting chatting, String title){
+
+		chatting.setTitle(title);
+		chattingRepository.save(chatting);
+
+	}
 	
 }
