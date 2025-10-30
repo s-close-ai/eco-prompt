@@ -1,5 +1,6 @@
 # judge_llm/tests/generate_samples.py
 # masking 테스트데이터 생성기 (노이즈/컨텍스트 강화 버전)
+# masking 테스트데이터 생성기 (노이즈/컨텍스트 강화 버전)
 import random, re, json, pathlib, uuid
 
 R = random.Random(42)
@@ -140,7 +141,6 @@ def build_core():
         f"시크릿: {rnd_secret()}",
         f"IP: {rnd_ip()}",
         f"{rnd_bank()}",
-        # 유효/무효 사업자번호 8:2 혼합 (무효는 기대: 비탐지)
         f"사업자등록번호 {rnd_bizno(valid=R.random()<0.8)}",
         f"{rnd_secret_ext()}",
         "랜덤토큰:" + ''.join(R.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_") for _ in range(60)),
@@ -165,3 +165,4 @@ def main(n=1000, out="tests/samples.jsonl"):
 
 if __name__ == "__main__":
     main()
+

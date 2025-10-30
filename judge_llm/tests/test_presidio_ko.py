@@ -1,4 +1,3 @@
-# judge_llm/tests/test_presidio_ko.py
 # Presidio-KO 확장 테스트
 import json, pathlib, os, re
 from collections import defaultdict
@@ -123,12 +122,11 @@ python tests/generate_samples.py
 2. 테스트 실행
 PYTHONPATH=. pytest -s tests/test_presidio_ko.py
 
-
-========================= test session starts ==========================
+========================= test session starts =========================
 platform darwin -- Python 3.12.3, pytest-8.3.5, pluggy-1.6.0
 rootdir: /Users/ssafy/S13P31A309/judge_llm
 plugins: anyio-4.11.0
-collected 1 item                                                       
+collected 1 item                                                      
 
 tests/test_presidio_ko.py 
 === Entity-wise Report ===

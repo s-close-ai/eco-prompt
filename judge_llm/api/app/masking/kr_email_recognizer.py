@@ -5,7 +5,6 @@ KREmailRecognizer
 - Presidio PatternRecognizer 기반
 """
 from __future__ import annotations
-import re
 from typing import List
 from presidio_analyzer import Pattern, PatternRecognizer
 
