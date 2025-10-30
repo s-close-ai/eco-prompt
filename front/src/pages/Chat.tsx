@@ -83,7 +83,7 @@ export default function Chat() {
           if (msg.type === 'user') {
             return (
               <div key={msg.id}>
-                <UserMessage message={msg.message} timestamp={msg.timestamp} />
+                <UserMessage message={msg.message} />
                 {msg.score && (
                   <PromptScore
                     scores={{
