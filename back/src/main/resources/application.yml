@@ -18,7 +18,7 @@ spring:
     jpa:
         show-sql: true
         hibernate:
-            ddl-auto: create-drop
+            ddl-auto: update
         properties:
             hibernate:
                 format_sql: true               # 🔹 SQL 문을 보기 좋게 정렬 출력
@@ -59,8 +59,17 @@ ssh:
     database-port:    ${DATABASE_PORT} # 원격서버에 있는 db 포트
     rds-endpoint:     ${RDS_ENDPOINT}
 
+<<<<<<< HEAD
 app:
     ssafy:
         openapi:
             base-url: https://project.ssafy.com/ssafy/open-api/v1
             api-key: ${SSAFY_API_KEY}
+=======
+ai:
+  model:
+    url:
+      input-judge: ""
+      llm: ""
+      training-judge: "http://112.171.56.247:8083"
+>>>>>>> d36ae8d (feat: 사용자 입력 평가 Model 비동기 호출)
