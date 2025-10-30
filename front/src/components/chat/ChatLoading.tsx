@@ -1,4 +1,4 @@
-import '../../styles/components/chat/chat-loading.css';
+import '@/styles/components/chat/chat-loading.css';
 
 export default function ChatLoading() {
   return (
@@ -14,4 +14,3 @@ export default function ChatLoading() {
     </div>
   );
 }
-

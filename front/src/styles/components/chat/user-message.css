@@ -6,20 +6,18 @@
   max-width: 48rem;
   margin: 0 auto;
 }
-
-/* 반응형 최대 너비 조정 */
-@media (min-width: 1280px) {
+@media (min-width: 1023px) {
   .user-message-container {
     max-width: 56rem;
+    width: 80%;
+    margin: 0 auto;
   }
 }
-
 @media (max-width: 768px) {
   .user-message-container {
     max-width: 100%;
   }
 }
-
 .user-message {
   max-width: 70%;
   background-color: #d4edda;
@@ -27,7 +25,6 @@
   padding: 12px 16px;
   position: relative;
 }
-
 .user-message-text {
   margin: 0;
   color: #1e1e1e;
@@ -36,7 +33,6 @@
   word-wrap: break-word;
   white-space: pre-wrap;
 }
-
 .user-message-time {
   display: block;
   font-size: 11px;
@@ -44,4 +40,3 @@
   margin-top: 4px;
   text-align: right;
 }
-

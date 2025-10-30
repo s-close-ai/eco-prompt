@@ -1,21 +1,13 @@
 import { useState } from 'react';
+import { useAppShell } from '@/context/AppShellContext';
+import useDeviceMode from '@/hooks/useDeviceMode';
 import '@/styles/components/common/sidebar.css';
-import DashboardIcon from '@/assets/icons/dashboard.svg?react';
-import { useSidebarStore } from '@/stores/useSidebarStore';
-import AddChatIcon from '@/assets/icons/add_chat.svg?react';
-import AddProjectIcon from '@/assets/icons/add_folder.svg?react';
-import SidebarCloseIcon from '@/assets/icons/sidebar_close.svg?react';
-import SidebarOpenIcon from '@/assets/icons/sidebar_open.svg?react';
-import HeaderImage from '@/assets/images/ep_header.png';
-import SearchIcon from '@/assets/icons/search.svg?react';
-import FolderIcon from '@/assets/icons/folder.svg?react';
-import FolderOpenIcon from '@/assets/icons/folder_open.svg?react';
-import { mockChatList, mockProjectList } from '@/data/mockData';
-import BookmarkIcon from '@/assets/icons/bookmark.svg?react';
-import SettingIcon from '@/assets/icons/settings.svg?react';
+import { mockProjectList, mockChatList } from '@/data/mockData';
 
 export default function Sidebar() {
-  const { isOpen, isCollapsed, toggleOpen, toggleCollapsed } = useSidebarStore();
+  const mode = useDeviceMode();
+  const { isSidebarOpen, closeSidebar, isSidebarCollapsed, toggleSidebarCollapsed, toggleSidebar } =
+    useAppShell();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedProjects, setExpandedProjects] = useState<Set<number>>(new Set());
 
@@ -31,26 +23,24 @@ export default function Sidebar() {
     });
   };
 
+  const isOpen = mode === 'desktop' || isSidebarOpen;
+  const isCollapsed = mode === 'desktop' && isSidebarCollapsed;
+
   return (
     <>
       {/* 모바일/태블릿 배경 오버레이 */}
-      {isOpen && (
-        <div
-          className="sidebar-backdrop"
-          onClick={toggleOpen}
-        />
+      {isSidebarOpen && mode === 'mobile' && (
+        <div className="sidebar-backdrop" onClick={closeSidebar} />
       )}
 
       {/* 사이드바 */}
-      <aside
-        className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}
-      >
+      <aside className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}>
         {/* 접힌 상태 - 데스크탑 전용 */}
         {isCollapsed && (
           <div className="sidebar-collapsed">
             <button
               className="sidebar-logo-btn"
-              onClick={toggleCollapsed}
+              onClick={toggleSidebarCollapsed}
               aria-label="사이드바 열기"
             >
               <img src="/logo/ngb_logo_png.png" alt="로고" className="sidebar-logo-icon" />
@@ -62,21 +52,21 @@ export default function Sidebar() {
                 aria-label="검색"
                 onClick={() => console.log('검색 버튼 클릭')}
               >
-                <SearchIcon />
+                <img src="/icons/search.svg" alt="search" width={20} height={20} />
               </button>
               <button
                 className="sidebar-icon-btn"
                 aria-label="새 채팅"
                 onClick={() => console.log('새 채팅 생성')}
               >
-                <AddChatIcon />
+                <img src="/icons/add_chat.svg" alt="add chat" width={20} height={20} />
               </button>
               <button
                 className="sidebar-icon-btn"
                 aria-label="새 프로젝트"
                 onClick={() => console.log('새 프로젝트 생성')}
               >
-                <AddProjectIcon />
+                <img src="/icons/add_folder.svg" alt="add folder" width={20} height={20} />
               </button>
             </div>
 
@@ -86,21 +76,21 @@ export default function Sidebar() {
                 aria-label="대시보드"
                 onClick={() => console.log('대시보드 클릭')}
               >
-                <DashboardIcon />
+                <img src="/icons/dashboard.svg" alt="dashboard" width={20} height={20} />
               </button>
               <button
                 className="sidebar-icon-btn"
                 aria-label="북마크"
                 onClick={() => console.log('북마크 클릭')}
               >
-                <BookmarkIcon />
+                <img src="/icons/bookmark.svg" alt="bookmark" width={20} height={20} />
               </button>
               <button
                 className="sidebar-icon-btn"
                 aria-label="설정"
                 onClick={() => console.log('설정 클릭')}
               >
-                <SettingIcon />
+                <img src="/icons/settings.svg" alt="settings" width={20} height={20} />
               </button>
             </div>
           </div>
@@ -113,54 +103,58 @@ export default function Sidebar() {
             <div className="sidebar-header">
               <div className="sidebar-header-top">
                 <div className="sidebar-logo">
-                  <img src={HeaderImage} alt="Eco Prompt" style={{ width: '170px', height: 'auto' }} />
+                  <img
+                    src="/logo/header_img.png"
+                    alt="Eco Prompt"
+                    style={{ width: '150px', height: 'auto' }}
+                  />
                 </div>
-                <button 
+                <button
                   className="sidebar-toggle-btn sidebar-toggle-desktop"
-                  onClick={toggleCollapsed}
+                  onClick={toggleSidebarCollapsed}
                   aria-label="사이드바 접기"
                 >
-                  <SidebarCloseIcon />
+                  <img src="/icons/sidebar_close.svg" alt="close" width={20} height={20} />
                 </button>
                 <button
                   className="sidebar-toggle-btn sidebar-toggle-mobile"
-                  onClick={toggleOpen}
+                  onClick={mode === 'mobile' ? closeSidebar : toggleSidebar}
                   aria-label="사이드바 닫기"
                 >
-                  <SidebarOpenIcon />
+                  <img src="/icons/sidebar_close.svg" alt="open" width={20} height={20} />
                 </button>
               </div>
 
-              {/* 검색창 - 데스크탑은 버튼, 모바일은 입력창 */}
-              <div className="sidebar-search sidebar-search-desktop" onClick={() => console.log('검색 버튼 클릭')}>
-                <SearchIcon />
+              {/* 검색창 - 데스크탑은 버튼, 모바일/태블릿은 입력창 */}
+              <button
+                className="sidebar-search sidebar-search-desktop"
+                onClick={() => console.log('검색 버튼 클릭')}
+              >
+                <img src="/icons/search.svg" alt="search" width={18} height={18} />
                 <span>검색</span>
-              </div>
+              </button>
 
-              <div className="sidebar-search sidebar-search-mobile">
-                <SearchIcon />
+              <label className="sidebar-search sidebar-search-mobile">
+                <img src="/icons/search.svg" alt="search" width={18} height={18} />
                 <input
                   type="text"
                   placeholder="검색"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-              </div>
+              </label>
 
-              {/* 새 채팅/새 프로젝트 버튼 - 가로로 배치 */}
+              {/* 새 채팅/새 프로젝트 버튼 */}
               <div className="sidebar-actions">
-                <button
-                  className="sidebar-action-btn"
-                  onClick={() => console.log('새 채팅 생성')}
-                >
-                  <AddChatIcon />
+                <button className="sidebar-action-btn" onClick={() => console.log('새 채팅 생성')}>
+                  <img src="/icons/add_chat.svg" alt="add chat" width={18} height={18} />
                   <span>새 채팅</span>
                 </button>
                 <button
                   className="sidebar-action-btn"
                   onClick={() => console.log('새 프로젝트 생성')}
                 >
-                  <AddProjectIcon />
+                  <img src="/icons/add_folder.svg" alt="add folder" width={18} height={18} />
                   <span>새 프로젝트</span>
                 </button>
               </div>
@@ -172,7 +166,7 @@ export default function Sidebar() {
               <div className="sidebar-section">
                 <h3 className="sidebar-section-title">프로젝트</h3>
                 <ul className="sidebar-list">
-                  {mockProjectList.map(project => {
+                  {mockProjectList.map((project) => {
                     const isExpanded = expandedProjects.has(project.id);
                     return (
                       <li key={project.id}>
@@ -180,12 +174,17 @@ export default function Sidebar() {
                           className="sidebar-list-item"
                           onClick={() => toggleProject(project.id)}
                         >
-                          {isExpanded ? <FolderOpenIcon /> : <FolderIcon />}
+                          <img
+                            src={isExpanded ? '/icons/folder_open.svg' : '/icons/folder.svg'}
+                            alt="folder"
+                            width={18}
+                            height={18}
+                          />
                           <span className="sidebar-list-item-text">{project.title}</span>
                         </button>
                         {isExpanded && (
                           <ul className="sidebar-nested-list">
-                            {project.chats.map(chat => (
+                            {project.chats.map((chat) => (
                               <li key={chat.id}>
                                 <button
                                   className="sidebar-list-item sidebar-nested-item"
@@ -210,7 +209,7 @@ export default function Sidebar() {
               <div className="sidebar-section">
                 <h3 className="sidebar-section-title">채팅</h3>
                 <ul className="sidebar-list">
-                  {mockChatList.map(chat => (
+                  {mockChatList.map((chat) => (
                     <li key={chat.id}>
                       <button
                         className="sidebar-list-item sidebar-list-item-no-icon"
@@ -226,25 +225,16 @@ export default function Sidebar() {
 
             {/* 하단 고정 영역 */}
             <div className="sidebar-footer">
-              <button
-                className="sidebar-explore-btn"
-                onClick={() => console.log('탐색하기 클릭')}
-              >
-                <DashboardIcon />
+              <button className="sidebar-explore-btn" onClick={() => console.log('대시보드 클릭')}>
+                <img src="/icons/dashboard.svg" alt="dashboard" width={18} height={18} />
                 <span>대시보드</span>
               </button>
-              <button
-                className="sidebar-explore-btn"
-                onClick={() => console.log('북마크 클릭')}
-              >
-                <BookmarkIcon />
+              <button className="sidebar-explore-btn" onClick={() => console.log('북마크 클릭')}>
+                <img src="/icons/bookmark.svg" alt="bookmark" width={18} height={18} />
                 <span>북마크</span>
               </button>
-              <button
-                className="sidebar-explore-btn"
-                onClick={() => console.log('설정 클릭')}
-              >
-                <SettingIcon />
+              <button className="sidebar-explore-btn" onClick={() => console.log('설정 클릭')}>
+                <img src="/icons/settings.svg" alt="settings" width={18} height={18} />
                 <span>설정</span>
               </button>
             </div>
@@ -254,4 +244,3 @@ export default function Sidebar() {
     </>
   );
 }
-

@@ -1,29 +1,9 @@
 // 임시 Mock 데이터 - 추후 API 연동 시 제거 예정
 
-export interface ChatItem {
-  id: number;
-  title: string;
-}
-
-export interface ProjectItem {
-  id: number;
-  title: string;
-  chats: ChatItem[];
-}
-
-export interface ChatMessage {
-  id: number;
-  type: 'user' | 'ai' | 'loading' | 'error';
-  message: string;
-  timestamp: Date;
-  score?: {
-    clarity: number; // 명확성 (최대 25점)
-    specificity: number; // 구체성 (최대 25점)
-    format: number; // 형식 준수 (최대 25점)
-    completeness: number; // 안정성 (최대 25점)
-    totalScore: number; // 총점 (최대 100점)
-  };
-}
+import type { ChatItem, ProjectItem } from '@/types/sidebar.types';
+import type { ChatMessage } from '@/types/chat.types';
+export type { ChatItem, ProjectItem } from '@/types/sidebar.types';
+export type { ChatMessage, PromptScore } from '@/types/chat.types';
 
 export const mockChatList: ChatItem[] = [
   { id: 1, title: '일일체팅' },
@@ -63,9 +43,7 @@ export const mockProjectList: ProjectItem[] = [
   {
     id: 4,
     title: '지지스캐서 피드백 2',
-    chats: [
-      { id: 401, title: '2차 피드백' },
-    ],
+    chats: [{ id: 401, title: '2차 피드백' }],
   },
 ];
 
@@ -108,7 +86,7 @@ export const mockChatMessages: ChatMessage[] = [
     id: 4,
     type: 'ai',
     message:
-      '물론입니다! Zustand를 사용한 간단한 예제입니다:\n\n```typescript\nimport { create } from \'zustand\';\n\ninterface CounterState {\n  count: number;\n  increment: () => void;\n  decrement: () => void;\n}\n\nconst useCounterStore = create<CounterState>((set) => ({\n  count: 0,\n  increment: () => set((state) => ({ count: state.count + 1 })),\n  decrement: () => set((state) => ({ count: state.count - 1 })),\n}));\n\n// 컴포넌트에서 사용\nfunction Counter() {\n  const { count, increment, decrement } = useCounterStore();\n  \n  return (\n    <div>\n      <p>Count: {count}</p>\n      <button onClick={increment}>+</button>\n      <button onClick={decrement}>-</button>\n    </div>\n  );\n}\n```\n\n이렇게 간단하게 전역 상태를 관리할 수 있습니다!',
+      "물론입니다! Zustand를 사용한 간단한 예제입니다:\n\n```typescript\nimport { create } from 'zustand';\n\ninterface CounterState {\n  count: number;\n  increment: () => void;\n  decrement: () => void;\n}\n\nconst useCounterStore = create<CounterState>((set) => ({\n  count: 0,\n  increment: () => set((state) => ({ count: state.count + 1 })),\n  decrement: () => set((state) => ({ count: state.count - 1 })),\n}));\n\n// 컴포넌트에서 사용\nfunction Counter() {\n  const { count, increment, decrement } = useCounterStore();\n  \n  return (\n    <div>\n      <p>Count: {count}</p>\n      <button onClick={increment}>+</button>\n      <button onClick={decrement}>-</button>\n    </div>\n  );\n}\n```\n\n이렇게 간단하게 전역 상태를 관리할 수 있습니다!",
     timestamp: new Date(2024, 0, 27, 14, 32, 20),
   },
   {
@@ -155,5 +133,4 @@ export const mockChatMessages: ChatMessage[] = [
     message: '메시지를 전송하는 중 오류가 발생했습니다.',
     timestamp: new Date(2024, 0, 27, 14, 40, 5),
   },
-
 ];

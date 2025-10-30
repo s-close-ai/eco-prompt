@@ -11,7 +11,7 @@ public class SubmitMessageRequestDto {
 	@Schema(example = "1")
 	Integer projectId;
 
-	@Schema(example = "")
+	@Schema(example = "1")
 	Long chattingId;
 
 	@Schema(example = "1+1의 결과값을 알려주세요.")
