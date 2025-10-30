@@ -237,7 +237,7 @@
   }
 
   .code-block-language {
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .code-copy-btn {
@@ -247,17 +247,24 @@
 
   .code-copy-btn svg,
   .code-copy-btn img {
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
   }
 
   .ai-message-text pre {
-    font-size: 8px;
+    font-size: 5px !important;
     margin: 12px -8px;
   }
 
   .ai-message-text :not(pre) > code {
-    font-size: 8px;
+    font-size: 5px !important;
     padding: 1px 4px;
+  }
+
+  /* react-syntax-highlighter가 인라인 스타일로 폰트를 지정하므로 강제 오버라이드 */
+  .code-block-wrapper pre,
+  .code-block-wrapper code {
+    font-size: 10px !important;
+    line-height: 1.6;
   }
 }
