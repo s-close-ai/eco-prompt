@@ -54,7 +54,6 @@ public class MessageService {
 
 		//2. message에 대한 UUID 값 생성
 		String messageUUID = UUID.randomUUID().toString();
-		System.out.println(messageUUID);
 
 		//3. Mysql과 MonogoDB에 사용자 입력 메시지 저장
 		saveMessage(messageUUID, chatting, MessageSender.USER, content, MessageStatus.RECEIVED);
