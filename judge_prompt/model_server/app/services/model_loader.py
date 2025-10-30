@@ -1,4 +1,9 @@
-# app/services/judge/model_loader.py
+# model_server/app/services/model_loader.py
+"""
+모델 생성
+모델 로드
+모델 warmup
+"""
 from llama_cpp import Llama
 from loguru import logger
 import asyncio, anyio

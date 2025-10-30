@@ -2,20 +2,13 @@
 import httpx
 from app.core.config import settings
 
-LLAMA_URL=f"{settings.LLAMA_URL}/chat/completions"
+LLAMA_URL=f"{settings.LLAMA_URL}/v1/judge"
 MODEL_NAME=settings.MODEL_NAME
 
-async def request_judge_output(SYSTEM_PROMPT, prompt, grammar_schema):
+async def request_judge_output(SYSTEM_PROMPT, prompt):
     payload = {
-        "model": MODEL_NAME,
-        "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": prompt},
-        ],
-        "max_tokens": 512,
-        "temperature": 0.2,
-        "grammar": grammar_schema,
-        
+        "systemprompt": SYSTEM_PROMPT,
+        "prompt": prompt,        
     }
 
 
