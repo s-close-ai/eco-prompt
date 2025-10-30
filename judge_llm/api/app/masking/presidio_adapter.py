@@ -2,6 +2,7 @@
 from __future__ import annotations
 import os, re
 from typing import List
+from dotenv import load_dotenv
 from presidio_analyzer import AnalyzerEngine
 from presidio_analyzer.recognizer_registry import RecognizerRegistry
 from presidio_analyzer.nlp_engine import SpacyNlpEngine
