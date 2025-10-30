@@ -59,22 +59,11 @@ ssh:
     database-port:    ${DATABASE_PORT} # 원격서버에 있는 db 포트
     rds-endpoint:     ${RDS_ENDPOINT}
 
-<<<<<<< HEAD
 app:
     ssafy:
         openapi:
             base-url: https://project.ssafy.com/ssafy/open-api/v1
             api-key: ${SSAFY_API_KEY}
-<<<<<<< HEAD
-=======
-ai:
-  model:
-    url:
-      input-judge: ""
-      llm: ""
-      training-judge: "http://112.171.56.247:8083"
->>>>>>> d36ae8d (feat: 사용자 입력 평가 Model 비동기 호출)
-=======
 
 ai:
     model:
@@ -82,4 +71,3 @@ ai:
             judge-prompt: ""
             llm: ""
             judge-llm: ${JUDGE_LLM_URL}
->>>>>>> efadf77 (feat: 슈퍼앱 로그인 기능 개발(Access Token만))
