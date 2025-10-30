@@ -1,4 +1,4 @@
-package com.closeai.ecoprompt.config;
+package com.closeai.ecoprompt.common.config;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.Session;

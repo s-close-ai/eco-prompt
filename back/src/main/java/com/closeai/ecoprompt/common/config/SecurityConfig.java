@@ -1,4 +1,4 @@
-package com.closeai.ecoprompt.config;
+package com.closeai.ecoprompt.common.config;
 
 import com.closeai.ecoprompt.security.jwt.JwtAuthenticationFilter;
 import com.closeai.ecoprompt.security.oauth.OAuth2SuccessHandler;

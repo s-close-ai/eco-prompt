@@ -1,4 +1,4 @@
-package com.closeai.ecoprompt.config;
+package com.closeai.ecoprompt.common.config;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
