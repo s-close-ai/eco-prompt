@@ -13,7 +13,7 @@ import os, sys, json, time
 from datetime import datetime
 import requests
 
-API_URL   = os.getenv("API_URL", "http://localhost:8081/api/v1/ai/training").rstrip("/")
+API_URL   = os.getenv("API_URL", "http://localhost:8083/api/v1/ai/training").rstrip("/")
 API_TOKEN = os.getenv("API_TOKEN", "").strip()
 
 def hdr():
