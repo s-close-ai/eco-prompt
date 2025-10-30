@@ -1,4 +1,4 @@
-package com.closeai.ecoprompt.config;
+package com.closeai.ecoprompt.common.config;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
