@@ -65,6 +65,7 @@ app:
         openapi:
             base-url: https://project.ssafy.com/ssafy/open-api/v1
             api-key: ${SSAFY_API_KEY}
+<<<<<<< HEAD
 =======
 ai:
   model:
@@ -73,3 +74,12 @@ ai:
       llm: ""
       training-judge: "http://112.171.56.247:8083"
 >>>>>>> d36ae8d (feat: 사용자 입력 평가 Model 비동기 호출)
+=======
+
+ai:
+    model:
+        url:
+            judge-prompt: ""
+            llm: ""
+            judge-llm: ${JUDGE_LLM_URL}
+>>>>>>> efadf77 (feat: 슈퍼앱 로그인 기능 개발(Access Token만))
