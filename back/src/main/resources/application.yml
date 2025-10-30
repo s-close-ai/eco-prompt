@@ -18,7 +18,7 @@ spring:
     jpa:
         show-sql: true
         hibernate:
-            ddl-auto: create-drop
+            ddl-auto: update
         properties:
             hibernate:
                 format_sql: true               # 🔹 SQL 문을 보기 좋게 정렬 출력
@@ -36,3 +36,10 @@ ssh:
     private-key:      ${PRIVATE_KEY} # ssh 연결 시 사용할 개인키 파일 경로
     database-port:    ${DATABASE_PORT} # 원격서버에 있는 db 포트
     rds-endpoint:     ${RDS_ENDPOINT}
+
+ai:
+  model:
+    url:
+      input-judge: ""
+      llm: ""
+      training-judge: "http://112.171.56.247:8083"

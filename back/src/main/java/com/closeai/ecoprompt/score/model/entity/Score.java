@@ -17,6 +17,9 @@ public class Score extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name="total_score", nullable = false)
+    private Double totalScore;
+
     @Column(name = "clarity_score", nullable = false)
     @Comment("명확성")
     private Double clarityScore;
