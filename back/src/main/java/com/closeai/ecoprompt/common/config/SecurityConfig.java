@@ -31,10 +31,19 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
 			.csrf(AbstractHttpConfigurer::disable)
+			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 			.authorizeHttpRequests(authorize -> authorize
-			.requestMatchers(SWAGGER_URLS).permitAll()
-			.requestMatchers("/api/v1/**").permitAll()
-			.anyRequest().authenticated());
+				.requestMatchers(SWAGGER_URLS).permitAll()
+				.requestMatchers("/", "/login", "/css/**", "/js/**").permitAll()
+				.requestMatchers("/api/v1/auth/sign-in").permitAll()
+				.anyRequest().authenticated()
+			)
+			.oauth2Login(oauth -> oauth
+					.loginProcessingUrl("/api/v1/users/sign-in")  // ✅ redirect-uri endpoint
+					.userInfoEndpoint(u -> u.userService(ssafyOAuth2UserService))
+					.successHandler(oAuth2SuccessHandler)
+			)
+			.logout(logout -> logout.logoutSuccessUrl("/"));
 
 		return http.build();
 	}
