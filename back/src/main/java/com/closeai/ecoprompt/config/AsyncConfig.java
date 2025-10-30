@@ -16,8 +16,8 @@ public class AsyncConfig implements AsyncConfigurer {
 	public Executor taskExecutor() {
 
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-		executor.setCorePoolSize(6);
-		executor.setMaxPoolSize(6);
+		executor.setCorePoolSize(10);
+		executor.setMaxPoolSize(20);
 		executor.setQueueCapacity(100);
 		executor.setThreadNamePrefix("EcoPrompt-");
 		executor.initialize();
