@@ -1,5 +1,4 @@
 # judge_llm/api/app/masking/regex_rules.py
-# -*- coding: utf-8 -*-
 """
 Presidio 통합 베이스 레지스트리
 - 한국어 PII + 글로벌 시크릿/토큰 패턴 탐지용 공통 리소스
@@ -10,6 +9,12 @@ Presidio 통합 베이스 레지스트리
 from __future__ import annotations
 from typing import List
 from presidio_analyzer import Pattern, PatternRecognizer
+
+# 보강형 커스텀 Recognizer들
+from .kr_address_recognizer import KRAddressEnhancedRecognizer
+from .kr_email_recognizer import KREmailRecognizer
+from .kr_ip_recognizer import KRIPRecognizer
+from .high_entropy_recognizer import HighEntropyTokenRecognizer
 
 # 한국어 컨텍스트 토큰 세트
 POS_CONTEXT_KR: set[str] = {
@@ -47,10 +52,10 @@ NEG_CONTEXT_KR: set[str] = {
     "데이터","분석","시스템","서버","모델","프로젝트","회의","문서","계약","납품","품질",
     "마케팅","물류","생산","제조","공정","설비","유지보수","서비스","제품","영업",
     # 시설/건물(주소 과탐지 힌트)
-    "도로","교차로","지하철","역","터미널","공원","빌딩","타워", "로", "번지"
+    "도로","교차로","지하철","역","터미널","공원","빌딩","타워","로","번지",
 }
 
-# 한국 성씨 Top100 (2020 행안부 주민등록 통계 요약)
+# 한국 성씨 Top100 (2020 행안부 요약)
 SURNAMES_KR_TOP100: set[str] = {
     "김","이","박","최","정","강","조","윤","장","임","한","오","서","신","권","황","안","송","류","유",
     "전","홍","고","문","손","배","백","허","남","심","노","양","주","우","민","진","채","천","공","현",
@@ -61,39 +66,25 @@ SURNAMES_KR_TOP100: set[str] = {
 
 # 한국형 PII 정규식 패턴
 PATTERN_PHONE_KR = [
-    # 010-1234-5678 / 010 1234 5678 / 010.1234.5678 / 01012345678
     Pattern("kr_mobile_phone", r"(?<!\d)(?:0?10(?:[\s\-\.]?\d{4}){2}|0?10\d{8})(?!\d)", 0.90),
-    # 02-345-6789 / 031-234-5678 등
-    Pattern("kr_area_phone", r"(?<!\d)(?:0[2-6]\d?)[\s\-\.]?\d{3,4}[\s\-\.]?\d{4}(?!\d)", 0.85),
+    Pattern("kr_area_phone",  r"(?<!\d)(?:0[2-6]\d?)[\s\-\.]?\d{3,4}[\s\-\.]?\d{4}(?!\d)", 0.85),
 ]
 
-# 주민등록번호: 하이픈형 + 13자리 compact형
 PATTERN_RRN_KR = [
-    Pattern("kr_rrn", r"(?<!\d)\d{6}\-\d{7}(?!\d)", 0.95),
-    Pattern("kr_rrn_compact", r"(?<!\d)\d{13}(?!\d)", 0.85),
+    Pattern("kr_rrn",          r"(?<!\d)\d{6}\-\d{7}(?!\d)", 0.95),
+    Pattern("kr_rrn_compact",  r"(?<!\d)\d{13}(?!\d)",       0.85),
 ]
 
-# 이메일(표준 + (at)/(dot) 난독화)
-PATTERN_EMAIL_OBF = [
-    Pattern(
-        "email_std_obf",
-        r"(?<![\w\.\-])[\w.\-+%]+(?:@|\(at\)|\[at\])[\w.\-]+(?:\.|\(dot\)|\[dot\])[A-Za-z]{2,24}(?![\w.\-])",
-        0.90
-    )
-]
-
-# 카드: 블록형/연속형 분리(연속형 점수 낮게 → RRN에 밀리도록)
 PATTERN_CARD_GENERIC = [
-    Pattern("card_block_4x", r"(?<!\d)\d{4}(?:[\s\-]?\d{4}){2,4}(?!\d)", 0.65),
-    Pattern("card_contiguous", r"(?<!\d)\d{13,19}(?!\d)", 0.35),
+    Pattern("card_block_4x",    r"(?<!\d)\d{4}(?:[\s\-]?\d{4}){2,4}(?!\d)", 0.65),
+    Pattern("card_contiguous",  r"(?<!\d)\d{13,19}(?!\d)",                 0.35),
 ]
 
-# 주소(완화형, 컨텍스트/상호강화로 점수 보강 예정)
 PATTERN_ADDRESS_LOOSE_KR = [
     Pattern(
         "kr_addr_loose",
         r"(?:[가-힣A-Za-z]{2,}(?:시|도))\s+(?:[가-힣A-Za-z]{1,}(?:구|군)|[가-힣A-Za-z0-9]{1,}(?:동|읍|면)|[가-힣A-Za-z0-9]{1,}(?:로|길)\s*\d{1,4}|\d{1,4}(?:-\d{1,4})?번?지?)(?:\s*\(\d{5}\))?",
-        0.40
+        0.40,
     ),
 ]
 
@@ -109,10 +100,10 @@ PATTERN_SECRETS_GLOBAL = [
     # Azure Connection strings(대표 키워드 기반)
     Pattern("azure_conn_str", r"(AccountKey|SharedAccessKey|PrimaryKey|ClientSecret)\s*=\s*[A-Za-z0-9/\+=]{20,}", 0.90),
 
-    # JWT(헤더.페이로드.서명) — 세 구간 최소 1자 이상으로 완화
+    # JWT(헤더.페이로드.서명)
     Pattern("jwt_token", r"eyJ[A-Za-z0-9_\-]*\.[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", 0.95),
 
-    # Git SHA(7~40) — 최소 1개 이상의 영문자 포함 강제(숫자-only 오탐 방지)
+    # Git SHA(7~40) — 숫자-only 오탐 방지
     Pattern("git_sha", r"\b(?=[a-f0-9]{7,40}\b)(?=.*[a-f])[a-f0-9]{7,40}\b", 0.60),
 
     # SSH / PEM Private Key
@@ -121,11 +112,9 @@ PATTERN_SECRETS_GLOBAL = [
     # UUID (8-4-4-4-12)
     Pattern("uuid_generic", r"\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b", 0.70),
 
-    # Generic API tokens (20+)
+    # Generic API tokens (20+)  ※ 고엔트로피 인식기와 보완 관계
     Pattern("api_token_generic", r"(?<![A-Za-z0-9/\-_])[A-Za-z0-9/\-_]{20,}(?![A-Za-z0-9/\-_])", 0.60),
-
-    # Base64 blob(고엔트로피)
-    Pattern("high_entropy_blob", r"(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{50,}(?![A-Za-z0-9/+=])", 0.50),
+    # (중복 방지) high_entropy_blob 패턴은 HighEntropyTokenRecognizer로 이동
 ]
 
 # Recognizer 헬퍼
@@ -143,14 +132,6 @@ def make_rrn_recognizer() -> PatternRecognizer:
         name="KRRRNRecognizer",
         patterns=PATTERN_RRN_KR,
         context=list(POS_CONTEXT_KR | {"resident", "rrn", "id"}),
-    )
-
-def make_email_recognizer() -> PatternRecognizer:
-    return PatternRecognizer(
-        supported_entity="EMAIL_ADDRESS",
-        name="EmailObfRecognizer",
-        patterns=PATTERN_EMAIL_OBF,
-        context=list(POS_CONTEXT_KR | {"mail", "email"}),
     )
 
 def make_card_recognizer() -> PatternRecognizer:
@@ -178,12 +159,24 @@ def make_secret_recognizer() -> PatternRecognizer:
     )
 
 def make_all_default() -> List[PatternRecognizer]:
-    """PII + Secrets 통합 기본 세트"""
+    """PII + Secrets 통합 기본 세트 (중복 제거/보강 버전)"""
     return [
+        # 기본 PII
         make_phone_recognizer(),
         make_rrn_recognizer(),
-        make_email_recognizer(),
         make_card_recognizer(),
+
+        # 주소: 루즈 + 보강형
         make_addr_recognizer(),
+        KRAddressEnhancedRecognizer(),
+
+        # 이메일: 전용 보강형 (난독화 포함)
+        KREmailRecognizer(),
+
+        # 시크릿/토큰
         make_secret_recognizer(),
+        HighEntropyTokenRecognizer(),
+
+        # IP 주소(공개 IPv4/IPv6, 사설 IPv4 낮은 점수)
+        KRIPRecognizer(),
     ]
