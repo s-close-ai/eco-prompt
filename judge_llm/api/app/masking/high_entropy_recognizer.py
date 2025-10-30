@@ -1,50 +1,48 @@
 # judge_llm/api/app/masking/high_entropy_recognizer.py
 """
 HighEntropyTokenRecognizer
-- Base64/URL-safe 계열의 긴 토큰 + 엔트로피 기반 필터
-- JWT 등과 중복될 수 있으므로 entity 분류: HIGH_ENTROPY_TOKEN
+- 길고 엔트로피가 높은 토큰/시크릿(베어 값) 탐지
+- Presidio PatternRecognizer 기반
 """
 from __future__ import annotations
-import math
 import re
 from typing import List
 from presidio_analyzer import Pattern, PatternRecognizer, RecognizerResult
 
-# 길이 24+ 의 Base64/URL-safe 알파벳 시퀀스
-_BASE64_URLISH = r"(?<![A-Za-z0-9_\-\/\+=])[A-Za-z0-9_\-\/\+=]{24,}(?![A-Za-z0-9_\-\/\+=])"
-
-def shannon_entropy(s: str) -> float:
-    if not s:
-        return 0.0
-    freq = {}
-    for ch in s:
-        freq[ch] = freq.get(ch, 0) + 1
-    n = len(s)
-    return -sum((c/n) * math.log2(c/n) for c in freq.values())
+# 길이 50+의 base64-ish/URL-safe 문자들(스페이스/경계 포함)
+_HIGH_ENTROPY_RX = r"(?<![A-Za-z0-9/+=._-])[A-Za-z0-9/+=._~-]{50,}(?![A-Za-z0-9/+=._-])"
 
 class HighEntropyTokenRecognizer(PatternRecognizer):
-    def __init__(self, entropy_threshold: float = 3.5):
+    def __init__(self):
+        patterns = [
+            Pattern("high_entropy_blob", _HIGH_ENTROPY_RX, 0.50),
+        ]
         super().__init__(
             supported_entity="HIGH_ENTROPY_TOKEN",
             name="HighEntropyTokenRecognizer",
-            patterns=[Pattern("base64ish_long", _BASE64_URLISH, 0.40)],
-            context=["token", "secret", "apikey", "key", "bearer", "auth", "credential"],
+            patterns=patterns,
+            context=["secret","token","key","credential","env","config","header"],
         )
-        self.entropy_threshold = entropy_threshold
-
-    def validate_result(self, pattern_text: str) -> bool:
-        # 너무 긴 base64 blob은 이미 다른 recognizer(SECRET_KEY 등)와 중복될 수 있으니
-        # 엔트로피로 보수적 필터링
-        return shannon_entropy(pattern_text) >= self.entropy_threshold
 
     def analyze(self, text: str, entities: List[str] = None, nlp_artifacts=None) -> List[RecognizerResult]:
-        if entities and self.supported_entity not in entities:
+        # Presidio v2 호환: supported_entities(list) 우선
+        target = None
+        if hasattr(self, "supported_entities") and self.supported_entities:
+            target = self.supported_entities[0]
+        else:
+            target = getattr(self, "supported_entity", None)
+
+        if entities and (target not in entities):
             return []
+
+        # 기본 탐지
         results = super().analyze(text, entities, nlp_artifacts)
-        filtered: List[RecognizerResult] = []
+
+        # 간단한 후처리(너무 반복적인 문자만 있는 경우 등은 버림)
+        filtered = []
         for r in results:
-            if self.validate_result(text[r.start:r.end]):
-                # 엔트로피 요건 충족 시 점수 상향
-                r.score = max(r.score, 0.80)
+            span = text[r.start:r.end]
+            # 예: aaaaa… 같은 저엔트로피 제거(고정 임계: 서로 다른 문자 6종 이상 요구)
+            if len(set(span)) >= 6:
                 filtered.append(r)
         return filtered

@@ -84,10 +84,15 @@ class PresidioAdapter:
         self.operators = {
             "KR_PHONE_NUMBER": OperatorConfig("replace", {"new_value": "<PHONE>"}),
             "KR_RRN":          OperatorConfig("replace", {"new_value": "<RRN>"}),
-            "KR_ADDRESS":      OperatorConfig("replace", {"new_value": "<ADDRESS>"}),  # (실제는 수동치환)
-            "EMAIL_ADDRESS":   OperatorConfig("replace", {"new_value": "<EMAIL>"}),    # (실제는 수동치환)
+            "KR_ADDRESS":      OperatorConfig("replace", {"new_value": "<ADDRESS>"}),
+            "EMAIL_ADDRESS":   OperatorConfig("replace", {"new_value": "<EMAIL>"}),
             "CREDIT_CARD":     OperatorConfig("replace", {"new_value": "<CARD>"}),
             "SECRET_KEY":      OperatorConfig("replace", {"new_value": "<SECRET>"}),
+            "IP_ADDRESS":        OperatorConfig("replace", {"new_value": "<IP>"}),
+            "KR_BANK_ACCOUNT":   OperatorConfig("replace", {"new_value": "<BANK_ACCT>"}),
+            "KR_BIZNO":          OperatorConfig("replace", {"new_value": "<BIZNO>"}),
+            "SENSITIVE_CONFIG":  OperatorConfig("replace", {"new_value": "<SECRET>"}),
+            "HIGH_ENTROPY_TOKEN":OperatorConfig("replace", {"new_value": "<SECRET>"}),  # ← 추가
         }
 
     def anonymize(self, text: str, lang: str = "ko") -> str:
@@ -115,7 +120,11 @@ class PresidioAdapter:
         others = self.analyzer.analyze(
             text=masked,
             language=lang,
-            entities=["KR_PHONE_NUMBER", "KR_RRN", "CREDIT_CARD", "SECRET_KEY"]
+            entities=[
+                "KR_PHONE_NUMBER","KR_RRN","CREDIT_CARD","SECRET_KEY",
+                "IP_ADDRESS","KR_BANK_ACCOUNT","KR_BIZNO","SENSITIVE_CONFIG",
+                "HIGH_ENTROPY_TOKEN",
+            ]
         )
         if others:
             masked = self.anonymizer.anonymize(text=masked, analyzer_results=others, operators=self.operators).text

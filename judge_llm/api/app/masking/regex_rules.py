@@ -14,7 +14,11 @@ from presidio_analyzer import Pattern, PatternRecognizer
 from .kr_address_recognizer import KRAddressEnhancedRecognizer
 from .kr_email_recognizer import KREmailRecognizer
 from .kr_ip_recognizer import KRIPRecognizer
-from .high_entropy_recognizer import HighEntropyTokenRecognizer
+from .high_entropy_recognizer import HighEntropyTokenRecognizer as HighEntropyRecognizer
+from .kr_bank_recognizer import KRBankRecognizer
+from .kr_bizno_recognizer import KRBizNoRecognizer
+from .kr_secret_ext_recognizer import KRSecretExtRecognizer
+
 
 # 한국어 컨텍스트 토큰 세트
 POS_CONTEXT_KR: set[str] = {
@@ -165,18 +169,13 @@ def make_all_default() -> List[PatternRecognizer]:
         make_phone_recognizer(),
         make_rrn_recognizer(),
         make_card_recognizer(),
-
-        # 주소: 루즈 + 보강형
         make_addr_recognizer(),
-        KRAddressEnhancedRecognizer(),
-
-        # 이메일: 전용 보강형 (난독화 포함)
-        KREmailRecognizer(),
-
-        # 시크릿/토큰
         make_secret_recognizer(),
-        HighEntropyTokenRecognizer(),
-
-        # IP 주소(공개 IPv4/IPv6, 사설 IPv4 낮은 점수)
-        KRIPRecognizer(),
+        KRAddressEnhancedRecognizer(),  # KR_ADDRESS (정교)
+        KREmailRecognizer(),            # EMAIL_ADDRESS (난독화 강화)
+        KRIPRecognizer(),               # IP_ADDRESS
+        HighEntropyRecognizer(),        # HIGH_ENTROPY_TOKEN
+        KRBankRecognizer(),             # KR_BANK_ACCOUNT
+        KRBizNoRecognizer(),            # KR_BIZNO (체크섬)
+        KRSecretExtRecognizer(),        # SENSITIVE_CONFIG (password=/token=/Bearer)
     ]
