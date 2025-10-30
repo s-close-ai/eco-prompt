@@ -28,8 +28,8 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # CRA(Create React App) 프로젝트라면 아래로 변경:
 # COPY --from=builder /app/build /usr/share/nginx/html
 
-# Nginx 설정 교체 (PWA 및 SPA 지원)
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# # Nginx 설정 교체 (PWA 및 SPA 지원)
+# COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Nginx는 기본 80포트 사용
 EXPOSE 80

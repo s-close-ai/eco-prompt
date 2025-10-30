@@ -5,22 +5,19 @@
   max-width: 48rem;
   margin: 0 auto;
 }
-
-/* 반응형 최대 너비 조정 */
-@media (min-width: 1280px) {
+@media (min-width: 1023px) {
   .error-message-container {
     max-width: 56rem;
+    width: 80%;
+    margin: 0 auto;
   }
 }
-
-/* 모바일 */
 @media (max-width: 768px) {
   .error-message-container {
     max-width: 100%;
     padding: 16px;
   }
 }
-
 .error-message {
   width: 100%;
   max-width: none;
@@ -32,27 +29,23 @@
   gap: 12px;
   align-items: flex-start;
 }
-
 .error-message-icon {
   color: #d32f2f;
   flex-shrink: 0;
   margin-top: 2px;
 }
-
 .error-message-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
 .error-message-text {
   margin: 0;
   color: #d32f2f;
   font-size: 14px;
   line-height: 1.5;
 }
-
 .error-message-retry-btn {
   align-self: flex-start;
   background-color: #ffffff;
@@ -65,13 +58,10 @@
   cursor: pointer;
   transition: all 0.2s;
 }
-
 .error-message-retry-btn:hover {
   background-color: #d32f2f;
   color: #ffffff;
 }
-
 .error-message-retry-btn:active {
   transform: scale(0.98);
 }
-

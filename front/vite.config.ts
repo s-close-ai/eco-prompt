@@ -1,8 +1,8 @@
-import { defineConfig } from 'vite'
-import { fileURLToPath, URL } from 'url'
-import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
-import svgr from 'vite-plugin-svgr'
+import { defineConfig } from 'vite';
+import { fileURLToPath, URL } from 'url';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
+import svgr from 'vite-plugin-svgr';
 
 export default defineConfig({
   resolve: {
@@ -27,8 +27,18 @@ export default defineConfig({
         start_url: '/',
         lang: 'ko',
         icons: [
-          { src: '/logo/wgb_logo_png_name.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: '/logo/wgb_logo_png_name.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          {
+            src: '/logo/wgb_logo_png_name.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: '/logo/wgb_logo_png_name.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+          },
         ],
         shortcuts: [
           {
@@ -60,4 +70,4 @@ export default defineConfig({
       devOptions: { enabled: true, navigateFallback: 'index.html', suppressWarnings: true },
     }),
   ],
-})
+});
