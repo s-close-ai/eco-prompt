@@ -16,7 +16,7 @@ public class Project extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "title", length = 100, nullable = false)
+    @Column(name = "title", length = 100)
     private String title;
 
     // FK: project.user_id -> user.user_id
