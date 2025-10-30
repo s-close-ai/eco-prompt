@@ -11,7 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
 
 	@Bean
-	public WebClient.Builder webClient() {
+	public WebClient.Builder webClientBuilder() {
 		return WebClient.builder()
 			.defaultHeader(HttpHeaders.ACCEPT, "application/json")
 			.defaultHeader(HttpHeaders.CONTENT_TYPE, "application/json");
