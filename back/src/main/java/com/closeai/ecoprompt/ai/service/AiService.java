@@ -40,7 +40,7 @@ public class AiService {
 	/**
 	 * JudgeModel 실행 완료 후 이벤트 생성 함수
 	 * */
-	@Async("callInputJudgeModel")
+	@Async
 	public void callInputJudgeModel(String messageUUID, String content){
 
 		runInputJudgeModel(messageUUID, content)
