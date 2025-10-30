@@ -5,7 +5,6 @@ from llama_cpp import  LlamaGrammar
 # from app.services.judge.model_loader import get_llama_model
 from app.services.judge.tokenizer_config import extract_features
 from app.schemas.response import JudgeModelOutput
-from app.services.judge.json_grammar import JUDGE_JSON_SCHEMA
 from app.services.judge.llama_client import request_judge_output
 # 모델 호출
 # 토크나이저 -> 자연어 메타 헤더 추출
@@ -14,7 +13,6 @@ from app.services.judge.llama_client import request_judge_output
     # user_personal_prompt는 미사용
 # 모델 추론
 
-grammar = LlamaGrammar.from_json_schema(json.dumps(JUDGE_JSON_SCHEMA))
 
 async def run_judge_model(user_input, user_personal_prompt):
     logger.debug("run_judge_model 실행")
@@ -152,14 +150,9 @@ async def run_judge_model(user_input, user_personal_prompt):
         }
 
     """
-    # [META]
-    # {meta_header}
 
-    # [USER PROMPT]
-    # {user_input}
 
     prompt = (
-        # f"{SYSTEM_PROMPT}\n\n"
         f"[META]\n{meta_header}\n\n"
         f"[USER PROMPT]\n{user_input}\n"
     )
@@ -172,52 +165,18 @@ async def run_judge_model(user_input, user_personal_prompt):
             v = 0.0
         return round(max(0.0, min(25.0, v)), 2)
 
-    # def _infer():
-    #     logger.debug("[_infer] 실행")
-    #     try: 
-    #         out = llm(
-    #             prompt,
-    #             max_tokens=1024,
-    #             temperature=0.2,
-    #             grammar=grammar
-    #         )
-    #         return out
-    #     except Exception as e:
-    #         logger.error(f"[_infer] exception : {e}")
-    #         raise
+    # 서버 분리 후, grammar 전달 -> json_schema 그대로 전달해야됨
+    result = await request_judge_output(SYSTEM_PROMPT, prompt)
 
-    # result = await anyio.to_thread.run_sync(_infer)
-    result = await request_judge_output(SYSTEM_PROMPT, prompt, grammar)
+    #  if not isinstance(result, dict) or "scoreInfo" not in result:
+    #     # (레거시/예외) 만약 혹시 기존 OpenAI 호환 응답 형태가 들어온다면
+    #     # choices[0].message.content 에서 JSON 추출 로직을 여기서 분기 처리해도 됨.
+    #     logger.error(f"Unexpected judge response format: {result}")
+    #     raise ValueError("Judge response format invalid")
 
-    # logger.success(f"result: {result}")
-    try:
-        text = (result.get("choices", [{}])[0].get("text") or "").strip()
-        logger.success(f"[raw output] {text}")
-    except Exception as e:
-        logger.error(f"invalid result structure: {e}")
-        raise ValueError("Llama server output invalid")
+    j = result
+    info = j.get("scoreInfo", {})
 
-    # if not text:
-    #     logger.error(f"output 없음: {result}")
-    #     raise ValueError("Judge output 비어있음")
-    json_match = re.search(r"\{[\s\S]*\}", text)
-    if not json_match:
-        logger.error(f"JSON block not found in output: {text[:200]}")
-        raise ValueError("Judge output does not contain valid JSON structure")
-
-    json_str = json_match.group(0)
-
-    try:
-        j = json.loads(text)
-    except Exception as e:
-        logger.error(f"JSONDecodeError: raw={text!r} err={e}")
-        raise ValueError("Judge output is not valid JSON object")
-    # logger.debug(f"result:{result}")
-    
-    # logger.debug(f"content:{content}")
-   
-    # 2) 스키마 필드 접근 + 보정
-    info = j["scoreInfo"]
     clarity = _clamp2(info.get("clarityScore"))
     specificity = _clamp2(info.get("specificityScore"))
     format_ = _clamp2(info.get("formatScore"))
@@ -232,4 +191,3 @@ async def run_judge_model(user_input, user_personal_prompt):
         overallScore=total,
         summary=j.get("summary", ""),
     )
-    

@@ -6,7 +6,7 @@ from app.api.inference import router
 from app.core.config import settings
 
 MODEL_READY_FLAG_KEY = "model_ready"
-LLAMA_HEALTH_URL=f"{settings.LLAMA_URL}/models"
+LLAMA_HEALTH_URL=f"{settings.LLAMA_URL}/healthz"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
