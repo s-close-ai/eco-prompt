@@ -1,5 +1,5 @@
 import Button from '@/components/common/Button';
-import '@/styles/pages/project-create.css';
+import '@/styles/components/project/project-create.css';
 
 type ProjectOverviewProps = {
   title: string;
@@ -19,10 +19,10 @@ export default function ProjectOverview({ title, onStart }: ProjectOverviewProps
         </Button>
       </header>
       <div className="project-create__body">
-        <p className="project-create__assist">프로젝트 컨텍스트에서 대화를 시작하거나, 이전 채팅으로 이동하세요.</p>
+        <p className="project-create__assist">
+          프로젝트 컨텍스트에서 대화를 시작하거나, 이전 채팅으로 이동하세요.
+        </p>
       </div>
     </section>
   );
 }
-
-

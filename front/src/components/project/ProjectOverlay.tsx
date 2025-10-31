@@ -17,12 +17,11 @@ export default function ProjectOverlay({ open, onClose, variant, title }: Projec
     ) : null;
   }
 
-  const sheetVariant = variant === 'fullscreen' ? 'fullscreen' : variant === 'bottom' ? 'bottom' : 'modal';
+  const sheetVariant =
+    variant === 'fullscreen' ? 'fullscreen' : variant === 'bottom' ? 'bottom' : 'modal';
   return (
     <Sheet open={open} onClose={onClose} variant={sheetVariant} ariaLabel="프로젝트">
       <ProjectOverview title={title} onStart={onClose} />
     </Sheet>
   );
 }
-
-
