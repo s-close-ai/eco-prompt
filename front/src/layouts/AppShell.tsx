@@ -6,25 +6,18 @@ import Sidebar from '../components/common/Sidebar';
 import Bottombar from '../components/common/Bottombar';
 import useDeviceMode from '../hooks/useDeviceMode';
 import ProjectCreateOverlay from '@/components/project_create/ProjectCreateOverlay';
-import ProjectOverlay from '@/components/project/ProjectOverlay';
-import { mockProjectList } from '@/data/mockData';
 import { useNavigate } from 'react-router-dom';
 
 function ShellBody() {
   const location = useLocation();
-  const navigate = useNavigate();
+  useNavigate();
   const mode = useDeviceMode();
   const { isSidebarCollapsed, isSidebarOpen } = useAppShell();
   const isChat = location.pathname.startsWith('/chat');
   const isHome = location.pathname === '/';
   const isProjectRoute = location.pathname.startsWith('/project');
-  const bottomVariant: 'chat' | 'menu' | null = isChat
-    ? 'chat'
-    : isHome || isProjectRoute
-    ? null
-    : mode === 'mobile'
-    ? 'menu'
-    : null;
+  const bottomVariant: 'chat' | 'menu' | null =
+    isChat || isProjectRoute ? 'chat' : isHome ? null : mode === 'mobile' ? 'menu' : null;
 
   const [isProjectCreateOpen, setProjectCreateOpen] = useState(false);
   useEffect(() => {
@@ -41,18 +34,8 @@ function ShellBody() {
   const projectCreateVariant: 'inline' | 'modal' | 'fullscreen' | 'bottom' =
     mode === 'mobile' ? 'fullscreen' : mode === 'tablet' ? 'inline' : 'modal';
 
-  // 프로젝트 오버레이(선택 시) - 모바일/태블릿에서만 오버레이로 표시, 데스크탑은 메인 영역에 페이지로 표시
-  const projectVariant: 'inline' | 'modal' | 'fullscreen' | null = isProjectRoute
-    ? mode === 'mobile'
-      ? 'fullscreen'
-      : mode === 'tablet'
-      ? 'inline'
-      : null
-    : null;
   // /project 페이지에서는 history state로 projectId를 전달받음
-  const historyState = (location as unknown as { state?: { projectId?: number } }).state || {};
-  const projectId = typeof historyState.projectId === 'number' ? historyState.projectId : null;
-  const projectTitle = projectId ? mockProjectList.find((p) => p.id === projectId)?.title ?? '' : '';
+  (location as unknown as { state?: { projectId?: number } }).state || {};
 
   const shellClass = [
     'app-shell',
@@ -75,14 +58,6 @@ function ShellBody() {
             variant="inline"
           />
         ) : null}
-        {projectVariant === 'inline' ? (
-          <ProjectOverlay
-            open={true}
-            onClose={() => navigate(-1)}
-            variant="inline"
-            title={projectTitle}
-          />
-        ) : null}
         <Outlet />
       </main>
       {bottomVariant ? <Bottombar variant={bottomVariant} /> : null}
@@ -91,14 +66,6 @@ function ShellBody() {
           open={isProjectCreateOpen}
           onClose={() => setProjectCreateOpen(false)}
           variant={projectCreateVariant}
-        />
-      ) : null}
-      {projectVariant && projectVariant !== 'inline' ? (
-        <ProjectOverlay
-          open={true}
-          onClose={() => navigate(-1)}
-          variant={projectVariant}
-          title={projectTitle}
         />
       ) : null}
     </div>
