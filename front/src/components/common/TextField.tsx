@@ -1,4 +1,5 @@
-import { InputHTMLAttributes, forwardRef } from 'react';
+import { forwardRef } from 'react';
+import type { InputHTMLAttributes } from 'react';
 import '@/styles/components/common/text-field.css';
 
 export type TextFieldProps = {
@@ -42,6 +43,3 @@ const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextFiel
 });
 
 export default TextField;
-
-
-

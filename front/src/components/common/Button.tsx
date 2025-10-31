@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes, PropsWithChildren } from 'react';
 import '@/styles/components/common/button.css';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost';
-type ButtonSize = 'sm' | 'md' | 'lg';
+type ButtonSize = 'sm' | 'md' | 'lg' | 'mobile';
 
 export type ButtonProps = {
   variant?: ButtonVariant;
@@ -36,13 +36,16 @@ export default function Button({
     .join(' ');
 
   return (
-    <button type={type} className={className} disabled={isDisabled} aria-label={ariaLabel} {...rest}>
+    <button
+      type={type}
+      className={className}
+      disabled={isDisabled}
+      aria-label={ariaLabel}
+      {...rest}
+    >
       {leftIconSrc ? <img src={leftIconSrc} alt="" aria-hidden width={18} height={18} /> : null}
       <span className="ep-button__label">{children}</span>
       {rightIconSrc ? <img src={rightIconSrc} alt="" aria-hidden width={18} height={18} /> : null}
     </button>
   );
 }
-
-
-

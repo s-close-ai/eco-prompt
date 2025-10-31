@@ -4,13 +4,16 @@
   justify-content: center;
   gap: 8px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: 4px;
   background: #5e9462;
   color: #ffffff;
   padding: 10px 14px;
   font-weight: 600;
   line-height: 1;
-  transition: background 120ms ease, transform 60ms ease, box-shadow 120ms ease;
+  transition:
+    background 120ms ease,
+    transform 60ms ease,
+    box-shadow 120ms ease;
 }
 
 .ep-button.is-full {
@@ -28,6 +31,12 @@
 .ep-button--lg {
   padding: 12px 16px;
   font-size: 16px;
+}
+
+.ep-button--mobile {
+  padding: 10px 14px;
+  font-size: 15px;
+  width: 100%;
 }
 
 .ep-button--secondary {
@@ -53,6 +62,3 @@
 .ep-button:active:not(:disabled) {
   transform: translateY(1px);
 }
-
-
-
