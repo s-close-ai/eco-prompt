@@ -13,18 +13,6 @@ export default function Sidebar() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedProjects, setExpandedProjects] = useState<Set<number>>(new Set());
 
-  const toggleProject = (projectId: number) => {
-    setExpandedProjects((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(projectId)) {
-        newSet.delete(projectId);
-      } else {
-        newSet.add(projectId);
-      }
-      return newSet;
-    });
-  };
-
   const openOnlyProject = (projectId: number) => {
     setExpandedProjects(new Set([projectId]));
   };
@@ -71,7 +59,7 @@ export default function Sidebar() {
                 className="sidebar-icon-btn"
                 aria-label="새 프로젝트"
                 onClick={() => {
-                  if (mode === 'mobile') {
+                  if (mode !== 'desktop' && mode !== 'tablet') {
                     closeSidebar();
                   }
                   window.dispatchEvent(new CustomEvent('project-create-open'));
