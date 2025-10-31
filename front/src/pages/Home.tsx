@@ -1,10 +1,20 @@
+import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ChatInput from '@/components/chat/ChatInput';
+import { generateChatId } from '@/utils/id';
 
 export default function Home() {
-  const handleSend = (message: string) => {
-    // TODO: 채팅 시작 로직
-    console.log('입력:', message);
-  };
+  const navigate = useNavigate();
+
+  const handleSend = useCallback(
+    (message: string) => {
+      const newChatId = generateChatId();
+      navigate(`/chat/${newChatId}`, {
+        state: { chatId: newChatId, isNew: true, message },
+      });
+    },
+    [navigate],
+  );
 
   return (
     <div
