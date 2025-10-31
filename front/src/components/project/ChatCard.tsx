@@ -18,11 +18,7 @@ function ChatCard({ id, title, preview, timestamp, onClick }: ChatCardProps) {
   };
 
   return (
-    <button
-      className="project-chat-card"
-      onClick={handleClick}
-      aria-label={`${title} 채팅 열기`}
-    >
+    <button className="project-chat-card" onClick={handleClick} aria-label={`${title} 채팅 열기`}>
       <div className="project-chat-card__title-row">
         <span className="project-chat-card__title">{title}</span>
         {formattedDate && <span className="project-chat-card__date">{formattedDate}</span>}

@@ -15,10 +15,7 @@ export default function Project() {
   const locationState = location.state as ProjectLocationState | undefined;
   const projectId = locationState?.projectId ?? NaN;
 
-  const project = useMemo(
-    () => mockProjectList.find((p) => p.id === projectId),
-    [projectId],
-  );
+  const project = useMemo(() => mockProjectList.find((p) => p.id === projectId), [projectId]);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -187,9 +184,7 @@ export default function Project() {
                 aria-hidden="true"
               />
               <h2 className="project-page-empty-title">아직 채팅이 없습니다</h2>
-              <p className="project-page-empty-description">
-                아래 입력창에서 새 채팅을 시작하세요
-              </p>
+              <p className="project-page-empty-description">아래 입력창에서 새 채팅을 시작하세요</p>
             </div>
           </div>
         )}
