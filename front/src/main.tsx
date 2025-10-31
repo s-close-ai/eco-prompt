@@ -26,6 +26,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'chat', element: <Chat /> },
+      { path: 'chat/:chatId', element: <Chat /> },
       { path: 'project', element: <Project /> },
     ],
   },
