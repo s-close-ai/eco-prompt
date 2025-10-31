@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import '@/styles/components/common/sidebar.css';
 import { mockProjectList, mockChatList } from '@/data/mockData';
 
 export default function Sidebar() {
+  const navigate = useNavigate();
   const mode = useDeviceMode();
   const { isSidebarOpen, closeSidebar, isSidebarCollapsed, toggleSidebarCollapsed, toggleSidebar } =
     useAppShell();
@@ -21,6 +23,10 @@ export default function Sidebar() {
       }
       return newSet;
     });
+  };
+
+  const openOnlyProject = (projectId: number) => {
+    setExpandedProjects(new Set([projectId]));
   };
 
   const isOpen = mode === 'desktop' || isSidebarOpen;
@@ -64,7 +70,12 @@ export default function Sidebar() {
               <button
                 className="sidebar-icon-btn"
                 aria-label="새 프로젝트"
-                onClick={() => console.log('새 프로젝트 생성')}
+                onClick={() => {
+                  if (mode === 'mobile') {
+                    closeSidebar();
+                  }
+                  window.dispatchEvent(new CustomEvent('project-create-open'));
+                }}
               >
                 <img src="/icons/add_folder.svg" alt="add folder" width={20} height={20} />
               </button>
@@ -152,7 +163,12 @@ export default function Sidebar() {
                 </button>
                 <button
                   className="sidebar-action-btn"
-                  onClick={() => console.log('새 프로젝트 생성')}
+                  onClick={() => {
+                    if (mode === 'mobile') {
+                      closeSidebar();
+                    }
+                    window.dispatchEvent(new CustomEvent('project-create-open'));
+                  }}
                 >
                   <img src="/icons/add_folder.svg" alt="add folder" width={18} height={18} />
                   <span>새 프로젝트</span>
@@ -172,7 +188,10 @@ export default function Sidebar() {
                       <li key={project.id}>
                         <button
                           className="sidebar-list-item"
-                          onClick={() => toggleProject(project.id)}
+                          onClick={() => {
+                            openOnlyProject(project.id);
+                            navigate('/project', { state: { projectId: project.id } });
+                          }}
                         >
                           <img
                             src={isExpanded ? '/icons/folder_open.svg' : '/icons/folder.svg'}

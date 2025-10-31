@@ -1,0 +1,60 @@
+.project-create {
+  display: grid;
+  gap: 12px;
+  }
+  
+  .project-create__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 12px;
+  }
+  
+  .project-create__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  }
+  
+  .project-create__title h2 {
+  font-size: 20px;
+  font-weight: 700;
+  }
+  
+  .project-create__body {
+  display: grid;
+  gap: 10px;
+  }
+  
+  .project-create__assist {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.6);
+  }
+  
+  /* inline card (tablet) */
+.project-create-inline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  padding: 16px 16px 24px;
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+}
+  
+.project-create-inline > .project-create.container {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 12px;
+  padding: 14px 14px 18px;
+    width: 100%;
+  max-width: 680px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
+  pointer-events: auto;
+  }
+  
+  
+  
