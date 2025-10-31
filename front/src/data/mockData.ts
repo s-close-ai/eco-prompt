@@ -17,33 +17,85 @@ export const mockProjectList: ProjectItem[] = [
     id: 1,
     title: '지지스캐서 피드백',
     chats: [
-      { id: 101, title: '첫 번째 피드백' },
-      { id: 102, title: '개선 사항 논의' },
-      { id: 103, title: '최종 검토' },
+      {
+        id: 101,
+        title: '첫 번째 피드백',
+        preview: '프로젝트 초기 버전에 대한 피드백을 받았습니다...',
+        timestamp: new Date(2024, 0, 25, 14, 30),
+      },
+      {
+        id: 102,
+        title: '개선 사항 논의',
+        preview: 'UI/UX 개선 방향에 대해 논의했습니다...',
+        timestamp: new Date(2024, 0, 26, 10, 15),
+      },
+      {
+        id: 103,
+        title: '최종 검토',
+        preview: '최종 수정 사항을 확인하고 마무리했습니다...',
+        timestamp: new Date(2024, 0, 27, 16, 45),
+      },
     ],
   },
   {
     id: 2,
     title: '자기소개서 초안 작성',
     chats: [
-      { id: 201, title: '초안 작성' },
-      { id: 202, title: '경력 기술서' },
+      {
+        id: 201,
+        title: '초안 작성',
+        preview: '자기소개서 초안을 작성하고 검토했습니다...',
+        timestamp: new Date(2024, 0, 20, 9, 0),
+      },
+      {
+        id: 202,
+        title: '경력 기술서',
+        preview: '경력 사항을 상세히 기술했습니다...',
+        timestamp: new Date(2024, 0, 22, 11, 30),
+      },
     ],
   },
   {
     id: 3,
     title: 'PRM 프로젝트 설계',
     chats: [
-      { id: 301, title: '요구사항 분석' },
-      { id: 302, title: 'DB 설계' },
-      { id: 303, title: 'API 명세' },
-      { id: 304, title: 'UI/UX 설계' },
+      {
+        id: 301,
+        title: '요구사항 분석',
+        preview: '프로젝트의 주요 요구사항을 정리했습니다...',
+        timestamp: new Date(2024, 0, 15, 13, 0),
+      },
+      {
+        id: 302,
+        title: 'DB 설계',
+        preview: '데이터베이스 스키마를 설계했습니다...',
+        timestamp: new Date(2024, 0, 16, 14, 20),
+      },
+      {
+        id: 303,
+        title: 'API 명세',
+        preview: 'RESTful API 엔드포인트를 정의했습니다...',
+        timestamp: new Date(2024, 0, 17, 15, 40),
+      },
+      {
+        id: 304,
+        title: 'UI/UX 설계',
+        preview: '사용자 인터페이스 디자인을 완성했습니다...',
+        timestamp: new Date(2024, 0, 18, 10, 10),
+      },
     ],
   },
   {
     id: 4,
     title: '지지스캐서 피드백 2',
-    chats: [{ id: 401, title: '2차 피드백' }],
+    chats: [
+      {
+        id: 401,
+        title: '2차 피드백',
+        preview: '추가 개선사항에 대한 피드백을 받았습니다...',
+        timestamp: new Date(2024, 0, 28, 13, 20),
+      },
+    ],
   },
 ];
 
