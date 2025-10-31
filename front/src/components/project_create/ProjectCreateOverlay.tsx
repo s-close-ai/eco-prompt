@@ -8,21 +8,30 @@ type ProjectCreateOverlayProps = {
   initialName?: string;
 };
 
-export default function ProjectCreateOverlay({ open, onClose, variant, initialName }: ProjectCreateOverlayProps) {
+export default function ProjectCreateOverlay({
+  open,
+  onClose,
+  variant,
+}: ProjectCreateOverlayProps) {
   if (variant === 'inline') {
     return open ? (
       <div className="project-create-inline">
-        <ProjectCreateForm onSubmit={() => onClose()} />
+        <ProjectCreateForm onSubmit={() => onClose()} onClose={onClose} />
       </div>
     ) : null;
   }
 
-  const sheetVariant = variant === 'fullscreen' ? 'fullscreen' : variant === 'bottom' ? 'bottom' : 'modal';
+  const sheetVariant =
+    variant === 'fullscreen' ? 'fullscreen' : variant === 'bottom' ? 'bottom' : 'modal';
   return (
-    <Sheet open={open} onClose={onClose} variant={sheetVariant} ariaLabel="프로젝트 생성">
-      <ProjectCreateForm onSubmit={() => onClose()} />
+    <Sheet
+      open={open}
+      onClose={onClose}
+      variant={sheetVariant}
+      ariaLabel="프로젝트 생성"
+      className="project-create-sheet"
+    >
+      <ProjectCreateForm onSubmit={() => onClose()} onClose={onClose} />
     </Sheet>
   );
 }
-
-

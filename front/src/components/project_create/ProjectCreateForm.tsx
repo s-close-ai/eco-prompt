@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import Button from '@/components/common/Button';
 import TextField from '@/components/common/TextField';
-import '@/styles/pages/project-create.css';
+import '@/styles/components/project/project-create.css';
 
 type ProjectCreateFormProps = {
   onSubmit?: (name: string) => void;
+  onClose?: () => void;
 };
 
-export default function ProjectCreateForm({ onSubmit }: ProjectCreateFormProps) {
+export default function ProjectCreateForm({ onSubmit, onClose }: ProjectCreateFormProps) {
   const [name, setName] = useState('');
 
   const handleCreate = () => {
@@ -30,6 +31,18 @@ export default function ProjectCreateForm({ onSubmit }: ProjectCreateFormProps) 
           <img src="/icons/add_folder.svg" alt="" aria-hidden width={24} height={24} />
           <h2>새 프로젝트</h2>
         </div>
+        <div className="project-create__actions">
+          {onClose && (
+            <button
+              className="project-create__close"
+              onClick={onClose}
+              aria-label="닫기"
+              type="button"
+            >
+              <img src="/icons/close.svg" alt="close" width={20} height={20} />
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="project-create__body">
@@ -39,7 +52,7 @@ export default function ProjectCreateForm({ onSubmit }: ProjectCreateFormProps) 
           </label>
           <TextField
             id="project-name"
-            placeholder="예: 파티 플랜 짜기"
+            placeholder="예: 일타싸피 공부"
             fullWidth
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -53,13 +66,15 @@ export default function ProjectCreateForm({ onSubmit }: ProjectCreateFormProps) 
       </div>
 
       <footer className="project-create__footer">
-        <Button size="md" onClick={handleCreate} ariaLabel="프로젝트 만들기" isDisabled={!name.trim() || !onSubmit}>
+        <Button
+          size="mobile"
+          onClick={handleCreate}
+          ariaLabel="프로젝트 만들기"
+          isDisabled={!name.trim() || !onSubmit}
+        >
           프로젝트 만들기
         </Button>
       </footer>
     </section>
   );
 }
-
-
-
