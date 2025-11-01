@@ -1,5 +1,7 @@
 package com.closeai.ecoprompt.security.oauth;
 
+import com.closeai.ecoprompt.project.model.entity.Project;
+import com.closeai.ecoprompt.project.repository.ProjectRepository;
 import com.closeai.ecoprompt.user.model.entity.User;
 import com.closeai.ecoprompt.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,7 @@ import java.util.Set;
 public class SsafyOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private final UserRepository userRepository;
+    private final ProjectRepository projectRepository;
 
     // ── HTTP 클라이언트
     private final RestTemplate restTemplate = new RestTemplate();
@@ -72,15 +75,27 @@ public class SsafyOAuth2UserService implements OAuth2UserService<OAuth2UserReque
         // 3) DB upsert (당신의 User 엔티티: employeeNumber/email/name/projectId)
         String employeeNumber = edu != null ? edu : "UNKNOWN";  // edu를 임시 사번으로 사용
         User user = userRepository.findByEmail(email)
-                .orElseGet(() -> User.builder()
-                        .email(email)
-                        .employeeNumber(employeeNumber)
-                        .name(name)
-                        .projectId(0)
-                        .build());
-        user.setName(name);
-        user.setEmployeeNumber(employeeNumber);
-        userRepository.save(user);
+                .orElseGet(() -> {
+                            User u = userRepository.save(
+                                    User.builder()
+                                        .email(email)
+                                        .employeeNumber(employeeNumber)
+                                        .name(name)
+                                        .projectId(0)
+                                        .build()
+                            );
+
+                            Project p = projectRepository.save(
+                                    Project.builder()
+                                        .title("기본 프로젝트")
+                                        .owner(u)
+                                        .build()
+                            );
+
+                            u.setProjectId(p.getId());
+                            return u;
+                        }
+                );
 
         // 4) Security Principal (FE로 내려갈 attributes에 두 응답을 합쳐 넣으면 디버그/표시에 좋음)
         Map<String, Object> merged = new LinkedHashMap<>();
