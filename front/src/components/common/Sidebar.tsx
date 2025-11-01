@@ -58,12 +58,7 @@ export default function Sidebar() {
               <button
                 className="sidebar-icon-btn"
                 aria-label="새 프로젝트"
-                onClick={() => {
-                  if (mode !== 'desktop' && mode !== 'tablet') {
-                    closeSidebar();
-                  }
-                  window.dispatchEvent(new CustomEvent('project-create-open'));
-                }}
+                onClick={() => window.dispatchEvent(new CustomEvent('project-create-open'))}
               >
                 <img src="/icons/add_folder.svg" alt="add folder" width={20} height={20} />
               </button>
@@ -87,7 +82,7 @@ export default function Sidebar() {
               <button
                 className="sidebar-icon-btn"
                 aria-label="설정"
-                onClick={() => console.log('설정 클릭')}
+                onClick={() => navigate('/settings')}
               >
                 <img src="/icons/settings.svg" alt="settings" width={20} height={20} />
               </button>
@@ -127,7 +122,12 @@ export default function Sidebar() {
               {/* 검색창 - 데스크탑은 버튼, 모바일/태블릿은 입력창 */}
               <button
                 className="sidebar-search sidebar-search-desktop"
-                onClick={() => console.log('검색 버튼 클릭')}
+                onClick={() => {
+                  if (mode === 'mobile') {
+                    closeSidebar();
+                  }
+                  console.log('검색 버튼 클릭');
+                }}
               >
                 <img src="/icons/search.svg" alt="search" width={18} height={18} />
                 <span>검색</span>
@@ -145,7 +145,15 @@ export default function Sidebar() {
 
               {/* 새 채팅/새 프로젝트 버튼 */}
               <div className="sidebar-actions">
-                <button className="sidebar-action-btn" onClick={() => console.log('새 채팅 생성')}>
+                <button
+                  className="sidebar-action-btn"
+                  onClick={() => {
+                    if (mode === 'mobile') {
+                      closeSidebar();
+                    }
+                    console.log('새 채팅 생성');
+                  }}
+                >
                   <img src="/icons/add_chat.svg" alt="add chat" width={18} height={18} />
                   <span>새 채팅</span>
                 </button>
@@ -177,6 +185,9 @@ export default function Sidebar() {
                         <button
                           className="sidebar-list-item"
                           onClick={() => {
+                            if (mode === 'mobile') {
+                              closeSidebar();
+                            }
                             openOnlyProject(project.id);
                             navigate('/project', { state: { projectId: project.id } });
                           }}
@@ -197,6 +208,9 @@ export default function Sidebar() {
                                   className="sidebar-list-item sidebar-nested-item"
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    if (mode === 'mobile') {
+                                      closeSidebar();
+                                    }
                                     console.log('채팅 선택:', chat.title);
                                   }}
                                 >
@@ -220,7 +234,12 @@ export default function Sidebar() {
                     <li key={chat.id}>
                       <button
                         className="sidebar-list-item sidebar-list-item-no-icon"
-                        onClick={() => console.log('채팅 선택:', chat.title)}
+                        onClick={() => {
+                          if (mode === 'mobile') {
+                            closeSidebar();
+                          }
+                          console.log('채팅 선택:', chat.title);
+                        }}
                       >
                         <span className="sidebar-list-item-text">{chat.title}</span>
                       </button>
@@ -232,15 +251,39 @@ export default function Sidebar() {
 
             {/* 하단 고정 영역 */}
             <div className="sidebar-footer">
-              <button className="sidebar-explore-btn" onClick={() => console.log('대시보드 클릭')}>
+              <button
+                className="sidebar-explore-btn"
+                onClick={() => {
+                  if (mode === 'mobile') {
+                    closeSidebar();
+                  }
+                  console.log('대시보드 클릭');
+                }}
+              >
                 <img src="/icons/dashboard.svg" alt="dashboard" width={18} height={18} />
                 <span>대시보드</span>
               </button>
-              <button className="sidebar-explore-btn" onClick={() => console.log('북마크 클릭')}>
+              <button
+                className="sidebar-explore-btn"
+                onClick={() => {
+                  if (mode === 'mobile') {
+                    closeSidebar();
+                  }
+                  console.log('북마크 클릭');
+                }}
+              >
                 <img src="/icons/bookmark.svg" alt="bookmark" width={18} height={18} />
                 <span>북마크</span>
               </button>
-              <button className="sidebar-explore-btn" onClick={() => console.log('설정 클릭')}>
+              <button
+                className="sidebar-explore-btn"
+                onClick={() => {
+                  if (mode === 'mobile') {
+                    closeSidebar();
+                  }
+                  navigate('/settings');
+                }}
+              >
                 <img src="/icons/settings.svg" alt="settings" width={18} height={18} />
                 <span>설정</span>
               </button>
