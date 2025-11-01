@@ -76,43 +76,30 @@ async def health():
 # 학습 요청 처리
 @app.post("/api/v1/ai/training")
 async def post_training(
-    payload: TrainPayload = Body(...),
+    payload: Dict[str, Any] = Body(...),
     sync: int | None = Query(default=None, description="1이면 동기 처리"),
 ):
-    pipe = getattr(app.state, "pipe", None)
-    if pipe is None:
-        print("파이프라인 미초기화 → 재구성")
-        app.state.pipe = build_pipeline()
-        pipe = app.state.pipe
+    pipe = getattr(app.state, "pipe", None) or build_pipeline()
+    app.state.pipe = pipe
 
     if sync == 1:
         try:
-            data: Dict[str, Any] = await pipe.run(payload.model_dump())
-            print("동기 학습 요청 처리 완료")
+            data: Dict[str, Any] = await pipe.run(payload)
             return JSONResponse({"status": "OK", "data": data}, status_code=200)
         except Exception as e:
-            print(f"동기 학습 처리 중 오류: {e}")
             return JSONResponse({"status": "ERROR", "error": str(e)}, status_code=500)
     else:
         async def _bg():
             try:
-                await pipe.run(payload.model_dump())
+                await pipe.run(payload)
                 print("비동기 학습 요청 처리 완료")
             except Exception as e:
                 print(f"비동기 학습 처리 중 오류: {e}")
-
         asyncio.create_task(_bg())
-        return JSONResponse(
-            {
-                "status": "SUCCESS",
-                "data": {
-                    "jobId": os.urandom(12).hex(),
-                    "message": "학습 작업이 시작되었습니다.",
-                    "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
-                },
-            },
-            status_code=202,
-        )
+        return JSONResponse({"status":"SUCCESS","data":{
+            "jobId": os.urandom(12).hex(),
+            "message":"학습 작업이 시작되었습니다.",
+            "timestamp": datetime.datetime.utcnow().isoformat()+"Z"}}, status_code=202)
 
 # 직접 실행 시
 if __name__ == "__main__":

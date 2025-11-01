@@ -7,11 +7,13 @@ from .pipeline import ManualTrainPipeline
 from .dummies import (
     DummyMongoReader, DummyJudgeClient, RegexMasker, DummyTrainRepository, DummyMainLlmClient
 )
+from .adapters.db.train_repository import MongoTrainRepository
+
 
 def build_pipeline(seed_data: Iterable[Dict[str, Any]] = ()) -> ManualTrainPipeline:
     mongo  = DummyMongoReader(seed=seed_data)
     masker = RegexMasker()
-    repo   = DummyTrainRepository()
+    repo   = MongoTrainRepository()
 
     judge_adapter = (os.getenv("JUDGE_ADAPTER") or "").lower()
     use_llama = judge_adapter == "llama" or bool(os.getenv("LLAMA_SERVER_URL"))
