@@ -12,6 +12,7 @@ export type ButtonProps = {
   rightIconSrc?: string;
   isDisabled?: boolean;
   ariaLabel?: string;
+  className?: string;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'disabled' | 'aria-label'>;
 
 export default function Button({
@@ -23,6 +24,7 @@ export default function Button({
   rightIconSrc,
   isDisabled,
   ariaLabel,
+  className: customClassName,
   type = 'button',
   ...rest
 }: PropsWithChildren<ButtonProps>) {
@@ -31,6 +33,7 @@ export default function Button({
     `ep-button--${variant}`,
     `ep-button--${size}`,
     fullWidth ? 'is-full' : '',
+    customClassName || '',
   ]
     .filter(Boolean)
     .join(' ');
