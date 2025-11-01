@@ -9,6 +9,6 @@ import com.closeai.ecoprompt.message.model.entity.MessageSender;
 
 public interface MessageMongoRepository extends MongoRepository<MessageDocument, Long> {
 
-	Optional<MessageDocument> findByUuidAndSenderType(String uuid, MessageSender senderType);
+	Optional<MessageDocument> findByMessageUUIDAndSenderType(String messageUUID, MessageSender senderType);
 
 }
