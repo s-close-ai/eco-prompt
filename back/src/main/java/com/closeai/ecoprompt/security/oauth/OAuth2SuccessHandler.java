@@ -1,6 +1,9 @@
 package com.closeai.ecoprompt.security.oauth;
 
+import com.closeai.ecoprompt.common.exception.BusinessException;
 import com.closeai.ecoprompt.security.jwt.JwtUtil;
+import com.closeai.ecoprompt.user.model.entity.User;
+import com.closeai.ecoprompt.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,13 +12,17 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 @Component
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
-    public OAuth2SuccessHandler(JwtUtil jwtUtil) {
+    public OAuth2SuccessHandler(JwtUtil jwtUtil, UserRepository userRepository) {
         this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -24,8 +31,18 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         String email = oAuth2User.getAttribute("email");
         String name  = oAuth2User.getAttribute("name");
+        Map<String,Object> profile = oAuth2User.getAttribute("profile");
 
-        String token = jwtUtil.generateToken(email, name);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("해당하는 유저를 찾을 수 없습니다."));
+
+        String token = jwtUtil.generateToken(
+                email,
+                name,
+                user.getId(),
+                (String)profile.get("edu"),
+                (String)profile.get("clss")
+        );
 
         Cookie cookie = new Cookie("ACCESS_TOKEN", token);
         cookie.setHttpOnly(true);
