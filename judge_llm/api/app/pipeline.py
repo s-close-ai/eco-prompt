@@ -83,16 +83,17 @@ class ManualTrainPipeline:
                 else:
                     prompt_m = llm_resp_m = rejected_m = ""
 
-                # 5) DB 업서트 문서(단순 포맷, 4)와 동일)
-                upserts.append({
-                    "batch_id": batch_id,
-                    "message_id": message_id,
-                    "prompt": prompt_m if passed else "",  # 통과하지 못한 건 저장 최소화
-                    "llm_response": llm_resp_m if passed else "",
-                    "rejected_response": rejected_m if passed else "",
-                    "judge_total": total,
-                    "passed": passed,
-                })
+                # 5) DB 업서트: "통과한 것만" 저장
+                if passed:
+                    upserts.append({
+                        "batch_id": batch_id,
+                        "message_id": message_id,
+                        "prompt": prompt_m,
+                        "llm_response": llm_resp_m,
+                        "rejected_response": rejected_m,
+                        "judge_total": total,
+                        "passed": True,
+                    })
 
                 # 6) 메인 LLM 전송 후보
                 if passed:
