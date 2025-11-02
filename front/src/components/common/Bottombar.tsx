@@ -23,7 +23,7 @@ export default function Bottombar({ variant }: BottombarProps) {
         <button aria-label="chat" className="icon-button" onClick={() => navigate('/')}>
           <img src="/icons/chat.svg" alt="chat" />
         </button>
-        <button aria-label="dashboard" className="icon-button">
+        <button aria-label="dashboard" className="icon-button" onClick={() => navigate('/?tab=dashboard')}>
           <img src="/icons/dashboard.svg" alt="dashboard" />
         </button>
         <button aria-label="bookmark" className="icon-button" onClick={() => navigate('/bookmark')}>
