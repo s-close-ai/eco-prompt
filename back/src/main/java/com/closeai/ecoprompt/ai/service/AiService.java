@@ -14,6 +14,7 @@ import com.closeai.ecoprompt.ai.model.dto.request.LlmRequest;
 import com.closeai.ecoprompt.ai.model.dto.response.LlmResponse;
 import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
+import com.closeai.ecoprompt.message.model.entity.MessageStatus;
 import com.closeai.ecoprompt.sse.service.SseService;
 import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 
@@ -56,6 +57,12 @@ public class AiService {
 	 * */
 	@Async
 	public void callAiModel(String messageUUID, String content, Integer userId){
+
+		if(sseService.isCancelled(messageUUID)){
+			log.info("AI 모델 호출 시작 이전에 이미 취소 되었습니다. UUID :  {}", messageUUID);
+			return;
+		}
+
 		callInputJudgeModel(messageUUID, content);
 		callLlmModel(messageUUID, content, userId);
 	}
@@ -70,8 +77,13 @@ public class AiService {
 
 		runInputJudgeModel(request)
 			.doOnSuccess(judgeResponse -> {
-				sseService.sendEventToClient(messageUUID, "JUDGE_PROMPT", judgeResponse.scoreInfo());
 
+				if(sseService.isCancelled(messageUUID)){
+					log.info("Judge 모델 완료 하였으나, 작업이 취소 되어 이벤트를 발행하지 않습니다.");
+					return;
+				}
+
+				sseService.sendEventToClient(messageUUID, "JUDGE_PROMPT", judgeResponse.scoreInfo());
 				eventPublisher.publishEvent(
 					new JudgeModelCompleteEvent(this, messageUUID, judgeResponse)
 				);
@@ -91,7 +103,9 @@ public class AiService {
 		String personalPrompt = userInfoService.getPersonalPrompt(userId);
 		LlmRequest request = new LlmRequest(personalPrompt, userInput, messageUUID);
 		StringBuilder answer = new StringBuilder();
+
 		runLlmModel(request)
+			.takeUntil(llmResponse -> sseService.isCancelled(messageUUID))
 			.doOnNext(llmResponse -> {
 				sseService.sendEventToClient(messageUUID, "LLM_TOKEN", llmResponse);
 
@@ -101,13 +115,28 @@ public class AiService {
 			})
 			.doOnError(error -> {
 				log.error("llm 모델 스트리밍 오류. UUID : {}", messageUUID);
+				sseService.sendEventToClient(messageUUID, "LLM_ERROR", "ERROR");
 			})
 			.doOnComplete(() -> {
 				String finalAnswer = answer.toString();
-				sseService.sendEventToClient(messageUUID, "END_LLM", "END");
-				eventPublisher.publishEvent(
-					new LlmModelCompleteEvent(this, messageUUID, finalAnswer)
-				);
+				MessageStatus status;
+
+				// SSE 연결이 끊기지 않고 완료된 경우에만 완료 메시지 전달
+				if (!sseService.isCancelled(messageUUID)){
+					sseService.sendEventToClient(messageUUID, "END_LLM", "END");
+					status = MessageStatus.COMPLETED;
+				}
+				else{
+					log.info("사용자에 의해서 답변이 중지되었습니다. UUID :  {}", messageUUID);
+					status = MessageStatus.CANCELLED;
+				}
+
+				// 생성된 답변이 있는 경우에만 DB에 저장 이벤트 발행
+				if(!finalAnswer.isEmpty()){
+					eventPublisher.publishEvent(
+						new LlmModelCompleteEvent(this, messageUUID, finalAnswer, status)
+					);
+				}
 			})
 			.subscribe();
 	}
