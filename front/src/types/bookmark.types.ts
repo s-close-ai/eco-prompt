@@ -5,4 +5,3 @@ export type Bookmark = {
   description?: string;
   icon?: string;
 };
-

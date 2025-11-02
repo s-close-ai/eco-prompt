@@ -280,7 +280,7 @@
   }
 
   /* 추가 버튼이 혼자 있을 때 중앙 정렬 */
-  .bookmark-card--add:nth-child(3n+1):last-child {
+  .bookmark-card--add:nth-child(3n + 1):last-child {
     grid-column: 1 / -1;
     justify-self: center;
     max-width: 240px;
@@ -356,7 +356,7 @@
   }
 
   /* 추가 버튼이 혼자 있을 때 중앙 정렬 */
-  .bookmark-card--add:nth-child(4n+1):last-child {
+  .bookmark-card--add:nth-child(4n + 1):last-child {
     grid-column: 1 / -1;
     justify-self: center;
     max-width: 230px;
@@ -399,4 +399,3 @@
     font-size: 14px;
   }
 }
-
