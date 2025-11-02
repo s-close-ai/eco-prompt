@@ -49,6 +49,7 @@ public class UserInfo extends BaseEntity {
     }
 
     public static UserInfo makeDefaultUserInfo(User user) {
+
         return new UserInfo(
                 0,
                 0.0,
@@ -56,8 +57,13 @@ public class UserInfo extends BaseEntity {
         );
     }
 
+    public void updateSharingInformationUpdatedAt() {
+        this.sharingInformationUpdatedAt = dateConverter(LocalDateTime.now());
+    }
+
     private String dateConverter(LocalDateTime time) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss");
+
         return time.format(formatter);
     }
 
