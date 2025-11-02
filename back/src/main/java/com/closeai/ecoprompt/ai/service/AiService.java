@@ -8,10 +8,10 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.closeai.ecoprompt.ai.model.dto.InputJudgeRequestDto;
-import com.closeai.ecoprompt.ai.model.dto.InputJudgeResponseDto;
-import com.closeai.ecoprompt.ai.model.dto.LlmRequestDto;
-import com.closeai.ecoprompt.ai.model.dto.LlmResponseDto;
+import com.closeai.ecoprompt.ai.model.dto.request.InputJudgeRequest;
+import com.closeai.ecoprompt.ai.model.dto.response.InputJudgeResponse;
+import com.closeai.ecoprompt.ai.model.dto.request.LlmRequest;
+import com.closeai.ecoprompt.ai.model.dto.response.LlmResponse;
 import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
 import com.closeai.ecoprompt.sse.service.SseService;
@@ -66,11 +66,11 @@ public class AiService {
 	@Async
 	public void callInputJudgeModel(String messageUUID, String content){
 
-		InputJudgeRequestDto request = new InputJudgeRequestDto(messageUUID, content);
+		InputJudgeRequest request = new InputJudgeRequest(messageUUID, content);
 
 		runInputJudgeModel(request)
 			.doOnSuccess(judgeResponse -> {
-				sseService.sendEventToClient(messageUUID, "JUDGE_PROMPT", judgeResponse.getScoreInfo());
+				sseService.sendEventToClient(messageUUID, "JUDGE_PROMPT", judgeResponse.scoreInfo());
 
 				eventPublisher.publishEvent(
 					new JudgeModelCompleteEvent(this, messageUUID, judgeResponse)
@@ -89,14 +89,14 @@ public class AiService {
 	public void callLlmModel(String messageUUID, String userInput, Integer userId){
 
 		String personalPrompt = userInfoService.getPersonalPrompt(userId);
-		LlmRequestDto request = new LlmRequestDto(personalPrompt, userInput, messageUUID);
+		LlmRequest request = new LlmRequest(personalPrompt, userInput, messageUUID);
 		StringBuilder answer = new StringBuilder();
 		runLlmModel(request)
 			.doOnNext(llmResponse -> {
 				sseService.sendEventToClient(messageUUID, "LLM_TOKEN", llmResponse);
 
 				if(llmResponse != null){
-					answer.append(llmResponse.getToken());
+					answer.append(llmResponse.token());
 				}
 			})
 			.doOnError(error -> {
@@ -115,25 +115,25 @@ public class AiService {
 	/**
 	 * JudgeModel 실행 함수
 	 * */
-	private Mono<InputJudgeResponseDto> runInputJudgeModel(InputJudgeRequestDto request){
+	private Mono<InputJudgeResponse> runInputJudgeModel(InputJudgeRequest request){
 
 		return judgePromptClient.post()
 			.uri("/api/v1/ai/prompt-judge")
 			.bodyValue(request)
 			.retrieve()
-			.bodyToMono(InputJudgeResponseDto.class);
+			.bodyToMono(InputJudgeResponse.class);
 	}
 
 	/**
 	 * LLM 실행 함수
 	 * */
-	private Flux<LlmResponseDto> runLlmModel(LlmRequestDto request){
+	private Flux<LlmResponse> runLlmModel(LlmRequest request){
 		return llmClient.post()
 			.uri("/api/v1/ai/prompt-response")
 			.accept(MediaType.TEXT_EVENT_STREAM)
 			.bodyValue(request)
 			.retrieve()
-			.bodyToFlux(LlmResponseDto.class);
+			.bodyToFlux(LlmResponse.class);
 	}
 
 	/**

@@ -2,29 +2,20 @@ package com.closeai.ecoprompt.message.service;
 
 import java.util.UUID;
 
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.closeai.ecoprompt.ai.model.dto.InputJudgeResponseDto;
-import com.closeai.ecoprompt.ai.model.dto.ScoreInfo;
-import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
-import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
 import com.closeai.ecoprompt.ai.service.AiService;
 import com.closeai.ecoprompt.chatting.model.entity.Chatting;
 import com.closeai.ecoprompt.chatting.service.ChattingService;
-import com.closeai.ecoprompt.common.exception.BusinessException;
-import com.closeai.ecoprompt.message.model.dto.SubmitMessageRequestDto;
-import com.closeai.ecoprompt.message.model.dto.SubmitMessageResponseDto;
+import com.closeai.ecoprompt.message.model.dto.request.SubmitMessageRequest;
+import com.closeai.ecoprompt.message.model.dto.response.SubmitMessageResponse;
 import com.closeai.ecoprompt.message.model.entity.Message;
 import com.closeai.ecoprompt.message.model.entity.MessageDocument;
 import com.closeai.ecoprompt.message.model.entity.MessageSender;
 import com.closeai.ecoprompt.message.model.entity.MessageStatus;
 import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
-import com.closeai.ecoprompt.score.service.ScoreService;
-import com.closeai.ecoprompt.sse.service.SseService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,11 +34,11 @@ public class MessageService {
 	 * 사용자 입력에 대한 API 처리 함수
 	 * */
 	@Transactional
-	public SubmitMessageResponseDto submitMessage(SubmitMessageRequestDto messageCommand) {
+	public SubmitMessageResponse submitMessage(SubmitMessageRequest messageCommand) {
 
-		Integer projectId = messageCommand.getProjectId();
-		Long chattingId = messageCommand.getChattingId();
-		String content = messageCommand.getContent();
+		Integer projectId = messageCommand.projectId();
+		Long chattingId = messageCommand.chattingId();
+		String content = messageCommand.content();
 
 		//1. chattingID가 null인 경우 chatting 저장
 		Chatting chatting = chattingService.getOrCreateChatting(chattingId, projectId);
@@ -66,7 +57,7 @@ public class MessageService {
 		// TODO : 임의로 userId = 1로 함수 호출 | 로그인 기능 개발 후 변경
 		aiService.callAiModel(messageUUID, content, 1);
 
-		return new SubmitMessageResponseDto(chattingId, messageUUID);
+		return new SubmitMessageResponse(chattingId, messageUUID);
 	}
 
 

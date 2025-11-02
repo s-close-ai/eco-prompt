@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.closeai.ecoprompt.ai.model.dto.InputJudgeResponseDto;
+import com.closeai.ecoprompt.ai.model.dto.response.InputJudgeResponse;
 import com.closeai.ecoprompt.ai.model.dto.ScoreInfo;
 import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
@@ -50,9 +50,9 @@ public class MessageEventHandler {
 	public void handleJudgeModelComplete(JudgeModelCompleteEvent event) {
 
 		String messageUUID = event.getMessageUUID();
-		InputJudgeResponseDto judgeResponse = event.getJudgeResponse();
-		ScoreInfo scoreInfo = judgeResponse.getScoreInfo();
-		String summary = judgeResponse.getSummary();
+		InputJudgeResponse judgeResponse = event.getJudgeResponse();
+		ScoreInfo scoreInfo = judgeResponse.scoreInfo();
+		String summary = judgeResponse.summary();
 
 		// 1. Message의 점수 정보 Update
 		MessageDocument messageToUpdate = updateMongoMessage(messageUUID, MessageSender.USER,null, scoreInfo, null);
