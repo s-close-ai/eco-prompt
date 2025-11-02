@@ -10,6 +10,7 @@ import Home from './pages/Home';
 import Chat from './pages/Chat';
 import Project from './pages/Project';
 import Settings from './pages/Settings';
+import Bookmark from './pages/Bookmark';
 
 // PWA Service Worker 등록
 registerSW({ immediate: true });
@@ -30,6 +31,7 @@ const router = createBrowserRouter([
       { path: 'chat/:chatId', element: <Chat /> },
       { path: 'project', element: <Project /> },
       { path: 'settings', element: <Settings /> },
+      { path: 'bookmark', element: <Bookmark /> },
     ],
   },
 ]);
