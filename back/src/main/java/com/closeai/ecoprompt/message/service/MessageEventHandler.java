@@ -22,6 +22,7 @@ import com.closeai.ecoprompt.message.model.entity.MessageSender;
 import com.closeai.ecoprompt.message.model.entity.MessageStatus;
 import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
+import com.closeai.ecoprompt.mileage.service.MileageService;
 import com.closeai.ecoprompt.score.service.ScoreService;
 import com.closeai.ecoprompt.sse.service.SseService;
 
@@ -36,6 +37,7 @@ public class MessageEventHandler {
 
 	private final ScoreService scoreService;
 	private final ChattingService chattingService;
+	private final MileageService mileageService;
 
 	private final MessageJpaRepository messageJpaRepository;
 	private final MessageMongoRepository messageMongoRepository;
@@ -61,6 +63,8 @@ public class MessageEventHandler {
 
 		// 2. Message에 대한 점수 score 테이블에 insert
 		scoreService.saveScore(message, scoreInfo);
+		// 2-1. 점수에 따른 마일리지 저장
+		mileageService.saveMileage(message, scoreInfo.getTotalScore());
 
 		// 3. 새로 생성된 채팅방인 경우 채팅방의 이름을 첫 입력에 대한 요약 값으로 변경
 		chattingService.setChattingTitle(messageToUpdate.getChattingId(), summary);
