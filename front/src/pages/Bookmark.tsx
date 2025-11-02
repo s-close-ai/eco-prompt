@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -39,11 +39,12 @@ const mockBookmarks: Bookmark[] = [
 
 const MAX_BOOKMARKS = 10;
 
+type FormMode = 'create' | 'edit';
+
 export default function Bookmark() {
   const mode = useDeviceMode();
   const [bookmarks, setBookmarks] = useState<Bookmark[]>(mockBookmarks);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -51,192 +52,179 @@ export default function Bookmark() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: mode === 'desktop' ? 0 : 8, // 데스크탑은 즉시, 모바일은 8px 이동 후
+        distance: mode === 'desktop' ? 0 : 8,
       },
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250, // 250ms 롱프레스
+        delay: 250,
         tolerance: 5,
       },
-    })
+    }),
   );
 
-  const handleBookmarkClick = (bookmark: Bookmark) => {
+  const handleBookmarkClick = useCallback((bookmark: Bookmark) => {
     window.open(bookmark.url, '_blank');
-  };
+  }, []);
 
-  const handleEdit = (bookmark: Bookmark) => {
+  const handleEdit = useCallback((bookmark: Bookmark) => {
     setEditingBookmark(bookmark);
-    setIsEditOpen(true);
-  };
+    setFormMode('edit');
+  }, []);
 
-  const handleUpdate = (data: BookmarkFormData) => {
-    if (!editingBookmark) return;
+  const handleUpdate = useCallback(
+    (data: BookmarkFormData) => {
+      if (!editingBookmark) return;
 
-    const normalizedUrl = normalizeUrl(data.url);
+      const normalizedUrl = normalizeUrl(data.url);
 
-    setBookmarks(
-      bookmarks.map((b) =>
-        b.id === editingBookmark.id
-          ? {
-              ...b,
-              title: data.title,
-              url: normalizedUrl,
-              description: data.description || undefined,
-              icon: getFaviconUrl(normalizedUrl),
-            }
-          : b
-      )
-    );
-    setIsEditOpen(false);
+      setBookmarks((prev: Bookmark[]) =>
+        prev.map((b: Bookmark) =>
+          b.id === editingBookmark.id
+            ? {
+                ...b,
+                title: data.title,
+                url: normalizedUrl,
+                description: data.description || undefined,
+                icon: getFaviconUrl(normalizedUrl),
+              }
+            : b,
+        ),
+      );
+      setFormMode(null);
+      setEditingBookmark(null);
+    },
+    [editingBookmark],
+  );
+
+  const handleEditClose = useCallback(() => {
+    setFormMode(null);
     setEditingBookmark(null);
-  };
+  }, []);
 
-  const handleEditClose = () => {
-    setIsEditOpen(false);
-    setEditingBookmark(null);
-  };
-
-  const handleDelete = (bookmark: Bookmark) => {
+  const handleDelete = useCallback((bookmark: Bookmark) => {
     if (confirm(`"${bookmark.title}" 북마크를 삭제하시겠습니까?`)) {
-      setBookmarks(bookmarks.filter((b) => b.id !== bookmark.id));
+      setBookmarks((prev: Bookmark[]) => prev.filter((b: Bookmark) => b.id !== bookmark.id));
     }
-  };
+  }, []);
 
-  const handleCreate = (data: BookmarkFormData) => {
-    if (bookmarks.length >= MAX_BOOKMARKS) {
-      alert(`최대 ${MAX_BOOKMARKS}개까지 추가할 수 있습니다.`);
-      return;
-    }
+  const handleCreate = useCallback(
+    (data: BookmarkFormData) => {
+      if (bookmarks.length >= MAX_BOOKMARKS) {
+        alert(`최대 ${MAX_BOOKMARKS}개까지 추가할 수 있습니다.`);
+        return;
+      }
 
-    // URL 정규화 (프로토콜 자동 추가)
-    const normalizedUrl = normalizeUrl(data.url);
+      const normalizedUrl = normalizeUrl(data.url);
 
-    const newBookmark: Bookmark = {
-      id: Date.now(),
-      title: data.title,
-      url: normalizedUrl,
-      description: data.description || undefined,
-      icon: getFaviconUrl(normalizedUrl),
-    };
+      const newBookmark: Bookmark = {
+        id: Date.now() + Math.random(), // 더 안전한 ID 생성
+        title: data.title,
+        url: normalizedUrl,
+        description: data.description || undefined,
+        icon: getFaviconUrl(normalizedUrl),
+      };
 
-    setBookmarks([...bookmarks, newBookmark]);
-    setIsCreateOpen(false);
-  };
+      setBookmarks((prev: Bookmark[]) => [...prev, newBookmark]);
+      setFormMode(null);
+    },
+    [bookmarks.length],
+  );
 
-  const handleClose = () => {
-    setIsCreateOpen(false);
-  };
+  const handleCreateOpen = useCallback(() => {
+    setFormMode('create');
+  }, []);
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      setBookmarks((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
+      setBookmarks((items: Bookmark[]) => {
+        const oldIndex = items.findIndex((item: Bookmark) => item.id === active.id);
+        const newIndex = items.findIndex((item: Bookmark) => item.id === over.id);
 
         return arrayMove(items, oldIndex, newIndex);
       });
 
       // TODO: 백엔드에 순서 변경 API 호출
-      // updateBookmarkOrder(bookmarks.map(b => b.id));
     }
-  };
+  }, []);
 
   const canAddMore = bookmarks.length < MAX_BOOKMARKS;
-
-  // 데스크탑에서 편집 모드가 아니면 드래그 비활성화
   const isDraggable = mode === 'desktop' ? isEditMode : true;
+  const isFormOpen = formMode !== null;
+  const bookmarkIds = useMemo(() => bookmarks.map((b: Bookmark) => b.id), [bookmarks]);
 
-  // 모바일: 전체 페이지
-  if (mode === 'mobile') {
-    if (isCreateOpen) {
+  // 생성/편집 폼 렌더링 헬퍼
+  const renderForm = useCallback(() => {
+    if (formMode === 'create') {
+      return <BookmarkCreateForm onSubmit={handleCreate} onClose={handleEditClose} />;
+    }
+
+    if (formMode === 'edit' && editingBookmark) {
       return (
-        <div className="bookmark-create-page">
-          <BookmarkCreateForm onSubmit={handleCreate} onClose={handleClose} />
-        </div>
+        <BookmarkCreateForm
+          onSubmit={handleUpdate}
+          onClose={handleEditClose}
+          initialData={{
+            title: editingBookmark.title,
+            url: editingBookmark.url,
+            description: editingBookmark.description || '',
+          }}
+        />
       );
     }
 
-    if (isEditOpen && editingBookmark) {
-      return (
-        <div className="bookmark-create-page">
-          <BookmarkCreateForm
-            onSubmit={handleUpdate}
-            onClose={handleEditClose}
-            initialData={{
-              title: editingBookmark.title,
-              url: editingBookmark.url,
-              description: editingBookmark.description || '',
-            }}
-          />
-        </div>
-      );
-    }
+    return null;
+  }, [formMode, editingBookmark, handleCreate, handleUpdate, handleEditClose]);
 
+  // 북마크 그리드 렌더링 헬퍼
+  const renderBookmarkGrid = useCallback(() => {
     return (
-      <div className="bookmark-page">
-        <div className="bookmark-page__header">
-          <h1 className="bookmark-page__title">북마크</h1>
-        </div>
-
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={bookmarks.map((b) => b.id)} strategy={rectSortingStrategy}>
-            <div className="bookmark-page__grid">
-              {bookmarks.map((bookmark) => (
-                <BookmarkCard
-                  key={bookmark.id}
-                  bookmark={bookmark}
-                  onClick={handleBookmarkClick}
-                  onDelete={handleDelete}
-                  onEdit={handleEdit}
-                  isDraggable={isDraggable}
-                />
-              ))}
-              {canAddMore && (
-                <div
-                  className="bookmark-card bookmark-card--add"
-                  onClick={() => setIsCreateOpen(true)}
-                >
-                  <div className="bookmark-card__add-icon">
-                    <img src="/icons/add.svg" alt="" aria-hidden />
-                  </div>
-                  <div className="bookmark-card__add-label">링크 추가</div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={bookmarkIds} strategy={rectSortingStrategy}>
+          <div className="bookmark-page__grid">
+            {bookmarks.map((bookmark: Bookmark) => (
+              <BookmarkCard
+                key={bookmark.id}
+                bookmark={bookmark}
+                onClick={handleBookmarkClick}
+                onDelete={handleDelete}
+                onEdit={handleEdit}
+                isDraggable={isDraggable}
+                isEditMode={isEditMode}
+              />
+            ))}
+            {canAddMore && !isEditMode && (
+              <div className="bookmark-card bookmark-card--add" onClick={handleCreateOpen}>
+                <div className="bookmark-card__add-icon">
+                  <img src="/icons/add.svg" alt="" aria-hidden />
                 </div>
-              )}
-            </div>
-          </SortableContext>
-        </DndContext>
-      </div>
+                <div className="bookmark-card__add-label">링크 추가</div>
+              </div>
+            )}
+          </div>
+        </SortableContext>
+      </DndContext>
     );
-  }
+  }, [
+    sensors,
+    bookmarkIds,
+    handleDragEnd,
+    bookmarks,
+    handleBookmarkClick,
+    handleDelete,
+    handleEdit,
+    isDraggable,
+    isEditMode,
+    canAddMore,
+    handleCreateOpen,
+  ]);
 
-  // 태블릿: 페이지 형식
-  if (mode === 'tablet') {
-    if (isCreateOpen) {
-      return (
-        <div className="bookmark-create-page">
-          <BookmarkCreateForm onSubmit={handleCreate} onClose={handleClose} />
-        </div>
-      );
-    }
-
-    if (isEditOpen && editingBookmark) {
-      return (
-        <div className="bookmark-create-page">
-          <BookmarkCreateForm
-            onSubmit={handleUpdate}
-            onClose={handleEditClose}
-            initialData={{
-              title: editingBookmark.title,
-              url: editingBookmark.url,
-              description: editingBookmark.description || '',
-            }}
-          />
-        </div>
-      );
+  // 모바일/태블릿: 페이지 형식
+  if (mode === 'mobile' || mode === 'tablet') {
+    if (isFormOpen) {
+      return <div className="bookmark-create-page">{renderForm()}</div>;
     }
 
     return (
@@ -244,34 +232,7 @@ export default function Bookmark() {
         <div className="bookmark-page__header">
           <h1 className="bookmark-page__title">북마크</h1>
         </div>
-
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={bookmarks.map((b) => b.id)} strategy={rectSortingStrategy}>
-            <div className="bookmark-page__grid">
-              {bookmarks.map((bookmark) => (
-                <BookmarkCard
-                  key={bookmark.id}
-                  bookmark={bookmark}
-                  onClick={handleBookmarkClick}
-                  onDelete={handleDelete}
-                  onEdit={handleEdit}
-                  isDraggable={isDraggable}
-                />
-              ))}
-              {canAddMore && (
-                <div
-                  className="bookmark-card bookmark-card--add"
-                  onClick={() => setIsCreateOpen(true)}
-                >
-                  <div className="bookmark-card__add-icon">
-                    <img src="/icons/add.svg" alt="" aria-hidden />
-                  </div>
-                  <div className="bookmark-card__add-label">링크 추가</div>
-                </div>
-              )}
-            </div>
-          </SortableContext>
-        </DndContext>
+        {renderBookmarkGrid()}
       </div>
     );
   }
@@ -291,57 +252,31 @@ export default function Bookmark() {
             {isEditMode ? '완료' : '순서 편집'}
           </Button>
         </div>
-
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={bookmarks.map((b) => b.id)} strategy={rectSortingStrategy}>
-            <div className="bookmark-page__grid">
-              {bookmarks.map((bookmark) => (
-                <BookmarkCard
-                  key={bookmark.id}
-                  bookmark={bookmark}
-                  onClick={handleBookmarkClick}
-                  onDelete={handleDelete}
-                  onEdit={handleEdit}
-                  isDraggable={isDraggable}
-                  isEditMode={isEditMode}
-                />
-              ))}
-              {canAddMore && !isEditMode && (
-                <div
-                  className="bookmark-card bookmark-card--add"
-                  onClick={() => setIsCreateOpen(true)}
-                >
-                  <div className="bookmark-card__add-icon">
-                    <img src="/icons/add.svg" alt="" aria-hidden />
-                  </div>
-                  <div className="bookmark-card__add-label">링크 추가</div>
-                </div>
-              )}
-            </div>
-          </SortableContext>
-        </DndContext>
+        {renderBookmarkGrid()}
       </div>
 
+      {formMode === 'create' && (
         <BookmarkCreateOverlay
-          open={isCreateOpen}
-          onClose={handleClose}
+          open={isFormOpen}
+          onClose={handleEditClose}
           variant="modal"
           onSubmit={handleCreate}
         />
+      )}
 
-        {isEditOpen && editingBookmark && (
-          <BookmarkCreateOverlay
-            open={isEditOpen}
-            onClose={handleEditClose}
-            variant="modal"
-            onSubmit={handleUpdate}
-            initialData={{
-              title: editingBookmark.title,
-              url: editingBookmark.url,
-              description: editingBookmark.description || '',
-            }}
-          />
-        )}
+      {formMode === 'edit' && editingBookmark && (
+        <BookmarkCreateOverlay
+          open={isFormOpen}
+          onClose={handleEditClose}
+          variant="modal"
+          onSubmit={handleUpdate}
+          initialData={{
+            title: editingBookmark.title,
+            url: editingBookmark.url,
+            description: editingBookmark.description || '',
+          }}
+        />
+      )}
     </>
   );
 }
