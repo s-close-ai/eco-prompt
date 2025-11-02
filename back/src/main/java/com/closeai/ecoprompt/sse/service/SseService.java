@@ -50,7 +50,7 @@ public class SseService {
 	 * SSE 이벤트 종료 함수
 	 * 마지막 종료 시 SSE_COMPLETE 이벤트 전달
 	 * */
-	public void completeEvent(String messageUUID){
+	public void complete(String messageUUID){
 
 		SseEmitter emitter = emitters.get(messageUUID);
 
@@ -58,7 +58,7 @@ public class SseService {
 			try{
 				sendEventToClient(messageUUID, "SSE_COMPLETE", "DONE");
 			}catch(Exception e){
-
+				emitter.completeWithError(e);
 			}
 			emitter.complete();
 		}
