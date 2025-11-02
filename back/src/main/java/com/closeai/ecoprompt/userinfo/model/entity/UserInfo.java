@@ -1,12 +1,12 @@
 package com.closeai.ecoprompt.userinfo.model.entity;
 
+import com.closeai.ecoprompt.common.CustomUtil;
 import com.closeai.ecoprompt.common.entity.BaseEntity;
 import com.closeai.ecoprompt.user.model.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
@@ -45,7 +45,7 @@ public class UserInfo extends BaseEntity {
     private UserInfo(Integer totalMileage, Double highScore, User user) {
         this.totalMileage = totalMileage;
         this.user = user;
-        this.sharingInformationUpdatedAt = dateConverter(LocalDateTime.now());
+        this.sharingInformationUpdatedAt = CustomUtil.dateConverter(LocalDateTime.now());
     }
 
     public static UserInfo makeDefaultUserInfo(User user) {
@@ -58,13 +58,7 @@ public class UserInfo extends BaseEntity {
     }
 
     public void updateSharingInformationUpdatedAt() {
-        this.sharingInformationUpdatedAt = dateConverter(LocalDateTime.now());
-    }
-
-    private String dateConverter(LocalDateTime time) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss");
-
-        return time.format(formatter);
+        this.sharingInformationUpdatedAt = CustomUtil.dateConverter(LocalDateTime.now());
     }
 
 }
