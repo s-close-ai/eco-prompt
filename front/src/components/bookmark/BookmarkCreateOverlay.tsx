@@ -5,8 +5,8 @@ import type { BookmarkFormData } from '@/components/bookmark/BookmarkCreateForm'
 type BookmarkCreateOverlayProps = {
   open: boolean;
   onClose: () => void;
-  variant: 'modal' | 'fullscreen';
-  onSubmit?: (data: { title: string; url: string; description: string }) => void;
+  variant: 'modal';
+  onSubmit?: (data: BookmarkFormData) => void;
   initialData?: BookmarkFormData;
 };
 
@@ -17,12 +17,11 @@ export default function BookmarkCreateOverlay({
   onSubmit,
   initialData,
 }: BookmarkCreateOverlayProps) {
-  const sheetVariant = variant === 'fullscreen' ? 'fullscreen' : 'modal';
   return (
     <Sheet
       open={open}
       onClose={onClose}
-      variant={sheetVariant}
+      variant={variant}
       ariaLabel={initialData ? '북마크 수정' : '북마크 생성'}
       className="bookmark-create-overlay-sheet"
     >
@@ -30,4 +29,3 @@ export default function BookmarkCreateOverlay({
     </Sheet>
   );
 }
-

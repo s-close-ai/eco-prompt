@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import Button from '@/components/common/Button';
 import TextField from '@/components/common/TextField';
@@ -18,7 +18,11 @@ type BookmarkCreateFormProps = {
   initialData?: BookmarkFormData;
 };
 
-export default function BookmarkCreateForm({ onSubmit, onClose, initialData }: BookmarkCreateFormProps) {
+export default function BookmarkCreateForm({
+  onSubmit,
+  onClose,
+  initialData,
+}: BookmarkCreateFormProps) {
   const mode = useDeviceMode();
   const [title, setTitle] = useState(initialData?.title || '');
   const [url, setUrl] = useState(initialData?.url || '');
@@ -27,6 +31,16 @@ export default function BookmarkCreateForm({ onSubmit, onClose, initialData }: B
   const titleRef = useRef<HTMLInputElement>(null);
   const urlRef = useRef<HTMLInputElement>(null);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
+
+  // initialData가 변경되면 폼 데이터 업데이트
+  useEffect(() => {
+    if (initialData) {
+      setTitle(initialData.title || '');
+      setUrl(initialData.url || '');
+      setDescription(initialData.description || '');
+      setUrlError('');
+    }
+  }, [initialData]);
 
   const handleFocus = (ref: React.RefObject<HTMLInputElement | HTMLTextAreaElement>) => {
     if (mode === 'tablet') {
@@ -151,4 +165,3 @@ export default function BookmarkCreateForm({ onSubmit, onClose, initialData }: B
     </section>
   );
 }
-
