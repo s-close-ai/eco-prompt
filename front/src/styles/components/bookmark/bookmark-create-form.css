@@ -27,13 +27,10 @@
 }
 
 .bookmark-create-form__title h2 {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 600;
   color: #111827;
-  background: linear-gradient(135deg, #5e9462 0%, #4a7a4e 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  margin: 0;
 }
 
 .bookmark-create-form__close {
@@ -209,6 +206,8 @@
 
   .bookmark-create-form__title h2 {
     font-size: 24px;
+    font-weight: 600;
+    color: #111827;
   }
 
   .bookmark-create-form__body {
