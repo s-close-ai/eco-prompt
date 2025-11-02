@@ -42,7 +42,7 @@ export default function BookmarkCreateForm({
     }
   }, [initialData]);
 
-  const handleFocus = (ref: React.RefObject<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleFocus = (ref: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>) => {
     if (mode === 'tablet') {
       // 태블릿에서는 포커스된 필드를 부드럽게 스크롤
       setTimeout(() => {
