@@ -63,3 +63,15 @@
   border-color: rgba(0, 0, 0, 0.1);
   box-shadow: none;
 }
+
+/* 모바일에서 TextArea 간격 조정 */
+@media (max-width: 768px) {
+  .ep-text-area {
+    gap: 6px;
+  }
+
+  .ep-text-area__control textarea {
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+}

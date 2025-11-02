@@ -32,6 +32,7 @@
 /* modal(center) */
 .ep-sheet__panel[data-variant='modal'] {
   width: min(640px, 92vw);
+  max-height: min(700px, 85vh);
   left: 50%;
   top: 50%;
   transform: translate(-50%, calc(-50% + 20px));
@@ -42,6 +43,14 @@
 .ep-sheet.is-open .ep-sheet__panel[data-variant='modal'] {
   transform: translate(-50%, -50%);
   opacity: 1;
+}
+
+/* 태블릿 모달 크기 조정 */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .ep-sheet__panel[data-variant='modal'] {
+    width: min(580px, 88vw);
+    max-height: min(650px, 80vh);
+  }
 }
 
 /* bottom sheet */
@@ -98,4 +107,14 @@
   overflow: auto;
   max-height: 100%;
   flex: 1;
+}
+
+/* 북마크 생성 모달 특별 스타일 */
+.ep-sheet__content:has(.bookmark-create-form) {
+  padding: 0;
+  overflow: hidden;
+}
+
+.ep-sheet__content .bookmark-create-form {
+  height: 100%;
 }
