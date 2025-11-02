@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useMemo, useCallback } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useClickOutside } from '@/hooks/useClickOutside';
 import type { Bookmark } from '@/types/bookmark.types';
 import '@/styles/components/bookmark/bookmark-card.css';
 
@@ -30,69 +31,74 @@ export default function BookmarkCard({
     disabled: !isDraggable,
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    cursor: isDraggable ? 'grab' : 'pointer',
-  };
+  const style = useMemo(
+    () => ({
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+      cursor: isDraggable ? 'grab' : 'pointer',
+    }),
+    [transform, transition, isDragging, isDraggable],
+  );
 
-  // 메뉴 외부 클릭 시 닫기
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        menuRef.current &&
-        buttonRef.current &&
-        !menuRef.current.contains(event.target as Node) &&
-        !buttonRef.current.contains(event.target as Node)
-      ) {
-        setIsMenuOpen(false);
-      }
-    };
+  const handleCloseMenu = useCallback(() => {
+    setIsMenuOpen(false);
+  }, []);
 
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+  useClickOutside(
+    [menuRef as React.RefObject<HTMLElement>, buttonRef as React.RefObject<HTMLElement>],
+    handleCloseMenu,
+    isMenuOpen
+  );
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isMenuOpen]);
-
-  const handleClick = () => {
-    // 편집 모드일 때는 클릭 비활성화
+  const handleClick = useCallback(() => {
     if (!isEditMode && !isMenuOpen) {
       onClick?.(bookmark);
     }
-  };
+  }, [isEditMode, isMenuOpen, onClick, bookmark]);
 
-  const handleMenuClick = (e: React.MouseEvent) => {
+  const handleMenuClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsMenuOpen(!isMenuOpen);
-  };
+    setIsMenuOpen((prev) => !prev);
+  }, []);
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsMenuOpen(false);
-    onEdit?.(bookmark);
-  };
+  const handleEdit = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIsMenuOpen(false);
+      onEdit?.(bookmark);
+    },
+    [onEdit, bookmark],
+  );
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsMenuOpen(false);
-    onDelete?.(bookmark);
-  };
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setIsMenuOpen(false);
+      onDelete?.(bookmark);
+    },
+    [onDelete, bookmark],
+  );
+
+  const cardClassName = useMemo(() => {
+    const classes = ['bookmark-card'];
+    if (isDragging) classes.push('bookmark-card--dragging');
+    if (isEditMode) classes.push('bookmark-card--edit-mode');
+    return classes.join(' ');
+  }, [isDragging, isEditMode]);
+
+  const hasMenuActions = Boolean(onDelete || onEdit);
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`bookmark-card ${isDragging ? 'bookmark-card--dragging' : ''} ${isEditMode ? 'bookmark-card--edit-mode' : ''}`}
+      className={cardClassName}
       onClick={handleClick}
       {...attributes}
       {...listeners}
     >
-      {(onDelete || onEdit) && (
+      {hasMenuActions && (
         <>
           <button
             ref={buttonRef}
@@ -148,4 +154,3 @@ export default function BookmarkCard({
     </div>
   );
 }
-
