@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Bookmark } from '@/types/bookmark.types';
@@ -7,6 +8,7 @@ type BookmarkCardProps = {
   bookmark: Bookmark;
   onClick?: (bookmark: Bookmark) => void;
   onDelete?: (bookmark: Bookmark) => void;
+  onEdit?: (bookmark: Bookmark) => void;
   isDraggable?: boolean;
   isEditMode?: boolean;
 };
@@ -15,9 +17,14 @@ export default function BookmarkCard({
   bookmark,
   onClick,
   onDelete,
+  onEdit,
   isDraggable = false,
   isEditMode = false,
 }: BookmarkCardProps) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: bookmark.id,
     disabled: !isDraggable,
@@ -29,15 +36,50 @@ export default function BookmarkCard({
     opacity: isDragging ? 0.5 : 1,
     cursor: isDraggable ? 'grab' : 'pointer',
   };
+
+  // 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current &&
+        buttonRef.current &&
+        !menuRef.current.contains(event.target as Node) &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
   const handleClick = () => {
     // 편집 모드일 때는 클릭 비활성화
-    if (!isEditMode) {
+    if (!isEditMode && !isMenuOpen) {
       onClick?.(bookmark);
     }
   };
 
+  const handleMenuClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMenuOpen(false);
+    onEdit?.(bookmark);
+  };
+
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
+    setIsMenuOpen(false);
     onDelete?.(bookmark);
   };
 
@@ -50,15 +92,41 @@ export default function BookmarkCard({
       {...attributes}
       {...listeners}
     >
-      {onDelete && (
-        <button
-          className="bookmark-card__delete"
-          onClick={handleDelete}
-          aria-label="삭제"
-          type="button"
-        >
-          <img src="/icons/close.svg" alt="" aria-hidden width={16} height={16} />
-        </button>
+      {(onDelete || onEdit) && (
+        <>
+          <button
+            ref={buttonRef}
+            className="bookmark-card__menu"
+            onClick={handleMenuClick}
+            aria-label="메뉴"
+            type="button"
+            aria-expanded={isMenuOpen}
+          >
+            <img src="/icons/more_detail.svg" alt="" aria-hidden width={20} height={20} />
+          </button>
+          {isMenuOpen && (
+            <div ref={menuRef} className="bookmark-card__menu-dropdown">
+              {onEdit && (
+                <button
+                  className="bookmark-card__menu-item bookmark-card__menu-item--edit"
+                  onClick={handleEdit}
+                  type="button"
+                >
+                  편집
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  className="bookmark-card__menu-item bookmark-card__menu-item--delete"
+                  onClick={handleDelete}
+                  type="button"
+                >
+                  삭제
+                </button>
+              )}
+            </div>
+          )}
+        </>
       )}
       <div className="bookmark-card__icon">
         {bookmark.icon ? (
