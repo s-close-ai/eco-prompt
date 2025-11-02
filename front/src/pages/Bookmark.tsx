@@ -43,6 +43,8 @@ export default function Bookmark() {
   const mode = useDeviceMode();
   const [bookmarks, setBookmarks] = useState<Bookmark[]>(mockBookmarks);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
   // 모바일/태블릿: 롱프레스로 드래그, 데스크탑: 편집 모드에서만 드래그
@@ -62,6 +64,38 @@ export default function Bookmark() {
 
   const handleBookmarkClick = (bookmark: Bookmark) => {
     window.open(bookmark.url, '_blank');
+  };
+
+  const handleEdit = (bookmark: Bookmark) => {
+    setEditingBookmark(bookmark);
+    setIsEditOpen(true);
+  };
+
+  const handleUpdate = (data: BookmarkFormData) => {
+    if (!editingBookmark) return;
+
+    const normalizedUrl = normalizeUrl(data.url);
+
+    setBookmarks(
+      bookmarks.map((b) =>
+        b.id === editingBookmark.id
+          ? {
+              ...b,
+              title: data.title,
+              url: normalizedUrl,
+              description: data.description || undefined,
+              icon: getFaviconUrl(normalizedUrl),
+            }
+          : b
+      )
+    );
+    setIsEditOpen(false);
+    setEditingBookmark(null);
+  };
+
+  const handleEditClose = () => {
+    setIsEditOpen(false);
+    setEditingBookmark(null);
   };
 
   const handleDelete = (bookmark: Bookmark) => {
@@ -126,6 +160,22 @@ export default function Bookmark() {
       );
     }
 
+    if (isEditOpen && editingBookmark) {
+      return (
+        <div className="bookmark-create-page">
+          <BookmarkCreateForm
+            onSubmit={handleUpdate}
+            onClose={handleEditClose}
+            initialData={{
+              title: editingBookmark.title,
+              url: editingBookmark.url,
+              description: editingBookmark.description || '',
+            }}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="bookmark-page">
         <div className="bookmark-page__header">
@@ -141,6 +191,7 @@ export default function Bookmark() {
                   bookmark={bookmark}
                   onClick={handleBookmarkClick}
                   onDelete={handleDelete}
+                  onEdit={handleEdit}
                   isDraggable={isDraggable}
                 />
               ))}
@@ -150,7 +201,7 @@ export default function Bookmark() {
                   onClick={() => setIsCreateOpen(true)}
                 >
                   <div className="bookmark-card__add-icon">
-                    <img src="/icons/add_folder.svg" alt="" aria-hidden />
+                    <img src="/icons/add.svg" alt="" aria-hidden />
                   </div>
                   <div className="bookmark-card__add-label">링크 추가</div>
                 </div>
@@ -162,50 +213,66 @@ export default function Bookmark() {
     );
   }
 
-  // 태블릿: 모달
+  // 태블릿: 페이지 형식
   if (mode === 'tablet') {
-    return (
-      <>
-        <div className="bookmark-page">
-          <div className="bookmark-page__header">
-            <h1 className="bookmark-page__title">북마크</h1>
-          </div>
+    if (isCreateOpen) {
+      return (
+        <div className="bookmark-create-page">
+          <BookmarkCreateForm onSubmit={handleCreate} onClose={handleClose} />
+        </div>
+      );
+    }
 
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={bookmarks.map((b) => b.id)} strategy={rectSortingStrategy}>
-              <div className="bookmark-page__grid">
-                {bookmarks.map((bookmark) => (
-                  <BookmarkCard
-                    key={bookmark.id}
-                    bookmark={bookmark}
-                    onClick={handleBookmarkClick}
-                    onDelete={handleDelete}
-                    isDraggable={isDraggable}
-                  />
-                ))}
-                {canAddMore && (
-                  <div
-                    className="bookmark-card bookmark-card--add"
-                    onClick={() => setIsCreateOpen(true)}
-                  >
-                    <div className="bookmark-card__add-icon">
-                      <img src="/icons/add_folder.svg" alt="" aria-hidden />
-                    </div>
-                    <div className="bookmark-card__add-label">링크 추가</div>
-                  </div>
-                )}
-              </div>
-            </SortableContext>
-          </DndContext>
+    if (isEditOpen && editingBookmark) {
+      return (
+        <div className="bookmark-create-page">
+          <BookmarkCreateForm
+            onSubmit={handleUpdate}
+            onClose={handleEditClose}
+            initialData={{
+              title: editingBookmark.title,
+              url: editingBookmark.url,
+              description: editingBookmark.description || '',
+            }}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="bookmark-page">
+        <div className="bookmark-page__header">
+          <h1 className="bookmark-page__title">북마크</h1>
         </div>
 
-        <BookmarkCreateOverlay
-          open={isCreateOpen}
-          onClose={handleClose}
-          variant="modal"
-          onSubmit={handleCreate}
-        />
-      </>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={bookmarks.map((b) => b.id)} strategy={rectSortingStrategy}>
+            <div className="bookmark-page__grid">
+              {bookmarks.map((bookmark) => (
+                <BookmarkCard
+                  key={bookmark.id}
+                  bookmark={bookmark}
+                  onClick={handleBookmarkClick}
+                  onDelete={handleDelete}
+                  onEdit={handleEdit}
+                  isDraggable={isDraggable}
+                />
+              ))}
+              {canAddMore && (
+                <div
+                  className="bookmark-card bookmark-card--add"
+                  onClick={() => setIsCreateOpen(true)}
+                >
+                  <div className="bookmark-card__add-icon">
+                    <img src="/icons/add.svg" alt="" aria-hidden />
+                  </div>
+                  <div className="bookmark-card__add-label">링크 추가</div>
+                </div>
+              )}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </div>
     );
   }
 
@@ -234,6 +301,7 @@ export default function Bookmark() {
                   bookmark={bookmark}
                   onClick={handleBookmarkClick}
                   onDelete={handleDelete}
+                  onEdit={handleEdit}
                   isDraggable={isDraggable}
                   isEditMode={isEditMode}
                 />
@@ -244,7 +312,7 @@ export default function Bookmark() {
                   onClick={() => setIsCreateOpen(true)}
                 >
                   <div className="bookmark-card__add-icon">
-                    <img src="/icons/add_folder.svg" alt="" aria-hidden />
+                    <img src="/icons/add.svg" alt="" aria-hidden />
                   </div>
                   <div className="bookmark-card__add-label">링크 추가</div>
                 </div>
@@ -254,12 +322,26 @@ export default function Bookmark() {
         </DndContext>
       </div>
 
-      <BookmarkCreateOverlay
-        open={isCreateOpen}
-        onClose={handleClose}
-        variant="modal"
-        onSubmit={handleCreate}
-      />
+        <BookmarkCreateOverlay
+          open={isCreateOpen}
+          onClose={handleClose}
+          variant="modal"
+          onSubmit={handleCreate}
+        />
+
+        {isEditOpen && editingBookmark && (
+          <BookmarkCreateOverlay
+            open={isEditOpen}
+            onClose={handleEditClose}
+            variant="modal"
+            onSubmit={handleUpdate}
+            initialData={{
+              title: editingBookmark.title,
+              url: editingBookmark.url,
+              description: editingBookmark.description || '',
+            }}
+          />
+        )}
     </>
   );
 }

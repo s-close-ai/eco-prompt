@@ -15,13 +15,14 @@ export type BookmarkFormData = {
 type BookmarkCreateFormProps = {
   onSubmit?: (data: BookmarkFormData) => void;
   onClose?: () => void;
+  initialData?: BookmarkFormData;
 };
 
-export default function BookmarkCreateForm({ onSubmit, onClose }: BookmarkCreateFormProps) {
+export default function BookmarkCreateForm({ onSubmit, onClose, initialData }: BookmarkCreateFormProps) {
   const mode = useDeviceMode();
-  const [title, setTitle] = useState('');
-  const [url, setUrl] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [url, setUrl] = useState(initialData?.url || '');
+  const [description, setDescription] = useState(initialData?.description || '');
   const [urlError, setUrlError] = useState('');
   const titleRef = useRef<HTMLInputElement>(null);
   const urlRef = useRef<HTMLInputElement>(null);
@@ -79,7 +80,7 @@ export default function BookmarkCreateForm({ onSubmit, onClose }: BookmarkCreate
           {mode !== 'mobile' && (
             <img src="/icons/bookmark.svg" alt="" aria-hidden width={24} height={24} />
           )}
-          <h2>북마크 생성</h2>
+          <h2>{initialData ? '북마크 수정' : '북마크 생성'}</h2>
         </div>
         {onClose && (
           <button
@@ -144,7 +145,7 @@ export default function BookmarkCreateForm({ onSubmit, onClose }: BookmarkCreate
           ariaLabel="추가"
           fullWidth
         >
-          추가
+          {initialData ? '수정' : '추가'}
         </Button>
       </footer>
     </section>
