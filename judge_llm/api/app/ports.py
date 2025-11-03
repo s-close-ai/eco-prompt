@@ -1,5 +1,4 @@
-# 외부 의존성 인터페이스
-# judge_llm/api/app/ports.py
+# judge_llm/api/api/app/ports.py
 from typing import Protocol, Iterable, Dict, Any, List, Tuple, Optional
 
 class MongoReader(Protocol):

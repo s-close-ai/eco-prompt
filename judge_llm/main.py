@@ -1,106 +1,117 @@
-# judge_llm/main.py
-# python 3.12.3
+#judge_llm/main.py
 from __future__ import annotations
-
 import os
 import asyncio
-from typing import Dict, Any, Optional
+import datetime
+from typing import Dict, Any, Optional, List
 
 from fastapi import FastAPI, Body, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-# --- .env 로드: api/.env 우선, 그 다음 루트 .env (override=True) ---
+# .env 파일 로드
 BASE_DIR = os.path.dirname(__file__)
-ENV_CANDIDATES = [os.path.join(BASE_DIR, "api/.env"),
-                  os.path.join(BASE_DIR, ".env")]
-for path in ENV_CANDIDATES:
+ENV_PATHS = [
+    os.path.join(BASE_DIR, "api/.env"),
+    os.path.join(BASE_DIR, ".env"),
+]
+for path in ENV_PATHS:
     if os.path.isfile(path):
         load_dotenv(path, override=True)
+        print(f"[.env 로드]: {path}")
         break
 
-# 패키지 임포트: api/app/*
-from api.app.wiring import build_pipeline  # noqa
+from api.app.wiring import build_pipeline
 
 app = FastAPI(title="JudgeLLM API", version="1.0")
 
-
 class TrainPayload(BaseModel):
     batchId: Optional[str] = None
-    items: list[dict]
+    items: List[dict]
 
-
-# ---- 앱 시작/종료 훅: 파이프라인 싱글톤 준비 ----
+# 서버 시작 시 실행
 @app.on_event("startup")
 async def on_startup() -> None:
-    # 필요시 seed_data 전달 가능
     app.state.pipe = build_pipeline()
-    # 초기화 로그 강제 출력 유도용으로 더미 호출(원치 않으면 제거해도 됨)
+
+    # MongoDB 연결 확인
     try:
-        # judge 연결 확인용 매우 가벼운 프롬프트
+        from api.app.adapters.db.mongo_connector import ping as mongo_ping
+        mongo_ping()
+    except Exception as e:
+        print(f"MongoDB 연결 실패: {e}")
+
+    # Judge LLM 연결 확인
+    try:
         _ = await app.state.pipe.judge.evaluate("ping", "pong")
-    except Exception:
-        # judge 미연결이어도 API 자체는 살아있을 수 있으므로 무시
-        pass
+        print("Judge 서버 연결 확인 완료")
+    except Exception as e:
+        print(f"Judge 서버 연결 실패: {e}")
 
+    print("서버 시작 완료")
 
+# 서버 종료 시 실행
 @app.on_event("shutdown")
 async def on_shutdown() -> None:
-    # 여기에 자원 정리 로직이 필요하면 추가
-    pass
+    print("서버 종료 중...")
+    try:
+        # 필요 시 자원 정리 코드 추가
+        pass
+    except Exception as e:
+        print(f"종료 중 오류 발생: {e}")
+    finally:
+        print("서버 종료 완료")
 
-
+# 헬스체크
 @app.get("/health")
 async def health():
-    auth = "enabled" if os.getenv("API_BEARER_TOKEN") else "disabled"
-    return {"ok": True, "service": "메인 LLM 훈련 로직 서버 동작중", "auth": auth}
+    auth = "활성화" if os.getenv("API_BEARER_TOKEN") else "비활성화"
+    return {
+        "ok": True,
+        "서비스": "메인 LLM 훈련 서버 동작 중",
+        "인증": auth,
+        "시간": datetime.datetime.utcnow().isoformat() + "Z",
+    }
 
-
+# 학습 요청 처리
 @app.post("/api/v1/ai/training")
 async def post_training(
     payload: TrainPayload = Body(...),
     sync: int | None = Query(default=None, description="1이면 동기 처리"),
 ):
-    pipe = getattr(app.state, "pipe", None)
-    if pipe is None:
-        # 이 경우는 거의 없음(스타트업 실패 케이스 방어)
-        app.state.pipe = build_pipeline()
-        pipe = app.state.pipe
+    pipe = getattr(app.state, "pipe", None) or build_pipeline()
+    app.state.pipe = pipe
+
+    # pipeline 은 Dict[str, Any] 기대하니 model_dump로 변환
+    payload_dict: Dict[str, Any] = {
+        "batchId": payload.batchId,
+        "items": payload.items,
+    }
 
     if sync == 1:
         try:
-            data: Dict[str, Any] = await pipe.run(payload.model_dump())
+            data: Dict[str, Any] = await pipe.run(payload_dict)
             return JSONResponse({"status": "OK", "data": data}, status_code=200)
         except Exception as e:
             return JSONResponse({"status": "ERROR", "error": str(e)}, status_code=500)
     else:
-        # 비동기 시뮬레이션: enqueue 대체
         async def _bg():
             try:
-                await pipe.run(payload.model_dump())
-            except Exception:
-                pass
-
+                await pipe.run(payload_dict)
+                print("비동기 학습 요청 처리 완료")
+            except Exception as e:
+                print(f"비동기 학습 처리 중 오류: {e}")
         asyncio.create_task(_bg())
-        return JSONResponse(
-            {
-                "status": "SUCCESS",
-                "data": {
-                    "jobId": os.urandom(12).hex(),
-                    "message": "모델 학습 작업이 성공적으로 시작되었습니다.",
-                    "timestamp": os.popen("date -u +%Y-%m-%dT%H:%M:%SZ").read().strip(),
-                },
-            },
-            status_code=202,
-        )
+        return JSONResponse({"status":"SUCCESS","data":{
+            "jobId": os.urandom(12).hex(),
+            "message":"학습 작업이 시작되었습니다.",
+            "timestamp": datetime.datetime.utcnow().isoformat()+"Z"}}, status_code=202)
 
-
+# 직접 실행 시
 if __name__ == "__main__":
     import uvicorn
-
     host = os.getenv("API_HOST", "0.0.0.0")
     port = int(os.getenv("API_PORT", "8081"))
-    # 개발 중엔 reload=False 권장(싱글톤 초기화 중복 방지)
+    print(f"JudgeLLM 서버 실행 중: {host}:{port}")
     uvicorn.run("main:app", host=host, port=port, reload=False)
- 

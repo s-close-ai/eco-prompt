@@ -4,14 +4,19 @@ from __future__ import annotations
 import os
 from typing import Dict, Any, Iterable
 from .pipeline import ManualTrainPipeline
-from .dummies import (
-    DummyMongoReader, DummyJudgeClient, RegexMasker, DummyTrainRepository, DummyMainLlmClient
-)
+from .dummies import DummyJudgeClient, DummyTrainRepository, DummyMainLlmClient
+from .adapters.db.train_repository import MongoTrainRepository
+from .masking.presidio_adapter import PresidioAdapter
+from .adapters.db import mongo_connector as mongo
+
+
 
 def build_pipeline(seed_data: Iterable[Dict[str, Any]] = ()) -> ManualTrainPipeline:
-    mongo  = DummyMongoReader(seed=seed_data)
-    masker = RegexMasker()
-    repo   = DummyTrainRepository()
+    mongo.ping()
+    mongo.ensure_unique_index()
+    mongo_ref = mongo
+    masker = PresidioAdapter()
+    repo = MongoTrainRepository()
 
     judge_adapter = (os.getenv("JUDGE_ADAPTER") or "").lower()
     use_llama = judge_adapter == "llama" or bool(os.getenv("LLAMA_SERVER_URL"))
@@ -31,4 +36,10 @@ def build_pipeline(seed_data: Iterable[Dict[str, Any]] = ()) -> ManualTrainPipel
         main_llm = DummyMainLlmClient()
         print("[MainLLM] 더미 메인 LLM 어댑터 사용 중 (MAIN_LLM_URL 미설정)")
 
-    return ManualTrainPipeline(mongo=mongo, judge=judge, masker=masker, repo=repo, main_llm=main_llm)
+    return ManualTrainPipeline(
+        mongo=mongo_ref,
+        judge=judge,
+        masker=masker,
+        repo=repo,
+        main_llm=main_llm,
+    )

@@ -1,13 +1,15 @@
+# judge_llm/api/api/app/adapters/main_llm_http.py
 from __future__ import annotations
 from typing import Dict, Any, List, Optional
 import os, httpx, asyncio
+
 
 class HttpMainLlmClient:
     """
     Main LLM 훈련 API 호출 어댑터(실연결).
     .env
       MAIN_LLM_URL
-      MAIN_LLM_TRAIN_PATH   (default: /api/v1/ai/training)
+      MAIN_LLM_TRAIN_PATH   (default: /api/v1/ai/train)
       MAIN_LLM_TOKEN
       MAIN_LLM_TIMEOUT_S    (default: 30)
       MAIN_LLM_RETRIES      (default: 2)
@@ -15,7 +17,7 @@ class HttpMainLlmClient:
     """
     def __init__(self) -> None:
         base = os.getenv("MAIN_LLM_URL", "").rstrip("/")
-        path = os.getenv("MAIN_LLM_TRAIN_PATH", "/api/v1/ai/training")
+        path = os.getenv("MAIN_LLM_TRAIN_PATH", "/api/v1/ai/train")
         if not base:
             raise RuntimeError("MAIN_LLM_URL is not set")
         self.url = f"{base}{path}"
@@ -27,7 +29,7 @@ class HttpMainLlmClient:
         headers = {"Content-Type": "application/json"}
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"  # ← 여분 } 제거
-        payload = {"batch_id": batch_id, "items": items}
+        payload = {"batch_id": batch_id, "dataset": items}
 
         attempt = 0
         last_err: Optional[Exception] = None
