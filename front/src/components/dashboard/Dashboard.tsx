@@ -1,6 +1,5 @@
 import { mockDashboardMetrics, mockDashboardStats } from '@/data/mockData';
 import type { DashboardMetric } from '@/types/dashboard.types';
-import useDeviceMode from '@/hooks/useDeviceMode';
 import '@/styles/components/dashboard/dashboard.css';
 
 function CircularProgress({
@@ -70,7 +69,6 @@ function CircularProgress({
 }
 
 export default function Dashboard() {
-  const mode = useDeviceMode();
   const metrics = mockDashboardMetrics;
   const stats = mockDashboardStats;
 

@@ -101,10 +101,6 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
     }
   };
 
-  const toggleExpand = (index: number) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
-  };
-
   const renderPromptCard = (prompt: EcoPickPrompt, index: number) => (
     <div key={prompt.id} className="eco-pick-card">
       <div className="eco-pick-header">
