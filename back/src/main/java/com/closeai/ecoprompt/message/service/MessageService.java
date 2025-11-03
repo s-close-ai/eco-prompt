@@ -1,7 +1,6 @@
 package com.closeai.ecoprompt.message.service;
 
-import java.util.UUID;
-
+import com.closeai.ecoprompt.common.CustomUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +44,7 @@ public class MessageService {
 		chattingId = chatting.getId();
 
 		//2. message에 대한 UUID 값 생성
-		String messageUUID = UUID.randomUUID().toString();
+		String messageUUID = CustomUtil.makeNewUUID();
 
 		//3. Mysql과 MonogoDB에 사용자 입력 메시지 저장
 		saveMessage(messageUUID, chatting, MessageSender.USER, content, MessageStatus.RECEIVED);

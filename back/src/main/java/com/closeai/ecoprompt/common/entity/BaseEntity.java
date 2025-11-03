@@ -1,11 +1,11 @@
 package com.closeai.ecoprompt.common.entity;
 
+import com.closeai.ecoprompt.common.CustomUtil;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.Comment;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Getter
 @MappedSuperclass
@@ -25,19 +25,14 @@ public abstract class BaseEntity {
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = dateConverter(LocalDateTime.now());
+        this.createdAt = CustomUtil.dateConverter(LocalDateTime.now());
         this.updatedAt = this.createdAt;
         this.isDeleted = 'N';
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.updatedAt = dateConverter(LocalDateTime.now());
-    }
-
-    private String dateConverter(LocalDateTime time) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss");
-        return time.format(formatter);
+        this.updatedAt = CustomUtil.dateConverter(LocalDateTime.now());
     }
     
 }

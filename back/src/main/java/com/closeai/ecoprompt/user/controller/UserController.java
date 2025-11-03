@@ -29,7 +29,7 @@ public class UserController {
 
         if (token == null) return Map.of("authenticated", false);
 
-        Claims claims = jwtUtil.validateAndParse(token);
+        Claims claims = jwtUtil.parseClaimsStrict(token);
         if (claims == null) return Map.of("authenticated", false);
 
         return Map.of(

@@ -71,3 +71,6 @@ ai:
             judge-prompt: ${JUDGE_PROMPT_URL}
             llm: ${LLM_URL}
             judge-llm: ${JUDGE_LLM_URL}
+
+jwt:
+    secret: ${JWT_SECRET}
