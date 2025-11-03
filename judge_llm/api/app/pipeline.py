@@ -105,6 +105,9 @@ class ManualTrainPipeline:
                     })
 
                 item_res = {"message_id": message_id, "total": total, "final_score": final_score, "passed": passed}
+                print(f"[JudgeParsed] mid={message_id} total={total} final={final_score} passed={passed}")
+                print(f"[JudgeRawJSON] mid={message_id} raw={getattr(norm,'__dict__',norm)}")
+
                 if debug_subs:
                     subs = getattr(norm, "subscores", None)
                     if subs:
