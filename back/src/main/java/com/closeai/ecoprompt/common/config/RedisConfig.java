@@ -1,9 +1,12 @@
 package com.closeai.ecoprompt.common.config;
 
+import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -15,6 +18,12 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @EnableRedisRepositories(basePackages = "com.closeai.ecoprompt.**.repository.redis")
 public class RedisConfig {
 
+	private final RedisProperties redisProperties;
+
+	public RedisConfig(RedisProperties redisProperties) {
+		this.redisProperties = redisProperties;
+	}
+
 	@Bean
 	public ObjectMapper objectMapper() {
 		return new ObjectMapper()
@@ -23,8 +32,17 @@ public class RedisConfig {
 
 	@Bean
 	public RedisConnectionFactory redisConnectionFactory() {
-		// host와 port는 spring-boot-starter-data-redis 에서 자동으로 삽입
-		return new LettuceConnectionFactory();
+		RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
+		config.setHostName(redisProperties.getHost());
+		config.setPort(redisProperties.getPort());
+
+		AppLogger.info(config.toString());
+
+		if (redisProperties.getPassword() != null) {
+			config.setPassword(redisProperties.getPassword());
+		}
+
+		return new LettuceConnectionFactory(config);
 	}
 
 	/** String 기반 간단 키-값 */
