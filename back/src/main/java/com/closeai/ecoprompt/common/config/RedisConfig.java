@@ -36,11 +36,11 @@ public class RedisConfig {
 		config.setHostName(redisProperties.getHost());
 		config.setPort(redisProperties.getPort());
 
-		AppLogger.info(config.toString());
-
 		if (redisProperties.getPassword() != null) {
 			config.setPassword(redisProperties.getPassword());
 		}
+
+		AppLogger.info(redisProperties.getHost() + ":" + redisProperties.getPort());
 
 		return new LettuceConnectionFactory(config);
 	}
