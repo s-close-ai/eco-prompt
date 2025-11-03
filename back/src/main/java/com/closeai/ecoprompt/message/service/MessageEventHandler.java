@@ -57,7 +57,7 @@ public class MessageEventHandler {
 
 		// 1. Message의 점수 정보 Update
 		MessageDocument messageToUpdate = updateMongoMessage(messageUUID, MessageSender.USER,null, scoreInfo, null);
-		Message message = messageJpaRepository.findByMessageUUID(messageUUID)
+		Message message = messageJpaRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER)
 			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
 
 		// 2. Message에 대한 점수 score 테이블에 insert
