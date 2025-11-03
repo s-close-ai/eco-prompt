@@ -68,6 +68,6 @@ app:
 ai:
     model:
         url:
-            judge-prompt: ""
-            llm: ""
+            judge-prompt: ${JUDGE_PROMPT_URL}
+            llm: ${LLM_URL}
             judge-llm: ${JUDGE_LLM_URL}
