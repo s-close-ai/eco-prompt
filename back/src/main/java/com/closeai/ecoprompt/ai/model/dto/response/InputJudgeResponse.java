@@ -1,10 +1,12 @@
 package com.closeai.ecoprompt.ai.model.dto.response;
 
-import com.closeai.ecoprompt.ai.model.dto.ScoreInfo;
-
 public record InputJudgeResponse(
 	String summary,
-	ScoreInfo scoreInfo
+	Double totalScore,
+	Double clarityScore,
+	Double specificityScore,
+	Double formatScore,
+	Double safetyScore
 ) {
 
 }
