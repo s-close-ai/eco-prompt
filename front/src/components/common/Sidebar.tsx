@@ -68,7 +68,7 @@ export default function Sidebar() {
               <button
                 className="sidebar-icon-btn"
                 aria-label="대시보드"
-                onClick={() => console.log('대시보드 클릭')}
+                onClick={() => navigate('/?tab=dashboard')}
               >
                 <img src="/icons/dashboard.svg" alt="dashboard" width={20} height={20} />
               </button>
@@ -257,7 +257,7 @@ export default function Sidebar() {
                   if (mode === 'mobile') {
                     closeSidebar();
                   }
-                  console.log('대시보드 클릭');
+                  navigate('/?tab=dashboard');
                 }}
               >
                 <img src="/icons/dashboard.svg" alt="dashboard" width={18} height={18} />

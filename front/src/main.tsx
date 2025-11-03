@@ -12,8 +12,10 @@ import Project from './pages/Project';
 import Settings from './pages/Settings';
 import Bookmark from './pages/Bookmark';
 
-// PWA Service Worker 등록
-registerSW({ immediate: true });
+// PWA Service Worker 등록 (개발 환경에서는 비활성화)
+if (import.meta.env.PROD) {
+  registerSW({ immediate: true });
+}
 
 // VisualViewport 기반의 100vh 대체 단위 설정
 installAppViewportUnit();

@@ -14,10 +14,9 @@ function ShellBody() {
   const mode = useDeviceMode();
   const { isSidebarCollapsed, isSidebarOpen } = useAppShell();
   const isChat = location.pathname.startsWith('/chat');
-  const isHome = location.pathname === '/';
   const isProjectRoute = location.pathname.startsWith('/project');
   const bottomVariant: 'chat' | 'menu' | null =
-    isChat || isProjectRoute ? 'chat' : isHome ? null : mode === 'mobile' ? 'menu' : null;
+    isChat || isProjectRoute ? 'chat' : mode === 'mobile' ? 'menu' : null;
 
   const [isProjectCreateOpen, setProjectCreateOpen] = useState(false);
   useEffect(() => {
