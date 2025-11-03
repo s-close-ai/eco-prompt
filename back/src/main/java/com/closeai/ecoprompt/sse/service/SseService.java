@@ -42,6 +42,7 @@ public class SseService {
 					.data(data));
 			} catch(Exception e){
 				emitter.completeWithError(e);
+				emitters.remove(messageUUID);
 			}
 		}
 	}
@@ -61,6 +62,7 @@ public class SseService {
 				emitter.completeWithError(e);
 			}
 			emitter.complete();
+			emitters.remove(messageUUID);
 		}
 	}
 }

@@ -38,10 +38,10 @@ public class MessageEventHandler {
 	private final ScoreService scoreService;
 	private final ChattingService chattingService;
 	private final MileageService mileageService;
+	private final SseService sseService;
 
 	private final MessageJpaRepository messageJpaRepository;
 	private final MessageMongoRepository messageMongoRepository;
-	private final SseService sseService;
 
 	/**
 	 * Judge 모델 완료 이벤트를 수신(구독)하는 리스너

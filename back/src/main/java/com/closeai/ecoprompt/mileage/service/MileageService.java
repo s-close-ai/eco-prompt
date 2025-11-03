@@ -29,7 +29,7 @@ public class MileageService {
 		mileageRepository.save(mileage);
 	}
 
-	public int calculateMileage(double score) {
+	private int calculateMileage(double score) {
 
 		int multiplier = 0; // 기본 배율(Multiplier)은 0으로 시작
 
