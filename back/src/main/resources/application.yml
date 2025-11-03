@@ -51,6 +51,9 @@ spring:
 springdoc:
     override-with-generic-response: false
 
+server:
+    forward-headers-strategy: framework
+
 ssh:
     remote-jump-host: ${REMOTE_JUMP_HOST} # ssh 연결할 중간 서버 주소
     ssh-port:         ${SSH_PORT} # ssh 프로토콜 포트
