@@ -15,11 +15,8 @@ def return_prompt_and_responses(samples):
         "rejected": samples["rejected"],
     }
 
-# MongoDB에서 마스킹 처리된 데이터 가져오기
-def get_masking_data(first_id: int):
-    # MongoDB에서 데이터 가져오기
-
-
+# 마스킹 처리된 데이터 가져오기
+def process_training_data(data: list):
     # dataset으로 로드할 수 있도록 전처리
 
 

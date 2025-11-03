@@ -42,9 +42,6 @@ class EvaluateSettings(BaseSettings):
     eval_log_samples: bool = True
     eval_auto_after_train: bool = True
 
-    class Config:
-        env_file = ".env"    # 환경변수 파일 경로
-
 base_settings = TotalSettings()
 wandb_settings = WandbSettings()
 train_settings = TrainSettings()
