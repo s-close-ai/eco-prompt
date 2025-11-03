@@ -34,9 +34,8 @@ async def get_client():
         logger.info("[llama_client] httpx.AsyncClient initialized")
     return _client
 
-async def request_judge_output(SYSTEM_PROMPT, prompt):
+async def request_judge_output(prompt):
     payload = {
-        "systemprompt": SYSTEM_PROMPT,
         "prompt": prompt,        
     }
 

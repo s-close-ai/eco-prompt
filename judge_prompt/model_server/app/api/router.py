@@ -12,7 +12,7 @@ router = APIRouter()
 @router.post("/v1/judge", response_model=InferenceResponse,)
 async def prompt_judge(payload: InferenceRequest, request: Request, response: Response):
     try:
-        result = await run_judge_model(payload.systemprompt, payload.prompt)
+        result = await run_judge_model(payload.prompt)
         logger.success("[router]inference success")
         return result
     except Exception as e:
