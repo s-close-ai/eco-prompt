@@ -22,6 +22,7 @@
   border-radius: 12px;
   padding: 12px 14px;
   background: #ffffff;
+  height: 48px;
 }
 
 .ep-text-field__control input {
@@ -44,4 +45,20 @@
 .ep-text-field__control:focus-within {
   border-color: rgba(0, 0, 0, 0.25);
   box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+/* 모바일에서 입력 칸 스타일 조정 */
+@media (max-width: 768px) {
+  .ep-text-field {
+    gap: 6px;
+  }
+
+  .ep-text-field__control {
+    padding: 12px 14px;
+    /* height: 48px은 기본 스타일에서 상속됨 */
+  }
+
+  .ep-text-field__control input {
+    font-size: 16px;
+  }
 }

@@ -269,7 +269,7 @@ export default function Sidebar() {
                   if (mode === 'mobile') {
                     closeSidebar();
                   }
-                  console.log('북마크 클릭');
+                  navigate('/bookmark');
                 }}
               >
                 <img src="/icons/bookmark.svg" alt="bookmark" width={18} height={18} />
