@@ -28,8 +28,3 @@ JUDGE_JSON_SCHEMA = {
         }
     }
 }
-
-
-# gbnf_grammar = llama_grammar_json_schema_to_gbnf(JUDGE_JSON_SCHEMA)
-
-# print(gbnf_grammar[:400])

@@ -10,14 +10,14 @@ import asyncio, anyio
 from app.core.config import settings
 
 _model_instance: Llama | None = None
-_model_lock = asyncio.Lock()
+_model_lock = anyio.Lock()
 
 def _create_llama():
     """동기 블로킹: 별도 스레드에서 호출될 생성기"""
     # 필요 시 chat_format 등 추가 (예: Qwen 계열이라면 chat_format="qwen2")
     llm = Llama(
         model_path=settings.MODEL_PATH,
-        n_ctx=8192,
+        n_ctx=32768,
         n_gpu_layers=-1,   # 환경에 맞게 조정
         n_threads=8,       # CPU 코어에 맞게 조정
         verbose=False,
@@ -56,7 +56,14 @@ async def warmup_model():
         llm = await get_llama_model()
 
         def _warm():
-            llm("warmup", max_tokens=1)
+            llm.create_chat_completion(
+                messages=[
+                    {"role": "system", "content": "warmup"},
+                    {"role": "user", "content": "ping"},
+                ],
+                max_tokens=1,
+                temperature=0.0,
+            )
         
         await anyio.to_thread.run_sync(_warm)
 
