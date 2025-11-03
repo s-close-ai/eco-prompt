@@ -34,13 +34,11 @@ class ManualTrainPipeline:
 
     async def run(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         batch_id: str = str(payload.get("batch_id") or payload.get("batchId") or "default")
-        if "items" in payload and "dataset" in payload:
-            raise ValueError("Use only 'dataset' (not both).")
-        if "dataset" not in payload:
-            raise ValueError("Missing 'dataset'.")
-        items: List[Dict[str, Any]] = list(payload.get("dataset") or [])
+        if "items" not in payload:
+            raise ValueError("Missing 'items'.")
+        items: List[Dict[str, Any]] = list(payload.get("items") or [])
         if not items:
-            raise ValueError("Empty 'dataset'.")
+            raise ValueError("Empty 'items'.")
 
         use_total  = os.getenv("JUDGE_USE_TOTAL", "true").lower() == "true"
         thr_final  = float(os.getenv("JUDGE_FINAL_THRESHOLD", "3.5"))

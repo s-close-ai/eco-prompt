@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import asyncio
 import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 from fastapi import FastAPI, Body, Query
 from fastapi.responses import JSONResponse
@@ -28,7 +28,7 @@ app = FastAPI(title="JudgeLLM API", version="1.0")
 
 class TrainPayload(BaseModel):
     batchId: Optional[str] = None
-    items: list[dict]
+    items: List[dict]
 
 # 서버 시작 시 실행
 @app.on_event("startup")
@@ -77,22 +77,28 @@ async def health():
 # 학습 요청 처리
 @app.post("/api/v1/ai/training")
 async def post_training(
-    payload: Dict[str, Any] = Body(...),
+    payload: TrainPayload = Body(...),
     sync: int | None = Query(default=None, description="1이면 동기 처리"),
 ):
     pipe = getattr(app.state, "pipe", None) or build_pipeline()
     app.state.pipe = pipe
 
+    # pipeline 은 Dict[str, Any] 기대하니 model_dump로 변환
+    payload_dict: Dict[str, Any] = {
+        "batchId": payload.batchId,
+        "items": payload.items,
+    }
+
     if sync == 1:
         try:
-            data: Dict[str, Any] = await pipe.run(payload)
+            data: Dict[str, Any] = await pipe.run(payload_dict)
             return JSONResponse({"status": "OK", "data": data}, status_code=200)
         except Exception as e:
             return JSONResponse({"status": "ERROR", "error": str(e)}, status_code=500)
     else:
         async def _bg():
             try:
-                await pipe.run(payload)
+                await pipe.run(payload_dict)
                 print("비동기 학습 요청 처리 완료")
             except Exception as e:
                 print(f"비동기 학습 처리 중 오류: {e}")

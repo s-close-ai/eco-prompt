@@ -1,6 +1,6 @@
 # judge_llm/api/app/masking/presidio_adapter.py
 from __future__ import annotations
-import os, re
+import os, re, traceback
 from typing import List
 from dotenv import load_dotenv
 from presidio_analyzer import AnalyzerEngine
@@ -71,10 +71,17 @@ class PresidioAdapter:
         # 1) 빈 레지스트리로 시작(기본 영문 인식기 비활성)
         empty_registry = RecognizerRegistry(recognizers=[])
 
-        # 2) 'ko' → 'en_core_web_lg' 매핑(토크나이징만 활용)
-        nlp_engine = SpacyNlpEngine(
-            models=[{"lang_code": "ko", "model_name": "en_core_web_lg"}]
-        )
+        # 2) 'ko' → spaCy 모델 매핑(토크나이징만 활용)
+        #    en_core_web_lg 미설치 환경 대비 en_core_web_sm 폴백
+        try:
+            nlp_engine = SpacyNlpEngine(
+                models=[{"lang_code": "ko", "model_name": "en_core_web_lg"}]
+            )
+        except Exception:
+            traceback.print_exc()
+            nlp_engine = SpacyNlpEngine(
+                models=[{"lang_code": "ko", "model_name": "en_core_web_sm"}]
+            )
 
         # 3) AnalyzerEngine 구성
         self.analyzer = AnalyzerEngine(registry=empty_registry, nlp_engine=nlp_engine)
@@ -147,6 +154,10 @@ class PresidioAdapter:
         if kept:
             masked = self.anonymizer.anonymize(text=masked, analyzer_results=kept, operators=self.operators).text
         return masked
+
+    # --- SensitiveMasker 호환 시그니처 ---
+    def mask(self, text: str) -> str:
+        return self.anonymize(text)
 
 if __name__ == "__main__":
     p = PresidioAdapter()
