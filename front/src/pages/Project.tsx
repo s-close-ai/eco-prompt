@@ -19,6 +19,9 @@ export default function Project() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [openChatMenus, setOpenChatMenus] = useState<Set<number>>(new Set());
+  const [showProjectMoveMenu, setShowProjectMoveMenu] = useState<number | null>(null);
+  const chatMenuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   // 메뉴 외부 클릭 감지
   useEffect(() => {
@@ -34,6 +37,34 @@ export default function Project() {
     document.addEventListener('click', onDocClick);
     return () => document.removeEventListener('click', onDocClick);
   }, [menuOpen]);
+
+  // 채팅 메뉴 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+
+      openChatMenus.forEach((chatId) => {
+        const menuRef = chatMenuRefs.current.get(chatId);
+        if (menuRef && !menuRef.contains(target)) {
+          setOpenChatMenus((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(chatId);
+            return newSet;
+          });
+          setShowProjectMoveMenu(null);
+        }
+      });
+    };
+
+    if (openChatMenus.size > 0) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('touchstart', handleClickOutside);
+      };
+    }
+  }, [openChatMenus]);
 
   // 메뉴 액션 핸들러들
   const handleRenameProject = useCallback(() => {
@@ -54,6 +85,39 @@ export default function Project() {
       navigate(`/chat/${chatId}`, { state: { chatId, projectId } });
     },
     [navigate, projectId],
+  );
+
+  // 채팅 메뉴 토글
+  const handleChatMenuToggle = useCallback((chatId: number) => {
+    setOpenChatMenus((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(chatId)) {
+        newSet.delete(chatId);
+      } else {
+        newSet.add(chatId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // 프로젝트 이동 메뉴 토글
+  const handleProjectMoveToggle = useCallback((chatId: number) => {
+    setShowProjectMoveMenu((prev) => (prev === chatId ? null : chatId));
+  }, []);
+
+  // 채팅 메뉴 액션
+  const handleChatMenuAction = useCallback(
+    (chatId: number, action: 'rename' | 'delete' | 'moveToProject', targetProjectId?: number) => {
+      setOpenChatMenus((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(chatId);
+        return newSet;
+      });
+      setShowProjectMoveMenu(null);
+      // TODO: 실제 액션 구현
+      console.log(`Chat ${chatId} ${action}`, targetProjectId ? `to project ${targetProjectId}` : '');
+    },
+    [],
   );
 
   // 프로젝트 화면에서 새 채팅 시작
@@ -113,7 +177,7 @@ export default function Project() {
                 aria-expanded={menuOpen}
               >
                 <img
-                  src="/icons/menu.svg"
+                  src="/icons/more_detail.svg"
                   alt=""
                   width={ICON_SIZE.SM}
                   height={ICON_SIZE.SM}
@@ -142,7 +206,7 @@ export default function Project() {
                     onClick={handleDeleteProject}
                   >
                     <img
-                      src="/icons/error.svg"
+                      src="/icons/delete.svg"
                       alt=""
                       width={ICON_SIZE.SM}
                       height={ICON_SIZE.SM}
@@ -169,6 +233,20 @@ export default function Project() {
                 preview={chat.preview}
                 timestamp={chat.timestamp}
                 onClick={handleChatClick}
+                onMenuToggle={handleChatMenuToggle}
+                onMenuAction={handleChatMenuAction}
+                isMenuOpen={openChatMenus.has(chat.id)}
+                projectId={projectId}
+                allProjects={mockProjectList.map((p) => ({ id: p.id, title: p.title }))}
+                showProjectMoveMenu={showProjectMoveMenu === chat.id}
+                onProjectMoveToggle={handleProjectMoveToggle}
+                menuRef={(el) => {
+                  if (el) {
+                    chatMenuRefs.current.set(chat.id, el);
+                  } else {
+                    chatMenuRefs.current.delete(chat.id);
+                  }
+                }}
               />
             ))}
           </div>

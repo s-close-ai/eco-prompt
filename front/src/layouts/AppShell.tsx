@@ -19,6 +19,7 @@ function ShellBody() {
     isChat || isProjectRoute ? 'chat' : mode === 'mobile' ? 'menu' : null;
 
   const [isProjectCreateOpen, setProjectCreateOpen] = useState(false);
+  
   useEffect(() => {
     const open = () => setProjectCreateOpen(true);
     const close = () => setProjectCreateOpen(false);
@@ -30,11 +31,13 @@ function ShellBody() {
     };
   }, []);
 
+  // 라우트 변경 시 모달 닫기
+  useEffect(() => {
+    setProjectCreateOpen(false);
+  }, [location.pathname]);
+
   const projectCreateVariant: 'inline' | 'modal' | 'fullscreen' | 'bottom' =
     mode === 'mobile' ? 'fullscreen' : mode === 'tablet' ? 'inline' : 'modal';
-
-  // /project 페이지에서는 history state로 projectId를 전달받음
-  (location as unknown as { state?: { projectId?: number } }).state || {};
 
   const shellClass = [
     'app-shell',

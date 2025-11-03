@@ -15,8 +15,10 @@ export default function ProjectCreateOverlay({
 }: ProjectCreateOverlayProps) {
   if (variant === 'inline') {
     return open ? (
-      <div className="project-create-inline">
-        <ProjectCreateForm onSubmit={() => onClose()} onClose={onClose} />
+      <div className="project-create-inline" onClick={onClose}>
+        <div onClick={(e) => e.stopPropagation()}>
+          <ProjectCreateForm onSubmit={() => onClose()} onClose={onClose} />
+        </div>
       </div>
     ) : null;
   }

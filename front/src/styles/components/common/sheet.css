@@ -31,8 +31,8 @@
 
 /* modal(center) */
 .ep-sheet__panel[data-variant='modal'] {
-  width: min(640px, 92vw);
-  max-height: min(700px, 85vh);
+  max-width: 380px;
+  width: 100%;
   left: 50%;
   top: 50%;
   transform: translate(-50%, calc(-50% + 20px));
@@ -43,6 +43,22 @@
 .ep-sheet.is-open .ep-sheet__panel[data-variant='modal'] {
   transform: translate(-50%, -50%);
   opacity: 1;
+}
+
+/* 데스크탑: 사이드바를 고려한 중앙 배치 */
+:root[data-mode='desktop'] .ep-sheet__panel[data-variant='modal'] {
+  /* 사이드바가 펼쳐진 경우: 사이드바 너비의 절반만큼 오른쪽으로 이동 */
+  left: calc(50% + var(--sidebar-width) / 2);
+}
+
+:root[data-mode='desktop'] .ep-sheet.is-open .ep-sheet__panel[data-variant='modal'] {
+  transform: translate(-50%, -50%);
+}
+
+/* 데스크탑: 사이드바가 접힌 경우 */
+:root[data-mode='desktop'] .ep-sheet.is-sidebar-collapsed .ep-sheet__panel[data-variant='modal'] {
+  /* 사이드바가 접힌 경우: 접힌 사이드바 너비의 절반만큼 오른쪽으로 이동 */
+  left: calc(50% + var(--sidebar-collapsed-width) / 2);
 }
 
 /* 태블릿 모달 크기 조정 */
@@ -103,7 +119,7 @@
 }
 
 .ep-sheet__content {
-  padding: 16px 16px 20px;
+  padding: 16px 16px 24px;
   overflow: auto;
   max-height: 100%;
   flex: 1;

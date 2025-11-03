@@ -19,12 +19,27 @@ export function AppShellProvider({ children }: { children: React.ReactNode }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const openSidebar = useCallback(() => setIsSidebarOpen(true), []);
-  const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
-  const toggleSidebar = useCallback(() => setIsSidebarOpen((v) => !v), []);
+  const closeSidebar = useCallback(() => {
+    setIsSidebarOpen(false);
+    window.dispatchEvent(new CustomEvent('project-create-close'));
+  }, []);
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((v) => !v);
+    window.dispatchEvent(new CustomEvent('project-create-close'));
+  }, []);
 
-  const collapseSidebar = useCallback(() => setIsSidebarCollapsed(true), []);
-  const expandSidebar = useCallback(() => setIsSidebarCollapsed(false), []);
-  const toggleSidebarCollapsed = useCallback(() => setIsSidebarCollapsed((v) => !v), []);
+  const collapseSidebar = useCallback(() => {
+    setIsSidebarCollapsed(true);
+    window.dispatchEvent(new CustomEvent('project-create-close'));
+  }, []);
+  const expandSidebar = useCallback(() => {
+    setIsSidebarCollapsed(false);
+    window.dispatchEvent(new CustomEvent('project-create-close'));
+  }, []);
+  const toggleSidebarCollapsed = useCallback(() => {
+    setIsSidebarCollapsed((v) => !v);
+    window.dispatchEvent(new CustomEvent('project-create-close'));
+  }, []);
 
   const value = useMemo(
     () => ({
