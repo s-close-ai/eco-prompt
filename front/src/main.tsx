@@ -9,6 +9,7 @@ import AppShell from './layouts/AppShell';
 import Home from './pages/Home';
 import Chat from './pages/Chat';
 import Project from './pages/Project';
+import Settings from './pages/Settings';
 
 // PWA Service Worker 등록
 registerSW({ immediate: true });
@@ -28,6 +29,7 @@ const router = createBrowserRouter([
       { path: 'chat', element: <Chat /> },
       { path: 'chat/:chatId', element: <Chat /> },
       { path: 'project', element: <Project /> },
+      { path: 'settings', element: <Settings /> },
     ],
   },
 ]);

@@ -1,0 +1,76 @@
+.ep-toggle-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ep-toggle-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.5);
+  transition: all 200ms ease;
+  white-space: nowrap;
+}
+
+.ep-toggle-label.is-active {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.ep-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+}
+
+.ep-toggle:active:not(.is-disabled) .ep-toggle__thumb {
+  width: 24px;
+}
+
+.ep-toggle.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ep-toggle__track {
+  position: relative;
+  width: 52px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 16px;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  padding: 3px;
+}
+
+.ep-toggle.is-active .ep-toggle__track {
+  background: var(--color-primary-600);
+}
+
+.ep-toggle__thumb {
+  width: 26px;
+  height: 26px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(0);
+}
+
+.ep-toggle.is-active .ep-toggle__thumb {
+  transform: translateX(20px);
+}
+
+.ep-toggle:hover:not(.is-disabled) .ep-toggle__track {
+  box-shadow: 0 0 0 8px rgba(0, 0, 0, 0.04);
+}
+
+.ep-toggle.is-active:hover:not(.is-disabled) .ep-toggle__track {
+  box-shadow: 0 0 0 8px rgba(var(--color-primary-600-rgb, 59, 130, 246), 0.12);
+}

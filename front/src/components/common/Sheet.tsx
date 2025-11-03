@@ -1,5 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { PropsWithChildren } from 'react';
+import { useAppShell } from '@/context/AppShellContext';
+import useDeviceMode from '@/hooks/useDeviceMode';
 import '@/styles/components/common/sheet.css';
 
 type SheetVariant = 'modal' | 'bottom' | 'fullscreen';
@@ -20,6 +22,28 @@ export default function Sheet({
   className,
   children,
 }: PropsWithChildren<SheetProps>) {
+  const [isVisible, setIsVisible] = useState(open);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const { isSidebarCollapsed } = useAppShell();
+  const mode = useDeviceMode();
+
+  useEffect(() => {
+    if (open) {
+      setIsVisible(true);
+      // 다음 프레임에서 애니메이션 시작
+      requestAnimationFrame(() => {
+        setIsAnimating(true);
+      });
+    } else {
+      setIsAnimating(false);
+      // 애니메이션 완료 후 unmount
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+      }, 300); // CSS transition 시간과 동일
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -28,11 +52,20 @@ export default function Sheet({
     return () => document.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!isVisible) return null;
+
+  const sheetClasses = [
+    'ep-sheet',
+    className || '',
+    isAnimating ? 'is-open' : '',
+    mode === 'desktop' && isSidebarCollapsed ? 'is-sidebar-collapsed' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div
-      className={`ep-sheet ${className || ''}`}
+      className={sheetClasses}
       role="dialog"
       aria-modal
       aria-label={ariaLabel}

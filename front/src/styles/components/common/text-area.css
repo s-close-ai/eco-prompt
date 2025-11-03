@@ -1,0 +1,65 @@
+.ep-text-area {
+  display: grid;
+  gap: 6px;
+}
+
+.ep-text-area.is-full {
+  width: 100%;
+}
+
+.ep-text-area__label {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 600;
+}
+
+.ep-text-area__control {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.ep-text-area__control textarea {
+  width: 100%;
+  outline: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #ffffff;
+  font-size: 16px;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.ep-text-area__control textarea:focus {
+  border-color: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.ep-text-area.is-invalid .ep-text-area__control textarea {
+  border-color: #ef4444;
+}
+
+.ep-text-area__char-count {
+  position: absolute;
+  bottom: 12px;
+  right: 14px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.ep-text-area.is-disabled .ep-text-area__control textarea {
+  background: rgba(0, 0, 0, 0.03);
+  color: rgba(0, 0, 0, 0.4);
+  cursor: not-allowed;
+}
+
+.ep-text-area.is-disabled .ep-text-area__control textarea:focus {
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: none;
+}

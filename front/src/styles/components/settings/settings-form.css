@@ -1,0 +1,244 @@
+.settings-form {
+  display: grid;
+  gap: 12px;
+  max-height: 100%;
+  overflow: hidden;
+  grid-template-rows: auto 1fr auto;
+}
+
+.settings-form__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 12px;
+  flex-shrink: 0;
+}
+
+.settings-form__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-form__title h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.settings-form__close {
+  background: none;
+  border: none;
+  padding: 4px;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 120ms ease;
+}
+
+.settings-form__close:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.settings-form__body {
+  display: grid;
+  gap: 24px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+  min-height: 0;
+}
+
+.settings-form__body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.settings-form__body::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.settings-form__section {
+  display: grid;
+  gap: 12px;
+}
+
+.settings-form__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  background: var(--color-primary-50);
+  border-radius: 12px;
+}
+
+.settings-form__section-content {
+  display: grid;
+  gap: 12px;
+}
+
+.settings-form__section-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.settings-form__section-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.settings-form__date {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.settings-form__badge {
+  padding: 6px 12px;
+  background: var(--color-primary-600);
+  color: #ffffff;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.settings-form__no-consent-message {
+  padding: 24px;
+  text-align: center;
+  color: var(--color-error);
+  font-size: 15px;
+  font-weight: 500;
+  background: var(--color-error-light);
+  border-radius: 12px;
+}
+
+.settings-form__no-consent-message p {
+  margin: 0;
+}
+
+.settings-form__description {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.6);
+  line-height: 1.5;
+}
+
+.settings-form__tip {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.settings-form__tip-label {
+  font-weight: 600;
+  color: #111827;
+  flex-shrink: 0;
+}
+
+.settings-form__tip-text {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.settings-form__footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.settings-form__close-btn {
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 500;
+}
+
+.settings-form__close-btn:hover {
+  color: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.settings-form__save-btn {
+  min-width: 120px;
+  font-weight: 600;
+}
+
+.settings-form__save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 모바일 스타일 */
+@media (max-width: 768px) {
+  .settings-form {
+    gap: 8px;
+  }
+
+  .settings-form__header {
+    padding: 12px 0 16px;
+  }
+
+  .settings-form__title h2 {
+    font-size: 24px;
+  }
+
+  .settings-form__body {
+    gap: 20px;
+  }
+
+  .settings-form__section-header {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .settings-form__footer {
+    flex-direction: column-reverse;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .settings-form__footer .ep-button {
+    width: 100%;
+    height: 48px;
+    font-size: 16px;
+  }
+
+  .settings-form__save-btn {
+    min-width: 100%;
+  }
+}
+
+/* 태블릿 스타일 */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .settings-form__footer {
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 24px;
+  }
+
+  .settings-form__close-btn {
+    display: none; /* 태블릿에서는 Footer의 닫기 버튼 숨김 */
+  }
+
+  .settings-form__footer .ep-button {
+    height: 52px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .settings-form__save-btn {
+    width: 100%;
+    min-width: 100%;
+  }
+}
