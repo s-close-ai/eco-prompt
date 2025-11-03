@@ -38,4 +38,14 @@ public class MessageController implements MessageControllerDocs{
 
 		return sseService.addEmitter(messageUUID);
 	}
+
+	@PostMapping(value = "/stop/{messageUUID}")
+	public ResponseEntity<ApiResponse<Void>> stopMessage(@PathVariable String messageUUID){
+
+		sseService.markAsCancelled(messageUUID);
+
+		sseService.complete(messageUUID);
+
+		return ApiResponse.success(null);
+	}
 }

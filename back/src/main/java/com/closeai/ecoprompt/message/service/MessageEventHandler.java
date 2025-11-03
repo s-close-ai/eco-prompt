@@ -85,10 +85,11 @@ public class MessageEventHandler {
 
 		String messageUUID = event.getMessageUUID();
 		String llmAnswer = event.getLlmAnswer();
+		MessageStatus status = event.getStatus();
 
-		// 2. AI 답변을 MongoDB에 저장
-		updateMongoMessage(messageUUID, MessageSender.AI,llmAnswer, null, MessageStatus.COMPLETED);
-
+		// 1. AI 답변을 MongoDB에 저장
+		updateMongoMessage(messageUUID, MessageSender.AI,llmAnswer, null, status);
+		// 2. AI 답변 완료 상태 저장
 		checkCompletion(messageUUID,"LLM");
 	}
 
