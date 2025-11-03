@@ -84,7 +84,6 @@ langsmith==0.4.39
 lark==1.2.2
 latex2sympy2-extended==1.10.2
 llvmlite==0.44.0
--e file:///C:/Users/SSAFY/Desktop/gitlab-repos/S13P31A309/llm/tests/lm-evaluation-harness
 lm-format-enforcer==0.11.3
 lxml==6.0.2
 markdown-it-py==4.0.0
