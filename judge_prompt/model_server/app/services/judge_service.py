@@ -12,6 +12,11 @@ from app.services.json_grammar import JUDGE_JSON_SCHEMA
     # user_personal_prompt는 미사용
 # 모델 추론
 
+# 동시 추론 상한 (Metal/UMA 안전옵션: 1, 여유되면 2까지 시도)
+_INFER_LIMITER = anyio.Semaphore(1)
+# 요청 타임아웃(초)
+_INFER_TIMEOUT = 30.0
+
 grammar = LlamaGrammar.from_json_schema(json.dumps(JUDGE_JSON_SCHEMA))
 
 def _clamp25(x) -> float:
@@ -29,18 +34,25 @@ async def run_judge_model(systemprompt, prompt):
     
     # llm 호출
     try: 
-        result = await anyio.to_thread.run_sync(
-            lambda: llm.create_chat_completion(
-                messages = [
-                    {"role": "system", "content": systemprompt},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.2,
-                top_p=0.9,
-                max_tokens=512,
-                grammar=grammar,
-            )
-        )
+        async with _INFER_LIMITER:
+            with anyio.fail_after(_INFER_TIMEOUT):
+                logger.info("모델 추론 시작")
+                result = await anyio.to_thread.run_sync(
+                    lambda: llm.create_chat_completion(
+                        messages = [
+                            {"role": "system", "content": systemprompt},
+                            {"role": "user", "content": prompt},
+                        ],
+                        temperature=0.2,
+                        top_p=0.9,
+                        max_tokens=512,
+                        grammar=grammar,
+                    ),
+                    cancellable=True,
+                )
+    except TimeoutError:
+        logger.warning("[run_judge_model] inference timeout")
+        raise ValueError("Inference timeout")
     except Exception as e:
         logger.exception(f"[run_judge_model] 추론 에러: {e}")
         raise

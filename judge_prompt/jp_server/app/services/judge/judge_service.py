@@ -14,7 +14,7 @@ from app.services.judge.llama_client import request_judge_output
 # 모델 추론
 
 
-async def run_judge_model(user_input, user_personal_prompt):
+async def run_judge_model(user_input):
     logger.debug("run_judge_model 실행")
     # llm = await get_llama_model()
 
