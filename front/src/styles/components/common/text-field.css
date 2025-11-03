@@ -1,0 +1,47 @@
+.ep-text-field {
+  display: grid;
+  gap: 6px;
+}
+
+.ep-text-field.is-full {
+  width: 100%;
+}
+
+.ep-text-field__label {
+  font-size: 14px;
+  color: #111827;
+  font-weight: 600;
+}
+
+.ep-text-field__control {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #ffffff;
+}
+
+.ep-text-field__control input {
+  outline: none;
+  border: none;
+  background: transparent;
+  width: 100%;
+  font-size: 16px;
+}
+
+.ep-text-field__assist {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.ep-text-field.is-invalid .ep-text-field__control {
+  border-color: #ef4444;
+}
+
+.ep-text-field__control:focus-within {
+  border-color: rgba(0, 0, 0, 0.25);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}

@@ -1,0 +1,64 @@
+.ep-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: #5e9462;
+  color: #ffffff;
+  padding: 10px 14px;
+  font-weight: 600;
+  line-height: 1;
+  transition:
+    background 120ms ease,
+    transform 60ms ease,
+    box-shadow 120ms ease;
+}
+
+.ep-button.is-full {
+  width: 100%;
+}
+
+.ep-button--sm {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+.ep-button--md {
+  padding: 10px 14px;
+  font-size: 15px;
+}
+.ep-button--lg {
+  padding: 12px 16px;
+  font-size: 16px;
+}
+
+.ep-button--mobile {
+  padding: 10px 14px;
+  font-size: 15px;
+  width: 100%;
+}
+
+.ep-button--secondary {
+  background: #ffffff;
+  color: #1f2937;
+  border-color: rgba(31, 41, 55, 0.15);
+}
+
+.ep-button--ghost {
+  background: transparent;
+  color: #1f2937;
+  border-color: transparent;
+}
+
+.ep-button:disabled {
+  opacity: 0.5;
+}
+
+.ep-button:hover:not(:disabled) {
+  filter: brightness(0.98);
+}
+
+.ep-button:active:not(:disabled) {
+  transform: translateY(1px);
+}

@@ -268,3 +268,45 @@
     line-height: 1.6;
   }
 }
+
+/* 태블릿 반응형 스타일 */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .code-block-wrapper {
+    max-width: 90%;
+    border-radius: 8px;
+  }
+
+  .code-block-header {
+    padding: 7px 11px;
+  }
+
+  .code-block-language {
+    font-size: 12.5px;
+  }
+
+  .code-copy-btn {
+    padding: 3px 8px;
+    font-size: 11.5px;
+  }
+
+  .ai-message-text pre {
+    font-size: 12px !important;
+  }
+
+  .ai-message-text :not(pre) > code {
+    font-size: 12px !important;
+  }
+
+  .code-block-wrapper pre,
+  .code-block-wrapper code {
+    font-size: 12px !important;
+    line-height: 1.7;
+  }
+}
+
+/* 데스크탑 세부 조정 */
+@media (min-width: 1024px) {
+  .code-block-wrapper {
+    max-width: 80%;
+  }
+}

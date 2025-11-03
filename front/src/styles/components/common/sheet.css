@@ -1,0 +1,119 @@
+.ep-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 100; /* overlay 최상단 */
+}
+
+.ep-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+}
+
+.ep-sheet__panel {
+  position: absolute;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+  overflow: hidden;
+  max-height: calc(var(--app-vh) * 100);
+  display: flex;
+  flex-direction: column;
+}
+
+/* modal(center) */
+.ep-sheet__panel[data-variant='modal'] {
+  width: min(400px, 92vw);
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  animation: ep-fade-in-center 200ms ease;
+  overflow: hidden;
+}
+
+/* 데스크탑에서 사이드바를 고려한 중앙 정렬 */
+.has-desktop-sidebar .ep-sheet__panel[data-variant='modal'] {
+  left: calc(50% + var(--sidebar-width) / 2);
+}
+
+.has-desktop-sidebar.is-sidebar-collapsed .ep-sheet__panel[data-variant='modal'] {
+  left: calc(50% + var(--sidebar-collapsed-width) / 2);
+}
+
+/* bottom sheet */
+.ep-sheet__panel[data-variant='bottom'] {
+  width: 100%;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  animation: ep-slide-up 220ms ease;
+}
+
+/* fullscreen sheet (mobile) */
+.ep-sheet__panel[data-variant='fullscreen'] {
+  width: 100%;
+  height: 100%;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 0;
+  animation: ep-slide-up 220ms ease;
+  padding-top: max(env(safe-area-inset-top), 8px);
+}
+
+/* fullscreen 상단 핸들 표시 */
+.ep-sheet__panel[data-variant='fullscreen']::before {
+  content: '';
+  position: absolute;
+  top: max(env(safe-area-inset-top), 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.ep-sheet__content {
+  padding: 16px 16px 20px;
+  overflow: auto;
+  max-height: 100%;
+  flex: 1;
+}
+
+@keyframes ep-slide-up {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes ep-fade-in-up {
+  from {
+    transform: translate(-50%, 8px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes ep-fade-in-center {
+  from {
+    transform: translate(-50%, calc(-50% + 8px));
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}

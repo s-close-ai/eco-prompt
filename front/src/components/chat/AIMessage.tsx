@@ -37,7 +37,12 @@ function CodeBlock({ inline, className, children }: CodeBlockProps) {
       <div className="code-block-wrapper">
         <div className="code-block-header">
           <span className="code-block-language">{language}</span>
-          <button className="code-copy-btn" onClick={handleCopy} aria-label="코드 복사" type="button">
+          <button
+            className="code-copy-btn"
+            onClick={handleCopy}
+            aria-label="코드 복사"
+            type="button"
+          >
             {copied ? (
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path

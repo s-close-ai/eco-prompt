@@ -171,6 +171,7 @@ body {
   overscroll-behavior: contain;
   contain: content;
   grid-column: 1 / -1; /* 기본은 전체 폭 */
+  position: relative; /* 인라인 오버레이 기준 */
 }
 
 .container {
