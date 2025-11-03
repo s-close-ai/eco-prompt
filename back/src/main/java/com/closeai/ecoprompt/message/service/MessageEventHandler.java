@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.closeai.ecoprompt.ai.model.dto.response.InputJudgeResponse;
-import com.closeai.ecoprompt.ai.model.dto.ScoreInfo;
+import com.closeai.ecoprompt.message.model.entity.ScoreInfo;
 import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
 import com.closeai.ecoprompt.chatting.service.ChattingService;
@@ -52,9 +52,8 @@ public class MessageEventHandler {
 	public void handleJudgeModelComplete(JudgeModelCompleteEvent event) {
 
 		String messageUUID = event.getMessageUUID();
-		InputJudgeResponse judgeResponse = event.getJudgeResponse();
-		ScoreInfo scoreInfo = judgeResponse.scoreInfo();
-		String summary = judgeResponse.summary();
+		ScoreInfo scoreInfo = event.getScoreInfo();
+		String summary = event.getSummary();
 
 		// 1. Message의 점수 정보 Update
 		MessageDocument messageToUpdate = updateMongoMessage(messageUUID, MessageSender.USER,null, scoreInfo, null);
@@ -64,7 +63,7 @@ public class MessageEventHandler {
 		// 2. Message에 대한 점수 score 테이블에 insert
 		scoreService.saveScore(message, scoreInfo);
 		// 2-1. 점수에 따른 마일리지 저장
-		mileageService.saveMileage(message, scoreInfo.getTotalScore());
+		mileageService.saveMileage(message, scoreInfo.totalScore());
 
 		// 3. 새로 생성된 채팅방인 경우 채팅방의 이름을 첫 입력에 대한 요약 값으로 변경
 		chattingService.setChattingTitle(messageToUpdate.getChattingId(), summary);

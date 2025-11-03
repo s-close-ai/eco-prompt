@@ -2,7 +2,6 @@ package com.closeai.ecoprompt.message.model.entity;
 
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import com.closeai.ecoprompt.ai.model.dto.ScoreInfo;
 import com.closeai.ecoprompt.common.entity.BaseEntity;
 
 import lombok.Builder;

@@ -15,6 +15,7 @@ import com.closeai.ecoprompt.ai.model.dto.response.LlmResponse;
 import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
 import com.closeai.ecoprompt.message.model.entity.MessageStatus;
+import com.closeai.ecoprompt.message.model.entity.ScoreInfo;
 import com.closeai.ecoprompt.sse.service.SseService;
 import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 
@@ -83,9 +84,13 @@ public class AiService {
 					return;
 				}
 
-				sseService.sendEventToClient(messageUUID, "JUDGE_PROMPT", judgeResponse.scoreInfo());
+				ScoreInfo scoreInfo = new ScoreInfo(judgeResponse.totalScore(),
+					judgeResponse.clarityScore(), judgeResponse.specificityScore(),
+					judgeResponse.formatScore(), judgeResponse.safetyScore());
+
+				sseService.sendEventToClient(messageUUID, "JUDGE_PROMPT", scoreInfo);
 				eventPublisher.publishEvent(
-					new JudgeModelCompleteEvent(this, messageUUID, judgeResponse)
+					new JudgeModelCompleteEvent(this, messageUUID, judgeResponse.summary(), scoreInfo)
 				);
 			})
 			.doOnError(error -> {
@@ -147,7 +152,7 @@ public class AiService {
 	private Mono<InputJudgeResponse> runInputJudgeModel(InputJudgeRequest request){
 
 		return judgePromptClient.post()
-			.uri("/api/v1/ai/prompt-judge")
+			.uri("/prompt-judge")
 			.bodyValue(request)
 			.retrieve()
 			.bodyToMono(InputJudgeResponse.class);
