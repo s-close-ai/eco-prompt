@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
+RUN git clone https://github.com/EleutherAI/lm-evaluation-harness.git
+RUN cd lm-evaluation-harness && pip install -e .
+
 # requirements 파일 복사
 COPY requirements.txt .
 

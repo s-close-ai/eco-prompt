@@ -2,7 +2,7 @@
 from pydantic import BaseModel
 
 class TrainRequest(BaseModel):
-    start_training: bool = True
+    start_training: bool
     training_data: list
 
 class TrainResponse(BaseModel):
