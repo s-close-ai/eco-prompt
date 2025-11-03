@@ -5,7 +5,7 @@ import '@/styles/components/dashboard/dashboard.css';
 
 function CircularProgress({
   metric,
-  size = 120,
+  size = 130,
   strokeWidth = 12,
 }: {
   metric: DashboardMetric;
