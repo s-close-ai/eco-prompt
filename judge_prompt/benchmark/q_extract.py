@@ -2,6 +2,7 @@ from datasets import load_dataset
 import pandas as pd
 
 ds = load_dataset("LGCNS/KorQuAD_2.0")  # train/dev 스플릿 포함
+
 # KorQuAD 2.0 항목: title, context, question, id, answers 등
 
 def to_df(split):
