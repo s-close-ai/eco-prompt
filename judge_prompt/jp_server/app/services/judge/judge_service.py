@@ -59,6 +59,6 @@ async def run_judge_model(user_input):
         specificityScore=specificity,
         formatScore=format_,
         safetyScore=safety,
-        overallScore=total,
+        totalScore=total,
         summary=j.get("summary", ""),
     )

@@ -7,4 +7,4 @@ class JudgeModelOutput(BaseModel):
     specificityScore: float = Field(..., description="구체성 점수")
     formatScore: float = Field(..., description="형식 준수 점수")
     safetyScore: float = Field(..., description="안전성 점수")
-    overallScore: float = Field(..., description="종합 점수")
+    totalScore: float = Field(..., description="종합 점수")
