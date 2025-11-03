@@ -8,7 +8,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 2. 환경 설정하기
 ```
 # 가상환경 설정
-uv init --python 3.12
+uv init --python 3.12.3
 uv venv
 source .venv/Scripts/activate
 
