@@ -1,0 +1,131 @@
+.project-create {
+  display: grid;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .project-create {
+    margin: 6vh 0;
+  }
+}
+
+.project-create__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 12px;
+}
+
+.project-create__close {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+.project-create__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.project-create__title h2 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.project-create__body {
+  display: grid;
+  gap: 10px;
+}
+
+.project-create__field {
+  display: grid;
+  gap: 6px;
+}
+
+.project-create__label {
+  margin-bottom: 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.project-create__description {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.project-create__footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.project-create__close {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+/* inline card (tablet) */
+.project-create-inline {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 16px;
+  padding-top: 60px;
+  pointer-events: none;
+}
+
+.project-create-inline > .project-create.container {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  padding: 14px 14px 18px;
+  width: 400px;
+  max-width: calc(100vw - 32px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
+  pointer-events: auto;
+  position: relative;
+}
+
+/* 말풍선 꼬리 - 테두리 */
+.project-create-inline > .project-create.container::before {
+  content: '';
+  position: absolute;
+  top: 24px;
+  left: -11px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 11px solid rgba(0, 0, 0, 0.06);
+}
+
+/* 말풍선 꼬리 - 내부 */
+.project-create-inline > .project-create.container::after {
+  content: '';
+  position: absolute;
+  top: 24px;
+  left: -10px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 10px solid #ffffff;
+}

@@ -8,9 +8,14 @@ import './styles/app.css';
 import AppShell from './layouts/AppShell';
 import Home from './pages/Home';
 import Chat from './pages/Chat';
+import Project from './pages/Project';
+import Settings from './pages/Settings';
+import Bookmark from './pages/Bookmark';
 
-// PWA Service Worker 등록
-registerSW({ immediate: true });
+// PWA Service Worker 등록 (개발 환경에서는 비활성화)
+if (import.meta.env.PROD) {
+  registerSW({ immediate: true });
+}
 
 // VisualViewport 기반의 100vh 대체 단위 설정
 installAppViewportUnit();
@@ -25,6 +30,10 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'chat', element: <Chat /> },
+      { path: 'chat/:chatId', element: <Chat /> },
+      { path: 'project', element: <Project /> },
+      { path: 'settings', element: <Settings /> },
+      { path: 'bookmark', element: <Bookmark /> },
     ],
   },
 ]);

@@ -1,0 +1,336 @@
+.eco-pick-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 12px 0 12px;
+  overflow: visible;
+  position: relative;
+}
+
+.eco-pick-carousel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+.eco-pick-card-wrapper {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.eco-pick-card {
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.eco-pick-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+.eco-pick-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+}
+
+.eco-pick-score {
+  background: #006400;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.eco-pick-content {
+  flex: 1;
+  overflow-y: auto;
+  transition: all 0.3s ease;
+  min-height: 0;
+  padding-bottom: 80px;
+}
+
+.eco-pick-content.expanded {
+  overflow-y: auto;
+}
+
+.eco-pick-description {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.eco-pick-tasks,
+.eco-pick-principles {
+  margin-bottom: 12px;
+}
+
+.tasks-title,
+.principles-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 8px;
+}
+
+.eco-pick-tasks p,
+.eco-pick-principles p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #666;
+  margin: 4px 0;
+}
+
+.more-button {
+  background: none;
+  border: none;
+  color: #006400;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 6px 0;
+  text-decoration: underline;
+}
+
+.more-button:hover {
+  color: #004d00;
+}
+
+.eco-pick-metrics {
+  background: #f0f8f0;
+  border-radius: 6px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  flex-shrink: 0;
+  margin-bottom: 8px;
+}
+
+.metric-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #666;
+}
+
+.metric-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #000;
+}
+
+.eco-pick-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0 12px 0;
+  flex-shrink: 0;
+}
+
+.indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d0d0d0;
+  transition: all 0.2s;
+}
+
+.indicator-dot.active {
+  background: #006400;
+  width: 18px;
+  border-radius: 3px;
+}
+
+.eco-pick-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+.carousel-button {
+  position: absolute;
+  top: 20%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #e0e0e0;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  transition: all 0.2s;
+}
+
+.carousel-button:hover {
+  background: #f5f5f5;
+  border-color: #006400;
+}
+
+.carousel-button.prev {
+  left: -20px;
+}
+
+.carousel-button.next {
+  right: -20px;
+}
+
+.carousel-button svg {
+  color: #006400;
+}
+
+/* 태블릿/데스크탑 스타일 - 세로로 긴 레이아웃 */
+:root[data-mode='tablet'] .eco-pick-container,
+:root[data-mode='desktop'] .eco-pick-container {
+  padding: 18px;
+  overflow: visible;
+}
+
+:root[data-mode='tablet'] .eco-pick-carousel,
+:root[data-mode='desktop'] .eco-pick-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: visible;
+}
+
+:root[data-mode='tablet'] .carousel-track,
+:root[data-mode='desktop'] .carousel-track {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: visible;
+  position: relative;
+}
+
+:root[data-mode='tablet'] .carousel-track > .eco-pick-card,
+:root[data-mode='desktop'] .carousel-track > .eco-pick-card {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+:root[data-mode='tablet'] .eco-pick-card,
+:root[data-mode='desktop'] .eco-pick-card {
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+  border-radius: 0;
+}
+
+:root[data-mode='tablet'] .eco-pick-header,
+:root[data-mode='desktop'] .eco-pick-header {
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+}
+
+:root[data-mode='tablet'] .eco-pick-name,
+:root[data-mode='desktop'] .eco-pick-name {
+  font-size: 19px;
+}
+
+:root[data-mode='tablet'] .eco-pick-score,
+:root[data-mode='desktop'] .eco-pick-score {
+  font-size: 16px;
+  padding: 7px 16px;
+}
+
+:root[data-mode='tablet'] .eco-pick-description,
+:root[data-mode='desktop'] .eco-pick-description {
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+
+:root[data-mode='tablet'] .eco-pick-tasks,
+:root[data-mode='desktop'] .eco-pick-tasks,
+:root[data-mode='tablet'] .eco-pick-principles,
+:root[data-mode='desktop'] .eco-pick-principles {
+  margin-bottom: 14px;
+}
+
+:root[data-mode='tablet'] .tasks-title,
+:root[data-mode='desktop'] .tasks-title,
+:root[data-mode='tablet'] .principles-title,
+:root[data-mode='desktop'] .principles-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+:root[data-mode='tablet'] .eco-pick-tasks p,
+:root[data-mode='desktop'] .eco-pick-tasks p,
+:root[data-mode='tablet'] .eco-pick-principles p,
+:root[data-mode='desktop'] .eco-pick-principles p {
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 6px 0;
+}
+
+:root[data-mode='tablet'] .eco-pick-metrics,
+:root[data-mode='desktop'] .eco-pick-metrics {
+  margin-top: auto;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+:root[data-mode='tablet'] .metric-label,
+:root[data-mode='desktop'] .metric-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+:root[data-mode='tablet'] .metric-value,
+:root[data-mode='desktop'] .metric-value {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+:root[data-mode='tablet'] .eco-pick-indicators,
+:root[data-mode='desktop'] .eco-pick-indicators {
+  padding: 12px 0 16px 0;
+}
+
+:root[data-mode='tablet'] .indicator-dot,
+:root[data-mode='desktop'] .indicator-dot {
+  width: 7px;
+  height: 7px;
+}
+
+:root[data-mode='tablet'] .indicator-dot.active,
+:root[data-mode='desktop'] .indicator-dot.active {
+  width: 20px;
+}
+

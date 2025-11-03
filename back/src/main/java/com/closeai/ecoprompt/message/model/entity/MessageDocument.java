@@ -13,7 +13,7 @@ import lombok.Getter;
 @Document(collection = "message")
 public class MessageDocument extends BaseEntity {
 	
-	private String uuid;
+	private String messageUUID;
 	private String content;
 	private Long chattingId;
 	private MessageSender senderType;
@@ -24,8 +24,11 @@ public class MessageDocument extends BaseEntity {
 		this.scoreInfo = scoreInfo;
 	}
 
-	public void updateMessageStatus(MessageStatus status) {
-		this.status = status;
+	public void updateContent(String content) {
+		this.content = content;
 	}
 
+	public void updateMessageStatus(MessageStatus messageStatus) {
+		this.status = messageStatus;
+	}
 }

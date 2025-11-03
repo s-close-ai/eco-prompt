@@ -12,7 +12,7 @@
 
 .chat-input-wrapper {
   max-width: 48rem;
-  margin: 0 auto;
+  margin: 0 auto 12px;
   display: flex;
   align-items: flex-end;
   gap: 10px;

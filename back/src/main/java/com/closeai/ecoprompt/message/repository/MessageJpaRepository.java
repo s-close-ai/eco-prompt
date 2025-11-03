@@ -8,6 +8,6 @@ import com.closeai.ecoprompt.message.model.entity.Message;
 
 public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 
-	Optional<Message> findByUuid(String messageId);
+	Optional<Message> findByMessageUUID(String messageUUID);
 
 }

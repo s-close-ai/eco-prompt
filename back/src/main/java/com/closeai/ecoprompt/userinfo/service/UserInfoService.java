@@ -1,12 +1,14 @@
 package com.closeai.ecoprompt.userinfo.service;
 
+import org.springframework.stereotype.Service;
+
 import com.closeai.ecoprompt.common.exception.BusinessException;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.userinfo.model.dto.response.SharingInformationStatusResponse;
 import com.closeai.ecoprompt.userinfo.model.entity.UserInfo;
 import com.closeai.ecoprompt.userinfo.repository.UserInfoRepository;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Transactional(readOnly = true)
@@ -14,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserInfoService {
 
-    private final UserInfoRepository userInfoRepository;
+	private final UserInfoRepository userInfoRepository;
 
     @Transactional
     public SharingInformationStatusResponse toggleSharingInformation(int userId) {
@@ -48,5 +50,13 @@ public class UserInfoService {
                 userInfoRepository.findByUserId(userId)
                     .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."))
         );
+    }
+
+    public String getPersonalPrompt(Integer userId){
+
+        UserInfo userInfo = userInfoRepository.getPersonalPromptByUserId(userId)
+                .orElseThrow(() -> new BusinessException("사용자 정보 조회에 실패했습니다"));
+
+        return userInfo.getPersonalPrompt();
     }
 }

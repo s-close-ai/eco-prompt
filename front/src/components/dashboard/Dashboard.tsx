@@ -1,0 +1,156 @@
+import { mockDashboardMetrics, mockDashboardStats } from '@/data/mockData';
+import type { DashboardMetric } from '@/types/dashboard.types';
+import '@/styles/components/dashboard/dashboard.css';
+
+function CircularProgress({
+  metric,
+  size = 130,
+  strokeWidth = 12,
+}: {
+  metric: DashboardMetric;
+  size?: number;
+  strokeWidth?: number;
+}) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const maxScore = Math.max(metric.myScore, metric.averageScore) * 1.2; // 여유 공간
+  const myPercentage = (metric.myScore / maxScore) * 100;
+  const averagePercentage = (metric.averageScore / maxScore) * 100;
+  const myOffset = circumference - (myPercentage / 100) * circumference;
+  const averageOffset = circumference - (averagePercentage / 100) * circumference;
+
+  return (
+    <div className="circular-progress-container">
+      <svg width={size} height={size} className="circular-progress">
+        {/* 배경 원 (연한 회색) */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#e0e0e0"
+          strokeWidth={strokeWidth}
+        />
+        {/* 평균 점수 원 (연한 초록색) */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#90ee90"
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={averageOffset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          className="average-circle"
+        />
+        {/* 내 점수 원 (진한 초록색) */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#006400"
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={myOffset}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          className="my-score-circle"
+        />
+      </svg>
+      <div className="circular-progress-text">
+        <div className="score-value my-score">{metric.myScore.toFixed(2)}</div>
+        <div className="score-value average-score">{metric.averageScore.toFixed(2)}</div>
+      </div>
+    </div>
+  );
+}
+
+export default function Dashboard() {
+  const metrics = mockDashboardMetrics;
+  const stats = mockDashboardStats;
+
+  return (
+    <div className="dashboard-container">
+      <div className="dashboard-metrics">
+        {metrics.map((metric) => (
+          <div key={metric.name} className="metric-card">
+            <h3 className="metric-title">{metric.displayName}</h3>
+            <CircularProgress metric={metric} />
+          </div>
+        ))}
+      </div>
+
+      <div className="dashboard-stats">
+        <h3 className="stats-title">기록 통계</h3>
+        <div className="stats-list">
+          <div className="stat-item">
+            <span className="stat-label">최고기록</span>
+            <span className="stat-value">{stats.highestRecord}점</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">평균 점수</span>
+            <span className="stat-value">{stats.averageScore}점</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">내 마일리지</span>
+            <span className="stat-value">{stats.myMileage.toLocaleString()}마일</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">입력한 프롬프트 개수</span>
+            <span className="stat-value">{stats.promptCount}개</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 대시보드 메트릭만 표시하는 컴포넌트
+export function DashboardMetrics() {
+  const metrics = mockDashboardMetrics;
+
+  return (
+    <div className="dashboard-metrics-container">
+      <div className="dashboard-metrics">
+        {metrics.map((metric) => (
+          <div key={metric.name} className="metric-card">
+            <h3 className="metric-title">{metric.displayName}</h3>
+            <CircularProgress metric={metric} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// 기록 통계만 표시하는 컴포넌트
+export function DashboardStats() {
+  const stats = mockDashboardStats;
+
+  return (
+    <div className="dashboard-stats-container">
+      <h3 className="stats-title">기록 통계</h3>
+      <div className="stats-list">
+        <div className="stat-item">
+          <span className="stat-label">최고기록</span>
+          <span className="stat-value">{stats.highestRecord}점</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">평균 점수</span>
+          <span className="stat-value">{stats.averageScore}점</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">내 마일리지</span>
+          <span className="stat-value">{stats.myMileage.toLocaleString()}마일</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">입력한 프롬프트 개수</span>
+          <span className="stat-value">{stats.promptCount}개</span>
+        </div>
+      </div>
+    </div>
+  );
+}

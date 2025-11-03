@@ -21,7 +21,7 @@ public class WebClientConfig {
 	 * 사용자 입력 JudgeModel WebClient Bean
 	 * */
 	@Bean
-	@Qualifier("inputJudge")
+	@Qualifier("judgePrompt")
 	public WebClient webClientInputJudge(
 		WebClient.Builder builder,
 		@Value("${ai.model.url.judge-prompt}") String baseUrl
@@ -45,7 +45,7 @@ public class WebClientConfig {
 	 * 학습 JudgeModel WebClient Bean
 	 * */
 	@Bean
-	@Qualifier("trainingJudge")
+	@Qualifier("judgeLlm")
 	public WebClient webClientTrainingJudge(
 		WebClient.Builder builder,
 		@Value("${ai.model.url.judge-llm}") String baseUrl

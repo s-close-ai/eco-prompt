@@ -67,7 +67,7 @@ export default defineConfig({
           },
         ],
       },
-      devOptions: { enabled: true, navigateFallback: 'index.html', suppressWarnings: true },
+      devOptions: { enabled: false, navigateFallback: 'index.html', suppressWarnings: true },
     }),
   ],
 });

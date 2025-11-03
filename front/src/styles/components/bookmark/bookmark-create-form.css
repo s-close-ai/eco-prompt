@@ -1,0 +1,266 @@
+.bookmark-create-form {
+  display: grid;
+  gap: 16px;
+  max-height: 100%;
+  overflow: hidden;
+  grid-template-rows: auto 1fr auto;
+}
+
+.bookmark-create-form__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 16px;
+  flex-shrink: 0;
+  border-bottom: 2px solid rgba(94, 148, 98, 0.1);
+  position: relative;
+}
+
+.bookmark-create-form__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bookmark-create-form__title img {
+  opacity: 0.8;
+}
+
+.bookmark-create-form__title h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.bookmark-create-form__close {
+  background: rgba(0, 0, 0, 0.04);
+  border: none;
+  padding: 8px;
+  margin: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 200ms ease;
+}
+
+.bookmark-create-form__close:hover {
+  background: rgba(239, 68, 68, 0.1);
+  transform: scale(1.05);
+}
+
+.bookmark-create-form__close:active {
+  transform: scale(0.95);
+}
+
+.bookmark-create-form__body {
+  display: grid;
+  gap: 24px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 8px;
+  min-height: 0;
+}
+
+.bookmark-create-form__body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.bookmark-create-form__body::-webkit-scrollbar-thumb {
+  background-color: rgba(94, 148, 98, 0.3);
+  border-radius: 3px;
+}
+
+.bookmark-create-form__body::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(94, 148, 98, 0.5);
+}
+
+.bookmark-create-form__field {
+  display: grid;
+  gap: 8px;
+}
+
+.bookmark-create-form__error {
+  color: #ef4444;
+  font-size: 13px;
+  font-weight: 500;
+  margin: 0;
+  padding: 4px 8px;
+  background: rgba(239, 68, 68, 0.05);
+  border-radius: 6px;
+  border-left: 3px solid #ef4444;
+}
+
+.bookmark-create-form__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 20px;
+  border-top: 2px solid rgba(94, 148, 98, 0.1);
+  flex-shrink: 0;
+}
+
+/* 모바일 스타일 */
+@media (max-width: 768px) {
+  .bookmark-create-form {
+    gap: 0;
+    height: 100%;
+    max-height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bookmark-create-form__header {
+    padding: 12px;
+    padding-bottom: 16px;
+    border-bottom: none;
+    justify-content: center;
+    background: #ffffff;
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .bookmark-create-form__title {
+    gap: 0;
+  }
+
+  .bookmark-create-form__title h2 {
+    font-size: 15px;
+    font-weight: 400;
+    color: #111827;
+    background: none;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: #111827;
+    background-clip: unset;
+    text-align: center;
+  }
+
+  .bookmark-create-form__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    padding: 4px;
+  }
+
+  .bookmark-create-form__close img {
+    width: 18px;
+    height: 18px;
+  }
+
+  .bookmark-create-form__close:hover {
+    background: rgba(0, 0, 0, 0.05);
+    transform: none;
+  }
+
+  .bookmark-create-form__body {
+    gap: 16px;
+    padding: 16px;
+    padding-bottom: 20px;
+    overflow: visible;
+    flex: 0 0 auto;
+    min-height: 0;
+  }
+
+  .bookmark-create-form__footer {
+    padding: 20px 16px;
+    padding-bottom: calc(20px + var(--footer-height, 64px));
+    border-top: none;
+    justify-content: center;
+    flex-shrink: 0;
+    flex-grow: 0;
+    background: transparent;
+    position: relative;
+  }
+
+  .bookmark-create-form__footer .ep-button {
+    height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 8px;
+  }
+}
+
+/* 태블릿 스타일 */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .bookmark-create-form {
+    padding: 24px;
+    gap: 16px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .bookmark-create-form__header {
+    padding: 0 0 20px;
+    flex-shrink: 0;
+  }
+
+  .bookmark-create-form__title h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .bookmark-create-form__body {
+    gap: 24px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+
+  .bookmark-create-form__footer {
+    padding-top: 20px;
+    flex-shrink: 0;
+  }
+
+  .bookmark-create-form__footer .ep-button {
+    height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
+/* 데스크탑 스타일 */
+@media (min-width: 1024px) {
+  .bookmark-create-form {
+    padding: 28px;
+    gap: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .bookmark-create-form__header {
+    padding: 0 0 24px;
+    flex-shrink: 0;
+  }
+
+  .bookmark-create-form__body {
+    gap: 28px;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+
+  .bookmark-create-form__footer {
+    padding-top: 24px;
+    flex-shrink: 0;
+  }
+
+  .bookmark-create-form__footer .ep-button {
+    height: 50px;
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
