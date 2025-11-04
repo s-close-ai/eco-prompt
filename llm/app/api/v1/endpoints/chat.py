@@ -12,7 +12,6 @@ router = APIRouter()
 async def chat(request: ChatRequest, llm=Depends(get_llm), tokenizer=Depends(get_tokenizer), vector_store=Depends(get_vector_store)):
     """
     스트림 답변 제공
-    - 아직 chosen, rejected 구분하지 않음.
     """
     user_input = request.user_input
     personal_prompt = request.personal_prompt

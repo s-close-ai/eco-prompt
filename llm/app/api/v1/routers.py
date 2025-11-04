@@ -6,7 +6,7 @@ api_router = APIRouter()
 
 api_router.include_router(
     chat.router,
-    prefix="/prompt/response",
+    prefix="/prompt-response",
     tags=["chat"]
 )
 
