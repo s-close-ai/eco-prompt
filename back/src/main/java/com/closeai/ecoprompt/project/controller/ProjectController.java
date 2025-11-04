@@ -27,4 +27,9 @@ public class ProjectController {
         return ApiResponse.success(new SidebarResponse(projectService.saveProject(projectRequest)));
     }
 
+    @PatchMapping("/{projectId}")
+    public ResponseEntity<ApiResponse<Void>> updateProject(@PathVariable int projectId, @RequestBody PersonalProjectRequest projectRequest) {
+        return ApiResponse.success(projectService.updateProjectTitle(projectId, projectRequest));
+    }
+
 }

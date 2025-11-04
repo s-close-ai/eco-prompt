@@ -6,7 +6,6 @@ import com.closeai.ecoprompt.chatting.repository.ChattingRepository;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.project.model.dto.request.PersonalProjectRequest;
 import com.closeai.ecoprompt.project.model.dto.response.PersonalProjectResponse;
-import com.closeai.ecoprompt.project.model.dto.response.SidebarResponse;
 import com.closeai.ecoprompt.user.model.entity.User;
 import com.closeai.ecoprompt.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -42,8 +41,8 @@ public class ProjectService {
     }
 
     // 프로젝트는 무조건 생성 시간 정렬해서 보내기, 최근 생성된 게 위로
-    // TODO: 상위 20개 채팅방 pagenation
-    //   채팅은 업데이트 시간으로 정렬해서 보내기
+    // 상위 20개 채팅방 pagenation
+    // 채팅은 업데이트 시간으로 정렬해서 보내기
     public List<PersonalProjectResponse> getPersonalProject(int userId) {
 		AppLogger.info("개인 프로젝트 리스트 조회", userId);
 
@@ -82,5 +81,17 @@ public class ProjectService {
         }
 
         return responses;
+    }
+
+    public Void updateProjectTitle(int projectId, PersonalProjectRequest projectRequest) {
+        AppLogger.info("UPDATE PROJECT TITLE: " + projectRequest.toString(),  projectId);
+
+        Project project = getProject(projectId);
+        if (project.getOwner().getId() != projectRequest.userId()) {
+            throw new BusinessException("사용자와 프로젝트가 일치하지 않습니다.");
+        }
+
+        project.updateTitle(projectRequest.title());
+        return null;
     }
 }

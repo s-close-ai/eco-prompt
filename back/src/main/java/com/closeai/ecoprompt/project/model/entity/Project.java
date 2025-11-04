@@ -30,5 +30,9 @@ public class Project extends BaseEntity {
                 .owner(owner)
                 .build();
     }
+
+    public void updateTitle(String title) {
+        this.title = title;
+    }
     
 }
