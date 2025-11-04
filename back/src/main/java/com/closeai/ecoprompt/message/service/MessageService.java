@@ -1,5 +1,7 @@
 package com.closeai.ecoprompt.message.service;
 
+import java.util.List;
+
 import com.closeai.ecoprompt.common.CustomUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -130,8 +132,7 @@ public class MessageService {
 		aiDocument.updateContent(null);
 		aiDocument.updateMessageStatus(MessageStatus.PROCESSING);
 
-		messageMongoRepository.save(userDocument);
-		messageMongoRepository.save(aiDocument);
+		messageMongoRepository.saveAll(List.of(userDocument, aiDocument));
 	}
 
 }
