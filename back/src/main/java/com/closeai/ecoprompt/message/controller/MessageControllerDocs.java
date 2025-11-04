@@ -5,6 +5,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.closeai.ecoprompt.common.ApiResponse;
 import com.closeai.ecoprompt.message.model.dto.request.SubmitMessageRequest;
+import com.closeai.ecoprompt.message.model.dto.request.UpdateMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.response.SubmitMessageResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,4 +22,7 @@ public interface MessageControllerDocs {
 
 	@Operation(summary = "사용자가 메시지 응답 중지하는 API")
 	ResponseEntity<ApiResponse<Void>> stopMessage(String messageUUID);
+
+	@Operation(summary = "사용자가 메시지 수정하는 API")
+	ResponseEntity<ApiResponse<SubmitMessageResponse>> updateMessage(UpdateMessageRequest request);
 }
