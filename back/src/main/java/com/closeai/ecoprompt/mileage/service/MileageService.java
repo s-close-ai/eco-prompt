@@ -17,14 +17,26 @@ public class MileageService {
 	// 마일리지 기본 배율 (10)
 	private static final int MILEAGE_UNIT = 10;
 
-	public void saveMileage(Message message, Double score){
+	public void saveOrUpdateMileage(Message message, Double score){
 
 		int value = calculateMileage(score);
+		Long messageId = message.getId();
 
-		Mileage mileage = Mileage.builder()
-			.message(message)
-			.value(value)
-			.build();
+		Mileage mileage = mileageRepository.findByMessage_Id(messageId).orElse(null);
+
+		// DB에 저장된 마일리지가 없다면 새로 생성
+		if(mileage == null){
+			mileage = Mileage.builder()
+				.message(message)
+				.value(value)
+				.build();
+		}
+		else {	// DB에 저장된 마일리지가 있다면 값을 수정
+			int preValue = mileage.getValue();
+			if(preValue != value){
+				mileage.updateValue(value);
+			}
+		}
 
 		mileageRepository.save(mileage);
 	}
