@@ -19,9 +19,9 @@ async def chat(request: ChatRequest, llm=Depends(get_llm), tokenizer=Depends(get
     message_uuid = request.message_uuid
 
     # 사용자 대화 히스토리 불러오기
-    chatting_id = find_chatting_id(message_uuid)
+    chatting_id = find_chatting_id(str(message_uuid))
     if chatting_id:
-        chat_history = get_chat_history(chatting_id)
+        chat_history = get_chat_history(int(chatting_id))
         # content와 senderType을 조합해서 histroy 생성하는 코드 필요함.
     else:
         chat_history = None
