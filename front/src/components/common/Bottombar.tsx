@@ -1,19 +1,26 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import '@/styles/components/common/bottombar.css';
+import { useAppShell } from '@/context/AppShellContext';
 import ChatInput from '@/components/chat/ChatInput';
 
 type BottombarProps = {
   variant: 'chat' | 'menu';
+  onSendMessage?: (message: string) => void;
 };
 
-export default function Bottombar({ variant }: BottombarProps) {
+export default function Bottombar({ variant, onSendMessage }: BottombarProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isLoading, onStopGeneration } = useAppShell();
 
   if (variant === 'chat') {
     return (
       <footer className="bottombar bottombar--chat app-footer" data-variant="chat">
-        <ChatInput onSend={() => {}} />
+        <ChatInput
+          onSend={onSendMessage || (() => {})}
+          isLoading={isLoading}
+          onStop={onStopGeneration}
+        />
       </footer>
     );
   }

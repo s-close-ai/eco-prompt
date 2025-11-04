@@ -22,16 +22,21 @@ const mockSettingsData: SettingsFormData = {
 
 function ShellBody() {
   const location = useLocation();
-  useNavigate();
+  const navigate = useNavigate();
   const mode = useDeviceMode();
   const { isSidebarCollapsed, isSidebarOpen, isSettingsOpen, closeSettings } = useAppShell();
   const isChat = location.pathname.startsWith('/chat');
   const isProjectRoute = location.pathname.startsWith('/project');
+  const isHome = location.pathname === '/';
   const bottomVariant: 'chat' | 'menu' | null =
-    isChat || isProjectRoute ? 'chat' : mode === 'mobile' ? 'menu' : null;
+    isChat || isProjectRoute || isHome ? 'chat' : mode === 'mobile' ? 'menu' : null;
 
   const [isProjectCreateOpen, setProjectCreateOpen] = useState(false);
   const [settingsData, setSettingsData] = useState<SettingsFormData>(mockSettingsData);
+
+  const handleSendMessage = (message: string) => {
+    navigate('/chat', { state: { isNew: true, message: message } });
+  };
 
   useEffect(() => {
     const open = () => setProjectCreateOpen(true);
@@ -100,7 +105,7 @@ function ShellBody() {
         ) : null}
         <Outlet />
       </main>
-      {bottomVariant ? <Bottombar variant={bottomVariant} /> : null}
+      {bottomVariant ? <Bottombar variant={bottomVariant} onSendMessage={handleSendMessage} /> : null}
       {projectCreateVariant !== 'inline' ? (
         <ProjectCreateOverlay
           open={isProjectCreateOpen}

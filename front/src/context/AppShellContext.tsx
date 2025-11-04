@@ -15,6 +15,11 @@ interface AppShellContextValue {
   openSettings: () => void;
   closeSettings: () => void;
   toggleSettings: () => void;
+
+  isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
+  onStopGeneration: () => void;
+  setOnStopGeneration: (fn: () => void) => void;
 }
 
 const AppShellContext = createContext<AppShellContextValue | null>(null);
@@ -23,6 +28,8 @@ export function AppShellProvider({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [onStopGeneration, setOnStopGeneration] = useState(() => () => {});
 
   const openSidebar = useCallback(() => setIsSidebarOpen(true), []);
   const closeSidebar = useCallback(() => {
@@ -65,6 +72,10 @@ export function AppShellProvider({ children }: { children: React.ReactNode }) {
       openSettings,
       closeSettings,
       toggleSettings,
+      isLoading,
+      setIsLoading,
+      onStopGeneration,
+      setOnStopGeneration,
     }),
     [
       isSidebarOpen,
@@ -79,6 +90,8 @@ export function AppShellProvider({ children }: { children: React.ReactNode }) {
       openSettings,
       closeSettings,
       toggleSettings,
+      isLoading,
+      onStopGeneration,
     ],
   );
 
