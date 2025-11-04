@@ -10,6 +10,11 @@ interface AppShellContextValue {
   collapseSidebar: () => void;
   expandSidebar: () => void;
   toggleSidebarCollapsed: () => void;
+
+  isSettingsOpen: boolean;
+  openSettings: () => void;
+  closeSettings: () => void;
+  toggleSettings: () => void;
 }
 
 const AppShellContext = createContext<AppShellContextValue | null>(null);
@@ -17,6 +22,7 @@ const AppShellContext = createContext<AppShellContextValue | null>(null);
 export function AppShellProvider({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const openSidebar = useCallback(() => setIsSidebarOpen(true), []);
   const closeSidebar = useCallback(() => {
@@ -41,6 +47,10 @@ export function AppShellProvider({ children }: { children: React.ReactNode }) {
     window.dispatchEvent(new CustomEvent('project-create-close'));
   }, []);
 
+  const openSettings = useCallback(() => setIsSettingsOpen(true), []);
+  const closeSettings = useCallback(() => setIsSettingsOpen(false), []);
+  const toggleSettings = useCallback(() => setIsSettingsOpen((v) => !v), []);
+
   const value = useMemo(
     () => ({
       isSidebarOpen,
@@ -51,6 +61,10 @@ export function AppShellProvider({ children }: { children: React.ReactNode }) {
       collapseSidebar,
       expandSidebar,
       toggleSidebarCollapsed,
+      isSettingsOpen,
+      openSettings,
+      closeSettings,
+      toggleSettings,
     }),
     [
       isSidebarOpen,
@@ -61,6 +75,10 @@ export function AppShellProvider({ children }: { children: React.ReactNode }) {
       collapseSidebar,
       expandSidebar,
       toggleSidebarCollapsed,
+      isSettingsOpen,
+      openSettings,
+      closeSettings,
+      toggleSettings,
     ],
   );
 

@@ -32,6 +32,7 @@
     width 0.3s ease;
   grid-row: 1 / -1;
   grid-column: 1;
+  overflow: visible;
 }
 
 /* 모바일/태블릿: 기본적으로 숨김, open 클래스로 표시 */
@@ -327,7 +328,9 @@
 .sidebar-scroll {
   flex: 1;
   overflow-y: auto;
+  overflow-x: clip;
   padding: 16px;
+  position: relative;
 }
 
 .sidebar-scroll::-webkit-scrollbar {
@@ -350,6 +353,8 @@
 /* 섹션 */
 .sidebar-section {
   margin-bottom: 4px;
+  overflow: visible;
+  position: relative;
 }
 
 .sidebar-section-title {
@@ -370,6 +375,7 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  overflow: visible;
 }
 
 .sidebar-list-item {
@@ -418,6 +424,7 @@
   border-radius: 8px;
   transition: background 0.2s;
   position: relative;
+  overflow: visible;
 }
 
 .sidebar-list-item-project:hover {
@@ -465,16 +472,14 @@
 }
 
 .sidebar-list-item-menu {
-  position: absolute;
-  right: 0;
-  top: 32px;
+  position: fixed;
   width: 170px;
   background: #ffffff;
   border: 1px solid #d9d9e3;
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   padding: 4px;
-  z-index: 1000;
+  z-index: 1300;
 }
 
 .sidebar-list-item-menu-item {
@@ -548,7 +553,7 @@
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   padding: 4px;
-  z-index: 1001;
+  z-index: 1301;
 }
 
 .sidebar-list-item-menu-submenu-item {
@@ -611,6 +616,7 @@
   border-radius: 8px;
   transition: background 0.2s;
   position: relative;
+  overflow: visible;
 }
 
 .sidebar-list-item-chat:hover {

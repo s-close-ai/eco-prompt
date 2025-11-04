@@ -70,12 +70,12 @@ const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function TextAre
           maxLength={maxLength}
           {...rest}
         />
-        {showCharCount && maxLength ? (
-          <span className="ep-text-area__char-count">
-            {charCount} / {maxLength}
-          </span>
-        ) : null}
       </div>
+      {showCharCount && maxLength ? (
+        <span className="ep-text-area__char-count">
+          {charCount} / {maxLength}
+        </span>
+      ) : null}
       {assistiveText ? (
         <span className="ep-text-area__assist" aria-live="polite">
           {assistiveText}

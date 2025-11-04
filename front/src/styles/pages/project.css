@@ -16,9 +16,7 @@
 }
 
 .project-page-hero-inner {
-  max-width: 48rem;
   margin: 0 auto;
-  width: 100%;
 }
 
 .project-page-header-row {
@@ -235,7 +233,6 @@
   top: 16px;
   display: flex;
   align-items: center;
-  padding-right: 8px;
 }
 
 .project-chat-card-menu-btn {
@@ -262,6 +259,10 @@
 /* 데스크탑: 호버 시 메뉴 버튼 표시 */
 :root[data-mode='desktop'] .project-chat-card-wrapper:hover .project-chat-card-menu-btn {
   display: flex;
+}
+
+:root[data-mode='tablet'] .project-chat-card-wrapper {
+  padding: 0 16px;
 }
 
 /* 모바일/태블릿: 항상 메뉴 버튼 표시 */

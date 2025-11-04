@@ -29,11 +29,29 @@ export default function Topbar() {
         <img src="/logo/header_img.png" alt="Eco Prompt" className="topbar-logo" />
 
         {showChatIcon ? (
-          <button aria-label="채팅" className="icon-button" onClick={() => navigate('/')}>
+          <button 
+            aria-label="채팅" 
+            className="icon-button" 
+            onClick={() => {
+              const targetPath = '/';
+              if (location.pathname !== targetPath) {
+                navigate(targetPath);
+              }
+            }}
+          >
             <img src="/icons/chat.svg" alt="chat" width={24} height={24} />
           </button>
         ) : (
-          <button aria-label="대시보드" className="icon-button">
+          <button 
+            aria-label="대시보드" 
+            className="icon-button"
+            onClick={() => {
+              const targetPath = '/?tab=dashboard';
+              if (location.pathname !== '/' || location.search !== '?tab=dashboard') {
+                navigate(targetPath);
+              }
+            }}
+          >
             <img src="/icons/dashboard.svg" alt="dashboard" width={24} height={24} />
           </button>
         )}

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import '@/styles/components/common/sidebar.css';
@@ -9,8 +9,9 @@ import { ICON_SIZE } from '@/constants/ui';
 
 export default function Sidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const mode = useDeviceMode();
-  const { isSidebarOpen, closeSidebar, isSidebarCollapsed, toggleSidebarCollapsed, toggleSidebar } =
+  const { isSidebarOpen, closeSidebar, isSidebarCollapsed, toggleSidebarCollapsed, toggleSidebar, toggleSettings } =
     useAppShell();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedProjects, setExpandedProjects] = useState<Set<number>>(new Set());
@@ -24,8 +25,22 @@ export default function Sidebar() {
     filterProjectId?: number;
   } | null>(null);
   const projectMoveMenuRef = useRef<HTMLDivElement | null>(null);
+  
+  // 포털로 렌더링할 메뉴 위치 정보
+  const [projectMenus, setProjectMenus] = useState<Map<number, { top: number; left: number }>>(new Map());
+  const [chatMenus, setChatMenus] = useState<Map<number, { top: number; left: number }>>(new Map());
+  const [nestedChatMenus, setNestedChatMenus] = useState<Map<number, { top: number; left: number }>>(new Map());
+  const projectMenuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const chatMenuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const nestedChatMenuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const [longPressTimer, setLongPressTimer] = useState<Map<number, number>>(new Map());
   const menuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
+  // 모든 오버레이 닫기 헬퍼 함수
+  const closeAllOverlays = () => {
+    window.dispatchEvent(new CustomEvent('project-create-close'));
+    window.dispatchEvent(new CustomEvent('settings-close'));
+  };
 
   // 메뉴 외부 클릭 감지
   useEffect(() => {
@@ -38,24 +53,36 @@ export default function Sidebar() {
       
       // 프로젝트 메뉴 닫기
       openProjectMenus.forEach((projectId) => {
-        const menuRef = menuRefs.current.get(projectId);
-        if (menuRef && !menuRef.contains(target)) {
+        const menuRef = projectMenuRefs.current.get(projectId);
+        const triggerRef = menuRefs.current.get(projectId);
+        if (menuRef && !menuRef.contains(target) && triggerRef && !triggerRef.contains(target)) {
           setOpenProjectMenus((prev) => {
             const newSet = new Set(prev);
             newSet.delete(projectId);
             return newSet;
+          });
+          setProjectMenus((prevMenus) => {
+            const newMenus = new Map(prevMenus);
+            newMenus.delete(projectId);
+            return newMenus;
           });
         }
       });
 
       // 채팅 메뉴 닫기
       openChatMenus.forEach((chatId) => {
-        const menuRef = menuRefs.current.get(chatId + 10000);
-        if (menuRef && !menuRef.contains(target)) {
+        const menuRef = chatMenuRefs.current.get(chatId);
+        const triggerRef = menuRefs.current.get(chatId + 10000);
+        if (menuRef && !menuRef.contains(target) && triggerRef && !triggerRef.contains(target)) {
           setOpenChatMenus((prev) => {
             const newSet = new Set(prev);
             newSet.delete(chatId);
             return newSet;
+          });
+          setChatMenus((prevMenus) => {
+            const newMenus = new Map(prevMenus);
+            newMenus.delete(chatId);
+            return newMenus;
           });
           setProjectMoveMenu(null);
         }
@@ -63,12 +90,18 @@ export default function Sidebar() {
 
       // 중첩 채팅 메뉴 닫기
       openNestedChatMenus.forEach((chatId) => {
-        const menuRef = menuRefs.current.get(chatId + 20000);
-        if (menuRef && !menuRef.contains(target)) {
+        const menuRef = nestedChatMenuRefs.current.get(chatId);
+        const triggerRef = menuRefs.current.get(chatId + 20000);
+        if (menuRef && !menuRef.contains(target) && triggerRef && !triggerRef.contains(target)) {
           setOpenNestedChatMenus((prev) => {
             const newSet = new Set(prev);
             newSet.delete(chatId);
             return newSet;
+          });
+          setNestedChatMenus((prevMenus) => {
+            const newMenus = new Map(prevMenus);
+            newMenus.delete(chatId);
+            return newMenus;
           });
           setProjectMoveMenu(null);
         }
@@ -96,15 +129,22 @@ export default function Sidebar() {
 
   // 스크롤/리사이즈 시 포털 닫기
   useEffect(() => {
-    if (!projectMoveMenu) return;
-    const close = () => setProjectMoveMenu(null);
-    window.addEventListener('scroll', close, true);
-    window.addEventListener('resize', close);
-    return () => {
-      window.removeEventListener('scroll', close, true);
-      window.removeEventListener('resize', close);
+    const closeAllMenus = () => {
+      setProjectMoveMenu(null);
+      setOpenProjectMenus(new Set());
+      setOpenChatMenus(new Set());
+      setOpenNestedChatMenus(new Set());
+      setProjectMenus(new Map());
+      setChatMenus(new Map());
+      setNestedChatMenus(new Map());
     };
-  }, [projectMoveMenu]);
+    window.addEventListener('scroll', closeAllMenus, true);
+    window.addEventListener('resize', closeAllMenus);
+    return () => {
+      window.removeEventListener('scroll', closeAllMenus, true);
+      window.removeEventListener('resize', closeAllMenus);
+    };
+  }, []);
   
   const toggleProject = (projectId: number) => {
     setExpandedProjects((prev) => {
@@ -122,29 +162,59 @@ export default function Sidebar() {
     if (mode === 'mobile') {
       closeSidebar();
     }
-    window.dispatchEvent(new CustomEvent('project-create-close'));
+    closeAllOverlays();
     navigate('/project', { state: { projectId } });
   };
 
-  const toggleProjectMenu = (projectId: number) => {
+  const toggleProjectMenu = (projectId: number, anchorEl?: HTMLElement) => {
     setOpenProjectMenus((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(projectId)) {
         newSet.delete(projectId);
+        setProjectMenus((prevMenus) => {
+          const newMenus = new Map(prevMenus);
+          newMenus.delete(projectId);
+          return newMenus;
+        });
       } else {
         newSet.add(projectId);
+        if (anchorEl) {
+          const rect = anchorEl.getBoundingClientRect();
+          const top = rect.bottom + 8;
+          const left = rect.right - 170; // 메뉴 너비만큼 왼쪽으로
+          setProjectMenus((prevMenus) => {
+            const newMenus = new Map(prevMenus);
+            newMenus.set(projectId, { top, left });
+            return newMenus;
+          });
+        }
       }
       return newSet;
     });
   };
 
-  const toggleChatMenu = (chatId: number) => {
+  const toggleChatMenu = (chatId: number, anchorEl?: HTMLElement) => {
     setOpenChatMenus((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(chatId)) {
         newSet.delete(chatId);
+        setChatMenus((prevMenus) => {
+          const newMenus = new Map(prevMenus);
+          newMenus.delete(chatId);
+          return newMenus;
+        });
       } else {
         newSet.add(chatId);
+        if (anchorEl) {
+          const rect = anchorEl.getBoundingClientRect();
+          const top = rect.bottom + 8;
+          const left = rect.right - 170; // 메뉴 너비만큼 왼쪽으로
+          setChatMenus((prevMenus) => {
+            const newMenus = new Map(prevMenus);
+            newMenus.set(chatId, { top, left });
+            return newMenus;
+          });
+        }
       }
       return newSet;
     });
@@ -238,13 +308,28 @@ export default function Sidebar() {
     console.log(`Project ${projectId} ${action}`);
   };
 
-  const toggleNestedChatMenu = (chatId: number) => {
+  const toggleNestedChatMenu = (chatId: number, anchorEl?: HTMLElement) => {
     setOpenNestedChatMenus((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(chatId)) {
         newSet.delete(chatId);
+        setNestedChatMenus((prevMenus) => {
+          const newMenus = new Map(prevMenus);
+          newMenus.delete(chatId);
+          return newMenus;
+        });
       } else {
         newSet.add(chatId);
+        if (anchorEl) {
+          const rect = anchorEl.getBoundingClientRect();
+          const top = rect.bottom + 8;
+          const left = rect.right - 170; // 메뉴 너비만큼 왼쪽으로
+          setNestedChatMenus((prevMenus) => {
+            const newMenus = new Map(prevMenus);
+            newMenus.set(chatId, { top, left });
+            return newMenus;
+          });
+        }
       }
       return newSet;
     });
@@ -337,9 +422,9 @@ export default function Sidebar() {
   };
 
   const handleSidebarClick = () => {
-    // 태블릿 모드에서 사이드바 클릭 시 프로젝트 생성 카드 닫기
+    // 태블릿 모드에서 사이드바 클릭 시 모든 오버레이 닫기
     if (mode === 'tablet') {
-      window.dispatchEvent(new CustomEvent('project-create-close'));
+      closeAllOverlays();
     }
   };
 
@@ -363,7 +448,10 @@ export default function Sidebar() {
           <div className="sidebar-collapsed" onClick={(e) => e.stopPropagation()}>
             <button
               className="sidebar-logo-btn"
-              onClick={toggleSidebarCollapsed}
+              onClick={() => {
+                closeAllOverlays();
+                toggleSidebarCollapsed();
+              }}
               aria-label="사이드바 열기"
             >
               <img src="/logo/ngb_logo_png.png" alt="로고" className="sidebar-logo-icon" />
@@ -374,7 +462,7 @@ export default function Sidebar() {
                 className="sidebar-icon-btn"
                 aria-label="검색"
                 onClick={() => {
-                  window.dispatchEvent(new CustomEvent('project-create-close'));
+                  closeAllOverlays();
                   console.log('검색 버튼 클릭');
                 }}
               >
@@ -390,7 +478,7 @@ export default function Sidebar() {
               <button
                 className="sidebar-icon-btn"
                 aria-label="새 프로젝트"
-                onClick={() => window.dispatchEvent(new CustomEvent('project-create-open'))}
+                onClick={() => window.dispatchEvent(new CustomEvent('project-create-toggle'))}
               >
                 <img src="/icons/add_folder.svg" alt="add folder" width={20} height={20} />
               </button>
@@ -401,8 +489,11 @@ export default function Sidebar() {
                 className="sidebar-icon-btn"
                 aria-label="대시보드"
                 onClick={() => {
-                  window.dispatchEvent(new CustomEvent('project-create-close'));
-                  navigate('/?tab=dashboard');
+                  closeAllOverlays();
+                  const targetPath = '/?tab=dashboard';
+                  if (location.pathname !== '/' || location.search !== '?tab=dashboard') {
+                    navigate(targetPath);
+                  }
                 }}
               >
                 <img src="/icons/dashboard.svg" alt="dashboard" width={20} height={20} />
@@ -411,7 +502,7 @@ export default function Sidebar() {
                 className="sidebar-icon-btn"
                 aria-label="북마크"
                 onClick={() => {
-                  window.dispatchEvent(new CustomEvent('project-create-close'));
+                  closeAllOverlays();
                   console.log('북마크 클릭');
                 }}
               >
@@ -421,8 +512,15 @@ export default function Sidebar() {
                 className="sidebar-icon-btn"
                 aria-label="설정"
                 onClick={() => {
-                  window.dispatchEvent(new CustomEvent('project-create-close'));
-                  navigate('/settings');
+                  if (mode === 'desktop') {
+                    toggleSettings();
+                  } else {
+                    closeAllOverlays();
+                    const targetPath = '/settings';
+                    if (location.pathname !== targetPath) {
+                      navigate(targetPath);
+                    }
+                  }
                 }}
               >
                 <img src="/icons/settings.svg" alt="settings" width={20} height={20} />
@@ -446,14 +544,24 @@ export default function Sidebar() {
                 </div>
                 <button
                   className="sidebar-toggle-btn sidebar-toggle-desktop"
-                  onClick={toggleSidebarCollapsed}
+                  onClick={() => {
+                    closeAllOverlays();
+                    toggleSidebarCollapsed();
+                  }}
                   aria-label="사이드바 접기"
                 >
                   <img src="/icons/sidebar_close.svg" alt="close" width={20} height={20} />
                 </button>
                 <button
                   className="sidebar-toggle-btn sidebar-toggle-mobile"
-                  onClick={mode === 'mobile' ? closeSidebar : toggleSidebar}
+                  onClick={() => {
+                    closeAllOverlays();
+                    if (mode === 'mobile') {
+                      closeSidebar();
+                    } else {
+                      toggleSidebar();
+                    }
+                  }}
                   aria-label="사이드바 닫기"
                 >
                   <img src="/icons/sidebar_close.svg" alt="open" width={20} height={20} />
@@ -464,7 +572,7 @@ export default function Sidebar() {
               <button
                 className="sidebar-search sidebar-search-desktop"
                 onClick={() => {
-                  window.dispatchEvent(new CustomEvent('project-create-close'));
+                  closeAllOverlays();
                   if (mode === 'mobile') {
                     closeSidebar();
                   }
@@ -483,7 +591,7 @@ export default function Sidebar() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => {
-                    window.dispatchEvent(new CustomEvent('project-create-close'));
+                    closeAllOverlays();
                   }}
                 />
               </label>
@@ -508,7 +616,7 @@ export default function Sidebar() {
                     if (mode === 'mobile') {
                       closeSidebar();
                     }
-                    window.dispatchEvent(new CustomEvent('project-create-open'));
+                    window.dispatchEvent(new CustomEvent('project-create-toggle'));
                   }}
                 >
                   <img src="/icons/add_folder.svg" alt="add folder" width={18} height={18} />
@@ -573,7 +681,7 @@ export default function Sidebar() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                toggleProjectMenu(project.id);
+                                toggleProjectMenu(project.id, e.currentTarget);
                               }}
                               aria-label="프로젝트 메뉴"
                               aria-expanded={isMenuOpen}
@@ -586,46 +694,6 @@ export default function Sidebar() {
                                 aria-hidden="true"
                               />
                             </button>
-                            {isMenuOpen && (
-                              <div className="sidebar-list-item-menu" role="menu">
-                                <button
-                                  className="sidebar-list-item-menu-item"
-                                  role="menuitem"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleProjectMenuAction(project.id, 'rename');
-                                  }}
-                                >
-                                  <img
-                                    src="/icons/edit.svg"
-                                    alt=""
-                                    width={ICON_SIZE.SM}
-                                    height={ICON_SIZE.SM}
-                                    aria-hidden="true"
-                                  />
-                                  <span>이름 바꾸기</span>
-                                </button>
-                                <button
-                                  className="sidebar-list-item-menu-item"
-                                  role="menuitem"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleProjectMenuAction(project.id, 'delete');
-                                  }}
-                                >
-                                  <img
-                                    src="/icons/delete.svg"
-                                    alt=""
-                                    width={ICON_SIZE.SM}
-                                    height={ICON_SIZE.SM}
-                                    aria-hidden="true"
-                                  />
-                                  <span>프로젝트 삭제</span>
-                                </button>
-                              </div>
-                            )}
                           </div>
                         </div>
                         {isExpanded && (
@@ -666,7 +734,7 @@ export default function Sidebar() {
                                         onClick={(e) => {
                                           e.preventDefault();
                                           e.stopPropagation();
-                                          toggleNestedChatMenu(chat.id);
+                                          toggleNestedChatMenu(chat.id, e.currentTarget);
                                         }}
                                         aria-label="채팅 메뉴"
                                         aria-expanded={isNestedMenuOpen}
@@ -679,73 +747,6 @@ export default function Sidebar() {
                                           aria-hidden="true"
                                         />
                                       </button>
-                                      {isNestedMenuOpen && (
-                                        <div className="sidebar-list-item-menu" role="menu">
-                                          <button
-                                            className="sidebar-list-item-menu-item"
-                                            role="menuitem"
-                                            onClick={(e) => {
-                                              e.preventDefault();
-                                              e.stopPropagation();
-                                              handleNestedChatMenuAction(chat.id, 'rename');
-                                            }}
-                                          >
-                                            <img
-                                              src="/icons/edit.svg"
-                                              alt=""
-                                              width={ICON_SIZE.SM}
-                                              height={ICON_SIZE.SM}
-                                              aria-hidden="true"
-                                            />
-                                            <span>이름 바꾸기</span>
-                                          </button>
-                                          <div className="sidebar-list-item-menu-item sidebar-list-item-menu-item-with-submenu">
-                                            <button
-                                              className="sidebar-list-item-menu-item-btn"
-                                              onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                openProjectMovePortal(chat.id, e.currentTarget as HTMLElement, project.id);
-                                              }}
-                                            >
-                                              <img
-                                                src="/icons/folder.svg"
-                                                alt=""
-                                                width={ICON_SIZE.SM}
-                                                height={ICON_SIZE.SM}
-                                                aria-hidden="true"
-                                              />
-                                              <span>프로젝트 이동</span>
-                                              <img
-                                                src="/icons/chevron.svg"
-                                                alt=""
-                                                width={ICON_SIZE.SM}
-                                                height={ICON_SIZE.SM}
-                                                className="sidebar-list-item-menu-item-chevron"
-                                                aria-hidden="true"
-                                              />
-                                            </button>
-                                          </div>
-                                          <button
-                                            className="sidebar-list-item-menu-item"
-                                            role="menuitem"
-                                            onClick={(e) => {
-                                              e.preventDefault();
-                                              e.stopPropagation();
-                                              handleNestedChatMenuAction(chat.id, 'delete');
-                                            }}
-                                          >
-                                            <img
-                                              src="/icons/delete.svg"
-                                              alt=""
-                                              width={ICON_SIZE.SM}
-                                              height={ICON_SIZE.SM}
-                                              aria-hidden="true"
-                                            />
-                                            <span>채팅 삭제</span>
-                                          </button>
-                                        </div>
-                                      )}
                                     </div>
                                   </div>
                                 </li>
@@ -797,7 +798,7 @@ export default function Sidebar() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                toggleChatMenu(chat.id);
+                                toggleChatMenu(chat.id, e.currentTarget);
                               }}
                               aria-label="채팅 메뉴"
                               aria-expanded={isMenuOpen}
@@ -810,73 +811,6 @@ export default function Sidebar() {
                                 aria-hidden="true"
                               />
                             </button>
-                            {isMenuOpen && (
-                              <div className="sidebar-list-item-menu" role="menu">
-                                <button
-                                  className="sidebar-list-item-menu-item"
-                                  role="menuitem"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleChatMenuAction(chat.id, 'rename');
-                                  }}
-                                >
-                                  <img
-                                    src="/icons/edit.svg"
-                                    alt=""
-                                    width={ICON_SIZE.SM}
-                                    height={ICON_SIZE.SM}
-                                    aria-hidden="true"
-                                  />
-                                  <span>이름 바꾸기</span>
-                                </button>
-                                <div className="sidebar-list-item-menu-item sidebar-list-item-menu-item-with-submenu">
-                                  <button
-                                    className="sidebar-list-item-menu-item-btn"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      openProjectMovePortal(chat.id, e.currentTarget as HTMLElement);
-                                    }}
-                                  >
-                                    <img
-                                      src="/icons/folder.svg"
-                                      alt=""
-                                      width={ICON_SIZE.SM}
-                                      height={ICON_SIZE.SM}
-                                      aria-hidden="true"
-                                    />
-                                    <span>프로젝트 이동</span>
-                                    <img
-                                      src="/icons/chevron.svg"
-                                      alt=""
-                                      width={ICON_SIZE.SM}
-                                      height={ICON_SIZE.SM}
-                                      className="sidebar-list-item-menu-item-chevron"
-                                      aria-hidden="true"
-                                    />
-                                  </button>
-                                </div>
-                                <button
-                                  className="sidebar-list-item-menu-item"
-                                  role="menuitem"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleChatMenuAction(chat.id, 'delete');
-                                  }}
-                                >
-                                  <img
-                                    src="/icons/delete.svg"
-                                    alt=""
-                                    width={ICON_SIZE.SM}
-                                    height={ICON_SIZE.SM}
-                                    aria-hidden="true"
-                                  />
-                                  <span>채팅 삭제</span>
-                                </button>
-                              </div>
-                            )}
                           </div>
                         </div>
                       </li>
@@ -894,8 +828,11 @@ export default function Sidebar() {
                   if (mode === 'mobile') {
                     closeSidebar();
                   }
-                  window.dispatchEvent(new CustomEvent('project-create-close'));
-                  navigate('/?tab=dashboard');
+                  closeAllOverlays();
+                  const targetPath = '/?tab=dashboard';
+                  if (location.pathname !== '/' || location.search !== '?tab=dashboard') {
+                    navigate(targetPath);
+                  }
                 }}
               >
                 <img src="/icons/dashboard.svg" alt="dashboard" width={18} height={18} />
@@ -907,8 +844,11 @@ export default function Sidebar() {
                   if (mode === 'mobile') {
                     closeSidebar();
                   }
-                  window.dispatchEvent(new CustomEvent('project-create-close'));
-                  navigate('/bookmark');
+                  closeAllOverlays();
+                  const targetPath = '/bookmark';
+                  if (location.pathname !== targetPath) {
+                    navigate(targetPath);
+                  }
                 }}
               >
                 <img src="/icons/bookmark.svg" alt="bookmark" width={18} height={18} />
@@ -920,8 +860,15 @@ export default function Sidebar() {
                   if (mode === 'mobile') {
                     closeSidebar();
                   }
-                  window.dispatchEvent(new CustomEvent('project-create-close'));
-                  navigate('/settings');
+                  if (mode === 'desktop') {
+                    toggleSettings();
+                  } else {
+                    closeAllOverlays();
+                    const targetPath = '/settings';
+                    if (location.pathname !== targetPath) {
+                      navigate(targetPath);
+                    }
+                  }
                 }}
               >
                 <img src="/icons/settings.svg" alt="settings" width={18} height={18} />
@@ -931,6 +878,240 @@ export default function Sidebar() {
           </div>
         )}
       </aside>
+      
+      {/* 프로젝트 메뉴 포털 */}
+      {Array.from(projectMenus.entries()).map(([projectId, position]) => {
+        const project = mockProjectList.find((p) => p.id === projectId);
+        if (!project) return null;
+        return createPortal(
+          <div
+            key={projectId}
+            className="sidebar-list-item-menu"
+            ref={(el) => {
+              if (el) {
+                projectMenuRefs.current.set(projectId, el);
+              } else {
+                projectMenuRefs.current.delete(projectId);
+              }
+            }}
+            role="menu"
+            style={{ top: position.top, left: position.left }}
+          >
+            <button
+              className="sidebar-list-item-menu-item"
+              role="menuitem"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleProjectMenuAction(projectId, 'rename');
+              }}
+            >
+              <img
+                src="/icons/edit.svg"
+                alt=""
+                width={ICON_SIZE.SM}
+                height={ICON_SIZE.SM}
+                aria-hidden="true"
+              />
+              <span>이름 바꾸기</span>
+            </button>
+            <button
+              className="sidebar-list-item-menu-item"
+              role="menuitem"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleProjectMenuAction(projectId, 'delete');
+              }}
+            >
+              <img
+                src="/icons/delete.svg"
+                alt=""
+                width={ICON_SIZE.SM}
+                height={ICON_SIZE.SM}
+                aria-hidden="true"
+              />
+              <span>프로젝트 삭제</span>
+            </button>
+          </div>,
+          document.body,
+        );
+      })}
+
+      {/* 채팅 메뉴 포털 */}
+      {Array.from(chatMenus.entries()).map(([chatId, position]) => {
+        const chat = mockChatList.find((c) => c.id === chatId);
+        if (!chat) return null;
+        return createPortal(
+          <div
+            key={chatId}
+            className="sidebar-list-item-menu"
+            ref={(el) => {
+              if (el) {
+                chatMenuRefs.current.set(chatId, el);
+              } else {
+                chatMenuRefs.current.delete(chatId);
+              }
+            }}
+            role="menu"
+            style={{ top: position.top, left: position.left }}
+          >
+            <button
+              className="sidebar-list-item-menu-item"
+              role="menuitem"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleChatMenuAction(chatId, 'rename');
+              }}
+            >
+              <img
+                src="/icons/edit.svg"
+                alt=""
+                width={ICON_SIZE.SM}
+                height={ICON_SIZE.SM}
+                aria-hidden="true"
+              />
+              <span>이름 바꾸기</span>
+            </button>
+            <div className="sidebar-list-item-menu-item sidebar-list-item-menu-item-with-submenu">
+              <button
+                className="sidebar-list-item-menu-item-btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  openProjectMovePortal(chatId, e.currentTarget as HTMLElement);
+                }}
+              >
+                <img
+                  src="/icons/folder.svg"
+                  alt=""
+                  width={ICON_SIZE.SM}
+                  height={ICON_SIZE.SM}
+                  aria-hidden="true"
+                />
+                <span>프로젝트 이동</span>
+                <img
+                  src="/icons/chevron.svg"
+                  alt=""
+                  width={ICON_SIZE.SM}
+                  height={ICON_SIZE.SM}
+                  className="sidebar-list-item-menu-item-chevron"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+            <button
+              className="sidebar-list-item-menu-item"
+              role="menuitem"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleChatMenuAction(chatId, 'delete');
+              }}
+            >
+              <img
+                src="/icons/delete.svg"
+                alt=""
+                width={ICON_SIZE.SM}
+                height={ICON_SIZE.SM}
+                aria-hidden="true"
+              />
+              <span>채팅 삭제</span>
+            </button>
+          </div>,
+          document.body,
+        );
+      })}
+
+      {/* 중첩 채팅 메뉴 포털 */}
+      {Array.from(nestedChatMenus.entries()).map(([chatId, position]) => {
+        const allChats = mockProjectList.flatMap((p) => p.chats);
+        const chat = allChats.find((c) => c.id === chatId);
+        if (!chat) return null;
+        const project = mockProjectList.find((p) => p.chats.some((c) => c.id === chatId));
+        return createPortal(
+          <div
+            key={chatId}
+            className="sidebar-list-item-menu"
+            ref={(el) => {
+              if (el) {
+                nestedChatMenuRefs.current.set(chatId, el);
+              } else {
+                nestedChatMenuRefs.current.delete(chatId);
+              }
+            }}
+            role="menu"
+            style={{ top: position.top, left: position.left }}
+          >
+            <button
+              className="sidebar-list-item-menu-item"
+              role="menuitem"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleNestedChatMenuAction(chatId, 'rename');
+              }}
+            >
+              <img
+                src="/icons/edit.svg"
+                alt=""
+                width={ICON_SIZE.SM}
+                height={ICON_SIZE.SM}
+                aria-hidden="true"
+              />
+              <span>이름 바꾸기</span>
+            </button>
+            <div className="sidebar-list-item-menu-item sidebar-list-item-menu-item-with-submenu">
+              <button
+                className="sidebar-list-item-menu-item-btn"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  openProjectMovePortal(chatId, e.currentTarget as HTMLElement, project?.id);
+                }}
+              >
+                <img
+                  src="/icons/folder.svg"
+                  alt=""
+                  width={ICON_SIZE.SM}
+                  height={ICON_SIZE.SM}
+                  aria-hidden="true"
+                />
+                <span>프로젝트 이동</span>
+                <img
+                  src="/icons/chevron.svg"
+                  alt=""
+                  width={ICON_SIZE.SM}
+                  height={ICON_SIZE.SM}
+                  className="sidebar-list-item-menu-item-chevron"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+            <button
+              className="sidebar-list-item-menu-item"
+              role="menuitem"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleNestedChatMenuAction(chatId, 'delete');
+              }}
+            >
+              <img
+                src="/icons/delete.svg"
+                alt=""
+                width={ICON_SIZE.SM}
+                height={ICON_SIZE.SM}
+                aria-hidden="true"
+              />
+              <span>채팅 삭제</span>
+            </button>
+          </div>,
+          document.body,
+        );
+      })}
+
       {/* 프로젝트 이동 포털 */}
       {projectMoveMenu &&
         createPortal(

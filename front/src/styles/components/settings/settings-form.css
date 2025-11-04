@@ -1,9 +1,10 @@
 .settings-form {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   max-height: 100%;
   overflow: hidden;
   grid-template-rows: auto 1fr auto;
+  position: relative;
 }
 
 .settings-form__header {
@@ -45,7 +46,7 @@
 
 .settings-form__body {
   display: grid;
-  gap: 24px;
+  gap: 16px;
   overflow-y: auto;
   flex: 1;
   padding-right: 4px;
@@ -63,7 +64,7 @@
 
 .settings-form__section {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .settings-form__section-header {
@@ -74,11 +75,23 @@
   padding: 16px;
   background: var(--color-primary-50);
   border-radius: 12px;
+  overflow: visible;
+  position: relative;
 }
 
 .settings-form__section-content {
   display: grid;
-  gap: 12px;
+  gap: 8px;
+  overflow: visible;
+  position: relative;
+}
+
+.settings-form__section-label-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: visible;
+  position: relative;
 }
 
 .settings-form__section-label {
@@ -126,26 +139,6 @@
   font-size: 14px;
   color: rgba(0, 0, 0, 0.6);
   line-height: 1.5;
-}
-
-.settings-form__tip {
-  display: flex;
-  gap: 8px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 8px;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.settings-form__tip-label {
-  font-weight: 600;
-  color: #111827;
-  flex-shrink: 0;
-}
-
-.settings-form__tip-text {
-  color: rgba(0, 0, 0, 0.6);
 }
 
 .settings-form__footer {

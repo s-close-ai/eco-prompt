@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Button from '@/components/common/Button';
 import TextArea from '@/components/common/TextArea';
 import Toggle from '@/components/common/Toggle';
+import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/settings/settings-form.css';
 
 export type SettingsFormData = {
@@ -77,7 +78,10 @@ export default function SettingsForm({
         {/* 개인정보 활용 동의 */}
         <div className="settings-form__section">
           <div className="settings-form__section-header">
-            <span className="settings-form__section-label">개인정보 활용 동의</span>
+            <div className="settings-form__section-label-wrapper">
+              <span className="settings-form__section-label">개인정보 활용 동의</span>
+              <Tooltip content="프롬프트 내용과 답변을 AI 학습에 활용하는 것에 동의합니다." />
+            </div>
             <div className="settings-form__section-value">
               {isPrivacyConsented ? (
                 <>
@@ -103,7 +107,10 @@ export default function SettingsForm({
             {/* 프롬프트 공개 여부 */}
             <div className="settings-form__section">
               <div className="settings-form__section-header">
-                <span className="settings-form__section-label">프롬프트 공개 여부</span>
+                <div className="settings-form__section-label-wrapper">
+                  <span className="settings-form__section-label">프롬프트 공개 여부</span>
+                  <Tooltip content="Eco 픽에 좋은 프롬프트로 공개될 수 있습니다." />
+                </div>
                 <Toggle
                   value={promptPublic}
                   onChange={handleToggleChange}
@@ -116,26 +123,18 @@ export default function SettingsForm({
             {/* 개인화 프롬프트 */}
             <div className="settings-form__section">
               <div className="settings-form__section-content">
-                <span className="settings-form__section-label">개인화 프롬프트</span>
-                <p className="settings-form__description">
-                  AI가 모든 대화에서 참고할 기본 지침을 설정하세요. 예를 들어, 답변 스타일, 선호하는
-                  형식, 특정 관점 등을 지정할 수 있습니다.
-                </p>
-                <div className="settings-form__tip">
-                  <span className="settings-form__tip-label">팁</span>
-                  <span className="settings-form__tip-text">
-                    기본 프롬프트는 모든 대화의 시작 부분에 자동으로 포함됩니다. 구체적이고 명확한
-                    지침을 작성하면 더 나은 결과를 얻을 수 있습니다.
-                  </span>
+                <div className="settings-form__section-label-wrapper">
+                  <span className="settings-form__section-label">개인화 프롬프트</span>
+                  <Tooltip content="기본 프롬프트는 모든 대화의 시작 부분에 자동으로 포함됩니다. 구체적이고 명확한 지침을 작성하면 더 나은 결과를 얻을 수 있습니다." />
                 </div>
                 <TextArea
                   value={personalizedPrompt}
                   onChange={(e) => setPersonalizedPrompt(e.target.value)}
-                  placeholder="개인화 프롬프트를 입력하세요..."
+                  placeholder="AI가 모든 대화에서 참고할 기본 지침을 설정하세요. 예를 들어, 답변 스타일, 선호하는 형식, 특정 관점 등을 지정할 수 있습니다."
                   maxLength={1000}
                   showCharCount
                   fullWidth
-                  rows={8}
+                  rows={6}
                 />
               </div>
             </div>
@@ -144,11 +143,6 @@ export default function SettingsForm({
       </div>
 
       <footer className="settings-form__footer">
-        {onClose && (
-          <Button variant="ghost" onClick={onClose} size="md" className="settings-form__close-btn">
-            닫기
-          </Button>
-        )}
         <Button
           variant="primary"
           onClick={handleSubmit}
@@ -157,7 +151,7 @@ export default function SettingsForm({
           ariaLabel="변경사항 저장"
           className="settings-form__save-btn"
         >
-          {hasChanges ? '변경사항 저장' : '저장됨'}
+          저장
         </Button>
       </footer>
     </section>

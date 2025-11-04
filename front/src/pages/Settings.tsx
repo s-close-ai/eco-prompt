@@ -49,28 +49,14 @@ export default function Settings() {
     }
   };
 
-  // 모바일: 전체 페이지 (x 버튼 없음)
-  if (mode === 'mobile') {
+  // 모바일/태블릿: 전체 페이지 (x 버튼 없음)
+  if (mode === 'mobile' || mode === 'tablet') {
     return (
       <div className="settings-page">
         <SettingsForm
           initialData={settingsData}
           onSubmit={handleSubmit}
           onAutoSave={handleAutoSave}
-        />
-      </div>
-    );
-  }
-
-  // 태블릿: 전체 페이지 (x 버튼 있음)
-  if (mode === 'tablet') {
-    return (
-      <div className="settings-page">
-        <SettingsForm
-          initialData={settingsData}
-          onSubmit={handleSubmit}
-          onAutoSave={handleAutoSave}
-          onClose={handleClose}
         />
       </div>
     );
