@@ -16,6 +16,7 @@ httpx==0.28.1
 huggingface-hub==0.35.3
 hyperframe==6.1.0
 idna==3.11
+iniconfig==2.3.0
 Jinja2==3.1.6
 joblib==1.5.2
 kiwipiepy==0.21.0
@@ -26,9 +27,12 @@ MarkupSafe==3.0.3
 nltk==3.9.2
 numpy==2.3.4
 packaging==25.0
+pluggy==1.6.0
 pydantic==2.12.3
 pydantic-settings==2.11.0
 pydantic_core==2.41.4
+Pygments==2.19.2
+pytest==8.4.2
 python-dotenv==1.1.1
 PyYAML==6.0.3
 regex==2025.10.23

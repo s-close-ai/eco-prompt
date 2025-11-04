@@ -22,8 +22,17 @@ RE_URL     = re.compile(r"https?://[^\s]+")
 RE_LATIN   = re.compile(r"[A-Za-z]")
 RE_HANGUL  = re.compile(r"[가-힣]")
 RE_PUNCT   = re.compile(r"[^\w\s가-힣A-Za-z]")   # 한/영/숫자/공백 제외 기호
-RE_LISTY   = re.compile(r"(?m)^\s*(?:-|\*|\d+\.|①|②|③|첫째|둘째|셋째|first|second|third)\s+",
-                        re.IGNORECASE)
+
+'''
+아래와 같이 줄바꿈을 포함하는 순서 정렬은 카운트하지만
+1.
+2. 
+3. 
+한 문장 내의 1. 2. 3. 형식으로 지정된 것은 파악 못함
+-> RE_LISTY_INLINE 추가 지정
+'''
+RE_LISTY_INLINE = re.compile(r"(?:\d+\.\s*[\w가-힣]+)(?:\s*(?:,|;)?\s*\d+\.\s*[\w가-힣]+)+")
+RE_LISTY_MULTI = re.compile(r"(?m)^\s*(?:-|\*|\d+\.|①|②|③|첫째|둘째|셋째|first|second|third)\s+", re.IGNORECASE)
 RE_QMARK   = re.compile(r"\?")
 RE_Q_KO_TAIL = re.compile(r"(까\??$)|(나요\??$)|(니\??$)|(죠\??$)")
 RE_Q_EN_LEAD = re.compile(
@@ -101,7 +110,13 @@ def _is_question(text: str, lang: str) -> int:
     return 0
 
 def _has_listy(text: str) -> int:
-    return 1 if RE_LISTY.search(text) else 0
+    # 1) 줄 시작 기준 bullet 리스트
+    if RE_LISTY_MULTI.search(text):
+        return 1
+    # 2) 문장 내 연속 숫자 리스트
+    if RE_LISTY_INLINE.search(text):
+        return 1
+    return 0
 
 def _count_urls(text: str) -> int:
     return len(RE_URL.findall(text))
