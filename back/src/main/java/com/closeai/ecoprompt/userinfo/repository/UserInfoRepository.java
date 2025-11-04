@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface UserInfoRepository extends JpaRepository<UserInfo, Integer> {
 
 	Optional<UserInfo> getPersonalPromptByUserId(Integer userId);
-    Optional<UserInfo> findByUserId(Integer id);
+    Optional<UserInfo> findByUser_Id(Integer userId);
     Integer user(User user);
 
 }
