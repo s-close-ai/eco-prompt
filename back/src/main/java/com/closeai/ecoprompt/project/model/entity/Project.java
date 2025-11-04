@@ -34,5 +34,9 @@ public class Project extends BaseEntity {
     public void updateTitle(String title) {
         this.title = title;
     }
+
+    public void deleteProject() {
+        this.isDeleted = 'Y';
+    }
     
 }

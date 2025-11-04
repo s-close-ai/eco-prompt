@@ -84,11 +84,22 @@ public class ProjectService {
         return responses;
     }
 
+    @Transactional
     public Void updateProjectTitle(int projectId, ProjectUpdateRequest projectRequest) {
-        AppLogger.info("UPDATE PROJECT TITLE: " + projectRequest.toString(),  projectId);
+        AppLogger.info("UPDATE PROJECT TITLE: " + projectRequest.toString() + ", PROJECT ID: " + projectId);
 
         Project project = getProject(projectId);
         project.updateTitle(projectRequest.title());
+
+        return null;
+    }
+
+    @Transactional
+    public Void deleteProject(int projectId) {
+        AppLogger.info("DELETE PROJECT ID: " + projectId + ", PROJECT ID: " + projectId);
+
+        Project project = getProject(projectId);
+        project.deleteProject();
 
         return null;
     }

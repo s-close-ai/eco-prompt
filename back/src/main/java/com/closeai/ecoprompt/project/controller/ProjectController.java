@@ -33,4 +33,9 @@ public class ProjectController {
         return ApiResponse.success(projectService.updateProjectTitle(projectId, projectRequest));
     }
 
+    @PatchMapping("/delete")
+    public ResponseEntity<ApiResponse<Void>> deleteProject(@RequestParam int projectId) {
+        return ApiResponse.success(projectService.deleteProject(projectId));
+    }
+
 }
