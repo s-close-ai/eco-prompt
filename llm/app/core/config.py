@@ -1,11 +1,18 @@
+import os
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 from typing import Optional
+
+load_dotenv()
 
 SEED = 42
 
 class TotalSettings(BaseSettings):
     # DPO 파인튜닝한 모델 저장 폴더
     base_model: str = "./local-models/Llama-SSAFY-8B"
+    # MongoDB 관련
+    mongo_url: str = os.getenv("MONGO_URL")
+
 
 # wandb 관련
 class WandbSettings(BaseSettings):

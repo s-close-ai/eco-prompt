@@ -83,7 +83,7 @@ def stream_response(vector_store, llm, tokenizer):
         question=RunnablePassthrough(),
         personal_prompt=RunnablePassthrough(),
         history=RunnablePassthrough(),
-        context=RunnableLambda(lambda _: ""),    # retriever | format_docs 로 교체 가능
+        context=RunnableLambda(lambda _: ""),    # retriever | format_docs 로 교체해야 함.
     )
 
     chain = Inputs | make_prompt | llm | StrOutputParser()
