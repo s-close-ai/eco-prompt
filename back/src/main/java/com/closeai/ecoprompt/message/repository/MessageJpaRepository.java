@@ -10,4 +10,6 @@ import com.closeai.ecoprompt.message.model.entity.MessageSender;
 public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 
 	Optional<Message> findByMessageUUIDAndSenderType(String messageUUID, MessageSender senderType);
+	Optional<Message> findTopByChatting_IdOrderByCreatedAtDesc(Long chattingId);
+
 }

@@ -14,20 +14,17 @@ public class UserInfoController {
 
     private final UserInfoService userInfoService;
 
-    @GetMapping("/{userId}/sharing-information")
-    public ResponseEntity<ApiResponse<SharingInformationStatusResponse>> getSharingInformation(
-            @PathVariable Integer userId
-    ) {
+    @GetMapping("/sharing-information")
+    public ResponseEntity<ApiResponse<SharingInformationStatusResponse>> getSharingInformation() {
 
-        return ApiResponse.success(userInfoService.getSharingInformationStatus(userId));
+        return ApiResponse.success(userInfoService.getSharingInformationStatus());
     }
 
-    @PatchMapping("/{userId}/sharing-information")
+    @PatchMapping("/sharing-information")
     public ResponseEntity<ApiResponse<SharingInformationStatusResponse>> toggleSharingInformation(
-            @PathVariable Integer userId
     ) {
 
-        return ApiResponse.success(userInfoService.toggleSharingInformation(userId));
+        return ApiResponse.success(userInfoService.toggleSharingInformation());
     }
 
 }
