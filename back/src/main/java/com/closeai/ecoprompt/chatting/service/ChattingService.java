@@ -20,6 +20,10 @@ public class ChattingService {
 
 	private final ChattingRepository chattingRepository;
 
+	/**
+	 * 채팅방 id에 해당하는 chatting이 있는 경우 반환
+	 * 아니라면 새로 생성 후 반환
+	 * */
 	public Chatting getOrCreateChatting(Long chattingId, Integer projectId){
 
 		if(chattingId != null){
@@ -47,17 +51,21 @@ public class ChattingService {
 		Chatting chatting = chattingRepository.findById(chattingId)
 			.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
 
-		if(chatting.getTitle() == null){
-			updateChattingTitle(chatting, title);
-		}
+		updateChattingTitle(chatting, title);
+	}
 
+	@Transactional
+	public void updateUpdateAt(Long chattingId){
+
+		Chatting chatting = chattingRepository.findById(chattingId)
+			.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
+
+		chatting.updateUpdatedAt();
 	}
 
 	private void updateChattingTitle(Chatting chatting, String title){
 
 		chatting.setTitle(title);
 		chattingRepository.save(chatting);
-
 	}
-	
 }

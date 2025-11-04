@@ -17,18 +17,37 @@ public class MileageService {
 	// 마일리지 기본 배율 (10)
 	private static final int MILEAGE_UNIT = 10;
 
-	public void saveMileage(Message message, Double score){
+	/**
+	 * messageId에 해당하는 마일리지 값이 있다면 점수 변경
+	 * 아닌 경우에는 새로 생성 후 저장
+	 * */
+	public void saveOrUpdateMileage(Message message, Double score){
 
 		int value = calculateMileage(score);
+		Long messageId = message.getId();
 
-		Mileage mileage = Mileage.builder()
-			.message(message)
-			.value(value)
-			.build();
-
-		mileageRepository.save(mileage);
+		mileageRepository.findByMessage_Id(messageId)
+			.ifPresentOrElse(
+				mileage -> {
+					int preValue = mileage.getValue();
+					if (preValue != value) {
+						mileage.updateValue(value);
+						mileageRepository.save(mileage);
+					}
+				},
+				() -> {
+					Mileage newMileage = Mileage.builder()
+						.message(message)
+						.value(value)
+						.build();
+					mileageRepository.save(newMileage);
+				}
+			);
 	}
 
+	/**
+	 * 프롬프트 점수 구간에 따른 마일리지 점수 계산
+	 * */
 	private int calculateMileage(double score) {
 
 		int multiplier = 0; // 기본 배율(Multiplier)은 0으로 시작
