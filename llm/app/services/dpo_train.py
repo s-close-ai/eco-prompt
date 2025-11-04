@@ -70,7 +70,7 @@ def train_model(model_path: str, dpo_dataset):
     wandb.init(
         project=wandb_settings.project,
         entity=wandb_settings.entity,
-        name=f"dpo_{model_path.split("/")[-1].split("_")[-1]}",
+        name=f"dpo_self_train",
         config=wandb_config
     )
 
@@ -78,6 +78,6 @@ def train_model(model_path: str, dpo_dataset):
     trainer.train()
 
     # 모델 저장
-    trainer.save_model(base_settings.base_model + "/v_latest")
+    trainer.save_model(base_settings.base_model + "/dpo_model")
 
     wandb.finish()
