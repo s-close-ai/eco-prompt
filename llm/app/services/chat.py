@@ -2,18 +2,12 @@ from dotenv import load_dotenv
 from langchain_core.runnables import RunnablePassthrough, RunnableLambda, RunnableParallel
 from langchain_core.output_parsers import StrOutputParser
 from langchain_huggingface import HuggingFacePipeline
-# from langchain_mongodb import MongoDBChatMessageHistory
 from transformers import pipeline
 
 from app.models.prompt_template import rag_prompt
 
 load_dotenv()
 
-# # MongoDB에서 채팅 내역 가져오기
-# def get_chat_history():
-#     history = MongoDBChatMessageHistory(
-#         connection_string=os.getenv("MONGO_URI"),
-#     )
 
 # RAG chain을 통해 답변 생성하기
 def format_docs(docs):

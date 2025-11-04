@@ -3,7 +3,7 @@ from fastapi import FastAPI
 
 from app.api.v1.routers import api_router
 from app.models.llm_loader import load_llm, llm, load_tokenizer, llm_tokenizer
-from app.models.load_for_rag import load_vectordb, vector_store, load_embedding_model, embedding_model
+from app.models.vectordb_loader import load_vectordb, vector_store, load_embedding_model, embedding_model
 
 # lifespan 컨텍스트 관리자 정의
 @asynccontextmanager
