@@ -124,6 +124,44 @@ body {
     system-ui,
     sans-serif;
   -webkit-tap-highlight-color: transparent;
+  /* 텍스트 선택 비활성화 (채팅 페이지 제외) */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 채팅 페이지와 채팅 관련 컴포넌트에서만 텍스트 선택 허용 */
+.chat-page-container,
+.chat-messages,
+.chat-messages *,
+.user-message-container,
+.user-message,
+.user-message-text,
+.ai-message-container,
+.ai-message,
+.ai-message-text,
+.error-message-container,
+.error-message,
+.error-message-text,
+.chat-loading-container,
+.chat-loading,
+.chat-loading-text {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* 입력 필드와 텍스트 영역은 항상 선택 가능 */
+input,
+textarea,
+[contenteditable],
+[contenteditable] * {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 .app-shell {

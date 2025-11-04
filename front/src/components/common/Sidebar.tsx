@@ -463,7 +463,7 @@ export default function Sidebar() {
                 aria-label="검색"
                 onClick={() => {
                   closeAllOverlays();
-                  console.log('검색 버튼 클릭');
+                  navigate('/search');
                 }}
               >
                 <img src="/icons/search.svg" alt="search" width={20} height={20} />
@@ -471,7 +471,7 @@ export default function Sidebar() {
               <button
                 className="sidebar-icon-btn"
                 aria-label="새 채팅"
-                onClick={() => console.log('새 채팅 생성')}
+                onClick={() => navigate('/')}
               >
                 <img src="/icons/add_chat.svg" alt="add chat" width={20} height={20} />
               </button>
@@ -490,10 +490,7 @@ export default function Sidebar() {
                 aria-label="대시보드"
                 onClick={() => {
                   closeAllOverlays();
-                  const targetPath = '/?tab=dashboard';
-                  if (location.pathname !== '/' || location.search !== '?tab=dashboard') {
-                    navigate(targetPath);
-                  }
+                  navigate('/dashboard/ranking');
                 }}
               >
                 <img src="/icons/dashboard.svg" alt="dashboard" width={20} height={20} />
@@ -503,7 +500,7 @@ export default function Sidebar() {
                 aria-label="북마크"
                 onClick={() => {
                   closeAllOverlays();
-                  console.log('북마크 클릭');
+                  navigate('/bookmark');
                 }}
               >
                 <img src="/icons/bookmark.svg" alt="bookmark" width={20} height={20} />
@@ -535,7 +532,7 @@ export default function Sidebar() {
             {/* 상단 고정 영역 */}
             <div className="sidebar-header">
               <div className="sidebar-header-top">
-                <div className="sidebar-logo">
+                <div className="sidebar-logo" onClick={() => navigate('/')}>
                   <img
                     src="/logo/header_img.png"
                     alt="Eco Prompt"
@@ -576,7 +573,7 @@ export default function Sidebar() {
                   if (mode === 'mobile') {
                     closeSidebar();
                   }
-                  console.log('검색 버튼 클릭');
+                  navigate('/search');
                 }}
               >
                 <img src="/icons/search.svg" alt="search" width={18} height={18} />
@@ -604,7 +601,7 @@ export default function Sidebar() {
                     if (mode === 'mobile') {
                       closeSidebar();
                     }
-                    console.log('새 채팅 생성');
+                    navigate('/');
                   }}
                 >
                   <img src="/icons/add_chat.svg" alt="add chat" width={18} height={18} />
@@ -712,7 +709,7 @@ export default function Sidebar() {
                                         if (mode === 'mobile') {
                                           closeSidebar();
                                         }
-                                        console.log('채팅 선택:', chat.title);
+                                        navigate(`/chat/${chat.id}`);
                                       }}
                                       onMouseDown={(e) => mode !== 'desktop' && handleNestedChatMenuLongPress(chat.id, e)}
                                       onTouchStart={(e) => mode !== 'desktop' && handleNestedChatMenuLongPress(chat.id, e)}
@@ -776,7 +773,7 @@ export default function Sidebar() {
                               if (mode === 'mobile') {
                                 closeSidebar();
                               }
-                              console.log('채팅 선택:', chat.title);
+                              navigate(`/chat/${chat.id}`);
                             }}
                             onMouseDown={(e) => mode !== 'desktop' && handleChatMenuLongPress(chat.id, e)}
                             onTouchStart={(e) => mode !== 'desktop' && handleChatMenuLongPress(chat.id, e)}
@@ -829,10 +826,7 @@ export default function Sidebar() {
                     closeSidebar();
                   }
                   closeAllOverlays();
-                  const targetPath = '/?tab=dashboard';
-                  if (location.pathname !== '/' || location.search !== '?tab=dashboard') {
-                    navigate(targetPath);
-                  }
+                  navigate('/dashboard/ranking');
                 }}
               >
                 <img src="/icons/dashboard.svg" alt="dashboard" width={18} height={18} />
@@ -845,10 +839,7 @@ export default function Sidebar() {
                     closeSidebar();
                   }
                   closeAllOverlays();
-                  const targetPath = '/bookmark';
-                  if (location.pathname !== targetPath) {
-                    navigate(targetPath);
-                  }
+                  navigate('/bookmark');
                 }}
               >
                 <img src="/icons/bookmark.svg" alt="bookmark" width={18} height={18} />

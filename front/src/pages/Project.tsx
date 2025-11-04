@@ -136,6 +136,10 @@ export default function Project() {
     const onChatSend = (e: Event) => {
       const detail = (e as CustomEvent<{ message: string }>).detail;
       if (!detail?.message) return;
+
+      // 이벤트 전파 중지하여 Chat 페이지에서 중복 수신 방지
+      e.stopImmediatePropagation();
+
       handleSendFromProject(detail.message);
     };
     window.addEventListener('chat-send', onChatSend as EventListener);
