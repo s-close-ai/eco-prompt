@@ -5,6 +5,7 @@ import com.closeai.ecoprompt.chatting.model.entity.Chatting;
 import com.closeai.ecoprompt.chatting.repository.ChattingRepository;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.project.model.dto.request.PersonalProjectRequest;
+import com.closeai.ecoprompt.project.model.dto.request.ProjectUpdateRequest;
 import com.closeai.ecoprompt.project.model.dto.response.PersonalProjectResponse;
 import com.closeai.ecoprompt.user.model.entity.User;
 import com.closeai.ecoprompt.user.repository.UserRepository;
@@ -46,7 +47,7 @@ public class ProjectService {
     public List<PersonalProjectResponse> getPersonalProject(int userId) {
 		AppLogger.info("개인 프로젝트 리스트 조회", userId);
 
-        return getPersonalProjectResponse(userId);
+        return getNotDeletedPersonalProjectResponse(userId);
     }
 
     @Transactional
@@ -58,12 +59,12 @@ public class ProjectService {
 
         projectRepository.save(Project.of(projectRequest.title(), user));
 
-        return getPersonalProjectResponse(projectRequest.userId());
+        return getNotDeletedPersonalProjectResponse(projectRequest.userId());
     }
 
-    private List<PersonalProjectResponse> getPersonalProjectResponse(int userId) {
+    private List<PersonalProjectResponse> getNotDeletedPersonalProjectResponse(int userId) {
         // 1. 유저의 모든 프로젝트 조회
-        List<Project> projects = projectRepository.findAllByOwner_Id(userId);
+        List<Project> projects = projectRepository.findAllByOwner_IdAndIsDeleted(userId, 'N');
 
         // 2. 채팅 페이지네이션 (updatedAt 내림차순)
         Pageable pageable = PageRequest.of(0, CHAT_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "updatedAt"));
@@ -83,15 +84,12 @@ public class ProjectService {
         return responses;
     }
 
-    public Void updateProjectTitle(int projectId, PersonalProjectRequest projectRequest) {
+    public Void updateProjectTitle(int projectId, ProjectUpdateRequest projectRequest) {
         AppLogger.info("UPDATE PROJECT TITLE: " + projectRequest.toString(),  projectId);
 
         Project project = getProject(projectId);
-        if (project.getOwner().getId() != projectRequest.userId()) {
-            throw new BusinessException("사용자와 프로젝트가 일치하지 않습니다.");
-        }
-
         project.updateTitle(projectRequest.title());
+
         return null;
     }
 }

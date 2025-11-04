@@ -2,6 +2,7 @@ package com.closeai.ecoprompt.project.controller;
 
 import com.closeai.ecoprompt.common.ApiResponse;
 import com.closeai.ecoprompt.project.model.dto.request.PersonalProjectRequest;
+import com.closeai.ecoprompt.project.model.dto.request.ProjectUpdateRequest;
 import com.closeai.ecoprompt.project.model.dto.response.SidebarResponse;
 import com.closeai.ecoprompt.project.service.ProjectService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class ProjectController {
     }
 
     @PatchMapping("/{projectId}")
-    public ResponseEntity<ApiResponse<Void>> updateProject(@PathVariable int projectId, @RequestBody PersonalProjectRequest projectRequest) {
+    public ResponseEntity<ApiResponse<Void>> updateProject(@PathVariable int projectId, @RequestBody ProjectUpdateRequest projectRequest) {
         return ApiResponse.success(projectService.updateProjectTitle(projectId, projectRequest));
     }
 

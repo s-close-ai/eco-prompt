@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.closeai.ecoprompt.project.model.entity.Project;
 
 public interface ProjectRepository extends JpaRepository<Project, Long> {
-	
+
 	Optional<Project> findById(Integer id);
-	List<Project> findAllByOwner_Id(Integer userId);
-	
+	List<Project> findAllByOwner_IdAndIsDeleted(Integer userId, char isDeleted);
+
 }
