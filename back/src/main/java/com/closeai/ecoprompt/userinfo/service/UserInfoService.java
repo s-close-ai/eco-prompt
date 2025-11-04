@@ -47,7 +47,7 @@ public class UserInfoService {
         AppLogger.start("정보 제공 동의 상태 조회");
 
         return SharingInformationStatusResponse.from(
-                userInfoRepository.findByUserId(userId)
+                userInfoRepository.findByUser_Id(userId)
                     .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."))
         );
     }
