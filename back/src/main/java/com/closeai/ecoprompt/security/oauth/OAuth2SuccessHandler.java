@@ -64,7 +64,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 tokens.getRefreshToken(), tokenService.getRefreshMaxAgeSec()
         );
 
-        UserInfo userInfo = userInfoRepository.findByUserId(user.getId())
+        UserInfo userInfo = userInfoRepository.findByUser_Id(user.getId())
                 .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."));
 
         Map<String,Object> responseBody = new HashMap<>();

@@ -1,5 +1,7 @@
 package com.closeai.ecoprompt.security.oauth;
 
+import com.closeai.ecoprompt.bookmark.model.entity.Bookmark;
+import com.closeai.ecoprompt.bookmark.repository.BookmarkRepository;
 import com.closeai.ecoprompt.project.model.entity.Project;
 import com.closeai.ecoprompt.project.repository.ProjectRepository;
 import com.closeai.ecoprompt.user.model.entity.User;
@@ -25,10 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +39,7 @@ public class SsafyOAuth2UserService implements OAuth2UserService<OAuth2UserReque
 
     // ── HTTP 클라이언트
     private final RestTemplate restTemplate = new RestTemplate();
+    private final BookmarkRepository bookmarkRepository;
 
     // ── Open API 설정
     @Value("${app.ssafy.openapi.base-url}")
@@ -98,6 +98,8 @@ public class SsafyOAuth2UserService implements OAuth2UserService<OAuth2UserReque
                                             .owner(u)
                                             .build()
                             );
+
+                            setupBookMarkAtSignUp(u);
 
                             u.setProjectId(p.getId());
                             return u;
@@ -171,5 +173,27 @@ public class SsafyOAuth2UserService implements OAuth2UserService<OAuth2UserReque
             if (v != null && !String.valueOf(v).isBlank()) return String.valueOf(v);
         }
         return null;
+    }
+
+    private void setupBookMarkAtSignUp(User u) {
+        List<Bookmark> bookmarks = List.of(
+                Bookmark.builder()
+                        .url("https://edu.ssafy.com/edu/main/index.do")
+                        .title("에듀 싸피")
+                        .owner(u)
+                        .sequence(1)
+                        .description("싸피 출결 관리")
+                        .build(),
+
+                Bookmark.builder()
+                        .url("https://ssafy-attendance.vercel.app/?tab=confirm")
+                        .title("싸피 출결 소명기")
+                        .owner(u)
+                        .sequence(2)
+                        .description("싸피 출결 소명기 웹")
+                        .build()
+        );
+
+        bookmarkRepository.saveAll(bookmarks);
     }
 }
