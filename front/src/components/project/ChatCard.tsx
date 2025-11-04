@@ -64,8 +64,7 @@ function ChatCard({
           <span className="project-chat-card__title">{title}</span>
         </div>
         {preview && <p className="project-chat-card__preview">{preview}</p>}
-      </button>
-      {onMenuToggle && (
+        {onMenuToggle && (
         <div className="project-chat-card-menu-wrapper" ref={menuRef}>
           <button
             className="project-chat-card-menu-btn"
@@ -171,6 +170,7 @@ function ChatCard({
           )}
         </div>
       )}
+      </button>
     </div>
   );
 }

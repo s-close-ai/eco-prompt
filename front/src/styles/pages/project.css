@@ -10,13 +10,16 @@
 
 .project-page-hero {
   flex-shrink: 0;
-  padding: 20px 16px 16px;
+  padding: 20px 0 16px;
   background: #ffffff;
   border-bottom: 1px solid #e5e5e5;
 }
 
 .project-page-hero-inner {
   margin: 0 auto;
+  max-width: 48rem;
+  width: 100%;
+  padding: 0 16px;
 }
 
 .project-page-header-row {
@@ -72,7 +75,7 @@
   max-width: 48rem;
   margin: 0 auto;
   width: 100%;
-  padding: 0;
+  padding: 0 16px;
 }
 
 /* Empty state */
@@ -239,8 +242,8 @@
   display: none;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   margin: 0;
   border: none;
@@ -262,7 +265,7 @@
 }
 
 :root[data-mode='tablet'] .project-chat-card-wrapper {
-  padding: 0 16px;
+  padding: 0;
 }
 
 /* 모바일/태블릿: 항상 메뉴 버튼 표시 */
@@ -414,11 +417,12 @@
 /* Mobile */
 @media (max-width: 767px) {
   .project-page-hero {
-    padding: 16px 12px;
+    padding: 16px 0;
   }
 
   .project-page-hero-inner {
     max-width: 100%;
+    padding: 0 12px;
   }
 
   .project-page-title {
@@ -471,16 +475,30 @@
   }
 }
 
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1022px) {
+  .project-page-hero-inner {
+    max-width: 48rem;
+    padding: 0 16px;
+  }
+
+  .project-page-chats {
+    max-width: 48rem;
+    padding: 0 16px;
+  }
+}
 /* Desktop - match chat input wrapper width */
 @media (min-width: 1023px) {
   .project-page-hero-inner {
     max-width: 56rem;
     width: 80%;
+    padding: 0 16px;
   }
 
   .project-page-chats {
     max-width: 56rem;
     width: 80%;
+    padding: 0 16px;
   }
 
   .project-page-empty {
