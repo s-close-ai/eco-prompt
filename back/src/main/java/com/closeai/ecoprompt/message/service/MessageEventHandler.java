@@ -22,6 +22,7 @@ import com.closeai.ecoprompt.message.model.entity.MessageStatus;
 import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
 import com.closeai.ecoprompt.mileage.service.MileageService;
+import com.closeai.ecoprompt.score.model.entity.Score;
 import com.closeai.ecoprompt.score.service.ScoreService;
 import com.closeai.ecoprompt.sse.service.SseService;
 
@@ -59,13 +60,15 @@ public class MessageEventHandler {
 		Message message = messageJpaRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER)
 			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
 
-		// 2. Message에 대한 점수 score 테이블에 insert
-		scoreService.saveScore(message, scoreInfo);
-		// 2-1. 점수에 따른 마일리지 저장
-		mileageService.saveMileage(message, scoreInfo.totalScore());
+		// 2. Message에 대한 점수 score 테이블에 있는지 없는지에 따라 save || update
+		scoreService.saveOrUpdateScore(message, scoreInfo);
+		// 2-1. Mileage 테이블에 이미 있는지 없는지에 따라 save || update
+		mileageService.saveOrUpdateMileage(message, scoreInfo.totalScore());
 
 		// 3. 새로 생성된 채팅방인 경우 채팅방의 이름을 첫 입력에 대한 요약 값으로 변경
-		chattingService.setChattingTitle(messageToUpdate.getChattingId(), summary);
+		if(summary != null){
+			chattingService.setChattingTitle(messageToUpdate.getChattingId(), summary);
+		}
 
 		// 4. TODO : 각 점수에 대한 전체 평균을 집계를 위해 REDIS 점수 저장
 
