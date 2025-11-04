@@ -42,7 +42,7 @@ async def train(request: TrainRequest):
                 result = evaluate_model(base_settings.base_model)
 
                 # v_latest 모델명 변경하기
-                total_version_number = len([namefor name in os.listdir(base_settings.base_model) if name.startswith("v_")])
+                total_version_number = len([name for name in os.listdir(base_settings.base_model) if name.startswith("v_")])
                 
                 os.rename(base_settings.base_model + "/v_latest", base_settings.base_model + f"/v_{total_version_number:03d}")
                 # 새로운 모델을 v_latest로 변경하기
