@@ -1,4 +1,4 @@
-package com.closeai.ecoprompt.message.model.entity;
+package com.closeai.ecoprompt.ai.model.event;
 
 public record ScoreInfo(
 	Double totalScore,

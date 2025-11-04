@@ -2,9 +2,6 @@ package com.closeai.ecoprompt.ai.model.event;
 
 import org.springframework.context.ApplicationEvent;
 
-import com.closeai.ecoprompt.ai.model.dto.response.InputJudgeResponse;
-import com.closeai.ecoprompt.message.model.entity.ScoreInfo;
-
 import lombok.Getter;
 
 @Getter

@@ -3,7 +3,7 @@ package com.closeai.ecoprompt.score.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.closeai.ecoprompt.message.model.entity.ScoreInfo;
+import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
 import com.closeai.ecoprompt.message.model.entity.Message;
 import com.closeai.ecoprompt.score.model.entity.Score;
 import com.closeai.ecoprompt.score.repository.ScoreRepository;

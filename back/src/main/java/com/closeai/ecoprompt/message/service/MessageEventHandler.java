@@ -10,8 +10,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.closeai.ecoprompt.ai.model.dto.response.InputJudgeResponse;
-import com.closeai.ecoprompt.message.model.entity.ScoreInfo;
+import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
 import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
 import com.closeai.ecoprompt.chatting.service.ChattingService;

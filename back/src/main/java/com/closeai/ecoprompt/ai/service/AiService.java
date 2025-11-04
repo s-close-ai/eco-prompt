@@ -15,7 +15,7 @@ import com.closeai.ecoprompt.ai.model.dto.response.LlmResponse;
 import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
 import com.closeai.ecoprompt.message.model.entity.MessageStatus;
-import com.closeai.ecoprompt.message.model.entity.ScoreInfo;
+import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
 import com.closeai.ecoprompt.sse.service.SseService;
 import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 
