@@ -15,5 +15,5 @@ public abstract class MongoBaseEntity {
 	protected String updatedAt;
 
 	@Field("is_deleted")
-	protected char isDeleted;
+	protected char isDeleted = 'N';
 }
