@@ -12,7 +12,6 @@ router = APIRouter()
 async def chat(request: ChatRequest, llm=Depends(get_llm), tokenizer=Depends(get_tokenizer), vector_store=Depends(get_vector_store)):
     """
     스트림 답변 제공
-    - 아직 chosen, rejected 구분하지 않음.
     """
     user_input = request.user_input
     personal_prompt = request.personal_prompt
@@ -84,5 +83,7 @@ async def chat(request: ChatRequest, llm=Depends(get_llm), tokenizer=Depends(get
             yield f"data: [ERROR] {type(e).__name__}: {e}\n\n"
 
         print(f"[REJECTED]\n{rejected_response}")
+
+        # rejected response 저장하기
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
