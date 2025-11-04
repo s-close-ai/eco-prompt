@@ -1,9 +1,9 @@
 .settings-form {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   max-height: 100%;
   overflow: hidden;
-  grid-template-rows: auto 1fr auto;
   position: relative;
 }
 
@@ -45,7 +45,8 @@
 }
 
 .settings-form__body {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
   overflow-y: auto;
   flex: 1;
@@ -65,6 +66,7 @@
 .settings-form__section {
   display: grid;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .settings-form__section-header {
@@ -77,6 +79,7 @@
   border-radius: 12px;
   overflow: visible;
   position: relative;
+  flex-shrink: 0;
 }
 
 .settings-form__section-content {
@@ -192,13 +195,42 @@
 
   .settings-form__section-header {
     gap: 12px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    min-height: auto;
+    max-height: none;
+    align-items: center;
+    height: auto;
+    padding: 16px;
+  }
+
+  .settings-form__section-label-wrapper {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .settings-form__section-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .settings-form__section-value {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .settings-form__footer {
+    position: sticky;
+    bottom: calc(var(--footer-height, 60px));
+    background: #ffffff;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    margin-top: auto;
+    margin-bottom: 0;
     flex-direction: column-reverse;
     gap: 8px;
-    margin-bottom: 24px;
+    z-index: 10;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
   }
 
   .settings-form__footer .ep-button {
@@ -209,6 +241,11 @@
 
   .settings-form__save-btn {
     min-width: 100%;
+  }
+
+  /* 모바일에서 TextArea 최소 높이 보장 */
+  .settings-form__section-content .ep-text-area__control textarea {
+    min-height: 66px; /* 최소 3줄 */
   }
 }
 

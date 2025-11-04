@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Button from '@/components/common/Button';
 import TextArea from '@/components/common/TextArea';
 import Toggle from '@/components/common/Toggle';
@@ -31,9 +31,64 @@ export default function SettingsForm({
   const [personalizedPrompt, setPersonalizedPrompt] = useState(
     initialData?.personalizedPrompt ?? '',
   );
+  const [textareaRows, setTextareaRows] = useState(6);
+  const sectionRef = useRef<HTMLDivElement>(null);
 
   const privacyConsent = initialData?.privacyConsent ?? { agreed: false };
   const isPrivacyConsented = privacyConsent.agreed;
+
+  // 화면 높이에 따라 TextArea rows 동적 조정
+  useEffect(() => {
+    const updateTextareaRows = () => {
+      if (typeof window === 'undefined') return;
+
+      const isMobile = window.innerWidth <= 768;
+      if (!isMobile) {
+        setTextareaRows(6);
+        return;
+      }
+
+      // 모바일에서만 계산 - 실제 DOM 요소 높이 사용
+      const formElement = document.querySelector('.settings-form');
+      if (!formElement) return;
+
+      const bodyElement = formElement.querySelector('.settings-form__body');
+      if (!bodyElement) return;
+
+      const bodyHeight = bodyElement.getBoundingClientRect().height;
+
+      // 다른 섹션들의 높이 계산
+      const otherSections = bodyElement.querySelectorAll('.settings-form__section');
+      let otherSectionHeight = 0;
+      otherSections.forEach((section) => {
+        if (section !== sectionRef.current) {
+          otherSectionHeight += section.getBoundingClientRect().height + 16; // gap 포함
+        }
+      });
+
+      const labelHeight = 24; // 라벨 높이
+      const charCountHeight = 20; // 문자 카운트 높이
+      const padding = 20; // 추가 여유 공간
+      const lineHeight = 22.5; // line-height 1.5 * font-size 15px
+
+      const availableHeight =
+        bodyHeight - otherSectionHeight - labelHeight - charCountHeight - padding;
+      const maxRows = Math.max(3, Math.floor(availableHeight / lineHeight));
+
+      setTextareaRows(Math.min(maxRows, 6));
+    };
+
+    // 초기 계산은 약간의 지연 후 실행 (DOM 렌더링 완료 후)
+    const timeoutId = setTimeout(updateTextareaRows, 100);
+    window.addEventListener('resize', updateTextareaRows);
+    window.addEventListener('orientationchange', updateTextareaRows);
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', updateTextareaRows);
+      window.removeEventListener('orientationchange', updateTextareaRows);
+    };
+  }, [isPrivacyConsented]);
 
   const handleToggleChange = (value: boolean) => {
     setPromptPublic(value);
@@ -121,7 +176,7 @@ export default function SettingsForm({
             </div>
 
             {/* 개인화 프롬프트 */}
-            <div className="settings-form__section">
+            <div className="settings-form__section" ref={sectionRef}>
               <div className="settings-form__section-content">
                 <div className="settings-form__section-label-wrapper">
                   <span className="settings-form__section-label">개인화 프롬프트</span>
@@ -134,7 +189,7 @@ export default function SettingsForm({
                   maxLength={1000}
                   showCharCount
                   fullWidth
-                  rows={6}
+                  rows={textareaRows}
                 />
               </div>
             </div>

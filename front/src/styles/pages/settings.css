@@ -20,11 +20,13 @@
 @media (max-width: 768px) {
   .settings-page {
     padding: 12px;
-    padding-bottom: calc(var(--footer-height, 60px) + 16px);
+    padding-bottom: 0;
+    overflow: hidden;
   }
 
   .settings-page .settings-form {
     max-width: 100%;
+    min-height: 100%;
   }
 }
 
