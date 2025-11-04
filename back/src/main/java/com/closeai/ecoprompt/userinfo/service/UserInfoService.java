@@ -1,5 +1,6 @@
 package com.closeai.ecoprompt.userinfo.service;
 
+import com.closeai.ecoprompt.common.CustomUtil;
 import org.springframework.stereotype.Service;
 
 import com.closeai.ecoprompt.common.exception.BusinessException;
@@ -19,9 +20,10 @@ public class UserInfoService {
 	private final UserInfoRepository userInfoRepository;
 
     @Transactional
-    public SharingInformationStatusResponse toggleSharingInformation(int userId) {
+    public SharingInformationStatusResponse toggleSharingInformation() {
         AppLogger.start("정보 제공 동의 상태 변경");
 
+        int userId = CustomUtil.getCurrentUserId();
         UserInfo userInfo = userInfoRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException("해당하는 사용자가 없습니다."));
 
@@ -43,9 +45,10 @@ public class UserInfoService {
         return SharingInformationStatusResponse.from(userInfo);
     }
 
-    public SharingInformationStatusResponse getSharingInformationStatus(Integer userId) {
+    public SharingInformationStatusResponse getSharingInformationStatus() {
         AppLogger.start("정보 제공 동의 상태 조회");
 
+        int userId = CustomUtil.getCurrentUserId();
         return SharingInformationStatusResponse.from(
                 userInfoRepository.findByUser_Id(userId)
                     .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."))

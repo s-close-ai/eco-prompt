@@ -3,6 +3,7 @@ package com.closeai.ecoprompt.project.service;
 import com.closeai.ecoprompt.chatting.model.dto.response.ChattingResponse;
 import com.closeai.ecoprompt.chatting.model.entity.Chatting;
 import com.closeai.ecoprompt.chatting.repository.ChattingRepository;
+import com.closeai.ecoprompt.common.CustomUtil;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.project.model.dto.request.PersonalProjectRequest;
 import com.closeai.ecoprompt.project.model.dto.request.ProjectUpdateRequest;
@@ -44,7 +45,8 @@ public class ProjectService {
     // 프로젝트는 무조건 생성 시간 정렬해서 보내기, 최근 생성된 게 위로
     // 상위 20개 채팅방 pagenation
     // 채팅은 업데이트 시간으로 정렬해서 보내기
-    public List<PersonalProjectResponse> getPersonalProject(int userId) {
+    public List<PersonalProjectResponse> getPersonalProject() {
+        int userId = CustomUtil.getCurrentUserId();
 		AppLogger.info("개인 프로젝트 리스트 조회", userId);
 
         return getNotDeletedPersonalProjectResponse(userId);
@@ -54,12 +56,33 @@ public class ProjectService {
     public List<PersonalProjectResponse> saveProject(PersonalProjectRequest projectRequest) {
         AppLogger.info("프로젝트 생성 \nDATA: " + projectRequest.toString());
 
-        User user = userRepository.findById(projectRequest.userId())
+        int userId = CustomUtil.getCurrentUserId();
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."));
 
         projectRepository.save(Project.of(projectRequest.title(), user));
 
-        return getNotDeletedPersonalProjectResponse(projectRequest.userId());
+        return getNotDeletedPersonalProjectResponse(userId);
+    }
+
+    @Transactional
+    public Void updateProjectTitle(int projectId, ProjectUpdateRequest projectRequest) {
+        AppLogger.info("UPDATE PROJECT TITLE: " + projectRequest.toString() + ", PROJECT ID: " + projectId);
+
+        Project project = getProject(projectId);
+        project.updateTitle(projectRequest.title());
+
+        return null;
+    }
+
+    @Transactional
+    public Void deleteProject(int projectId) {
+        AppLogger.info("DELETE PROJECT ID: " + projectId + ", PROJECT ID: " + projectId);
+
+        Project project = getProject(projectId);
+        project.deleteProject();
+
+        return null;
     }
 
     private List<PersonalProjectResponse> getNotDeletedPersonalProjectResponse(int userId) {
@@ -82,25 +105,5 @@ public class ProjectService {
         }
 
         return responses;
-    }
-
-    @Transactional
-    public Void updateProjectTitle(int projectId, ProjectUpdateRequest projectRequest) {
-        AppLogger.info("UPDATE PROJECT TITLE: " + projectRequest.toString() + ", PROJECT ID: " + projectId);
-
-        Project project = getProject(projectId);
-        project.updateTitle(projectRequest.title());
-
-        return null;
-    }
-
-    @Transactional
-    public Void deleteProject(int projectId) {
-        AppLogger.info("DELETE PROJECT ID: " + projectId + ", PROJECT ID: " + projectId);
-
-        Project project = getProject(projectId);
-        project.deleteProject();
-
-        return null;
     }
 }

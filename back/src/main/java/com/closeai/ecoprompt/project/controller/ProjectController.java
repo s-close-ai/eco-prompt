@@ -17,8 +17,8 @@ public class ProjectController {
     private final ProjectService projectService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<SidebarResponse>> getPersonalProject(@RequestParam int userId) {
-        return ApiResponse.success(new SidebarResponse(projectService.getPersonalProject(userId)));
+    public ResponseEntity<ApiResponse<SidebarResponse>> getPersonalProject() {
+        return ApiResponse.success(new SidebarResponse(projectService.getPersonalProject()));
     }
 
     @PostMapping
@@ -35,7 +35,7 @@ public class ProjectController {
 
     @PatchMapping("/delete")
     public ResponseEntity<ApiResponse<Void>> deleteProject(@RequestParam int projectId) {
-        return ApiResponse.success(projectService.deleteProject(projectId));
+        return ApiResponse.noContent(projectService.deleteProject(projectId));
     }
 
 }
