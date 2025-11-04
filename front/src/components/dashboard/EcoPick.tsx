@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { mockEcoPickPrompts } from '@/data/mockData';
 import type { EcoPickPrompt } from '@/types/dashboard.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
+import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/eco-pick.css';
 
 interface EcoPickProps {
@@ -104,7 +105,10 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
   const renderPromptCard = (prompt: EcoPickPrompt, index: number) => (
     <div key={prompt.id} className="eco-pick-card">
       <div className="eco-pick-header">
-        <h3 className="eco-pick-name">{prompt.name}</h3>
+        <div className="eco-pick-name-wrapper">
+          <h3 className="eco-pick-name">{prompt.name}</h3>
+          <Tooltip content="오늘의 가장 잘 쓴 프롬프트입니다. 명확성, 구체성, 형식 준수, 안전성을 기준으로 선정됩니다." />
+        </div>
         <div className="eco-pick-score">{prompt.score}</div>
       </div>
 
@@ -158,33 +162,53 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
             <div className="carousel-track" ref={carouselRef}>
               {renderPromptCard(currentPrompt, currentIndex)}
             </div>
-            <div className="eco-pick-indicators">
-              {prompts.map((_, idx) => (
-                <button
-                  key={idx}
-                  className={`indicator-dot ${idx === currentIndex ? 'active' : ''}`}
-                  onClick={() => setCurrentIndex(idx)}
-                  aria-label={`${idx + 1}번째 프롬프트`}
-                />
-              ))}
+            <div className="eco-pick-controls">
+              <button
+                className="carousel-button-bottom prev"
+                onClick={handlePrev}
+                aria-label="이전"
+                disabled={currentIndex === 0}
+              >
+                <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
+                  <circle cx="3" cy="3" r="3" />
+                </svg>
+                <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
+                  <circle cx="3" cy="3" r="3" />
+                </svg>
+                <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
+                  <circle cx="3" cy="3" r="3" />
+                </svg>
+              </button>
+              <div className="eco-pick-indicators">
+                {prompts.map((_, idx) => (
+                  <button
+                    key={idx}
+                    className={`indicator-dot ${idx === currentIndex ? 'active' : ''}`}
+                    onClick={() => setCurrentIndex(idx)}
+                    aria-label={`${idx + 1}번째 프롬프트`}
+                  />
+                ))}
+              </div>
+              <button
+                className="carousel-button-bottom next"
+                onClick={handleNext}
+                aria-label="다음"
+                disabled={currentIndex === prompts.length - 1}
+              >
+                <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
+                  <circle cx="3" cy="3" r="3" />
+                </svg>
+                <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
+                  <circle cx="3" cy="3" r="3" />
+                </svg>
+                <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
+                  <circle cx="3" cy="3" r="3" />
+                </svg>
+              </button>
             </div>
-            {currentIndex > 0 && (
-              <button className="carousel-button prev" onClick={handlePrev} aria-label="이전">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-            )}
-            {currentIndex < prompts.length - 1 && (
-              <button className="carousel-button next" onClick={handleNext} aria-label="다음">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </button>
-            )}
           </>
         ) : (
-          // 모바일: 한 번에 하나씩
+          // 모바일: 한 번에 하나씩 (슬라이드만 지원, 버튼 없음)
           <>
             <div className="eco-pick-card-wrapper">{renderPromptCard(currentPrompt, currentIndex)}</div>
             <div className="eco-pick-indicators">
@@ -192,20 +216,6 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
                 <span key={idx} className={`indicator-dot ${idx === currentIndex ? 'active' : ''}`} />
               ))}
             </div>
-            {currentIndex > 0 && (
-              <button className="carousel-button prev" onClick={handlePrev} aria-label="이전">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-            )}
-            {currentIndex < prompts.length - 1 && (
-              <button className="carousel-button next" onClick={handleNext} aria-label="다음">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </button>
-            )}
           </>
         )}
       </div>

@@ -2,11 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { mockRankingData } from '@/data/mockData';
 import type { RankingData } from '@/types/dashboard.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
+import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/ranking.css';
 
-function getDayName(date: Date): string {
-  const days = ['일', '월', '화', '수', '목', '금', '토'];
-  return days[date.getDay()];
+function getDateNumber(date: Date): string {
+  return date.getDate().toString();
 }
 
 function formatDate(date: Date): string {
@@ -121,10 +121,13 @@ export default function Ranking() {
     <div className="ranking-container" ref={containerRef}>
       <div className="ranking-header">
         <div className="ranking-header-left">
-          <h2 className="ranking-title">Top 10 Rankings</h2>
+          <div className="ranking-title-wrapper">
+            <h2 className="ranking-title">Top 10 Rankings</h2>
+            <Tooltip content="오늘 최고 점수 기준으로 랭킹이 결정됩니다. 동점일 경우 마일리지가 높은 순으로, 그래도 동점이면 프롬프트 수가 적은 순으로 정렬됩니다." />
+          </div>
           <div className="date-selector">
             {dateList.map((date) => {
-              const dayName = getDayName(date);
+              const dateNumber = getDateNumber(date);
               const isSelected = isSameDate(date, selectedDate);
               return (
                 <button
@@ -132,7 +135,7 @@ export default function Ranking() {
                   className={`date-button ${isSelected ? 'active' : ''}`}
                   onClick={() => setSelectedDate(date)}
                 >
-                  {dayName}
+                  {dateNumber}
                 </button>
               );
             })}

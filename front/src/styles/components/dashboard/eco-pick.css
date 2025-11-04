@@ -44,6 +44,12 @@
   flex-shrink: 0;
 }
 
+.eco-pick-name-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .eco-pick-name {
   font-size: 16px;
   font-weight: 700;
@@ -318,9 +324,18 @@
   font-weight: 700;
 }
 
+:root[data-mode='tablet'] .eco-pick-controls,
+:root[data-mode='desktop'] .eco-pick-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 0 16px 0;
+}
+
 :root[data-mode='tablet'] .eco-pick-indicators,
 :root[data-mode='desktop'] .eco-pick-indicators {
-  padding: 12px 0 16px 0;
+  padding: 0;
 }
 
 :root[data-mode='tablet'] .indicator-dot,
@@ -332,5 +347,29 @@
 :root[data-mode='tablet'] .indicator-dot.active,
 :root[data-mode='desktop'] .indicator-dot.active {
   width: 20px;
+}
+
+.carousel-button-bottom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 8px;
+  transition: opacity 0.2s;
+}
+
+.carousel-button-bottom:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.carousel-button-bottom svg {
+  color: #666;
+}
+
+.carousel-button-bottom:hover:not(:disabled) svg {
+  color: #006400;
 }
 

@@ -1,6 +1,14 @@
 import { mockDashboardMetrics, mockDashboardStats } from '@/data/mockData';
 import type { DashboardMetric } from '@/types/dashboard.types';
+import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/dashboard.css';
+
+const metricDescriptions: Record<string, string> = {
+  clarity: '질문이 명확하고 오해의 여지가 없는 정도를 나타냅니다.',
+  specificity: '필요한 정보와 제한조건이 구체적으로 제시된 정도를 나타냅니다.',
+  formatCompliance: '출력 형식, 언어, 길이 등이 명확히 지시된 정도를 나타냅니다.',
+  safety: '안전하고 윤리적으로 문제 없는 정도를 나타냅니다.',
+};
 
 function CircularProgress({
   metric,
@@ -77,7 +85,10 @@ export default function Dashboard() {
       <div className="dashboard-metrics">
         {metrics.map((metric) => (
           <div key={metric.name} className="metric-card">
-            <h3 className="metric-title">{metric.displayName}</h3>
+            <div className="metric-title-wrapper">
+              <h3 className="metric-title">{metric.displayName}</h3>
+              <Tooltip content={metricDescriptions[metric.name] || ''} />
+            </div>
             <CircularProgress metric={metric} />
           </div>
         ))}
@@ -117,7 +128,10 @@ export function DashboardMetrics() {
       <div className="dashboard-metrics">
         {metrics.map((metric) => (
           <div key={metric.name} className="metric-card">
-            <h3 className="metric-title">{metric.displayName}</h3>
+            <div className="metric-title-wrapper">
+              <h3 className="metric-title">{metric.displayName}</h3>
+              <Tooltip content={metricDescriptions[metric.name] || ''} />
+            </div>
             <CircularProgress metric={metric} />
           </div>
         ))}

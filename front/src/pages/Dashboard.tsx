@@ -17,7 +17,7 @@ export default function DashboardPage() {
   const tabs: { id: TabType; label: string; path: string }[] = [
     { id: 'ranking', label: '랭킹', path: '/dashboard/ranking' },
     { id: 'eco-pick', label: 'Eco 픽', path: '/dashboard/eco-pick' },
-    { id: 'dashboard', label: '대시보드', path: '/dashboard' },
+    { id: 'dashboard', label: '개인기록', path: '/dashboard' },
   ];
 
   return (

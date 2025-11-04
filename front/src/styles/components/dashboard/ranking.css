@@ -25,13 +25,19 @@
   min-width: 0;
 }
 
+.ranking-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .ranking-title {
   font-size: 16px;
   font-weight: 700;
   color: #333;
   margin: 0;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .refresh-button {
@@ -82,6 +88,7 @@
   flex: 1;
   min-width: 0;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 .date-selector::-webkit-scrollbar {
@@ -89,7 +96,7 @@
 }
 
 .date-button {
-  min-width: 36px;
+  min-width: 32px;
   height: 28px;
   border-radius: 14px;
   border: 1px solid #e0e0e0;
@@ -100,7 +107,8 @@
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
-  padding: 0 8px;
+  padding: 0 10px;
+  white-space: nowrap;
 }
 
 .date-button:hover {
@@ -172,16 +180,17 @@
 }
 
 .rank-icon {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
 }
 
 .rank-number {
-  width: 24px;
+  width: 32px;
   text-align: center;
   font-weight: 600;
   color: #666;
+  flex-shrink: 0;
 }
 
 .rank-name {
@@ -203,8 +212,8 @@
 }
 
 .change-icon {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
 }
 
 .new-badge {
@@ -457,15 +466,17 @@
 
 :root[data-mode='tablet'] .rank-icon,
 :root[data-mode='desktop'] .rank-icon {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
 }
 
 :root[data-mode='tablet'] .rank-number,
 :root[data-mode='desktop'] .rank-number {
-  width: auto;
+  width: 24px;
+  text-align: center;
   font-size: 13px;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 :root[data-mode='tablet'] .rank-name,
@@ -501,7 +512,7 @@
 
 :root[data-mode='tablet'] .change-icon,
 :root[data-mode='desktop'] .change-icon {
-  width: 14px;
-  height: 14px;
+  width: 20px;
+  height: 20px;
 }
 
