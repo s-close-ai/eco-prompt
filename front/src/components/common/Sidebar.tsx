@@ -24,7 +24,7 @@ export default function Sidebar() {
     filterProjectId?: number;
   } | null>(null);
   const projectMoveMenuRef = useRef<HTMLDivElement | null>(null);
-  const [longPressTimer, setLongPressTimer] = useState<Map<number, NodeJS.Timeout>>(new Map());
+  const [longPressTimer, setLongPressTimer] = useState<Map<number, number>>(new Map());
   const menuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
   // 메뉴 외부 클릭 감지
@@ -297,6 +297,16 @@ export default function Sidebar() {
     });
     // TODO: 실제 액션 구현
     console.log(`Nested Chat ${chatId} ${action}`);
+  };
+
+  const handleChatMenuAction = (chatId: number, action: 'rename' | 'delete') => {
+    setOpenChatMenus((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(chatId);
+      return newSet;
+    });
+    // TODO: 실제 액션 구현
+    console.log(`Chat ${chatId} ${action}`);
   };
 
   const handleMoveToProject = (chatId: number, targetProjectId: number, currentProjectId?: number) => {

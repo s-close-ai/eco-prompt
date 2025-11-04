@@ -1,5 +1,4 @@
 import { memo } from 'react';
-import { formatShortDate } from '@/utils/date';
 import { ICON_SIZE } from '@/constants/ui';
 import '@/styles/pages/project.css';
 
@@ -23,7 +22,6 @@ function ChatCard({
   id,
   title,
   preview,
-  timestamp,
   onClick,
   onMenuToggle,
   onMenuAction,
@@ -34,7 +32,6 @@ function ChatCard({
   onProjectMoveToggle,
   menuRef,
 }: ChatCardProps) {
-  const formattedDate = formatShortDate(timestamp);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
