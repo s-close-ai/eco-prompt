@@ -1,5 +1,6 @@
 # FastAPI 환경 설정
 fastapi>=0.119.0
+uvicorn>=0.38.0
 sentence-transformers>=5.1.2
 langchain>=1.0.3
 langchain-community>=0.4.1
