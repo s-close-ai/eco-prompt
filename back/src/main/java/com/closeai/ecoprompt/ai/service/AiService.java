@@ -14,6 +14,7 @@ import com.closeai.ecoprompt.ai.model.dto.request.LlmRequest;
 import com.closeai.ecoprompt.ai.model.dto.response.LlmResponse;
 import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
+import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.model.entity.MessageStatus;
 import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
 import com.closeai.ecoprompt.sse.service.SseService;
@@ -57,14 +58,14 @@ public class AiService {
 	 * JudgePrompt Model 과 LLM 모델 호출 함수
 	 * */
 	@Async
-	public void callAiModel(String messageUUID, String content, Integer userId){
+	public void callAiModel(String messageUUID, String content, Integer userId, boolean isFirstChatting){
 
 		if(sseService.isCancelled(messageUUID)){
-			log.info("AI 모델 호출 시작 이전에 이미 취소 되었습니다. UUID :  {}", messageUUID);
+			AppLogger.info("AI 모델 호출 시작 이전에 이미 취소 되었습니다. UUID :  {}" + messageUUID);
 			return;
 		}
 
-		callInputJudgeModel(messageUUID, content);
+		callInputJudgeModel(messageUUID, content, isFirstChatting);
 		callLlmModel(messageUUID, content, userId);
 	}
 
@@ -72,7 +73,7 @@ public class AiService {
 	 * JudgeModel 실행 완료 후 이벤트 생성 함수
 	 * */
 	@Async
-	public void callInputJudgeModel(String messageUUID, String content){
+	public void callInputJudgeModel(String messageUUID, String content, boolean isFirstChatting){
 
 		InputJudgeRequest request = new InputJudgeRequest(messageUUID, content);
 
@@ -80,21 +81,26 @@ public class AiService {
 			.doOnSuccess(judgeResponse -> {
 
 				if(sseService.isCancelled(messageUUID)){
-					log.info("Judge 모델 완료 하였으나, 작업이 취소 되어 이벤트를 발행하지 않습니다.");
+					AppLogger.info("Judge 모델 완료 하였으나, 작업이 취소 되어 이벤트를 발행하지 않습니다.");
 					return;
 				}
 
 				ScoreInfo scoreInfo = new ScoreInfo(judgeResponse.totalScore(),
 					judgeResponse.clarityScore(), judgeResponse.specificityScore(),
 					judgeResponse.formatScore(), judgeResponse.safetyScore());
+				String summary = null;
 
 				sseService.sendEventToClient(messageUUID, "JUDGE_PROMPT", scoreInfo);
+				if(isFirstChatting){
+					summary = judgeResponse.summary();
+					sseService.sendEventToClient(messageUUID, "CHATTING_TITLE", summary);
+				}
 				eventPublisher.publishEvent(
-					new JudgeModelCompleteEvent(this, messageUUID, judgeResponse.summary(), scoreInfo)
+					new JudgeModelCompleteEvent(this, messageUUID, summary, scoreInfo)
 				);
 			})
 			.doOnError(error -> {
-				log.error("답변 Judge 모델 호출 실패. UUID :  {}", messageUUID);
+				AppLogger.error("답변 Judge 모델 호출 실패. UUID :  " +  messageUUID);
 			})
 			.subscribe();
 	}
@@ -119,7 +125,7 @@ public class AiService {
 				}
 			})
 			.doOnError(error -> {
-				log.error("llm 모델 스트리밍 오류. UUID : {}", messageUUID);
+				AppLogger.error("llm 모델 스트리밍 오류. UUID : {}" +  messageUUID);
 				sseService.sendEventToClient(messageUUID, "LLM_ERROR", "ERROR");
 			})
 			.doOnComplete(() -> {
@@ -132,7 +138,7 @@ public class AiService {
 					status = MessageStatus.COMPLETED;
 				}
 				else{
-					log.info("사용자에 의해서 답변이 중지되었습니다. UUID :  {}", messageUUID);
+					AppLogger.info("사용자에 의해서 답변이 중지되었습니다. UUID :  {}" + messageUUID);
 					status = MessageStatus.CANCELLED;
 				}
 
@@ -163,7 +169,7 @@ public class AiService {
 	 * */
 	private Flux<LlmResponse> runLlmModel(LlmRequest request){
 		return llmClient.post()
-			.uri("/api/v1/ai/prompt-response")
+			.uri("/prompt-response")
 			.accept(MediaType.TEXT_EVENT_STREAM)
 			.bodyValue(request)
 			.retrieve()
