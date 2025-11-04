@@ -1,7 +1,6 @@
-package com.closeai.ecoprompt.ai.model.dto.response;
+package com.closeai.ecoprompt.ai.model.event;
 
-public record InputJudgeResponse(
-	String summary,
+public record ScoreInfo(
 	Double totalScore,
 	Double clarityScore,
 	Double specificityScore,
