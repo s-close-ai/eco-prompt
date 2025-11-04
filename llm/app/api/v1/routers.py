@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import train
+from app.api.v1.endpoints import train, chat
 
 # API에 대한 메인 라우터 만들기
 api_router = APIRouter()
