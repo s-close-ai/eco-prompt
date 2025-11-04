@@ -85,4 +85,6 @@ async def chat(request: ChatRequest, llm=Depends(get_llm), tokenizer=Depends(get
 
         print(f"[REJECTED]\n{rejected_response}")
 
+        # rejected response 저장하기
+
     return StreamingResponse(event_generator(), media_type="text/event-stream")

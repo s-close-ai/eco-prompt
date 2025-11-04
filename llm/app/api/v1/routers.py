@@ -5,6 +5,12 @@ from app.api.v1.endpoints import train
 api_router = APIRouter()
 
 api_router.include_router(
+    chat.router,
+    prefix="/prompt/response",
+    tags=["chat"]
+)
+
+api_router.include_router(
     train.router,
     prefix="/train",
     tags=["train"]
