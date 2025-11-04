@@ -15,3 +15,6 @@ class TrainRepository(Protocol):
 
 class MainLlmClient(Protocol):
     async def train(self, batch_id: str, items: List[Dict[str, Any]]) -> Dict[str, Any]: ...
+
+class EcoPromptRepository(Protocol):
+    async def upsert_or_insert_many(self, docs: List[Dict[str, Any]]) -> int: ...

@@ -3,14 +3,13 @@ from __future__ import annotations
 import os
 import asyncio
 import datetime
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Union
 
-from fastapi import FastAPI, Body, Query
+from fastapi import FastAPI, Body, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
-# .env 파일 로드
 BASE_DIR = os.path.dirname(__file__)
 ENV_PATHS = [
     os.path.join(BASE_DIR, "api/.env"),
@@ -30,40 +29,26 @@ class TrainPayload(BaseModel):
     batchId: Optional[str] = None
     items: List[dict]
 
-# 서버 시작 시 실행
 @app.on_event("startup")
 async def on_startup() -> None:
     app.state.pipe = build_pipeline()
-
-    # MongoDB 연결 확인
     try:
         from api.app.adapters.db.mongo_connector import ping as mongo_ping
         mongo_ping()
     except Exception as e:
         print(f"MongoDB 연결 실패: {e}")
-
-    # Judge LLM 연결 확인
     try:
         _ = await app.state.pipe.judge.evaluate("ping", "pong")
         print("Judge 서버 연결 확인 완료")
     except Exception as e:
         print(f"Judge 서버 연결 실패: {e}")
-
     print("서버 시작 완료")
 
-# 서버 종료 시 실행
 @app.on_event("shutdown")
 async def on_shutdown() -> None:
     print("서버 종료 중...")
-    try:
-        # 필요 시 자원 정리 코드 추가
-        pass
-    except Exception as e:
-        print(f"종료 중 오류 발생: {e}")
-    finally:
-        print("서버 종료 완료")
+    print("서버 종료 완료")
 
-# 헬스체크
 @app.get("/health")
 async def health():
     auth = "활성화" if os.getenv("API_BEARER_TOKEN") else "비활성화"
@@ -74,31 +59,33 @@ async def health():
         "시간": datetime.datetime.utcnow().isoformat() + "Z",
     }
 
-# 학습 요청 처리
 @app.post("/api/v1/ai/training")
 async def post_training(
-    payload: TrainPayload = Body(...),
+    request: Request,
     sync: int | None = Query(default=None, description="1이면 동기 처리"),
 ):
     pipe = getattr(app.state, "pipe", None) or build_pipeline()
     app.state.pipe = pipe
 
-    # pipeline 은 Dict[str, Any] 기대하니 model_dump로 변환
-    payload_dict: Dict[str, Any] = {
-        "batchId": payload.batchId,
-        "items": payload.items,
-    }
+    body = await request.json()
+
+    async def _do_run() -> Dict[str, Any]:
+        if isinstance(body, list):
+            return await pipe.run(body)
+        if isinstance(body, dict):
+            return await pipe.run(body)
+        raise ValueError("Invalid payload type")
 
     if sync == 1:
         try:
-            data: Dict[str, Any] = await pipe.run(payload_dict)
+            data = await _do_run()
             return JSONResponse({"status": "OK", "data": data}, status_code=200)
         except Exception as e:
             return JSONResponse({"status": "ERROR", "error": str(e)}, status_code=500)
     else:
         async def _bg():
             try:
-                await pipe.run(payload_dict)
+                await _do_run()
                 print("비동기 학습 요청 처리 완료")
             except Exception as e:
                 print(f"비동기 학습 처리 중 오류: {e}")
@@ -108,7 +95,6 @@ async def post_training(
             "message":"학습 작업이 시작되었습니다.",
             "timestamp": datetime.datetime.utcnow().isoformat()+"Z"}}, status_code=202)
 
-# 직접 실행 시
 if __name__ == "__main__":
     import uvicorn
     host = os.getenv("API_HOST", "0.0.0.0")

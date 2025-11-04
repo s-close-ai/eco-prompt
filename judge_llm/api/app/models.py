@@ -1,9 +1,9 @@
-# judge_llm/api/app/models.py
 from __future__ import annotations
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any, Tuple, List
 from pydantic import BaseModel, Field
 import re, os
 
+# ===== Judge 정규화 =====
 W_CORRECTNESS  = int(os.getenv("JUDGE_W_CORRECTNESS",  "45"))
 W_COMPLETENESS = int(os.getenv("JUDGE_W_COMPLETENESS", "25"))
 W_CLARITY      = int(os.getenv("JUDGE_W_CLARITY",      "15"))
@@ -137,13 +137,12 @@ def _to_float_0_5(v: Any, subs: Optional[Subscores], default: float = 3.0) -> Tu
 
 def normalize_judge_json(raw: Dict[str, Any]) -> JudgeNormalized:
     recovered = False
-
     crit_raw = raw.get("criteria", "")
-    fb_raw = raw.get("feedback", "")
+    fb_raw   = raw.get("feedback", "")
     crit_strip, r1 = _strip_code_fences(crit_raw)
-    fb_strip, r2 = _strip_code_fences(fb_raw)
-    criteria, r3 = _clip_len(str(crit_strip), TEXT_LIMIT)
-    feedback, r4 = _clip_len(str(fb_strip), TEXT_LIMIT)
+    fb_strip,   r2 = _strip_code_fences(fb_raw)
+    criteria,   r3 = _clip_len(str(crit_strip), TEXT_LIMIT)
+    feedback,   r4 = _clip_len(str(fb_strip), TEXT_LIMIT)
     recovered = recovered or r1 or r2 or r3 or r4
 
     subs_model, subs_rec = _coerce_subscores(raw.get("subscores"))
@@ -153,7 +152,6 @@ def normalize_judge_json(raw: Dict[str, Any]) -> JudgeNormalized:
     recovered = recovered or fs_rec
 
     total = _calc_total(fs, raw.get("subscores") if subs_model else None)
-
     txt = f"{criteria} {feedback}"
     lang = "ko" if _RE_HANGUL.search(txt) else "en"
 
@@ -169,3 +167,26 @@ def normalize_judge_json(raw: Dict[str, Any]) -> JudgeNormalized:
     )
 
 calc_total = _calc_total
+
+# ===== CloseAI 수신 모델 =====
+class ScoreInfo(BaseModel):
+    totalScore: Optional[int] = None
+    clarityScore: Optional[int] = None
+    specificityScore: Optional[int] = None
+    formatScore: Optional[int] = None
+    safetyScore: Optional[int] = None
+
+class CloseAIMessage(BaseModel):
+    _id: Optional[Dict[str, Any]] = None
+    _class: Optional[str] = None
+    chatting_id: Optional[int] = None
+    content: Optional[str] = None
+    created_at: Optional[str] = None
+    is_deleted: Optional[str] = None
+    messageUUID: Optional[str] = None
+    sender_type: Optional[str] = None  # USER | AI | TRAIN
+    status: Optional[str] = None
+    updated_at: Optional[str] = None
+    score_info: Optional[ScoreInfo] = None
+
+CloseAIBatch = List[CloseAIMessage]

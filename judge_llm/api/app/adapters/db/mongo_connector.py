@@ -5,9 +5,11 @@ from typing import List, Dict, Any
 from pymongo import MongoClient, UpdateOne
 
 _URI  = os.getenv("MONGO_URI")
-_DB   = os.getenv("MONGO_DB") or "admin"           # 확정 전 임시
-_COLL = os.getenv("MONGO_COLL") or "train_dataset" # 확정 전 임시
 _TO   = int(os.getenv("MONGO_TIMEOUT_MS", "5000"))
+
+_DB_ECO      = os.getenv("ECO_MONGO_DB") or "eco_prompt"
+_COLL_MASK   = os.getenv("ECO_MASK_COLL") or "masking_message"
+_MASK_UPSERT = os.getenv("ECO_MASK_UPSERT", "false").lower() == "true"
 
 _client: MongoClient | None = None
 
@@ -18,54 +20,59 @@ def get_client() -> MongoClient:
     return _client
 
 def ping() -> None:
-    get_client().admin.command("ping")  # 실패 시 예외
+    get_client().admin.command("ping")
     print("[MongoDB] ✅ 몽고디비 헬스체크")
 
-def get_collection():
-    cli = get_client()
-    return cli[_DB][_COLL]
+def coll_masking():
+    return get_client()[_DB_ECO][_COLL_MASK]
 
-def ensure_unique_index() -> None:
-    # (batch_id, message_id) 멱등 업서트 보장
-    coll = get_collection()
-    coll.create_index(
-        [("batch_id", 1), ("message_id", 1)],
-        unique=True,
-        name="uidx_batch_message"
+def ensure_indexes() -> None:
+    coll_masking().create_index(
+        [("messageUUID", 1), ("sender_type", 1)],
+        name="uidx_uuid_sender",
+        unique=True
     )
 
-def upsert_many_minimal(docs: List[Dict[str, Any]]) -> Dict[str, int]:
-    """
-    docs: 4) 구조와 동일한 문서 리스트
-      - 필수 키: batch_id, message_id, prompt, llm_response, rejected_response
-      - 선택 키: judge_total, passed
-    업서트 키: (batch_id, message_id)
-    """
+def mask_upsert_or_insert_many(docs: List[Dict[str, Any]]) -> int:
     if not docs:
-        return {"matched": 0, "modified": 0, "upserts": 0}
-
-    coll = get_collection()
+        return 0
+    c = coll_masking()
     now = datetime.utcnow()
-    ops = []
-    for d in docs:
-        d = dict(d)  # 방어적 복사
-        filt = {"batch_id": d["batch_id"], "message_id": d["message_id"]}
-        # 필수키 검증(방어)
-        for k in ("batch_id", "message_id", "prompt", "llm_response", "rejected_response"):
-            if k not in d:
-                raise ValueError(f"missing required key: {k}")
 
-        set_fields = dict(d)
-        set_fields["updated_at"] = now
-        ops.append(UpdateOne(
-            filt,
-            {"$set": set_fields, "$setOnInsert": {"created_at": now}},
-            upsert=True
-        ))
-        
-    res = coll.bulk_write(ops, ordered=False)
-    return {
-        "matched": getattr(res, "matched_count", 0),
-        "modified": getattr(res, "modified_count", 0),
-        "upserts": len(getattr(res, "upserted_ids", {}) or {})
-    }
+    if _MASK_UPSERT:
+        ops = []
+        for d in docs:
+            d = dict(d)
+            # 생성시 1회만: _ts 는 setOnInsert로만 넣고, set 대상에서는 제거
+            d.pop("_ts", None)
+            d.setdefault("_source", d.get("_source") or "closeai")
+
+            filt = {
+                "messageUUID": d.get("messageUUID"),
+                "sender_type": d.get("sender_type"),
+            }
+
+            update = {
+                # 내용 갱신(마스킹된 content 포함)
+                "$set": d,
+                # 최초 insert시에만 생성 시각 기록
+                "$setOnInsert": {"_ts": now},
+                # 매 업서트 시 갱신 시각 자동 기록
+                "$currentDate": {"updated_at": True},
+            }
+
+            ops.append(UpdateOne(filt, update, upsert=True))
+
+        res = c.bulk_write(ops, ordered=False)
+        # 처리 수는 대략적으로 upsert + modified로 계산 (상황에 따라 matched도 참고 가능)
+        upserts = len(getattr(res, "upserted_ids", {}) or {})
+        modified = getattr(res, "modified_count", 0)
+        return upserts + modified or len(ops)
+
+    else:
+        # insert 모드: 생성 시각 기본값 세팅
+        for d in docs:
+            d.setdefault("_ts", now)
+            d.setdefault("_source", d.get("_source") or "closeai")
+        res = c.insert_many(docs, ordered=False)
+        return len(getattr(res, "inserted_ids", []) or [])
