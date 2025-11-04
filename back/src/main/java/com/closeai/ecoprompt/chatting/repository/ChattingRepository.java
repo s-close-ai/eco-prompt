@@ -10,4 +10,5 @@ public interface ChattingRepository extends JpaRepository<Chatting, Long> {
 
     // 프로젝트별 채팅을 페이지네이션 + 정렬
     Page<Chatting> findByProject_Id(Integer projectId, Pageable pageable);
+
 }

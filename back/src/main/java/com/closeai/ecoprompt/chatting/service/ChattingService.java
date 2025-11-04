@@ -1,5 +1,11 @@
 package com.closeai.ecoprompt.chatting.service;
 
+import com.closeai.ecoprompt.chatting.model.dto.response.ChattingResponse;
+import com.closeai.ecoprompt.common.logging.AppLogger;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +25,8 @@ public class ChattingService {
 	private final ProjectService projectService;
 
 	private final ChattingRepository chattingRepository;
+
+    private static final int CHAT_PAGE_SIZE = 20;
 
 	/**
 	 * 채팅방 id에 해당하는 chatting이 있는 경우 반환
@@ -63,9 +71,20 @@ public class ChattingService {
 		chatting.updateUpdatedAt();
 	}
 
+	public Page<ChattingResponse> getChattings(Integer projectId, int page) {
+		AppLogger.start(projectId + " 프로젝트의 " + page + " 페이지 조회");
+
+		Pageable pageable = PageRequest.of(page, CHAT_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "updatedAt"));
+		Page<Chatting> chattingPage = chattingRepository.findByProject_Id(projectId, pageable);
+
+		return chattingPage.map(ChattingResponse::from);
+	}
+
 	private void updateChattingTitle(Chatting chatting, String title){
 
 		chatting.setTitle(title);
 		chattingRepository.save(chatting);
+
 	}
+	
 }

@@ -31,7 +31,6 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +55,7 @@ public class ProjectService {
     // 채팅은 업데이트 시간으로 정렬해서 보내기
     public List<PersonalProjectResponse> getPersonalProject() {
         int userId = CustomUtil.getCurrentUserId();
-		AppLogger.info("개인 프로젝트 리스트 조회", userId);
+        AppLogger.info("개인 프로젝트 리스트 조회", userId);
 
         return getNotDeletedPersonalProjectResponse(userId);
     }
@@ -130,11 +129,8 @@ public class ProjectService {
         // 3. 프로젝트별 채팅 조회 및 DTO 변환
         List<PersonalProjectResponse> responses = new ArrayList<>();
         for (Project project : projects) {
-            Page<Chatting> chattingPage = chattingRepository.findByProject_Id(project.getId(), pageable);
-
-            List<ChattingResponse> chattingResponses = chattingPage
-                    .map(c -> new ChattingResponse(project.getId(), c.getId(), c.getTitle()))
-                    .getContent();
+            Page<ChattingResponse> chattingResponses = chattingRepository.findByProject_Id(project.getId(), pageable)
+                    .map(c -> new ChattingResponse(project.getId(), c.getId(), c.getTitle()));
 
             responses.add(PersonalProjectResponse.of(project, chattingResponses));
         }
