@@ -23,8 +23,14 @@ public class ChattingService {
 	public Chatting getOrCreateChatting(Long chattingId, Integer projectId){
 
 		if(chattingId != null){
-			return chattingRepository.findById(chattingId)
-				.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
+			Chatting chatting = chattingRepository.findById(chattingId)
+					.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
+
+			if (chatting.getProject().getId().equals(projectId)) {
+				return chatting;
+			} else {
+				throw new BusinessException("채팅방과 프로젝트의 아이디가 일치하지 않습니다.");
+			}
 		}
 
 		Project project = projectService.getProject(projectId);

@@ -75,7 +75,7 @@ public class ProjectService {
             Page<Chatting> chattingPage = chattingRepository.findByProject_Id(project.getId(), pageable);
 
             List<ChattingResponse> chattingResponses = chattingPage
-                    .map(c -> new ChattingResponse(project.getId(), c.getTitle()))
+                    .map(c -> new ChattingResponse(project.getId(), c.getId(), c.getTitle()))
                     .getContent();
 
             responses.add(PersonalProjectResponse.of(project, chattingResponses));
