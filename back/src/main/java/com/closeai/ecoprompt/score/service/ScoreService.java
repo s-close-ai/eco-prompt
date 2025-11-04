@@ -17,15 +17,25 @@ public class ScoreService {
 
 	private final ScoreRepository scoreRepository;
 
-	public void saveScore(Message message, ScoreInfo scoreInfo) {
-		Score score = Score.builder()
-			.totalScore(scoreInfo.totalScore())
-			.clarityScore(scoreInfo.clarityScore())
-			.specificityScore(scoreInfo.specificityScore())
-			.formatScore(scoreInfo.formatScore())
-			.safetyScore(scoreInfo.safetyScore())
-			.message(message)
-			.build();
+	public void saveOrUpdateScore(Message message, ScoreInfo scoreInfo) {
+
+		Long messageId = message.getId();
+		Score score = scoreRepository.findByMessage_Id(messageId).orElse(null);
+
+		// 만약 score이 없다면 새로 생성 후 저장
+		if(score == null){
+			score = Score.builder()
+				.totalScore(scoreInfo.totalScore())
+				.clarityScore(scoreInfo.clarityScore())
+				.specificityScore(scoreInfo.specificityScore())
+				.formatScore(scoreInfo.formatScore())
+				.safetyScore(scoreInfo.safetyScore())
+				.message(message)
+				.build();
+		}
+		else{ // 점수 값을 업데이트
+			score.updateScores(scoreInfo);
+		}
 
 		scoreRepository.save(score);
 	}
