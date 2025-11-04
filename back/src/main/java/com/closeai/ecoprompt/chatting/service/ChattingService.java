@@ -41,17 +41,22 @@ public class ChattingService {
 		Chatting chatting = chattingRepository.findById(chattingId)
 			.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
 
-		if(chatting.getTitle() == null){
-			updateChattingTitle(chatting, title);
-		}
+		updateChattingTitle(chatting, title);
+	}
 
+	@Transactional
+	public void updateUpdateAt(Long chattingId){
+
+		Chatting chatting = chattingRepository.findById(chattingId)
+			.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
+
+		chatting.updateUpdatedAt();
+		chattingRepository.save(chatting);
 	}
 
 	private void updateChattingTitle(Chatting chatting, String title){
 
 		chatting.setTitle(title);
 		chattingRepository.save(chatting);
-
 	}
-	
 }

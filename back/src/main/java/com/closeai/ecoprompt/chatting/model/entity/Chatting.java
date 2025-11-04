@@ -1,5 +1,9 @@
 package com.closeai.ecoprompt.chatting.model.entity;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+
+import com.closeai.ecoprompt.common.CustomUtil;
 import com.closeai.ecoprompt.common.entity.BaseEntity;
 import com.closeai.ecoprompt.project.model.entity.Project;
 import jakarta.persistence.*;
@@ -23,5 +27,9 @@ public class Chatting extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     private Project project;
+
+    public void updateUpdatedAt(){
+        this.updatedAt = CustomUtil.dateConverter(LocalDateTime.now());
+    }
     
 }
