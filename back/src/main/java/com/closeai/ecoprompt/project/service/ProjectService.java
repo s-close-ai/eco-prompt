@@ -1,13 +1,19 @@
 package com.closeai.ecoprompt.project.service;
 
 import com.closeai.ecoprompt.chatting.model.dto.response.ChattingResponse;
+import com.closeai.ecoprompt.chatting.model.dto.response.ChattingWithLastMessageResponse;
 import com.closeai.ecoprompt.chatting.model.entity.Chatting;
 import com.closeai.ecoprompt.chatting.repository.ChattingRepository;
 import com.closeai.ecoprompt.common.CustomUtil;
 import com.closeai.ecoprompt.common.logging.AppLogger;
+import com.closeai.ecoprompt.message.model.entity.MessageDocument;
+import com.closeai.ecoprompt.message.model.entity.MessageSender;
+import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
+import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
 import com.closeai.ecoprompt.project.model.dto.request.PersonalProjectRequest;
 import com.closeai.ecoprompt.project.model.dto.request.ProjectUpdateRequest;
 import com.closeai.ecoprompt.project.model.dto.response.PersonalProjectResponse;
+import com.closeai.ecoprompt.project.model.dto.response.SpecificProjectResponse;
 import com.closeai.ecoprompt.user.model.entity.User;
 import com.closeai.ecoprompt.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -25,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +41,8 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final ChattingRepository chattingRepository;
+    private final MessageMongoRepository messageMongoRepository;
+    private final MessageJpaRepository messageJpaRepository;
 
     private static final int CHAT_PAGE_SIZE = 20;
 
@@ -83,6 +92,32 @@ public class ProjectService {
         project.deleteProject();
 
         return null;
+    }
+
+    public SpecificProjectResponse getSpecificProject(int projectId) {
+        AppLogger.start("특정 프로젝트 아이디로 프로젝트 조회 시작 PROJECT ID: " + projectId);
+        Project project = getProject(projectId);
+
+        // 2. 채팅 페이지네이션 (updatedAt 내림차순)
+        Pageable pageable = PageRequest.of(0, CHAT_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "updatedAt"));
+
+        Page<Chatting> chattingPage = chattingRepository.findByProject_Id(project.getId(), pageable);
+
+        List<ChattingWithLastMessageResponse> chattingResponses = chattingPage
+                .map(c -> {
+                    String messageUUID = messageJpaRepository.findTopByChatting_IdOrderByCreatedAtDesc(c.getId())
+                            .orElseThrow(() -> new BusinessException("해당하는 메시지가 없습니다."))
+                            .getMessageUUID();
+
+                    MessageDocument messageDocument = messageMongoRepository
+                            .findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER)
+                            .orElseThrow(() -> new BusinessException("해당하는 메시지가 존재하지 않습니다."));
+
+                    return new ChattingWithLastMessageResponse(project.getId(), c.getId(), c.getTitle(), messageDocument.getContent());
+                })
+                .getContent();
+
+        return new SpecificProjectResponse(projectId, project.getTitle(), chattingResponses);
     }
 
     private List<PersonalProjectResponse> getNotDeletedPersonalProjectResponse(int userId) {

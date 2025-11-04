@@ -4,6 +4,7 @@ import com.closeai.ecoprompt.common.ApiResponse;
 import com.closeai.ecoprompt.project.model.dto.request.PersonalProjectRequest;
 import com.closeai.ecoprompt.project.model.dto.request.ProjectUpdateRequest;
 import com.closeai.ecoprompt.project.model.dto.response.SidebarResponse;
+import com.closeai.ecoprompt.project.model.dto.response.SpecificProjectResponse;
 import com.closeai.ecoprompt.project.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,11 @@ public class ProjectController {
             @RequestBody PersonalProjectRequest projectRequest
     ) {
         return ApiResponse.success(new SidebarResponse(projectService.saveProject(projectRequest)));
+    }
+
+    @GetMapping("/{projectId}")
+    public ResponseEntity<ApiResponse<SpecificProjectResponse>> getProject(@PathVariable int projectId) {
+        return ApiResponse.success(projectService.getSpecificProject(projectId));
     }
 
     @PatchMapping("/{projectId}")
