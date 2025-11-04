@@ -5,7 +5,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from app.core.config import base_settings
 
 # 전역 변수 정의
-MODEL_NAME = base_settings.base_model + "/v_2"
+MODEL_NAME = base_settings.base_model + "/v_latest"
 
 llm: Optional[AutoModelForCausalLM] = None
 llm_tokenizer: Optional[AutoTokenizer] = None
