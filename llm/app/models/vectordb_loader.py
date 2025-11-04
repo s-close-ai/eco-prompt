@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+QDRANT_URL = os.getenv("QDRANT_URL")
 
 # 전역 변수 정의
 embedding_model: Optional[HuggingFaceEmbeddings] = None
@@ -53,7 +54,7 @@ def load_vectordb():
     try:
 
         vector_store = QdrantVectorStore.from_existing_collection(
-            url="https://c5c72aa1-571c-4980-8091-f3fe5f10b794.us-west-1-0.aws.cloud.qdrant.io:6333",
+            url=QDRANT_URL,
             collection_name="ssafy",
             embedding=embedding_model,
             api_key=QDRANT_API_KEY

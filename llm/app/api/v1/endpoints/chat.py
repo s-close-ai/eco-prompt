@@ -5,6 +5,7 @@ from app.schemas.chat import ChatRequest, ChatResponse
 from app.services.chat import stream_response
 from app.models.llm_loader import get_llm, get_tokenizer
 from app.models.vectordb_loader import get_vector_store
+from app.models.mongodb_loader import find_chatting_id, get_chat_history
 
 router = APIRouter()
 
@@ -18,13 +19,19 @@ async def chat(request: ChatRequest, llm=Depends(get_llm), tokenizer=Depends(get
     message_uuid = request.message_uuid
 
     # 사용자 대화 히스토리 불러오기
+    chatting_id = find_chatting_id(message_uuid)
+    if chatting_id:
+        chat_history = get_chat_history(chatting_id)
+        # content와 senderType을 조합해서 histroy 생성하는 코드 필요함.
+    else:
+        chat_history = None
 
     chain = stream_response(vector_store=vector_store, llm=llm, tokenizer=tokenizer)
     payload = {
         "personal_prompt": personal_prompt,
         "question": user_input,
         "history": "",
-        "context": ""
+        "context": ""    # 추후 chat_history로 변경예정
     }
 
     async def event_generator():
