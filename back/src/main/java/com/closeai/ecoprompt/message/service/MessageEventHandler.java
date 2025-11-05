@@ -122,7 +122,7 @@ public class MessageEventHandler {
 	@EventListener
 	public void ModelCancelledEvent(ModelCancelledEvent event) {
 
-		MessageDocument message = event.getMessageDocument();
+		MessageDocument message = event.getMessage();
 		String content = event.getContent();
 
 		message.updateMessageStatus(MessageStatus.CANCELLED);

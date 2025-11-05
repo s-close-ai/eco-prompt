@@ -24,11 +24,9 @@ import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.model.entity.MessageDocument;
 import com.closeai.ecoprompt.message.model.entity.MessageStatus;
 import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
-import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
 import com.closeai.ecoprompt.sse.service.SseService;
 import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -126,7 +124,7 @@ public class AiService {
 				AppLogger.error("답변 Judge 모델 호출 실패. UUID :  " +  messageUUID);
 				sseService.sendEventToClient(messageUUID, "JUDGE_ERROR", "ERROR");
 				eventPublisher.publishEvent(
-					new ModelErrorEvent(this, messageUUID, message)
+					new ModelErrorEvent(this, message, messageUUID)
 				);
 			})
 			.subscribe();
@@ -173,7 +171,7 @@ public class AiService {
 				AppLogger.error("llm 모델 스트리밍 오류. UUID : {}" +  messageUUID);
 				sseService.sendEventToClient(messageUUID, "LLM_ERROR", "ERROR");
 				eventPublisher.publishEvent(
-					new ModelErrorEvent(this, messageUUID, message)
+					new ModelErrorEvent(this, message, messageUUID)
 				);
 			})
 			.doOnComplete(() -> {
