@@ -10,80 +10,68 @@ interface TooltipProps {
 export default function Tooltip({ content }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const [placement, setPlacement] = useState<'top' | 'bottom'>('top');
+  const [arrowPosition, setArrowPosition] = useState<number>(0);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   const updatePosition = () => {
-    if (!triggerRef.current) return;
-    const rect = triggerRef.current.getBoundingClientRect();
-    const tooltipWidth = tooltipRef.current?.offsetWidth || 200; // 기본값 200px
+    if (!triggerRef.current || !tooltipRef.current) return;
 
-    let top = rect.top - 8; // 위로 8px
-    let left = rect.left + rect.width / 2; // 중앙 기준
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const tooltipRect = tooltipRef.current.getBoundingClientRect();
+    const { innerWidth: screenWidth, innerHeight: screenHeight } = window;
+    const padding = 10;
+    const tooltipHeight = tooltipRect.height;
 
-    // 화면 너비
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-    const padding = 10; // 화면 가장자리 여백
-
-    // 왼쪽 경계 체크
-    if (left - tooltipWidth / 2 < padding) {
-      left = tooltipWidth / 2 + padding;
+    let newPlacement: 'top' | 'bottom' = 'top';
+    if (triggerRect.top - tooltipHeight - padding < 0) {
+      newPlacement = 'bottom';
     }
 
-    // 오른쪽 경계 체크
-    if (left + tooltipWidth / 2 > screenWidth - padding) {
-      left = screenWidth - tooltipWidth / 2 - padding;
+    let top;
+    if (newPlacement === 'top') {
+      top = triggerRect.top - tooltipHeight - 8;
+    } else {
+      top = triggerRect.bottom + 8;
     }
 
-    // 상단 경계 체크 (위로 나가면 아래로 표시)
-    if (top < padding) {
-      top = rect.bottom + 8;
+    let left = triggerRect.left + triggerRect.width / 2;
+    let arrowLeft = triggerRect.left + triggerRect.width / 2;
+
+    if (left - tooltipRect.width / 2 < padding) {
+      left = tooltipRect.width / 2 + padding;
+    } else if (left + tooltipRect.width / 2 > screenWidth - padding) {
+      left = screenWidth - tooltipRect.width / 2 - padding;
     }
 
-    // 하단 경계 체크
-    if (top + 100 > screenHeight - padding) {
-      top = rect.top - 100 - 8;
-    }
+    arrowLeft = arrowLeft - left + tooltipRect.width / 2;
 
     setPosition({ top, left });
+    setPlacement(newPlacement);
+    setArrowPosition(arrowLeft);
   };
 
   useEffect(() => {
-    if (isVisible && triggerRef.current) {
-      updatePosition();
-      
-      const handleScroll = () => {
-        if (isVisible) {
-          updatePosition();
-        }
-      };
-      
-      const handleResize = () => {
-        if (isVisible) {
-          updatePosition();
-        }
-      };
+    if (isVisible) {
+      const timer = setTimeout(updatePosition, 0);
+
+      const handleScroll = () => isVisible && updatePosition();
+      const handleResize = () => isVisible && updatePosition();
 
       window.addEventListener('scroll', handleScroll, true);
       window.addEventListener('resize', handleResize);
-      
+
       return () => {
+        clearTimeout(timer);
         window.removeEventListener('scroll', handleScroll, true);
         window.removeEventListener('resize', handleResize);
       };
     }
   }, [isVisible]);
 
-  const handleMouseEnter = () => {
-    setIsVisible(true);
-    updatePosition();
-  };
-
-  const handleMouseLeave = () => {
-    setIsVisible(false);
-    setPosition(null);
-  };
+  const handleMouseEnter = () => setIsVisible(true);
+  const handleMouseLeave = () => setIsVisible(false);
 
   return (
     <>
@@ -101,20 +89,28 @@ export default function Tooltip({ content }: TooltipProps) {
           <img src={InfoIcon} alt="info" width={16} height={16} />
         </button>
       </div>
-      {isVisible && position &&
-        createPortal(
-          <div
-            ref={tooltipRef}
-            className="ep-tooltip-content"
-            role="tooltip"
-            style={{ top: position.top, left: position.left }}
-            onMouseEnter={() => setIsVisible(true)}
-            onMouseLeave={handleMouseLeave}
-          >
-            {content}
-          </div>,
-          document.body,
-        )}
+      {createPortal(
+        <div
+          ref={tooltipRef}
+          className={`ep-tooltip-content ${isVisible ? 'ep-tooltip-visible' : ''}`}
+          role="tooltip"
+          style={
+            position
+              ? {
+                  top: `${position.top}px`,
+                  left: `${position.left}px`,
+                  '--arrow-left': `${arrowPosition}px`,
+                }
+              : { visibility: 'hidden' }
+          }
+          data-placement={placement}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          {content}
+        </div>,
+        document.body,
+      )}
     </>
   );
 }
