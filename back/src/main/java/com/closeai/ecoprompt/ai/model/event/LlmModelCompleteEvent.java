@@ -11,12 +11,10 @@ public class LlmModelCompleteEvent extends ApplicationEvent {
 
 	String messageUUID;
 	String llmAnswer;
-	MessageStatus status;
 
-	public LlmModelCompleteEvent(Object source, String messageUUID, String llmAnswer, MessageStatus status) {
+	public LlmModelCompleteEvent(Object source, String messageUUID, String llmAnswer) {
 		super(source);
 		this.messageUUID = messageUUID;
 		this.llmAnswer = llmAnswer;
-		this.status = status;
 	}
 }

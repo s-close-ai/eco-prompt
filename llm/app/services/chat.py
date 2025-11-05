@@ -78,7 +78,11 @@ def stream_response(vector_store, llm, tokenizer):
         personal_prompt=RunnablePassthrough(),
         history=RunnablePassthrough(),
         context=RunnableLambda(lambda _: ""),    # retriever | format_docs 로 교체해야 함.
+        # context= retriever | format_docs
     )
+
+    # 만약 retriever | format_docs에서 아무것도 찾을 수 없다면 ""을 반환하도록 한다.
+
 
     chain = Inputs | make_prompt | llm | StrOutputParser()
 

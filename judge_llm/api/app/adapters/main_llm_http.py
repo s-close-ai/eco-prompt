@@ -1,3 +1,4 @@
+# judge_llm/api/app/adapters/main_llm_http.py
 from __future__ import annotations
 import os
 from typing import Dict, Any, List, Optional
@@ -37,20 +38,34 @@ class HttpMainLlmClient:
 
     async def train(self, batch_id: str, items: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        payload:
+        메인 LLM의 TrainRequest 스키마에 맞춰 전송:
         {
-          "batch_id": "...",
-          "items": [
-            {
-              "message_id": "...",
-              "prompt": "<MASKED>",
-              "llm_response": "<MASKED or ''>",
-              "rejected_response": "<MASKED or ''>"
-            }, ...
+          "start_training": true,
+          "training_data": [
+            {"input": "<MASKED_PROMPT>", "output": "<MASKED_ANSWER>", "meta": {...}},
+            ...
           ]
         }
         """
-        payload = {"batch_id": batch_id, "items": items}
+        training_data: List[Dict[str, Any]] = []
+        for it in items:
+            prompt = it.get("prompt") or ""
+            # 출력은 llm_response 우선, 없으면 rejected_response로 대체
+            output = (it.get("llm_response") or "") or (it.get("rejected_response") or "")
+            training_data.append({
+                "input": prompt,
+                "output": output,
+                "meta": {
+                    "batch_id": batch_id,
+                    "message_id": it.get("message_id") or "",
+                    "has_rejected": bool(it.get("rejected_response")),
+                }
+            })
+
+        payload = {
+            "start_training": True,
+            "training_data": training_data,
+        }
 
         last_exc: Optional[Exception] = None
         for attempt in range(1, self.retries + 2):  # 초기 1회 + 재시도 N회
@@ -72,7 +87,6 @@ class HttpMainLlmClient:
                     }
             except Exception as e:
                 last_exc = e
-                # 간단한 선형 backoff (1s, 2s, 3s ...)
                 if attempt <= self.retries:
                     await asyncio.sleep(attempt)
                 else:

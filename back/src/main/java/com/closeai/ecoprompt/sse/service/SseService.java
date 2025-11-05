@@ -6,10 +6,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.closeai.ecoprompt.common.logging.AppLogger;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SseService {
@@ -29,23 +30,23 @@ public class SseService {
 
 		// SSE 연결하기 이전 사용자 답변 중지된 경우 SSE 연결 해지
 		if(isCancelled(messageUUID)){
-			log.warn("사용자 답변 중지된 작업. UUID :  {}", messageUUID);
+			AppLogger.warn("사용자 답변 중지된 작업. UUID :  {}" + messageUUID);
 			emitter.complete();
 			return emitter;
 		}
 		
 		emitter.onCompletion(() -> {
-			log.debug("Emitter 완료. UUID :  {}", messageUUID);
+			AppLogger.debug("Emitter 완료. UUID :  {}" +  messageUUID);
 			emitters.remove(messageUUID);
 			cancelledTasks.remove(messageUUID);	// 작업 완료 시 제거
 		});
 		emitter.onTimeout(() -> {
-			log.warn("Emitter 시간 초과. UUID :  {}", messageUUID);
+			AppLogger.warn("Emitter 시간 초과. UUID :  {}" +  messageUUID);
 			emitters.remove(messageUUID);
 			cancelledTasks.remove(messageUUID);	// 작업 완료 시 제거
 		});
 		emitter.onError((e) -> {
-			log.error(e.getMessage());
+			AppLogger.error(e.getMessage());
 			emitters.remove(messageUUID);
 			cancelledTasks.remove(messageUUID);	// 작업 완료 시 제거
 		});

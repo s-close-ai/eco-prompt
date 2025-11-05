@@ -37,6 +37,9 @@ public class UserInfo extends BaseEntity {
     @Column(name = "sharing_prompt", length = 1, nullable = false, columnDefinition = "VARCHAR(1) DEFAULT 'N'")
     private String sharingPrompt = "N";  // 기본값 N
 
+    @Column(name="total_prompt_count", nullable = false)
+    private Long totalPromptCount = 0L;
+
     // FK: user_info.user_id -> user.user_id (1:1 가정)
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -65,6 +68,18 @@ public class UserInfo extends BaseEntity {
 
     public void updateSharingInformationUpdatedAt() {
         this.sharingInformationUpdatedAt = CustomUtil.dateConverter(LocalDateTime.now());
+    }
+
+    public void updateTotalPromptCount() {
+        this.totalPromptCount++;
+    }
+
+    public void updateHighScore(Double highScore) {
+        this.highScore = highScore;
+    }
+
+    public void updateTotalMileage(Integer value){
+        this.totalMileage = this.totalMileage+value;
     }
 
 }

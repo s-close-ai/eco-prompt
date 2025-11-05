@@ -1,16 +1,21 @@
 package com.closeai.ecoprompt.mileage.service;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.closeai.ecoprompt.message.model.entity.Message;
 import com.closeai.ecoprompt.mileage.model.entity.Mileage;
 import com.closeai.ecoprompt.mileage.repository.MileageRepository;
+import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MileageService {
+
+	private final UserInfoService userInfoService;
 
 	private final MileageRepository mileageRepository;
 
@@ -21,26 +26,31 @@ public class MileageService {
 	 * messageId에 해당하는 마일리지 값이 있다면 점수 변경
 	 * 아닌 경우에는 새로 생성 후 저장
 	 * */
-	public void saveOrUpdateMileage(Message message, Double score){
+	@Transactional
+	public void saveOrUpdateMileage(Message message, Integer userId, Double score) {
 
-		int value = calculateMileage(score);
+		int newValue = calculateMileage(score);
 		Long messageId = message.getId();
 
 		mileageRepository.findByMessage_Id(messageId)
 			.ifPresentOrElse(
 				mileage -> {
-					int preValue = mileage.getValue();
-					if (preValue != value) {
-						mileage.updateValue(value);
+					int oldValue = mileage.getValue();
+					if (oldValue != newValue) {
+						mileage.updateValue(newValue);
 						mileageRepository.save(mileage);
+
+						userInfoService.updateTotalMileage(userId, oldValue, newValue);
 					}
 				},
 				() -> {
 					Mileage newMileage = Mileage.builder()
 						.message(message)
-						.value(value)
+						.value(newValue)
 						.build();
 					mileageRepository.save(newMileage);
+
+					userInfoService.updateTotalMileage(userId,0, newValue);
 				}
 			);
 	}
