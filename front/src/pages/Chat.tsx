@@ -185,7 +185,7 @@ export default function Chat() {
         }
       }
 
-      let filteredMessages = [...prev];
+      const filteredMessages = [...prev];
       if (nextAiMessageIndex !== -1) {
         filteredMessages.splice(nextAiMessageIndex, 1);
       }

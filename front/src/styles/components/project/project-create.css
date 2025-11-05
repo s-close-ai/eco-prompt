@@ -76,11 +76,12 @@
   cursor: pointer;
 }
 
-/* inline card (tablet) */
+/* inline card (tablet) - 말풍선 디자인 + 모달 배경 */
 .project-create-inline {
   position: fixed;
+  inset: 0;
   left: 0;
-  z-index: 20;
+  z-index: 1300;
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
@@ -89,10 +90,12 @@
   pointer-events: auto;
   width: 100%;
   height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* 검은 반투명 배경 */
 }
 
 .project-create-inline > div {
   cursor: default;
+  pointer-events: none; /* 이 div는 클릭을 차단하지 않도록 */
 }
 
 .project-create-inline > div > .project-create.container {
@@ -101,10 +104,12 @@
   border-radius: 12px;
   padding: 14px 14px 18px;
   width: 400px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.0);
   pointer-events: auto;
   position: relative;
   cursor: default;
+  left: 220px;
+  top: 70px;
 }
 
 /* 말풍선 꼬리 - 테두리 */

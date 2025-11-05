@@ -1,7 +1,7 @@
 .ep-sheet {
   position: fixed;
   inset: 0;
-  z-index: 100; /* overlay 최상단 */
+  z-index: 1300; /* 사이드바(z-index: 1200)보다 위에 표시하여 사이드바 조작 불가능하게 */
 }
 
 .ep-sheet__backdrop {

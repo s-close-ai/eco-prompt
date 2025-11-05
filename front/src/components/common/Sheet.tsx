@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { PropsWithChildren } from 'react';
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';
@@ -63,7 +64,7 @@ export default function Sheet({
     .filter(Boolean)
     .join(' ');
 
-  return (
+  return createPortal(
     <div
       className={sheetClasses}
       role="dialog"
@@ -72,9 +73,10 @@ export default function Sheet({
       data-variant={variant}
     >
       <div className="ep-sheet__backdrop" onClick={onClose} />
-      <div className="ep-sheet__panel" data-variant={variant}>
+      <div className="ep-sheet__panel" data-variant={variant} onClick={(e) => e.stopPropagation()}>
         <div className="ep-sheet__content">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

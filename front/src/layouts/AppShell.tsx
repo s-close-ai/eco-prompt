@@ -7,6 +7,7 @@ import Bottombar from '../components/common/Bottombar';
 import useDeviceMode from '../hooks/useDeviceMode';
 import ProjectCreateOverlay from '@/components/project_create/ProjectCreateOverlay';
 import SettingsOverlay from '@/components/settings/SettingsOverlay';
+import SearchModal from '@/components/search/SearchModal';
 import type { SettingsFormData } from '@/components/settings/SettingsForm';
 import { useNavigate } from 'react-router-dom';
 
@@ -24,7 +25,7 @@ function ShellBody() {
   const location = useLocation();
   const navigate = useNavigate();
   const mode = useDeviceMode();
-  const { isSidebarCollapsed, isSidebarOpen, isSettingsOpen, closeSettings } = useAppShell();
+  const { isSidebarCollapsed, isSidebarOpen, isSettingsOpen, closeSettings, closeSearch } = useAppShell();
   const isChat = location.pathname.startsWith('/chat');
   const isProjectRoute = location.pathname.startsWith('/project');
   const isHome = location.pathname === '/';
@@ -64,7 +65,8 @@ function ShellBody() {
   useEffect(() => {
     setProjectCreateOpen(false);
     closeSettings();
-  }, [location.pathname, closeSettings]);
+    closeSearch();
+  }, [location.pathname, closeSettings, closeSearch]);
 
   const handleSettingsAutoSave = (data: SettingsFormData) => {
     // TODO: 실제 API에 자동 저장
@@ -96,25 +98,16 @@ function ShellBody() {
       <Topbar />
       <Sidebar />
       <main className="app-main">
-        {projectCreateVariant === 'inline' ? (
-          <ProjectCreateOverlay
-            open={isProjectCreateOpen}
-            onClose={() => setProjectCreateOpen(false)}
-            variant="inline"
-          />
-        ) : null}
         <Outlet />
       </main>
       {bottomVariant ? (
         <Bottombar variant={bottomVariant} onSendMessage={handleSendMessage} />
       ) : null}
-      {projectCreateVariant !== 'inline' ? (
-        <ProjectCreateOverlay
-          open={isProjectCreateOpen}
-          onClose={() => setProjectCreateOpen(false)}
-          variant={projectCreateVariant}
-        />
-      ) : null}
+      <ProjectCreateOverlay
+        open={isProjectCreateOpen}
+        onClose={() => setProjectCreateOpen(false)}
+        variant={projectCreateVariant}
+      />
       {mode === 'desktop' && (
         <SettingsOverlay
           open={isSettingsOpen}
@@ -124,7 +117,7 @@ function ShellBody() {
           onSubmit={handleSettingsSubmit}
           onAutoSave={handleSettingsAutoSave}
         />
-      )}
+      )} <SearchModal />
     </div>
   );
 }

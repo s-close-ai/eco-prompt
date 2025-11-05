@@ -57,7 +57,7 @@ function CircularProgress({
           strokeDasharray={circumference}
           strokeDashoffset={averageOffset}
           strokeLinecap="round"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          transform={`rotate( ${size / 2} ${size / 2})`}
           className="average-circle"
         />
         {/* 내 점수 원 (진한 초록색) */}
@@ -71,7 +71,7 @@ function CircularProgress({
           strokeDasharray={circumference}
           strokeDashoffset={myOffset}
           strokeLinecap="round"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          transform={`rotate( ${size / 2} ${size / 2})`}
           className="my-score-circle"
         />
       </svg>

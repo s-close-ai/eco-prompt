@@ -14,11 +14,13 @@ export default function UserMessage({
 }: UserMessageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedMessage, setEditedMessage] = useState(message);
+  const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(message);
-      // You can add a visual confirmation here if you want
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy text:', err);
     }
@@ -58,8 +60,9 @@ export default function UserMessage({
             <img src="/icons/edit.svg" alt="수정" width={16} height={16} />
           </button>
         )}
-        <button onClick={handleCopy} title="복사">
+        <button onClick={handleCopy} title="복사" className="user-message-copy-btn">
           <img src="/icons/copy.svg" alt="복사" width={16} height={16} />
+          {copied && <span className="user-message-copied">복사됨!</span>}
         </button>
       </div>
     </div>

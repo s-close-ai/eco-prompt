@@ -27,8 +27,8 @@
   max-width: 400px;
   width: max-content;
   padding: 8px 12px;
-  background: #1f2937;
-  color: #ffffff;
+  background: #ffffff;
+  color: #1f2937;
   font-size: 13px;
   line-height: 1.4;
   border-radius: 6px;
@@ -64,7 +64,7 @@
 
 .ep-tooltip-content[data-placement='top']::after {
   top: 100%;
-  border-top-color: #1f2937;
+  border-top-color: #ffffff;
 }
 
 .ep-tooltip-content[data-placement='bottom'] {
@@ -73,7 +73,7 @@
 
 .ep-tooltip-content[data-placement='bottom']::after {
   bottom: 100%;
-  border-bottom-color: #1f2937;
+  border-bottom-color: #ffffff;
 }
 
 /* 모바일에서는 툴팁 위치 조정 */
