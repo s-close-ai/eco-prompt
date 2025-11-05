@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.closeai.ecoprompt.dashboard.model.dto.response.DetailScoreResponse;
 import com.closeai.ecoprompt.message.model.dto.response.DailyRankingProjection;
+import com.closeai.ecoprompt.message.model.dto.response.EcoPickFlatProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.closeai.ecoprompt.message.model.entity.Message;
@@ -66,6 +67,31 @@ public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 		  AND m.user_id = :userId
     """, nativeQuery = true)
 	DetailScoreResponse findAverageScoresByUserAllTime(@Param("userId") int userId);
+
+	@Query(value = """
+		SELECT
+			u.name AS name,
+			sc.total_score AS sumOfScore,
+			m.message_uuid AS messageUUID,
+			sc.clarity_score     AS clarityScore,
+			sc.specificity_score AS specificityScore,
+			sc.format_score      AS formatScore,
+			sc.safety_score      AS safetyScore
+		FROM message m
+		JOIN score      sc  ON sc.message_id = m.message_id
+		JOIN `user`     u   ON u.user_id = m.user_id
+		JOIN user_info  ui  ON ui.user_id = u.user_id
+		WHERE m.is_deleted = 'N'
+		  AND m.sender_type = 'USER'
+		  AND ui.sharing_prompt = 'Y'
+		  AND STR_TO_DATE(m.created_at, '%Y.%m.%d.%H.%i.%s')
+				BETWEEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '00:00:00')
+					AND TIMESTAMP(CURDATE(), '23:59:59')
+		ORDER BY sc.total_score DESC
+		LIMIT 3
+    """, nativeQuery = true)
+	List<EcoPickFlatProjection> findWeeklyEcoPicksTop3();
+
 
 
 
