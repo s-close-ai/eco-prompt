@@ -40,13 +40,22 @@ public class UserInfo extends BaseEntity {
     @Column(name="total_prompt_count", nullable = false)
     private Long totalPromptCount = 0L;
 
+    @Column(name="total_score", nullable = false)
+    private Double totalScore = 0.0;
+
     // FK: user_info.user_id -> user.user_id (1:1 가정)
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private UserInfo(Integer totalMileage, Double highScore, User user) {
+    @Column(name = "prompt_count",  nullable = false)
+    private Integer promptCount = 0;
+
+    private UserInfo(Integer totalMileage, Double highScore, int promptCount, Double totalScore, User user) {
         this.totalMileage = totalMileage;
+        this.highScore = highScore;
+        this.promptCount = promptCount;
+        this.totalScore = totalScore;
         this.user = user;
         this.sharingInformationUpdatedAt = CustomUtil.dateConverter(LocalDateTime.now());
     }
@@ -54,6 +63,8 @@ public class UserInfo extends BaseEntity {
     public static UserInfo makeDefaultUserInfo(User user) {
 
         return new UserInfo(
+                0,
+                0.0,
                 0,
                 0.0,
                 user
@@ -74,6 +85,10 @@ public class UserInfo extends BaseEntity {
 
     public void updateTotalMileage(Integer value){
         this.totalMileage = this.totalMileage+value;
+    }
+
+    public void updateTotalScore(Double score){
+        this.totalScore += score;
     }
 
 }

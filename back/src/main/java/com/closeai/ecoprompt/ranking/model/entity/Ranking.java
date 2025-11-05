@@ -5,8 +5,11 @@ import com.closeai.ecoprompt.user.model.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "ranking")
 public class Ranking extends BaseEntity {
@@ -34,4 +37,13 @@ public class Ranking extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(name = "score", nullable = false)
+    private Double score;
+
+    @Column(name = "mileage", nullable = false)
+    private Integer mileage;
+
+    @Column(name = "prompt_count", nullable = false)
+    private Integer promptCount;
 }
