@@ -120,16 +120,19 @@ class PresidioAdapter:
         return self.analyzer.analyze(text=text, language=lang, entities=entities)
 
     def anonymize(self, text: str, lang: str = "ko") -> str:
-        # 주소/이메일 마스킹
-        addr_mail = self.analyzer.analyze(text=text, language=lang, entities=["KR_ADDRESS", "EMAIL_ADDRESS"])
-        masked = text
+        # [PATCH] 이메일 변형 패턴을 먼저 정규화해( (at)/(dot) → @/. ) 탐지를 안정화
+        work = _normalize_email_obfuscation(text)
+
+        # 주소/이메일 마스킹 (정책 적용 치환)
+        addr_mail = self.analyzer.analyze(text=work, language=lang, entities=["KR_ADDRESS", "EMAIL_ADDRESS"])
+        masked = work
         def _replace_span(s, st, ed, rep): return s[:st] + rep + s[ed:]
         for r in sorted(addr_mail, key=lambda x: x.start, reverse=True):
             span = masked[r.start:r.end]
             repl = _mask_address_with_policy(span) if r.entity_type == "KR_ADDRESS" else _mask_email_with_policy(span)
             masked = _replace_span(masked, r.start, r.end, repl)
 
-        # 나머지 엔터티 자동 탐지
+        # 나머지 엔터티 자동 탐지 (이메일/주소는 이미 처리했으므로 제외)
         others = self.analyzer.analyze(
             text=masked, language=lang,
             entities=[

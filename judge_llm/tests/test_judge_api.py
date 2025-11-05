@@ -1,10 +1,11 @@
+# judge_llm/tests/test_judge_api.py
 #!/usr/bin/env python3
 """
 Judge 파이프라인 통합 테스트 러너 (++ 업그레이드 버전)
 
 환경변수:
   # 공통
-  API_URL                (default: http://localhost:8081/api/v1/ai/training)
+  API_URL                (default: http://<HOST>:<PORT>/api/v1/ai/training)
   API_TOKEN              (optional)
 
   # CloseAI 포맷 전송용
@@ -23,8 +24,14 @@ Judge 파이프라인 통합 테스트 러너 (++ 업그레이드 버전)
   # 골든 배치 ID 고정(선택)
   GOLDEN_BATCH_ID
 
+추가 편의:
+  - 테스트 러너가 ../api/.env 를 자동 파싱하여 API_HOST / API_PORT를 기본값으로 사용
+  - 호스트-컨테이너 포트가 다를 때는 API_HOST_PORT 로 클라이언트 접속 포트를 덮어쓰기
+    예) API_HOST_PORT=8083 python tests/test_judge_api.py --suite standard
+
 실행 예시:
   python tests/test_judge_api.py --suite all
+  API_HOST_PORT=8083 python tests/test_judge_api.py --suite standard
   API_URL=http://112.171.56.247:8083/api/v1/ai/training python tests/test_judge_api.py --suite standard
   CLOSEAI_URL=http://112.171.56.247:8083/api/v1/ai/training/closeai python tests/test_judge_api.py --suite closeai
 """
@@ -40,20 +47,59 @@ except Exception:
     MongoClient = None
 
 # -------------------- 환경 --------------------
-API_URL   = os.getenv("API_URL", "http://localhost:8081/api/v1/ai/training").rstrip("/")
-API_TOKEN = os.getenv("API_TOKEN", "").strip()
+def _load_kv_env(path: str) -> Dict[str, str]:
+    kv: Dict[str, str] = {}
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                kv[k.strip()] = v.strip().strip("'").strip('"')
+    except Exception:
+        pass
+    return kv
 
-# CloseAI 입력 전송 설정
+API_URL_env = os.getenv("API_URL", "").strip()
+API_TOKEN   = os.getenv("API_TOKEN", "").strip()
+
+_here = os.path.dirname(os.path.abspath(__file__))
+_env_candidates = [
+    os.path.normpath(os.path.join(_here, "..", "api", ".env")),
+    os.path.normpath(os.path.join(_here, "api", ".env")),
+]
+_env_kv: Dict[str, str] = {}
+for _p in _env_candidates:
+    _env_kv = _load_kv_env(_p)
+    if _env_kv:
+        break
+
+API_HOST = os.getenv("API_HOST", _env_kv.get("API_HOST", "127.0.0.1"))
+API_PORT = os.getenv("API_PORT", _env_kv.get("API_PORT", "8081"))
+
+# 0.0.0.0 같은 바인딩 주소는 클라이언트 접속에 부적합 → 루프백으로 치환
+if API_HOST in ("0.0.0.0", "0.0.0.0/0", "::"):
+    API_HOST = "127.0.0.1"
+
+# 호스트 포트 매핑(예: 8083->8081)시, 클라이언트 접속 포트 덮어쓰기
+API_HOST_PORT = os.getenv("API_HOST_PORT", "").strip()
+_client_port = API_HOST_PORT if API_HOST_PORT else API_PORT
+
+# 최종 API_URL
+if API_URL_env:
+    API_URL = API_URL_env.rstrip("/")
+else:
+    API_URL = f"http://{API_HOST}:{_client_port}/api/v1/ai/training".rstrip("/")
+
 CLOSEAI_URL = os.getenv("CLOSEAI_URL", (API_URL + "/closeai")).rstrip("/")
 CLOSEAI_DIRECT_ARRAY = (os.getenv("CLOSEAI_DIRECT_ARRAY", "false").lower() == "true")
 
-# Mongo 검증(표준 배치)
 VERIFY_MONGO = (os.getenv("VERIFY_MONGO","false").lower() == "true")
 MONGO_URI  = os.getenv("MONGO_URI")
 MONGO_DB   = os.getenv("MONGO_DB") or "judge_llm"
 MONGO_COLL = os.getenv("MONGO_COLL") or "train_dataset"
 
-# PII 정책
 STRICT_PII   = (os.getenv("STRICT_PII","false").lower() == "true")
 
 
@@ -315,6 +361,7 @@ def closeai_set_multi_pii_noise():
 # ===================================================
 def run_suite_standard() -> bool:
     print(f"[INFO] (STANDARD) API_URL={API_URL} token={'set' if bool(API_TOKEN) else 'not-set'} at {datetime.now().isoformat()}")
+    print(f"[INFO] (STANDARD) API_HOST={API_HOST} API_PORT={API_PORT} API_HOST_PORT={API_HOST_PORT or '-'}")
     sr = SuiteResult()
 
     # 비동기(202) — 상태코드만 확인
@@ -407,6 +454,7 @@ def run_suite_standard() -> bool:
 def run_suite_closeai() -> bool:
     print(f"[INFO] (CLOSEAI) URL={CLOSEAI_URL if not CLOSEAI_DIRECT_ARRAY else API_URL} "
           f"direct_array={CLOSEAI_DIRECT_ARRAY} token={'set' if bool(API_TOKEN) else 'not-set'} at {datetime.now().isoformat()}")
+    print(f"[INFO] (CLOSEAI) API_HOST={API_HOST} API_PORT={API_PORT} API_HOST_PORT={API_HOST_PORT or '-'}")
     sr = SuiteResult()
 
     # 기본/정상
