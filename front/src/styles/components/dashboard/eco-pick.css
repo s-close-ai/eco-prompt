@@ -35,6 +35,7 @@
   overflow: hidden;
 }
 
+
 .eco-pick-header {
   display: flex;
   justify-content: space-between;
@@ -214,10 +215,10 @@
   color: #006400;
 }
 
-/* 태블릿/데스크탑 스타일 - 세로로 긴 레이아웃 */
+/* 태블릿/데스크탑 스타일 - 가로 레이아웃 */
 :root[data-mode='tablet'] .eco-pick-container,
 :root[data-mode='desktop'] .eco-pick-container {
-  padding: 18px;
+  padding: 0;
   overflow: visible;
 }
 
@@ -227,6 +228,7 @@
   flex-direction: column;
   gap: 0;
   overflow: visible;
+  height: 100%;
 }
 
 :root[data-mode='tablet'] .carousel-track,
@@ -305,12 +307,6 @@
   margin: 6px 0;
 }
 
-:root[data-mode='tablet'] .eco-pick-metrics,
-:root[data-mode='desktop'] .eco-pick-metrics {
-  margin-top: auto;
-  padding: 14px;
-  margin-bottom: 14px;
-}
 
 :root[data-mode='tablet'] .metric-label,
 :root[data-mode='desktop'] .metric-label {

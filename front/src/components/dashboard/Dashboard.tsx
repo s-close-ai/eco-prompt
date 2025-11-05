@@ -12,7 +12,7 @@ const metricDescriptions: Record<string, string> = {
 
 function CircularProgress({
   metric,
-  size = 130,
+  size = 100,
   strokeWidth = 12,
 }: {
   metric: DashboardMetric;

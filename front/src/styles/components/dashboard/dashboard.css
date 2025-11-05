@@ -24,10 +24,20 @@
   flex-direction: column;
 }
 
-/* 모바일: 그래프 영역 길게, 기록 통계 짧게 */
+/* 모바일: 기록 통계를 위로, 그래프를 아래로 */
 :root[data-mode='mobile'] .dashboard-container {
   padding: 12px 12px calc(var(--footer-height, 60px) + 20px) 12px;
-  gap: 12px;
+  gap: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+:root[data-mode='mobile'] .dashboard-stats {
+  order: 1;
+}
+
+:root[data-mode='mobile'] .dashboard-metrics {
+  order: 2;
 }
 
 :root[data-mode='mobile'] .dashboard-metrics {
@@ -35,6 +45,7 @@
   min-height: 0;
   overflow: visible;
   gap: 6px;
+  margin-bottom: 8px;
 }
 
 :root[data-mode='mobile'] .dashboard-metrics-container {
@@ -57,6 +68,9 @@
 :root[data-mode='mobile'] .stats-list {
   flex: 0 0 auto;
   overflow: visible;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
 }
 
 :root[data-mode='mobile'] .dashboard-metrics {
@@ -73,14 +87,14 @@
 }
 
 :root[data-mode='mobile'] .circular-progress-container {
-  width: 130px;
-  height: 130px;
+  width: 100px;
+  height: 100px;
   margin: 8px 0;
 }
 
 :root[data-mode='mobile'] .circular-progress-container svg {
-  width: 130px;
-  height: 130px;
+  width: 100px;
+  height: 100px;
 }
 
 :root[data-mode='mobile'] .metric-title {
@@ -106,7 +120,12 @@
 }
 
 :root[data-mode='mobile'] .stat-item {
-  padding: 8px 6px;
+  padding: 6px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
 }
 
 :root[data-mode='mobile'] .stat-label {
@@ -190,11 +209,6 @@
   transform: scaleX(1);
 }
 
-.metric-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-}
-
 .metric-title-wrapper {
   display: flex;
   align-items: center;
@@ -241,14 +255,14 @@
   align-items: center;
   justify-content: center;
   margin: 8px 0;
-  width: 130px;
-  height: 130px;
+  width: 100px;
+  height: 100px;
   flex-shrink: 0;
 }
 
 .circular-progress-container svg {
-  width: 130px;
-  height: 130px;
+  width: 100px;
+  height: 100px;
 }
 
 .circular-progress {
@@ -363,11 +377,6 @@
   flex-shrink: 0;
 }
 
-.stat-item:hover {
-  background: #f9fafb;
-  transform: translateX(4px);
-}
-
 .stat-label-wrapper {
   display: flex;
   align-items: center;
@@ -413,9 +422,9 @@
 /* 태블릿/데스크탑 스타일 - 가로 레이아웃 */
 :root[data-mode='tablet'] .dashboard-container,
 :root[data-mode='desktop'] .dashboard-container {
-  padding: 16px;
+  padding: 0;
   gap: 14px;
-  flex-direction: row;
+  flex-direction: column;
 }
 
 :root[data-mode='tablet'] .dashboard-legend,
@@ -436,7 +445,7 @@
 :root[data-mode='tablet'] .dashboard-metrics-container,
 :root[data-mode='desktop'] .dashboard-metrics-container {
   flex: 0 0 auto;
-  max-height: fit-content;
+  max-height: fit-content + 20ㅔ;
 }
 
 :root[data-mode='tablet'] .dashboard-metrics,
@@ -449,82 +458,103 @@
 :root[data-mode='tablet'] .metric-card,
 :root[data-mode='desktop'] .metric-card {
   flex: 1;
-  padding: 16px;
-  gap: 10px;
+  padding: 12px;
+  gap: 8px;
 }
 
 :root[data-mode='tablet'] .metric-title,
 :root[data-mode='desktop'] .metric-title {
-  font-size: 13px;
+  font-size: 12px;
 }
 
 :root[data-mode='tablet'] .score-value.my-score,
 :root[data-mode='desktop'] .score-value.my-score {
-  font-size: 20px;
+  font-size: 16px;
 }
 
 :root[data-mode='tablet'] .score-value.average-score,
 :root[data-mode='desktop'] .score-value.average-score {
-  font-size: 13px;
+  font-size: 11px;
 }
 
 :root[data-mode='tablet'] .circular-progress-container,
 :root[data-mode='desktop'] .circular-progress-container {
-  width: 130px;
-  height: 130px;
-  margin: 8px 0;
+  width: 100px;
+  height: 100px;
+  margin: 4px 0;
 }
 
 :root[data-mode='tablet'] .circular-progress-container svg,
 :root[data-mode='desktop'] .circular-progress-container svg {
-  width: 130px;
-  height: 130px;
+  width: 100px;
+  height: 100px;
 }
 
 :root[data-mode='tablet'] .dashboard-stats,
 :root[data-mode='desktop'] .dashboard-stats {
   flex: 0 0 auto;
-  padding: 16px;
+  padding: 0;
   max-height: fit-content;
+  background: transparent;
+  box-shadow: none;
+}
+
+:root[data-mode='tablet'] .dashboard-stats-container,
+:root[data-mode='desktop'] .dashboard-stats-container {
+  padding: 0;
 }
 
 :root[data-mode='tablet'] .stats-list,
 :root[data-mode='desktop'] .stats-list {
   overflow: visible;
   flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
 }
 
 :root[data-mode='tablet'] .stats-title,
 :root[data-mode='desktop'] .stats-title {
-  font-size: 15px;
-  margin-bottom: 12px;
+  font-size: 14px;
+  margin-bottom: 10px;
 }
 
 :root[data-mode='tablet'] .stat-item,
 :root[data-mode='desktop'] .stat-item {
   padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 :root[data-mode='tablet'] .stat-icon,
 :root[data-mode='desktop'] .stat-icon {
-  font-size: 16px;
-  width: 26px;
-  height: 26px;
+  font-size: 14px;
+  width: 24px;
+  height: 24px;
 }
 
 :root[data-mode='tablet'] .stat-label,
 :root[data-mode='desktop'] .stat-label {
-  font-size: 12px;
+  font-size: 11px;
+  text-align: center;
 }
 
 :root[data-mode='tablet'] .stat-value,
 :root[data-mode='desktop'] .stat-value {
-  font-size: 15px;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
 }
 
 :root[data-mode='tablet'] .stat-value.highlight,
 :root[data-mode='desktop'] .stat-value.highlight {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
 }
 

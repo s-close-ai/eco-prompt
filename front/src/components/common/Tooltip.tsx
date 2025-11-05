@@ -16,8 +16,36 @@ export default function Tooltip({ content }: TooltipProps) {
   const updatePosition = () => {
     if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
-    const top = rect.top - 8; // 위로 8px
-    const left = rect.left + rect.width / 2; // 중앙 기준
+    const tooltipWidth = tooltipRef.current?.offsetWidth || 200; // 기본값 200px
+
+    let top = rect.top - 8; // 위로 8px
+    let left = rect.left + rect.width / 2; // 중앙 기준
+
+    // 화면 너비
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    const padding = 10; // 화면 가장자리 여백
+
+    // 왼쪽 경계 체크
+    if (left - tooltipWidth / 2 < padding) {
+      left = tooltipWidth / 2 + padding;
+    }
+
+    // 오른쪽 경계 체크
+    if (left + tooltipWidth / 2 > screenWidth - padding) {
+      left = screenWidth - tooltipWidth / 2 - padding;
+    }
+
+    // 상단 경계 체크 (위로 나가면 아래로 표시)
+    if (top < padding) {
+      top = rect.bottom + 8;
+    }
+
+    // 하단 경계 체크
+    if (top + 100 > screenHeight - padding) {
+      top = rect.top - 100 - 8;
+    }
+
     setPosition({ top, left });
   };
 

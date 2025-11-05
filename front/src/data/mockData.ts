@@ -389,8 +389,8 @@ export const mockDashboardMetrics: DashboardMetric[] = [
     averageScore: 12.47,
   },
   {
-    name: 'stability',
-    displayName: '안정성',
+    name: 'safety',
+    displayName: '안전성',
     myScore: 18.76,
     averageScore: 22.47,
   },

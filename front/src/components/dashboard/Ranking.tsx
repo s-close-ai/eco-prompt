@@ -4,6 +4,7 @@ import type { RankingData } from '@/types/dashboard.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/ranking.css';
+import newIcon from '/icons/new.svg';
 
 function getDateNumber(date: Date): string {
   return date.getDate().toString();
@@ -15,6 +16,10 @@ function formatDate(date: Date): string {
 
 function isSameDate(date1: Date, date2: Date): boolean {
   return formatDate(date1) === formatDate(date2);
+}
+
+function getMonthLabel(date: Date): string {
+  return `${date.getMonth() + 1}월`;
 }
 
 export default function Ranking() {
@@ -128,14 +133,16 @@ export default function Ranking() {
           <div className="date-selector">
             {dateList.map((date) => {
               const dateNumber = getDateNumber(date);
+              const monthLabel = getMonthLabel(date);
               const isSelected = isSameDate(date, selectedDate);
               return (
                 <button
                   key={formatDate(date)}
-                  className={`date-button ${isSelected ? 'active' : ''}`}
+                  className={`date-button has-month ${isSelected ? 'active' : ''}`}
                   onClick={() => setSelectedDate(date)}
                 >
-                  {dateNumber}
+                  <span className="month-label">{monthLabel}</span>
+                  <span className="date-number">{dateNumber}</span>
                 </button>
               );
             })}
@@ -199,7 +206,7 @@ export default function Ranking() {
                   <td className="mileage-cell">{entry.mileage.toLocaleString()}</td>
                   <td className="change-cell">
                     {entry.rankChange === 'new' ? (
-                      <span className="new-badge">NEW</span>
+                      <img src={newIcon} alt="new" className="change-icon" />
                     ) : (
                       getRankChangeIcon(entry.rankChange) && (
                         <img

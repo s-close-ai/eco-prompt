@@ -44,10 +44,10 @@ export default function Bottombar({ variant, onSendMessage }: BottombarProps) {
           aria-label="dashboard" 
           className="icon-button" 
           onClick={() => {
-            const targetPath = '/?tab=dashboard';
-            if (location.pathname !== '/' || location.search !== '?tab=dashboard') {
-              navigate(targetPath);
-            }
+            const targetPath = '/dashboard';
+              if (location.pathname !== targetPath) {
+                navigate(targetPath);
+              }
           }}
         >
           <img src="/icons/dashboard.svg" alt="dashboard" />

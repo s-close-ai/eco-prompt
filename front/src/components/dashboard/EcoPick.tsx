@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { mockEcoPickPrompts } from '@/data/mockData';
 import type { EcoPickPrompt } from '@/types/dashboard.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
-import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/eco-pick.css';
 
 interface EcoPickProps {
@@ -26,9 +25,9 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
   // 태블릿/데스크탑: 3개의 프롬프트를 캐러셀로 표시
   const isDesktopMode = mode === 'tablet' || mode === 'desktop';
 
-  // 스와이프 처리 (모바일)
+  // 스와이프 처리 (모바일, 태블릿)
   useEffect(() => {
-    if (mode !== 'mobile') return;
+    if (mode === 'desktop') return;
 
     const container = containerRef.current;
     if (!container) return;
@@ -107,7 +106,6 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
       <div className="eco-pick-header">
         <div className="eco-pick-name-wrapper">
           <h3 className="eco-pick-name">{prompt.name}</h3>
-          <Tooltip content="오늘의 가장 잘 쓴 프롬프트입니다. 명확성, 구체성, 형식 준수, 안전성을 기준으로 선정됩니다." />
         </div>
         <div className="eco-pick-score">{prompt.score}</div>
       </div>
@@ -169,14 +167,8 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
                 aria-label="이전"
                 disabled={currentIndex === 0}
               >
-                <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
-                  <circle cx="3" cy="3" r="3" />
-                </svg>
-                <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
-                  <circle cx="3" cy="3" r="3" />
-                </svg>
-                <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
-                  <circle cx="3" cy="3" r="3" />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M15 18l-6-6 6-6" />
                 </svg>
               </button>
               <div className="eco-pick-indicators">
@@ -195,14 +187,8 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
                 aria-label="다음"
                 disabled={currentIndex === prompts.length - 1}
               >
-                <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
-                  <circle cx="3" cy="3" r="3" />
-                </svg>
-                <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
-                  <circle cx="3" cy="3" r="3" />
-                </svg>
-                <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor">
-                  <circle cx="3" cy="3" r="3" />
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 18l6-6-6-6" />
                 </svg>
               </button>
             </div>

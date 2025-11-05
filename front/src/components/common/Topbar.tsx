@@ -47,8 +47,8 @@ export default function Topbar() {
             aria-label="대시보드"
             className="icon-button"
             onClick={() => {
-              const targetPath = '/?tab=ranking';
-              if (location.pathname !== '/' || location.search !== '?tab=ranking') {
+              const targetPath = '/dashboard';
+              if (location.pathname !== targetPath) {
                 navigate(targetPath);
               }
             }}
