@@ -39,12 +39,12 @@ select {
   --app-vh: 1vh;
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
-  --header-height: 56px;
-  --footer-height: 64px;
+  --header-height: 3.5rem;
+  --footer-height: 4rem;
   /* Sidebar layout variables */
-  --sidebar-width: 280px;
-  --sidebar-collapsed-width: 64px;
-  --sidebar-tablet-width: min(50vw, 280px);
+  --sidebar-width: 17.5rem;
+  --sidebar-collapsed-width: 4rem;
+  --sidebar-tablet-width: min(50vw, 17.5rem);
 
   /* Color Palette */
   /* Primary Colors */
@@ -97,6 +97,10 @@ select {
   --fg: var(--color-base-white);
   --surface: rgba(16, 16, 16, 0.9);
   --border: rgba(255, 255, 255, 0.08);
+}
+
+html {
+  font-size: clamp(0.875rem, 1.04vw, 1.125rem);
 }
 
 html,
@@ -168,8 +172,8 @@ textarea,
   display: grid;
   grid-template-rows: auto 1fr auto;
   height: calc(var(--app-vh) * 100);
-  padding-top: max(var(--safe-top), 0px);
-  padding-bottom: max(var(--safe-bottom), 0px);
+  padding-top: max(var(--safe-top), 0);
+  padding-bottom: max(var(--safe-bottom), 0);
   overflow: hidden;
   gap: 0; /* ensure no column/row gap */
 }
@@ -213,10 +217,10 @@ textarea,
 }
 
 .container {
-  max-width: 960px;
+  max-width: 60rem;
   margin: 0 auto;
   width: 100%;
-  padding-inline: 16px;
+  padding-inline: 1rem;
 }
 
 /* 메인 영역에서는 사이드바와의 간격(좌측 margin)을 없앱니다 */
@@ -231,15 +235,15 @@ textarea,
 
 .brand {
   font-weight: 700;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.0125rem;
 }
 
 .chat-input {
   width: 100%;
-  max-width: 960px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
+  max-width: 60rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 0.0625rem solid var(--border);
   background: rgba(255, 255, 255, 0.02);
   color: var(--fg);
 }
@@ -264,7 +268,7 @@ textarea,
 
 /* 입력 특성 기반 보조 분기 */
 :root[data-pointer='coarse'] .needs-large-hit {
-  padding: 14px 16px;
+  padding: 0.875rem 1rem;
 }
 :root[data-hover='hover'] .show-on-hover:hover {
   opacity: 1;

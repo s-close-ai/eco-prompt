@@ -12,13 +12,14 @@ const metricDescriptions: Record<string, string> = {
 
 function CircularProgress({
   metric,
-  size = 100,
+  size = 130,
   strokeWidth = 12,
 }: {
   metric: DashboardMetric;
   size?: number;
   strokeWidth?: number;
 }) {
+  // 내부 계산은 기준 크기(size)를 사용하고, 실제 표시 크기는 컨테이너의 CSS clamp로 제어한다.
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const maxScore = Math.max(metric.myScore, metric.averageScore) * 1.2; // 여유 공간
@@ -28,8 +29,19 @@ function CircularProgress({
   const averageOffset = circumference - (averagePercentage / 100) * circumference;
 
   return (
-    <div className="circular-progress-container">
-      <svg width={size} height={size} className="circular-progress">
+    <div
+      className="circular-progress-container"
+      style={{
+        width: 'clamp(7rem, 6.77vw, 9rem)',
+        height: 'clamp(7rem, 6.77vw, 9rem)',
+      }}
+    >
+      <svg
+        width="100%"
+        height="100%"
+        viewBox={`0 0 ${size} ${size}`}
+        className="circular-progress"
+      >
         {/* 배경 원 (연한 회색) */}
         <circle
           cx={size / 2}

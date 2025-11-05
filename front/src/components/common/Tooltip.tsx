@@ -20,7 +20,7 @@ export default function Tooltip({ content }: TooltipProps) {
 
     const triggerRect = triggerRef.current.getBoundingClientRect();
     const tooltipRect = tooltipRef.current.getBoundingClientRect();
-    const { innerWidth: screenWidth, innerHeight: screenHeight } = window;
+    const { innerWidth: screenWidth } = window;
     const padding = 10;
     const tooltipHeight = tooltipRect.height;
 
@@ -94,15 +94,15 @@ export default function Tooltip({ content }: TooltipProps) {
           ref={tooltipRef}
           className={`ep-tooltip-content ${isVisible ? 'ep-tooltip-visible' : ''}`}
           role="tooltip"
-          style={
-            position
+          style={{
+            ...(position
               ? {
                   top: `${position.top}px`,
                   left: `${position.left}px`,
                   '--arrow-left': `${arrowPosition}px`,
                 }
-              : { visibility: 'hidden' }
-          }
+              : { visibility: 'hidden' }),
+          } as React.CSSProperties}
           data-placement={placement}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}

@@ -87,14 +87,14 @@
 }
 
 :root[data-mode='mobile'] .circular-progress-container {
-  width: 100px;
-  height: 100px;
+  width: 130px;
+  height: 130px;
   margin: 8px 0;
 }
 
 :root[data-mode='mobile'] .circular-progress-container svg {
-  width: 100px;
-  height: 100px;
+  width: 130px;
+  height: 130px;
 }
 
 :root[data-mode='mobile'] .metric-title {
@@ -255,14 +255,14 @@
   align-items: center;
   justify-content: center;
   margin: 8px 0;
-  width: 100px;
-  height: 100px;
+  width: 130px;
+  height: 130px;
   flex-shrink: 0;
 }
 
 .circular-progress-container svg {
-  width: 100px;
-  height: 100px;
+  width: 130px;
+  height: 130px;
 }
 
 .circular-progress {
@@ -479,15 +479,15 @@
 
 :root[data-mode='tablet'] .circular-progress-container,
 :root[data-mode='desktop'] .circular-progress-container {
-  width: 100px;
-  height: 100px;
+  width: 130px;
+  height: 130px;
   margin: 4px 0;
 }
 
 :root[data-mode='tablet'] .circular-progress-container svg,
 :root[data-mode='desktop'] .circular-progress-container svg {
-  width: 100px;
-  height: 100px;
+  width: 130px;
+  height: 130px;
 }
 
 :root[data-mode='tablet'] .dashboard-stats,

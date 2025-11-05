@@ -21,7 +21,7 @@
   top: 0;
   left: 0;
   bottom: 0;
-  width: 280px;
+  width: var(--sidebar-width);
   background: #f5faf4;
   border-right: none; /* remove visual gap line; container handles separation */
   z-index: 1200;
