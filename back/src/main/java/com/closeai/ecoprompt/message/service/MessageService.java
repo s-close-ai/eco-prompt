@@ -60,16 +60,16 @@ public class MessageService {
 		String messageUUID = CustomUtil.makeNewUUID();
 
 		//3. Mysql과 MonogoDB에 사용자 입력 메시지 저장
-		MessageDocument userMessage = saveMessage(messageUUID, chatting, MessageSender.USER, content, MessageStatus.RECEIVED, userId);
+		saveMessage(messageUUID, chatting, MessageSender.USER, content, MessageStatus.RECEIVED, userId);
 
 		//4. Mysql과 MonogoDB에 AI 응답 메시지 저장
-		MessageDocument aiMessage = saveMessage(messageUUID, chatting, MessageSender.AI, null, MessageStatus.PROCESSING, userId);
+		saveMessage(messageUUID, chatting, MessageSender.AI, null, MessageStatus.PROCESSING, userId);
 
 		//5. 사용자에 대한 프롬프트 수 + 1 증가
 		userInfoService.increasePromptCnt(userId);
 
 		//6. JudgeModel 호출
-		aiService.callAiModel(messageUUID, content, userId, isFirstChatting, userMessage, aiMessage);
+		aiService.callAiModel(messageUUID, content, userId, isFirstChatting);
 
 		return new SubmitMessageResponse(chattingId, messageUUID);
 	}
@@ -86,13 +86,13 @@ public class MessageService {
 		Integer userId = CustomUtil.getCurrentUserId();
 
 		// 1. 기존에 있는 message MongoDB의 값을 변경
-		List<MessageDocument> messageDocuments = updateMessageContent(messageUUID, content);
+		updateMessageContent(messageUUID, content);
 
 		// 2. 기존에 있는 chatting의 updatedAt 변경
 		chattingService.updateUpdateAt(chattingId);
 
 		// 3. JudgeModel 호출
-		aiService.callAiModel(messageUUID, content, userId, false, messageDocuments.get(0), messageDocuments.get(1));
+		aiService.callAiModel(messageUUID, content, userId, false);
 
 		return new SubmitMessageResponse(chattingId, messageUUID);
 	}
@@ -100,7 +100,7 @@ public class MessageService {
 	/**
 	 * MYSQL과 MONGODB에 메시지 저장 함수
 	 * */
-	private MessageDocument saveMessage(String messageUUID, Chatting chatting, MessageSender messageSender, String content, MessageStatus messageStatus, Integer userId) {
+	private void saveMessage(String messageUUID, Chatting chatting, MessageSender messageSender, String content, MessageStatus messageStatus, Integer userId) {
 		
 		Message message = Message.builder()
 			.messageUUID(messageUUID)
@@ -120,14 +120,12 @@ public class MessageService {
 
 		messageJpaRepository.save(message);
 		messageMongoRepository.save(messageDocument);
-
-		return messageDocument;
 	}
 
 	/**
 	 * MongoDB 기존의 메시지 값
 	 * */
-	private List<MessageDocument> updateMessageContent(String messageUUID, String content){
+	private void updateMessageContent(String messageUUID, String content){
 
 		MessageDocument userDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER)
 			.orElseThrow(() -> new BusinessException("저장된 메시지가 없습니다."));
@@ -143,7 +141,6 @@ public class MessageService {
 		List<MessageDocument> messageDocuments = List.of(userDocument, aiDocument);
 
 		messageMongoRepository.saveAll(messageDocuments);
-		return messageDocuments;
 	}
 
 }

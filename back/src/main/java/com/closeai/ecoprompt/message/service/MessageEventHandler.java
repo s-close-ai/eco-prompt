@@ -17,6 +17,7 @@ import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
 import com.closeai.ecoprompt.chatting.service.ChattingService;
 import com.closeai.ecoprompt.common.exception.BusinessException;
+import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.model.entity.Message;
 import com.closeai.ecoprompt.message.model.entity.MessageDocument;
 import com.closeai.ecoprompt.message.model.entity.MessageSender;
@@ -24,7 +25,6 @@ import com.closeai.ecoprompt.message.model.entity.MessageStatus;
 import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
 import com.closeai.ecoprompt.mileage.service.MileageService;
-import com.closeai.ecoprompt.score.model.entity.Score;
 import com.closeai.ecoprompt.score.service.ScoreService;
 import com.closeai.ecoprompt.sse.service.SseService;
 
@@ -122,8 +122,12 @@ public class MessageEventHandler {
 	@EventListener
 	public void ModelCancelledEvent(ModelCancelledEvent event) {
 
-		MessageDocument message = event.getMessage();
+		String messageUUID = event.getMessageUUID();
 		String content = event.getContent();
+		MessageSender messageSender = event.getMessageSender();
+
+		MessageDocument message = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, messageSender)
+				.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다"));
 
 		message.updateMessageStatus(MessageStatus.CANCELLED);
 		// Judge Model 중지
@@ -149,19 +153,31 @@ public class MessageEventHandler {
 	@EventListener
 	public void ModelErrorEvent(ModelErrorEvent event) {
 
-		MessageDocument message = event.getMessage();
 		String messageUUID = event.getMessageUUID();
 
+		sseService.markAsCancelled(messageUUID);
 		sseService.complete(messageUUID);
-		message.updateMessageStatus(MessageStatus.ERROR);
-		messageMongoRepository.save(message);
+		
+		try{
+			MessageDocument userDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER)
+				.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
+			MessageDocument aiDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.AI)
+				.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
+			
+			if(userDocument.getStatus() != MessageStatus.ERROR){
+				userDocument.updateMessageStatus(MessageStatus.ERROR);
+				messageMongoRepository.save(userDocument);
+			}
+			if(aiDocument.getStatus() != MessageStatus.ERROR){
+				aiDocument.updateMessageStatus(MessageStatus.ERROR);
+				messageMongoRepository.save(aiDocument);
+			}
+		}catch (BusinessException e){
+			AppLogger.warn("메시지 에러 처리 실패");
+		}
 
-		if(message.getSenderType() == MessageSender.AI){
-			checkCompletion(messageUUID,"LLM");
-		}
-		else{
-			checkCompletion(messageUUID,"JUDGE");
-		}
+		checkCompletion(messageUUID,"LLM");
+		checkCompletion(messageUUID,"JUDGE");
 	}
 
 	/**
