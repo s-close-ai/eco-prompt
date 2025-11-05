@@ -120,13 +120,9 @@ SYSTEM_PROMPT = """\
         "summary": "<userInput 10자 이내 요약 - 한국어>",
         "scoreInfo": {
             "clarityScore": <0.00~25.00>,
-            "clarityReason": "<이유 1~2문장>",
             "specificityScore": <0.00~25.00>,
-            "specificityReason": "<이유 1~2문장>",
             "formatScore": <0.00~25.00>,
-            "formatReason": "<이유 1~2문장>",
-            "safetyScore": <0.00~25.00>,
-            "safetyReason": "<이유 1~2문장>"
+            "safetyScore": <0.00~25.00>
         }
         }
         주의: JSON 외 텍스트 출력 금지. 숫자는 소수 2자리. 근거는 간결하고 입력에 근거할 것.
@@ -139,13 +135,9 @@ SYSTEM_PROMPT = """\
             "summary": "AI 기반 스마트팩토리의 장점을 표 형식으로 3가지 요약 요청",
             "scoreInfo": {
                 "clarityScore": 22.20,
-                "clarityReason": "질문의 목적(스마트팩토리 장점 요약)과 출력 형식(표로 정리)이 명확하게 제시되어 있습니다.",
                 "specificityScore": 19.10,
-                "specificityReason": "요약 개수(3가지)와 형식(표)이 구체적으로 지정되어 있습니다. 하지만, 표에 들어가야할 세부 항목이 주어지지 않았습니다.",
                 "formatScore": 22.00,
-                "formatReason": "표 형식과 '요약'이라는 출력 지침이 분명합니다.",
-                "safetyScore": 23.00,
-                "safetyReason": "비논란적이며 안전한 정보 요청입니다."
+                "safetyScore": 23.00
             }
         }
 
