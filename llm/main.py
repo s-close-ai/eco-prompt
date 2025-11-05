@@ -7,7 +7,7 @@ from app.models.vectordb_loader import load_vectordb, vector_store, load_embeddi
 
 import torch
 
-device = torch.device("auto" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # lifespan 컨텍스트 관리자 정의
