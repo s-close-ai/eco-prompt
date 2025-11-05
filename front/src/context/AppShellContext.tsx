@@ -16,6 +16,11 @@ interface AppShellContextValue {
   closeSettings: () => void;
   toggleSettings: () => void;
 
+  isSearchOpen: boolean;
+  openSearch: () => void;
+  closeSearch: () => void;
+  toggleSearch: () => void;
+
   isLoading: boolean;
   setIsLoading: (isLoading: boolean) => void;
   onStopGeneration: () => void;
@@ -28,6 +33,7 @@ export function AppShellProvider({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [onStopGeneration, setOnStopGeneration] = useState(() => () => {});
 
@@ -58,6 +64,10 @@ export function AppShellProvider({ children }: { children: React.ReactNode }) {
   const closeSettings = useCallback(() => setIsSettingsOpen(false), []);
   const toggleSettings = useCallback(() => setIsSettingsOpen((v) => !v), []);
 
+  const openSearch = useCallback(() => setIsSearchOpen(true), []);
+  const closeSearch = useCallback(() => setIsSearchOpen(false), []);
+  const toggleSearch = useCallback(() => setIsSearchOpen((v) => !v), []);
+
   const value = useMemo(
     () => ({
       isSidebarOpen,
@@ -72,6 +82,10 @@ export function AppShellProvider({ children }: { children: React.ReactNode }) {
       openSettings,
       closeSettings,
       toggleSettings,
+      isSearchOpen,
+      openSearch,
+      closeSearch,
+      toggleSearch,
       isLoading,
       setIsLoading,
       onStopGeneration,
@@ -90,6 +104,10 @@ export function AppShellProvider({ children }: { children: React.ReactNode }) {
       openSettings,
       closeSettings,
       toggleSettings,
+      isSearchOpen,
+      openSearch,
+      closeSearch,
+      toggleSearch,
       isLoading,
       onStopGeneration,
     ],

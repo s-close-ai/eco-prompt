@@ -24,6 +24,15 @@ export default function ProjectCreateForm({ onSubmit, onClose }: ProjectCreateFo
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    if (value.length > 100) {
+      alert('최대 100자까지 입력 가능합니다.');
+      return;
+    }
+    setName(value);
+  };
+
   return (
     <section className="project-create container">
       <header className="project-create__header">
@@ -55,7 +64,7 @@ export default function ProjectCreateForm({ onSubmit, onClose }: ProjectCreateFo
             placeholder="예: 일타싸피 공부"
             fullWidth
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={handleChange}
             onKeyDown={handleKeyDown}
             autoFocus
           />

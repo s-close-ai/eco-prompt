@@ -58,6 +58,42 @@
   border: none;
   cursor: pointer;
   padding: 0;
+  position: relative;
+}
+
+.user-message-copy-btn {
+  position: relative;
+}
+
+.user-message-copied {
+  position: absolute;
+  top: -28px;
+  right: 0;
+  background-color: #5c8a5f;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  animation: fadeInOut 2s;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
 }
 
 .user-message-editor {

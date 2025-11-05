@@ -18,6 +18,7 @@ export default function Sidebar() {
     toggleSidebarCollapsed,
     toggleSidebar,
     toggleSettings,
+    toggleSearch,
   } = useAppShell();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedProjects, setExpandedProjects] = useState<Set<number>>(new Set());
@@ -61,11 +62,17 @@ export default function Sidebar() {
         return;
       }
 
-      // 프로젝트 메뉴 닫기
+      // 프로젝트 메뉴 닫기 - 메뉴 외부 클릭 시 닫기
       openProjectMenus.forEach((projectId) => {
         const menuRef = projectMenuRefs.current.get(projectId);
         const triggerRef = menuRefs.current.get(projectId);
-        if (menuRef && !menuRef.contains(target) && triggerRef && !triggerRef.contains(target)) {
+        // 메뉴 외부를 클릭했고, 트리거 버튼도 아닌 경우
+        if (
+          menuRef &&
+          !menuRef.contains(target) &&
+          triggerRef &&
+          !triggerRef.contains(target)
+        ) {
           setOpenProjectMenus((prev) => {
             const newSet = new Set(prev);
             newSet.delete(projectId);
@@ -79,11 +86,17 @@ export default function Sidebar() {
         }
       });
 
-      // 채팅 메뉴 닫기
+      // 채팅 메뉴 닫기 - 메뉴 외부 클릭 시 닫기
       openChatMenus.forEach((chatId) => {
         const menuRef = chatMenuRefs.current.get(chatId);
         const triggerRef = menuRefs.current.get(chatId + 10000);
-        if (menuRef && !menuRef.contains(target) && triggerRef && !triggerRef.contains(target)) {
+        // 메뉴 외부를 클릭했고, 트리거 버튼도 아닌 경우
+        if (
+          menuRef &&
+          !menuRef.contains(target) &&
+          triggerRef &&
+          !triggerRef.contains(target)
+        ) {
           setOpenChatMenus((prev) => {
             const newSet = new Set(prev);
             newSet.delete(chatId);
@@ -98,11 +111,17 @@ export default function Sidebar() {
         }
       });
 
-      // 중첩 채팅 메뉴 닫기
+      // 중첩 채팅 메뉴 닫기 - 메뉴 외부 클릭 시 닫기
       openNestedChatMenus.forEach((chatId) => {
         const menuRef = nestedChatMenuRefs.current.get(chatId);
         const triggerRef = menuRefs.current.get(chatId + 20000);
-        if (menuRef && !menuRef.contains(target) && triggerRef && !triggerRef.contains(target)) {
+        // 메뉴 외부를 클릭했고, 트리거 버튼도 아닌 경우
+        if (
+          menuRef &&
+          !menuRef.contains(target) &&
+          triggerRef &&
+          !triggerRef.contains(target)
+        ) {
           setOpenNestedChatMenus((prev) => {
             const newSet = new Set(prev);
             newSet.delete(chatId);
@@ -116,8 +135,9 @@ export default function Sidebar() {
           setProjectMoveMenu(null);
         }
       });
-      // 포털 자체 닫기 (사이드바 외부 클릭 포함)
-      if (projectMoveMenu) {
+
+      // 프로젝트 이동 포털 닫기 - 포털 외부 클릭 시 닫기
+      if (projectMoveMenu && projectMoveMenuRef.current && !projectMoveMenuRef.current.contains(target)) {
         setProjectMoveMenu(null);
       }
     };
@@ -128,11 +148,12 @@ export default function Sidebar() {
       openNestedChatMenus.size > 0 ||
       projectMoveMenu
     ) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
+      // capture phase에서 이벤트를 먼저 처리하여 메뉴가 확실히 닫히도록 함
+      document.addEventListener('mousedown', handleClickOutside, true);
+      document.addEventListener('touchstart', handleClickOutside, true);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('touchstart', handleClickOutside);
+        document.removeEventListener('mousedown', handleClickOutside, true);
+        document.removeEventListener('touchstart', handleClickOutside, true);
       };
     }
   }, [openProjectMenus, openChatMenus, openNestedChatMenus, projectMoveMenu]);
@@ -312,10 +333,16 @@ export default function Sidebar() {
   };
 
   const handleProjectMenuAction = (projectId: number, action: 'rename' | 'delete') => {
+    // 메뉴 닫기 - 모든 상태 정리
     setOpenProjectMenus((prev) => {
       const newSet = new Set(prev);
       newSet.delete(projectId);
       return newSet;
+    });
+    setProjectMenus((prevMenus) => {
+      const newMenus = new Map(prevMenus);
+      newMenus.delete(projectId);
+      return newMenus;
     });
     // TODO: 실제 액션 구현
     console.log(`Project ${projectId} ${action}`);
@@ -391,21 +418,35 @@ export default function Sidebar() {
   };
 
   const handleNestedChatMenuAction = (chatId: number, action: 'rename' | 'delete') => {
+    // 메뉴 닫기 - 모든 상태 정리
     setOpenNestedChatMenus((prev) => {
       const newSet = new Set(prev);
       newSet.delete(chatId);
       return newSet;
     });
+    setNestedChatMenus((prevMenus) => {
+      const newMenus = new Map(prevMenus);
+      newMenus.delete(chatId);
+      return newMenus;
+    });
+    setProjectMoveMenu(null); // 프로젝트 이동 포털도 닫기
     // TODO: 실제 액션 구현
     console.log(`Nested Chat ${chatId} ${action}`);
   };
 
   const handleChatMenuAction = (chatId: number, action: 'rename' | 'delete') => {
+    // 메뉴 닫기 - 모든 상태 정리
     setOpenChatMenus((prev) => {
       const newSet = new Set(prev);
       newSet.delete(chatId);
       return newSet;
     });
+    setChatMenus((prevMenus) => {
+      const newMenus = new Map(prevMenus);
+      newMenus.delete(chatId);
+      return newMenus;
+    });
+    setProjectMoveMenu(null); // 프로젝트 이동 포털도 닫기
     // TODO: 실제 액션 구현
     console.log(`Chat ${chatId} ${action}`);
   };
@@ -485,7 +526,7 @@ export default function Sidebar() {
                 aria-label="검색"
                 onClick={() => {
                   closeAllOverlays();
-                  navigate('/search');
+                  toggleSearch();
                 }}
               >
                 <img src="/icons/search.svg" alt="search" width={20} height={20} />
@@ -592,10 +633,7 @@ export default function Sidebar() {
                 className="sidebar-search sidebar-search-desktop"
                 onClick={() => {
                   closeAllOverlays();
-                  if (mode === 'mobile') {
-                    closeSidebar();
-                  }
-                  navigate('/search');
+                  toggleSearch();
                 }}
               >
                 <img src="/icons/search.svg" alt="search" width={18} height={18} />

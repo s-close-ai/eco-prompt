@@ -55,10 +55,14 @@
   transform: none;
 }
 
-/* 모바일/태블릿에서는 collapsed 무시 */
-:root[data-mode='mobile'] .sidebar.collapsed,
-:root[data-mode='tablet'] .sidebar.collapsed {
+/* 모바일에서는 collapsed 무시 */
+:root[data-mode='mobile'] .sidebar.collapsed {
   width: 280px;
+}
+
+/* 태블릿에서는 항상 고정 너비 유지 */
+:root[data-mode='tablet'] .sidebar {
+  width: var(--sidebar-tablet-width);
 }
 
 /* 데스크탑: 항상 표시, collapsed로 접기/펼치기 */

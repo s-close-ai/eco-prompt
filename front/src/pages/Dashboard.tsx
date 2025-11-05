@@ -93,6 +93,7 @@ export default function DashboardPage() {
               <Ranking />
             </div>
             <div className="grid-section metrics-section">
+              <h2 className="section-title">마이 데이터</h2>
               <DashboardMetrics />
               <DashboardStats />
             </div>

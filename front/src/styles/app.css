@@ -44,7 +44,7 @@ select {
   /* Sidebar layout variables */
   --sidebar-width: 17.5rem;
   --sidebar-collapsed-width: 4rem;
-  --sidebar-tablet-width: min(50vw, 17.5rem);
+  --sidebar-tablet-width: 17.5rem;
 
   /* Color Palette */
   /* Primary Colors */
@@ -100,7 +100,13 @@ select {
 }
 
 html {
-  font-size: clamp(0.875rem, 1.04vw, 1.125rem);
+  font-size: 1rem;
+}
+
+@media (max-width: 767px) {
+  html {
+    font-size: 0.9375rem;
+  }
 }
 
 html,
@@ -214,6 +220,12 @@ textarea,
   contain: content;
   grid-column: 1 / -1; /* 기본은 전체 폭 */
   position: relative; /* 인라인 오버레이 기준 */
+}
+
+/* 데스크탑/태블릿 배경색 white */
+:root[data-mode='desktop'] .app-main,
+:root[data-mode='tablet'] .app-main {
+  background: #ffffff;
 }
 
 .container {

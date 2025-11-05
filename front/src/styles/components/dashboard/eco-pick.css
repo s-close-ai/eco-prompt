@@ -318,7 +318,7 @@
   font-weight: 700;
 }
 
-:root[data-mode='tablet'] .eco-pick-controls,
+/* 데스크탑: 좌우 버튼 + 인디케이터 */
 :root[data-mode='desktop'] .eco-pick-controls {
   display: flex;
   align-items: center;
@@ -327,20 +327,33 @@
   padding: 12px 0 16px 0;
 }
 
-:root[data-mode='tablet'] .eco-pick-indicators,
 :root[data-mode='desktop'] .eco-pick-indicators {
   padding: 0;
 }
 
-:root[data-mode='tablet'] .indicator-dot,
 :root[data-mode='desktop'] .indicator-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d0d0d0;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
-:root[data-mode='tablet'] .indicator-dot.active,
 :root[data-mode='desktop'] .indicator-dot.active {
-  width: 20px;
+  background: #006400;
+  width: 18px;
+  border-radius: 3px;
+}
+
+:root[data-mode='desktop'] .indicator-dot:hover {
+  background: #999;
+}
+
+:root[data-mode='desktop'] .indicator-dot.active:hover {
+  background: #004d00;
 }
 
 .carousel-button-bottom {
@@ -365,4 +378,38 @@
 
 .carousel-button-bottom:hover:not(:disabled) svg {
   color: #006400;
+}
+
+/* 태블릿: 인디케이터만 (모바일과 동일) */
+:root[data-mode='tablet'] .eco-pick-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0 12px 0;
+  flex-shrink: 0;
+}
+
+:root[data-mode='tablet'] .indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d0d0d0;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+:root[data-mode='tablet'] .indicator-dot.active {
+  background: #006400;
+  width: 18px;
+  border-radius: 3px;
+}
+
+:root[data-mode='tablet'] .indicator-dot:hover {
+  background: #999;
+}
+
+:root[data-mode='tablet'] .indicator-dot.active:hover {
+  background: #004d00;
 }

@@ -22,8 +22,9 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
   const prompts = mockEcoPickPrompts;
   const currentPrompt = prompts[currentIndex];
 
-  // 태블릿/데스크탑: 3개의 프롬프트를 캐러셀로 표시
-  const isDesktopMode = mode === 'tablet' || mode === 'desktop';
+  // 태블릿/데스크탑 구분
+  const isDesktopMode = mode === 'desktop';
+  const isTabletMode = mode === 'tablet';
 
   // 스와이프 처리 (모바일, 태블릿)
   useEffect(() => {
@@ -155,7 +156,7 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
     <div className="eco-pick-container" ref={containerRef}>
       <div className="eco-pick-carousel">
         {isDesktopMode ? (
-          // 태블릿/데스크탑: 캐러셀 (3개 프롬프트)
+          // 데스크탑: 좌우 화살표 버튼 + 인디케이터
           <>
             <div className="carousel-track" ref={carouselRef}>
               {renderPromptCard(currentPrompt, currentIndex)}
@@ -207,8 +208,25 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
               </button>
             </div>
           </>
+        ) : isTabletMode ? (
+          // 태블릿: 인디케이터만 (모바일과 동일)
+          <>
+            <div className="carousel-track" ref={carouselRef}>
+              {renderPromptCard(currentPrompt, currentIndex)}
+            </div>
+            <div className="eco-pick-indicators">
+              {prompts.map((_, idx) => (
+                <button
+                  key={idx}
+                  className={`indicator-dot ${idx === currentIndex ? 'active' : ''}`}
+                  onClick={() => setCurrentIndex(idx)}
+                  aria-label={`${idx + 1}번째 프롬프트`}
+                />
+              ))}
+            </div>
+          </>
         ) : (
-          // 모바일: 한 번에 하나씩 (슬라이드만 지원, 버튼 없음)
+          // 모바일: 인디케이터만
           <>
             <div className="eco-pick-card-wrapper">
               {renderPromptCard(currentPrompt, currentIndex)}
