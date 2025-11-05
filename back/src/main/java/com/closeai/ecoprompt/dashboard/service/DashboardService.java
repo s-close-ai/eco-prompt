@@ -6,7 +6,7 @@ import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.dashboard.model.dto.response.DashboardDetailScoreResponse;
 import com.closeai.ecoprompt.dashboard.model.dto.response.DetailScoreResponse;
 import com.closeai.ecoprompt.dashboard.model.dto.response.EcoPickResponse;
-import com.closeai.ecoprompt.dashboard.model.dto.response.PersonalStatResponse;
+import com.closeai.ecoprompt.dashboard.model.dto.response.PersonalStateResponse;
 import com.closeai.ecoprompt.message.model.entity.MessageSender;
 import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
@@ -27,7 +27,7 @@ public class DashboardService {
     private final MessageJpaRepository messageJpaRepository;
     private final MessageMongoRepository messageMongoRepository;
 
-    public PersonalStatResponse getRecord() {
+    public PersonalStateResponse getRecord() {
         AppLogger.start("개인의 기록 통계 불러오기");
 
         int userId = CustomUtil.getCurrentUserId();
@@ -35,7 +35,7 @@ public class DashboardService {
 
         AppLogger.info(userInfo.toString(), userId);
 
-        return PersonalStatResponse.from(userInfo);
+        return PersonalStateResponse.from(userInfo);
     }
 
     public DashboardDetailScoreResponse getDetailScore() {
@@ -51,7 +51,7 @@ public class DashboardService {
     public List<EcoPickResponse> getEcoPick() {
         AppLogger.start("에코픽 조회 시작");
 
-        return messageJpaRepository.findWeeklyEcoPicksTop3().stream()
+        return messageJpaRepository.findDailyEcoPicksTop3().stream()
                 .map(p -> {
                     // 1) Mongo에서 messageUUID로 프롬프트 본문 조회
                     String prompt = messageMongoRepository.findByMessageUUIDAndSenderType(p.getMessageUUID(), MessageSender.USER)

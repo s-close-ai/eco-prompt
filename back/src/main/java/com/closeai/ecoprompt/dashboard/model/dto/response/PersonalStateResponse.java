@@ -2,16 +2,16 @@ package com.closeai.ecoprompt.dashboard.model.dto.response;
 
 import com.closeai.ecoprompt.userinfo.model.entity.UserInfo;
 
-public record PersonalStatResponse(
+public record PersonalStateResponse(
         Double highScore,
         Double averageScore,
         int totalMileage,
         int promptCount
 ) {
-    public static PersonalStatResponse from(UserInfo userInfo) {
-        return new PersonalStatResponse(
+    public static PersonalStateResponse from(UserInfo userInfo) {
+        return new PersonalStateResponse(
                 userInfo.getHighScore(),
-                userInfo.getHighScore() / userInfo.getPromptCount(),
+                userInfo.getTotalScore() / userInfo.getPromptCount(),
                 userInfo.getTotalMileage(),
                 userInfo.getPromptCount()
         );

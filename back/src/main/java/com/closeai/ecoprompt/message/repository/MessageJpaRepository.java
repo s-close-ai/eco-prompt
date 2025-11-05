@@ -53,7 +53,6 @@ public interface MessageJpaRepository extends JpaRepository<Message, Long> {
     """, nativeQuery = true)
 	DetailScoreResponse findAverageScoresAllUsersAllTime();
 
-
 	// 특정 사용자 평균 (전체 기간)
 	@Query(value = """
 		SELECT
@@ -86,13 +85,10 @@ public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 		  AND ui.sharing_prompt = 'Y'
 		  AND STR_TO_DATE(m.created_at, '%Y.%m.%d.%H.%i.%s')
 				BETWEEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '00:00:00')
-					AND TIMESTAMP(CURDATE(), '23:59:59')
+					AND TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '23:59:59')
 		ORDER BY sc.total_score DESC
 		LIMIT 3
     """, nativeQuery = true)
-	List<EcoPickFlatProjection> findWeeklyEcoPicksTop3();
-
-
-
+	List<EcoPickFlatProjection> findDailyEcoPicksTop3();
 
 }

@@ -18,12 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class UserInfoService {
 
-	private final UserInfoRepository userInfoRepository;
+    private final UserInfoRepository userInfoRepository;
     private final ScoreRepository scoreRepository;
 
     /**
      * 정보 제공 동의 상태 변환 함수
-     * */
+     */
     @Transactional
     public SharingInformationStatusResponse toggleSharingInformation() {
         AppLogger.start("정보 제공 동의 상태 변경");
@@ -52,21 +52,21 @@ public class UserInfoService {
 
     /**
      * 정보 제공 동의 상태 조회 함수
-     * */
+     */
     public SharingInformationStatusResponse getSharingInformationStatus() {
         AppLogger.start("정보 제공 동의 상태 조회");
 
         int userId = CustomUtil.getCurrentUserId();
         return SharingInformationStatusResponse.from(
                 userInfoRepository.findByUser_Id(userId)
-                    .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."))
+                        .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."))
         );
     }
 
     /**
      * 사용자 프롬프트 조회 함수
-     * */
-    public String getPersonalPrompt(Integer userId){
+     */
+    public String getPersonalPrompt(Integer userId) {
 
         UserInfo userInfo = getUserInfo(userId);
 
@@ -75,9 +75,9 @@ public class UserInfoService {
 
     /**
      * 사용자에 대한 프롬프트 수 증가
-     * */
+     */
     @Transactional
-    public void increasePromptCnt(Integer userId){
+    public void increasePromptCnt(Integer userId) {
 
         UserInfo userInfo = getUserInfo(userId);
         userInfo.updateTotalPromptCount();
@@ -85,40 +85,43 @@ public class UserInfoService {
 
     /**
      * 사용자의 최고 점수를 수정하는 함수
-     * */
+     */
     @Transactional
-    public void recalculateAndUpdateHighScore(Integer userId, Double oriHighScore, Double newHighScore){
+    public void recalculateAndUpdateHighScore(Integer userId, Double oriHighScore, Double newHighScore) {
 
         UserInfo userInfo = getUserInfo(userId);
         Double curHighScore = userInfo.getHighScore();
 
         // 새로운 점수가 현재 최고 점수보다 높은 경우
-        if(newHighScore > curHighScore){
+        if (newHighScore > curHighScore) {
             userInfo.updateHighScore(newHighScore);
+            userInfo.updateTotalScore(newHighScore - oriHighScore);
+
             userInfoRepository.save(userInfo);
-        }
-        else if(curHighScore.equals(oriHighScore) && newHighScore < oriHighScore){
+        } else if (curHighScore.equals(oriHighScore) && newHighScore < oriHighScore) {
             Double newCalHighScore = scoreRepository.findMaxTotalScoreByUserId(userId).orElse(0.0);
 
             userInfo.updateHighScore(newCalHighScore);
+            userInfo.updateTotalScore(newHighScore - oriHighScore);
+
             userInfoRepository.save(userInfo);
         }
     }
 
     /**
      * 총 마일리지를 업데이트 하는 함수
-     * */
+     */
     @Transactional
-    public void updateTotalMileage(Integer userId, int oldValue, int newValue){
+    public void updateTotalMileage(Integer userId, int oldValue, int newValue) {
 
         UserInfo userInfo = getUserInfo(userId);
-        int gapValue = newValue-oldValue;
+        int gapValue = newValue - oldValue;
 
         userInfo.updateTotalMileage(gapValue);
     }
 
-    private UserInfo getUserInfo(Integer userId){
+    private UserInfo getUserInfo(Integer userId) {
         return userInfoRepository.findByUser_Id(userId)
-            .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."));
+                .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."));
     }
 }

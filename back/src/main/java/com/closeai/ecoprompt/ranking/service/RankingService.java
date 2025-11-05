@@ -127,5 +127,4 @@ public class RankingService {
         return result;
     }
 
-
 }
