@@ -3,6 +3,7 @@ package com.closeai.ecoprompt.message.repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.closeai.ecoprompt.dashboard.model.dto.response.DetailScoreResponse;
 import com.closeai.ecoprompt.message.model.dto.response.DailyRankingProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -37,5 +38,35 @@ public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 			@Param("startOfDay") String startOfDay,
 			@Param("nowStr")     String nowStr
 	);
+
+	// 전체 사용자 평균 (전체 기간)
+	@Query(value = """
+		SELECT
+			COALESCE(AVG(sc.clarity_score), 0)      AS clarityScore,
+			COALESCE(AVG(sc.specificity_score), 0)  AS specificityScore,
+			COALESCE(AVG(sc.format_score), 0)       AS formatScore,
+			COALESCE(AVG(sc.safety_score), 0)       AS safetyScore
+		FROM message m
+		JOIN score sc ON sc.message_id = m.message_id
+		WHERE m.is_deleted = 'N'
+    """, nativeQuery = true)
+	DetailScoreResponse findAverageScoresAllUsersAllTime();
+
+
+	// 특정 사용자 평균 (전체 기간)
+	@Query(value = """
+		SELECT
+			COALESCE(AVG(sc.clarity_score), 0)      AS clarityScore,
+			COALESCE(AVG(sc.specificity_score), 0)  AS specificityScore,
+			COALESCE(AVG(sc.format_score), 0)       AS formatScore,
+			COALESCE(AVG(sc.safety_score), 0)       AS safetyScore
+		FROM message m
+		JOIN score sc ON sc.message_id = m.message_id
+		WHERE m.is_deleted = 'N'
+		  AND m.user_id = :userId
+    """, nativeQuery = true)
+	DetailScoreResponse findAverageScoresByUserAllTime(@Param("userId") int userId);
+
+
 
 }

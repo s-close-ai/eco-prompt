@@ -1,6 +1,7 @@
 package com.closeai.ecoprompt.dashboard.controller;
 
 import com.closeai.ecoprompt.common.ApiResponse;
+import com.closeai.ecoprompt.dashboard.model.dto.response.DashboardDetailScoreResponse;
 import com.closeai.ecoprompt.dashboard.model.dto.response.PersonalStatResponse;
 import com.closeai.ecoprompt.dashboard.service.DashboardService;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +17,13 @@ public class DashboardController {
 
     private final DashboardService dashboardService;
 
-    @GetMapping("/personal")
-    public ResponseEntity<ApiResponse<PersonalStatResponse>> getPersonalStatistics() {
-        return ApiResponse.success(dashboardService.getPersonalStatistics());
+    @GetMapping("/records")
+    public ResponseEntity<ApiResponse<PersonalStatResponse>> getRecord() {
+        return ApiResponse.success(dashboardService.getRecord());
+    }
+
+    @GetMapping("/detail-scores")
+    public ResponseEntity<ApiResponse<DashboardDetailScoreResponse>> getDetailScore() {
+        return ApiResponse.success(dashboardService.getDetailScore());
     }
 }
