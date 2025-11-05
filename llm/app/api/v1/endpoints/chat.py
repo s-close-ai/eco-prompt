@@ -23,15 +23,15 @@ async def chat(request: ChatRequest, llm=Depends(get_llm), tokenizer=Depends(get
     if chatting_id:
         chat_history = get_chat_history(chatting_id)
         # content와 senderType을 조합해서 histroy 생성하는 코드 필요함.
+        chat_history = "히스토리 요약 생성 예정"
     else:
-        chat_history = None
+        chat_history = ""
 
     chain = stream_response(vector_store=vector_store, llm=llm, tokenizer=tokenizer)
     payload = {
         "personal_prompt": personal_prompt,
         "question": user_input,
-        "history": "",
-        "context": ""    # 추후 chat_history로 변경예정
+        "history": chat_history,
     }
 
     async def event_generator():
@@ -46,7 +46,7 @@ async def chat(request: ChatRequest, llm=Depends(get_llm), tokenizer=Depends(get
         
         sequence_id = -1
         try:
-            for chunk in chain.stream(payload):
+            async for chunk in chain.astream(payload):
                 if not chunk:
                     continue
                 
@@ -54,19 +54,19 @@ async def chat(request: ChatRequest, llm=Depends(get_llm), tokenizer=Depends(get
 
                 if (state == "SEEK_OPEN_CHOSEN") and (OPEN_C in chunk):
                     state = "FOUND_CHOSEN"
-                    yield f"data: {ChatResponse(sequence_id=sequence_id, token="START").model_dump_json()}\n"
+                    yield f"data: {ChatResponse(sequence_id=sequence_id, token="START").model_dump_json()}\n\n"
                     continue
                 
 
                 if (state == "FOUND_CHOSEN") and (OPEN_C not in chunk) and (CLOSE_C not in chunk):
                     chosen_response += chunk
-                    yield f"data: {ChatResponse(sequence_id=sequence_id, token=chunk).model_dump_json()}\n"
+                    yield f"data: {ChatResponse(sequence_id=sequence_id, token=chunk).model_dump_json()}\n\n"
                     continue
 
                 
                 if (state == "FOUND_CHOSEN") and (OPEN_C not in chunk) and (CLOSE_C in chunk):
                     state = "END_CHOSEN"
-                    yield f"data: {ChatResponse(sequence_id=sequence_id, token='DONE').model_dump_json()}\n"
+                    yield f"data: {ChatResponse(sequence_id=sequence_id, token='DONE').model_dump_json()}\n\n"
                     continue
 
 

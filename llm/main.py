@@ -5,6 +5,11 @@ from app.api.v1.routers import api_router
 from app.models.llm_loader import load_llm, llm, load_tokenizer, llm_tokenizer
 from app.models.vectordb_loader import load_vectordb, vector_store, load_embedding_model, embedding_model
 
+import torch
+
+device = torch.device("auto" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
 # lifespan 컨텍스트 관리자 정의
 @asynccontextmanager
 async def lifespan_manager(app: FastAPI):
