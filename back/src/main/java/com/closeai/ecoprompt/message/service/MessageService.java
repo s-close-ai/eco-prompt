@@ -19,6 +19,7 @@ import com.closeai.ecoprompt.message.model.entity.MessageSender;
 import com.closeai.ecoprompt.message.model.entity.MessageStatus;
 import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
+import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +30,7 @@ public class MessageService {
 
 	private final AiService aiService;
 	private final ChattingService chattingService;
+	private final UserInfoService userInfoService;
 
 	private final MessageJpaRepository messageJpaRepository;
 	private final MessageMongoRepository messageMongoRepository;
@@ -37,11 +39,12 @@ public class MessageService {
 	 * 사용자 입력에 대한 API 처리 함수
 	 * */
 	@Transactional
-	public SubmitMessageResponse submitMessage(SubmitMessageRequest messageCommand, Integer userId) {
+	public SubmitMessageResponse submitMessage(SubmitMessageRequest messageCommand) {
 
 		Integer projectId = messageCommand.projectId();
 		Long chattingId = messageCommand.chattingId();
 		String content = messageCommand.content();
+		Integer userId = CustomUtil.getCurrentUserId();
 		boolean isFirstChatting = (chattingId == null);
 
 		//1. chattingID가 null인 경우 chatting 저장
@@ -57,14 +60,16 @@ public class MessageService {
 		String messageUUID = CustomUtil.makeNewUUID();
 
 		//3. Mysql과 MonogoDB에 사용자 입력 메시지 저장
-		saveMessage(messageUUID, chatting, MessageSender.USER, content, MessageStatus.RECEIVED, userId);
+		MessageDocument userMessage = saveMessage(messageUUID, chatting, MessageSender.USER, content, MessageStatus.RECEIVED, userId);
 
 		//4. Mysql과 MonogoDB에 AI 응답 메시지 저장
-		saveMessage(messageUUID, chatting, MessageSender.AI, null, MessageStatus.PROCESSING, userId);
+		MessageDocument aiMessage = saveMessage(messageUUID, chatting, MessageSender.AI, null, MessageStatus.PROCESSING, userId);
 
-		//5. JudgeModel 호출
-		// TODO : 임의로 userId = 1로 함수 호출 | 로그인 기능 개발 후 변경
-		aiService.callAiModel(messageUUID, content, userId, isFirstChatting);
+		//5. 사용자에 대한 프롬프트 수 + 1 증가
+		userInfoService.increasePromptCnt(userId);
+
+		//6. JudgeModel 호출
+		aiService.callAiModel(messageUUID, content, userId, isFirstChatting, userMessage, aiMessage);
 
 		return new SubmitMessageResponse(chattingId, messageUUID);
 	}
@@ -73,20 +78,21 @@ public class MessageService {
 	 * 사용자 입력 수정 API 처리 함수
 	 * */
 	@Transactional
-	public SubmitMessageResponse updateMessage(UpdateMessageRequest messageCommand, Integer userId) {
+	public SubmitMessageResponse updateMessage(UpdateMessageRequest messageCommand) {
 
 		Long chattingId = messageCommand.chattingId();
 		String content = messageCommand.content();
 		String messageUUID = messageCommand.messageUUID();
+		Integer userId = CustomUtil.getCurrentUserId();
 
 		// 1. 기존에 있는 message MongoDB의 값을 변경
-		updateMessageContent(messageUUID, content);
+		List<MessageDocument> messageDocuments = updateMessageContent(messageUUID, content);
 
 		// 2. 기존에 있는 chatting의 updatedAt 변경
 		chattingService.updateUpdateAt(chattingId);
 
 		// 3. JudgeModel 호출
-		aiService.callAiModel(messageUUID, content, 1, false);
+		aiService.callAiModel(messageUUID, content, userId, false, messageDocuments.get(0), messageDocuments.get(1));
 
 		return new SubmitMessageResponse(chattingId, messageUUID);
 	}
@@ -94,7 +100,7 @@ public class MessageService {
 	/**
 	 * MYSQL과 MONGODB에 메시지 저장 함수
 	 * */
-	private void saveMessage(String messageUUID, Chatting chatting, MessageSender messageSender, String content, MessageStatus messageStatus, Integer userId) {
+	private MessageDocument saveMessage(String messageUUID, Chatting chatting, MessageSender messageSender, String content, MessageStatus messageStatus, Integer userId) {
 		
 		Message message = Message.builder()
 			.messageUUID(messageUUID)
@@ -114,12 +120,14 @@ public class MessageService {
 
 		messageJpaRepository.save(message);
 		messageMongoRepository.save(messageDocument);
+
+		return messageDocument;
 	}
 
 	/**
 	 * MongoDB 기존의 메시지 값
 	 * */
-	private void updateMessageContent(String messageUUID, String content){
+	private List<MessageDocument> updateMessageContent(String messageUUID, String content){
 
 		MessageDocument userDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER)
 			.orElseThrow(() -> new BusinessException("저장된 메시지가 없습니다."));
@@ -132,7 +140,10 @@ public class MessageService {
 		aiDocument.updateContent(null);
 		aiDocument.updateMessageStatus(MessageStatus.PROCESSING);
 
-		messageMongoRepository.saveAll(List.of(userDocument, aiDocument));
+		List<MessageDocument> messageDocuments = List.of(userDocument, aiDocument);
+
+		messageMongoRepository.saveAll(messageDocuments);
+		return messageDocuments;
 	}
 
 }

@@ -7,6 +7,7 @@ import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
 import com.closeai.ecoprompt.message.model.entity.Message;
 import com.closeai.ecoprompt.score.model.entity.Score;
 import com.closeai.ecoprompt.score.repository.ScoreRepository;
+import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,21 +16,29 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class ScoreService {
 
+	private final UserInfoService userInfoService;
+
 	private final ScoreRepository scoreRepository;
 
 	/**
 	 * messageId에 해당하는 점수 값이 있다면 점수 변경
 	 * 아닌 경우에는 새로 생성 후 저장
 	 * */
-	public void saveOrUpdateScore(Message message, ScoreInfo scoreInfo) {
+	@Transactional
+	public void saveOrUpdateScore(Message message, Integer userId, ScoreInfo scoreInfo) {
 
 		Long messageId = message.getId();
+		Double newTotalScore = scoreInfo.totalScore();
 
 		scoreRepository.findByMessage_Id(messageId)
 			.ifPresentOrElse(
 				score -> {
+					Double oriTotalScore = score.getTotalScore();
+
 					score.updateScores(scoreInfo);
 					scoreRepository.save(score);
+
+					userInfoService.recalculateAndUpdateHighScore(userId, oriTotalScore, newTotalScore);
 				},
 				() -> {
 					Score newScore = Score.builder()
@@ -41,6 +50,8 @@ public class ScoreService {
 						.message(message)
 						.build();
 					scoreRepository.save(newScore);
+
+					userInfoService.recalculateAndUpdateHighScore(userId, 0.0, newTotalScore);
 				}
 			);
 	}

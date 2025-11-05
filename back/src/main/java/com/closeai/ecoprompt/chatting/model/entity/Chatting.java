@@ -21,7 +21,7 @@ public class Chatting extends BaseEntity {
     private Long id;
 
     @Column(name = "title", length = 100)
-    private String title;
+    private String title = "NEW CHAT";
 
     // FK: chatting.project_id -> project.project_id
     @ManyToOne(fetch = FetchType.LAZY)

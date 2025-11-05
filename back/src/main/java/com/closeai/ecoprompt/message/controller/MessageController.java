@@ -31,8 +31,8 @@ public class MessageController implements MessageControllerDocs{
 	@PostMapping("/input")
 	public ResponseEntity<ApiResponse<SubmitMessageResponse>> submitMessage(@RequestBody @Valid SubmitMessageRequest request) {
 
-		// TODO: userId 값 추후에 CustomUtil에서 가져오기
-		SubmitMessageResponse responseDto = messageService.submitMessage(request, 1);
+		SubmitMessageResponse responseDto = messageService.submitMessage(request);
+
 		return ApiResponse.success(responseDto);
 	}
 
@@ -55,8 +55,8 @@ public class MessageController implements MessageControllerDocs{
 	@PatchMapping
 	public ResponseEntity<ApiResponse<SubmitMessageResponse>> updateMessage(@RequestBody @Valid UpdateMessageRequest request) {
 
-		// TODO : userId 값 추후에 CustomUtil에서 가져오기
-		SubmitMessageResponse response = messageService.updateMessage(request, 1);
+		SubmitMessageResponse response = messageService.updateMessage(request);
+
 		return ApiResponse.success(response);
 	}
 }

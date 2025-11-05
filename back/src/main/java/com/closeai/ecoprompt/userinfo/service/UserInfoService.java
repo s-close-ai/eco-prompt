@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.closeai.ecoprompt.common.exception.BusinessException;
 import com.closeai.ecoprompt.common.logging.AppLogger;
+import com.closeai.ecoprompt.score.repository.ScoreRepository;
 import com.closeai.ecoprompt.userinfo.model.dto.response.SharingInformationStatusResponse;
 import com.closeai.ecoprompt.userinfo.model.entity.UserInfo;
 import com.closeai.ecoprompt.userinfo.repository.UserInfoRepository;
@@ -12,13 +13,17 @@ import com.closeai.ecoprompt.userinfo.repository.UserInfoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.transaction.annotation.Transactional;
 
-@Transactional(readOnly = true)
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserInfoService {
 
 	private final UserInfoRepository userInfoRepository;
+    private final ScoreRepository scoreRepository;
 
+    /**
+     * 정보 제공 동의 상태 변환 함수
+     * */
     @Transactional
     public SharingInformationStatusResponse toggleSharingInformation() {
         AppLogger.start("정보 제공 동의 상태 변경");
@@ -45,6 +50,9 @@ public class UserInfoService {
         return SharingInformationStatusResponse.from(userInfo);
     }
 
+    /**
+     * 정보 제공 동의 상태 조회 함수
+     * */
     public SharingInformationStatusResponse getSharingInformationStatus() {
         AppLogger.start("정보 제공 동의 상태 조회");
 
@@ -55,11 +63,62 @@ public class UserInfoService {
         );
     }
 
+    /**
+     * 사용자 프롬프트 조회 함수
+     * */
     public String getPersonalPrompt(Integer userId){
 
-        UserInfo userInfo = userInfoRepository.getPersonalPromptByUserId(userId)
-                .orElseThrow(() -> new BusinessException("사용자 정보 조회에 실패했습니다"));
+        UserInfo userInfo = getUserInfo(userId);
 
         return userInfo.getPersonalPrompt();
+    }
+
+    /**
+     * 사용자에 대한 프롬프트 수 증가
+     * */
+    @Transactional
+    public void increasePromptCnt(Integer userId){
+
+        UserInfo userInfo = getUserInfo(userId);
+        userInfo.updateTotalPromptCount();
+    }
+
+    /**
+     * 사용자의 최고 점수를 수정하는 함수
+     * */
+    @Transactional
+    public void recalculateAndUpdateHighScore(Integer userId, Double oriHighScore, Double newHighScore){
+
+        UserInfo userInfo = getUserInfo(userId);
+        Double curHighScore = userInfo.getHighScore();
+
+        // 새로운 점수가 현재 최고 점수보다 높은 경우
+        if(newHighScore > curHighScore){
+            userInfo.updateHighScore(newHighScore);
+            userInfoRepository.save(userInfo);
+        }
+        else if(curHighScore.equals(oriHighScore) && newHighScore < oriHighScore){
+            Double newCalHighScore = scoreRepository.findMaxTotalScoreByUserId(userId).orElse(0.0);
+
+            userInfo.updateHighScore(newCalHighScore);
+            userInfoRepository.save(userInfo);
+        }
+    }
+
+    /**
+     * 총 마일리지를 업데이트 하는 함수
+     * */
+    @Transactional
+    public void updateTotalMileage(Integer userId, int oldValue, int newValue){
+
+        UserInfo userInfo = getUserInfo(userId);
+        int gapValue = newValue-oldValue;
+
+        userInfo.updateTotalMileage(gapValue);
+    }
+
+    private UserInfo getUserInfo(Integer userId){
+        return userInfoRepository.findByUser_Id(userId)
+            .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."));
     }
 }
