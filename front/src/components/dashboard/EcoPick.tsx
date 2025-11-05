@@ -167,7 +167,14 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
                 aria-label="이전"
                 disabled={currentIndex === 0}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M15 18l-6-6 6-6" />
                 </svg>
               </button>
@@ -187,7 +194,14 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
                 aria-label="다음"
                 disabled={currentIndex === prompts.length - 1}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
                   <path d="M9 18l6-6-6-6" />
                 </svg>
               </button>
@@ -196,10 +210,15 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
         ) : (
           // 모바일: 한 번에 하나씩 (슬라이드만 지원, 버튼 없음)
           <>
-            <div className="eco-pick-card-wrapper">{renderPromptCard(currentPrompt, currentIndex)}</div>
+            <div className="eco-pick-card-wrapper">
+              {renderPromptCard(currentPrompt, currentIndex)}
+            </div>
             <div className="eco-pick-indicators">
               {prompts.map((_, idx) => (
-                <span key={idx} className={`indicator-dot ${idx === currentIndex ? 'active' : ''}`} />
+                <span
+                  key={idx}
+                  className={`indicator-dot ${idx === currentIndex ? 'active' : ''}`}
+                />
               ))}
             </div>
           </>
@@ -208,4 +227,3 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
     </div>
   );
 }
-

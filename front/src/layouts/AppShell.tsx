@@ -105,7 +105,9 @@ function ShellBody() {
         ) : null}
         <Outlet />
       </main>
-      {bottomVariant ? <Bottombar variant={bottomVariant} onSendMessage={handleSendMessage} /> : null}
+      {bottomVariant ? (
+        <Bottombar variant={bottomVariant} onSendMessage={handleSendMessage} />
+      ) : null}
       {projectCreateVariant !== 'inline' ? (
         <ProjectCreateOverlay
           open={isProjectCreateOpen}

@@ -115,7 +115,10 @@ export default function Project() {
       });
       setShowProjectMoveMenu(null);
       // TODO: 실제 액션 구현
-      console.log(`Chat ${chatId} ${action}`, targetProjectId ? `to project ${targetProjectId}` : '');
+      console.log(
+        `Chat ${chatId} ${action}`,
+        targetProjectId ? `to project ${targetProjectId}` : '',
+      );
     },
     [],
   );

@@ -51,38 +51,41 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSendMessage = useCallback((message: string) => {
-    setMessages((prev) => {
-      const newUserMessage: ChatMessage = {
-        id: prev.length + 1,
-        type: 'user',
-        message,
-        timestamp: new Date(),
-        score: {
-          clarity: Math.floor(Math.random() * 5) + 20,
-          specificity: Math.floor(Math.random() * 5) + 20,
-          format: Math.floor(Math.random() * 5) + 20,
-          completeness: Math.floor(Math.random() * 5) + 20,
-          totalScore: Math.floor(Math.random() * 20) + 80,
-        },
-      };
-      return [...prev, newUserMessage];
-    });
-
-    setIsLoading(true);
-    aiResponseTimerRef.current = setTimeout(() => {
+  const handleSendMessage = useCallback(
+    (message: string) => {
       setMessages((prev) => {
-        const newAIMessage: ChatMessage = {
+        const newUserMessage: ChatMessage = {
           id: prev.length + 1,
-          type: 'ai',
-          message: `"${message}"에 대한 응답입니다. 이것은 목 데이터를 통해 생성된 테스트 응답입니다.`,
+          type: 'user',
+          message,
           timestamp: new Date(),
+          score: {
+            clarity: Math.floor(Math.random() * 5) + 20,
+            specificity: Math.floor(Math.random() * 5) + 20,
+            format: Math.floor(Math.random() * 5) + 20,
+            completeness: Math.floor(Math.random() * 5) + 20,
+            totalScore: Math.floor(Math.random() * 20) + 80,
+          },
         };
-        return [...prev, newAIMessage];
+        return [...prev, newUserMessage];
       });
-      setIsLoading(false);
-    }, 2000);
-  }, [setIsLoading]);
+
+      setIsLoading(true);
+      aiResponseTimerRef.current = setTimeout(() => {
+        setMessages((prev) => {
+          const newAIMessage: ChatMessage = {
+            id: prev.length + 1,
+            type: 'ai',
+            message: `"${message}"에 대한 응답입니다. 이것은 목 데이터를 통해 생성된 테스트 응답입니다.`,
+            timestamp: new Date(),
+          };
+          return [...prev, newAIMessage];
+        });
+        setIsLoading(false);
+      }, 2000);
+    },
+    [setIsLoading],
+  );
 
   // Cleanup timer on unmount
   useEffect(() => {

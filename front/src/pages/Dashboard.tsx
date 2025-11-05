@@ -100,8 +100,8 @@ export default function DashboardPage() {
           <div className="right-sections">
             <div className="grid-section eco-pick-section">
               <div className="section-title-wrapper">
-              <h2 className="section-title">Eco Pick</h2>
-              <Tooltip content="오늘의 가장 잘 쓴 프롬프트입니다. 명확성, 구체성, 형식 준수, 안전성을 기준으로 선정됩니다." />
+                <h2 className="section-title">Eco Pick</h2>
+                <Tooltip content="오늘의 가장 잘 쓴 프롬프트입니다. 명확성, 구체성, 형식 준수, 안전성을 기준으로 선정됩니다." />
               </div>
               <EcoPick />
             </div>

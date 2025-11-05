@@ -11,8 +11,14 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const mode = useDeviceMode();
-  const { isSidebarOpen, closeSidebar, isSidebarCollapsed, toggleSidebarCollapsed, toggleSidebar, toggleSettings } =
-    useAppShell();
+  const {
+    isSidebarOpen,
+    closeSidebar,
+    isSidebarCollapsed,
+    toggleSidebarCollapsed,
+    toggleSidebar,
+    toggleSettings,
+  } = useAppShell();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedProjects, setExpandedProjects] = useState<Set<number>>(new Set());
   const [openProjectMenus, setOpenProjectMenus] = useState<Set<number>>(new Set());
@@ -25,11 +31,15 @@ export default function Sidebar() {
     filterProjectId?: number;
   } | null>(null);
   const projectMoveMenuRef = useRef<HTMLDivElement | null>(null);
-  
+
   // 포털로 렌더링할 메뉴 위치 정보
-  const [projectMenus, setProjectMenus] = useState<Map<number, { top: number; left: number }>>(new Map());
+  const [projectMenus, setProjectMenus] = useState<Map<number, { top: number; left: number }>>(
+    new Map(),
+  );
   const [chatMenus, setChatMenus] = useState<Map<number, { top: number; left: number }>>(new Map());
-  const [nestedChatMenus, setNestedChatMenus] = useState<Map<number, { top: number; left: number }>>(new Map());
+  const [nestedChatMenus, setNestedChatMenus] = useState<
+    Map<number, { top: number; left: number }>
+  >(new Map());
   const projectMenuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const chatMenuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const nestedChatMenuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -50,7 +60,7 @@ export default function Sidebar() {
       if (projectMoveMenuRef.current && projectMoveMenuRef.current.contains(target)) {
         return;
       }
-      
+
       // 프로젝트 메뉴 닫기
       openProjectMenus.forEach((projectId) => {
         const menuRef = projectMenuRefs.current.get(projectId);
@@ -145,7 +155,7 @@ export default function Sidebar() {
       window.removeEventListener('resize', closeAllMenus);
     };
   }, []);
-  
+
   const toggleProject = (projectId: number) => {
     setExpandedProjects((prev) => {
       const newSet = new Set(prev);
@@ -220,9 +230,12 @@ export default function Sidebar() {
     });
   };
 
-  const handleProjectMenuLongPress = (projectId: number, e: React.MouseEvent | React.TouchEvent) => {
+  const handleProjectMenuLongPress = (
+    projectId: number,
+    e: React.MouseEvent | React.TouchEvent,
+  ) => {
     if (mode === 'desktop') return;
-    
+
     const timer = setTimeout(() => {
       toggleProjectMenu(projectId);
     }, 500);
@@ -261,7 +274,7 @@ export default function Sidebar() {
 
   const handleChatMenuLongPress = (chatId: number, e: React.MouseEvent | React.TouchEvent) => {
     if (mode === 'desktop') return;
-    
+
     const timer = setTimeout(() => {
       toggleChatMenu(chatId);
     }, 500);
@@ -335,9 +348,12 @@ export default function Sidebar() {
     });
   };
 
-  const handleNestedChatMenuLongPress = (chatId: number, e: React.MouseEvent | React.TouchEvent) => {
+  const handleNestedChatMenuLongPress = (
+    chatId: number,
+    e: React.MouseEvent | React.TouchEvent,
+  ) => {
     if (mode === 'desktop') return;
-    
+
     const timer = setTimeout(() => {
       toggleNestedChatMenu(chatId);
     }, 500);
@@ -394,7 +410,11 @@ export default function Sidebar() {
     console.log(`Chat ${chatId} ${action}`);
   };
 
-  const handleMoveToProject = (chatId: number, targetProjectId: number, currentProjectId?: number) => {
+  const handleMoveToProject = (
+    chatId: number,
+    targetProjectId: number,
+    currentProjectId?: number,
+  ) => {
     setProjectMoveMenu(null);
     setOpenChatMenus((prev) => {
       const newSet = new Set(prev);
@@ -407,7 +427,9 @@ export default function Sidebar() {
       return newSet;
     });
     // TODO: 실제 프로젝트 이동 구현
-    console.log(`Chat ${chatId} moved to project ${targetProjectId} from ${currentProjectId || 'none'}`);
+    console.log(
+      `Chat ${chatId} moved to project ${targetProjectId} from ${currentProjectId || 'none'}`,
+    );
   };
 
   const openProjectMovePortal = (
@@ -439,7 +461,7 @@ export default function Sidebar() {
       )}
 
       {/* 사이드바 */}
-      <aside 
+      <aside
         className={`sidebar ${isOpen ? 'open' : ''} ${isCollapsed ? 'collapsed' : ''}`}
         onClick={handleSidebarClick}
       >
@@ -658,13 +680,17 @@ export default function Sidebar() {
                               e.stopPropagation();
                               handleProjectNameClick(project.id);
                             }}
-                            onMouseDown={(e) => mode !== 'desktop' && handleProjectMenuLongPress(project.id, e)}
-                            onTouchStart={(e) => mode !== 'desktop' && handleProjectMenuLongPress(project.id, e)}
+                            onMouseDown={(e) =>
+                              mode !== 'desktop' && handleProjectMenuLongPress(project.id, e)
+                            }
+                            onTouchStart={(e) =>
+                              mode !== 'desktop' && handleProjectMenuLongPress(project.id, e)
+                            }
                           >
                             <span className="sidebar-list-item-text">{project.title}</span>
                           </button>
-                          <div 
-                            className="sidebar-list-item-menu-wrapper" 
+                          <div
+                            className="sidebar-list-item-menu-wrapper"
                             ref={(el) => {
                               if (el) {
                                 menuRefs.current.set(project.id, el);
@@ -697,7 +723,6 @@ export default function Sidebar() {
                           <ul className="sidebar-nested-list">
                             {project.chats.map((chat) => {
                               const isNestedMenuOpen = openNestedChatMenus.has(chat.id);
-                              
 
                               return (
                                 <li key={chat.id}>
@@ -711,13 +736,19 @@ export default function Sidebar() {
                                         }
                                         navigate(`/chat/${chat.id}`);
                                       }}
-                                      onMouseDown={(e) => mode !== 'desktop' && handleNestedChatMenuLongPress(chat.id, e)}
-                                      onTouchStart={(e) => mode !== 'desktop' && handleNestedChatMenuLongPress(chat.id, e)}
+                                      onMouseDown={(e) =>
+                                        mode !== 'desktop' &&
+                                        handleNestedChatMenuLongPress(chat.id, e)
+                                      }
+                                      onTouchStart={(e) =>
+                                        mode !== 'desktop' &&
+                                        handleNestedChatMenuLongPress(chat.id, e)
+                                      }
                                     >
                                       <span className="sidebar-list-item-text">{chat.title}</span>
                                     </button>
-                                    <div 
-                                      className="sidebar-list-item-menu-wrapper" 
+                                    <div
+                                      className="sidebar-list-item-menu-wrapper"
                                       ref={(el) => {
                                         if (el) {
                                           menuRefs.current.set(chat.id + 20000, el);
@@ -775,13 +806,17 @@ export default function Sidebar() {
                               }
                               navigate(`/chat/${chat.id}`);
                             }}
-                            onMouseDown={(e) => mode !== 'desktop' && handleChatMenuLongPress(chat.id, e)}
-                            onTouchStart={(e) => mode !== 'desktop' && handleChatMenuLongPress(chat.id, e)}
+                            onMouseDown={(e) =>
+                              mode !== 'desktop' && handleChatMenuLongPress(chat.id, e)
+                            }
+                            onTouchStart={(e) =>
+                              mode !== 'desktop' && handleChatMenuLongPress(chat.id, e)
+                            }
                           >
                             <span className="sidebar-list-item-text">{chat.title}</span>
                           </button>
-                          <div 
-                            className="sidebar-list-item-menu-wrapper" 
+                          <div
+                            className="sidebar-list-item-menu-wrapper"
                             ref={(el) => {
                               if (el) {
                                 menuRefs.current.set(chat.id + 10000, el); // 채팅 ID와 구분하기 위해 오프셋 사용
@@ -869,7 +904,7 @@ export default function Sidebar() {
           </div>
         )}
       </aside>
-      
+
       {/* 프로젝트 메뉴 포털 */}
       {Array.from(projectMenus.entries()).map(([projectId, position]) => {
         const project = mockProjectList.find((p) => p.id === projectId);
@@ -1122,7 +1157,11 @@ export default function Sidebar() {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  handleMoveToProject(projectMoveMenu.chatId, p.id, projectMoveMenu.filterProjectId);
+                  handleMoveToProject(
+                    projectMoveMenu.chatId,
+                    p.id,
+                    projectMoveMenu.filterProjectId,
+                  );
                 }}
               >
                 <span>{p.title}</span>

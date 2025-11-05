@@ -48,7 +48,7 @@ export default function Bookmark() {
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [windowWidth, setWindowWidth] = useState(
-    typeof window !== 'undefined' ? window.innerWidth : 1024
+    typeof window !== 'undefined' ? window.innerWidth : 1024,
   );
 
   // 화면 크기 추적 (북마크 페이지에서만)
@@ -78,13 +78,16 @@ export default function Bookmark() {
     }),
   );
 
-  const handleBookmarkClick = useCallback((bookmark: Bookmark) => {
-    // 모달이 열려있으면 먼저 닫기
-    if (formMode !== null) {
-      setFormMode(null);
-    }
-    window.open(bookmark.url, '_blank');
-  }, [formMode]);
+  const handleBookmarkClick = useCallback(
+    (bookmark: Bookmark) => {
+      // 모달이 열려있으면 먼저 닫기
+      if (formMode !== null) {
+        setFormMode(null);
+      }
+      window.open(bookmark.url, '_blank');
+    },
+    [formMode],
+  );
 
   const handleEdit = useCallback((bookmark: Bookmark) => {
     // 다른 북마크 편집 시 기존 모달 닫고 새로 열기
@@ -190,46 +193,49 @@ export default function Bookmark() {
     [mode, vibrate],
   );
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
 
-    // over가 없거나 같은 아이템이면 드래그 취소 (스크롤로 간주)
-    if (!over || active.id === over.id) {
-      // 드래그가 끝났으므로 편집 모드 종료
+      // over가 없거나 같은 아이템이면 드래그 취소 (스크롤로 간주)
+      if (!over || active.id === over.id) {
+        // 드래그가 끝났으므로 편집 모드 종료
+        if (mode === 'mobile' || mode === 'tablet') {
+          setIsEditMode(false);
+        }
+        return;
+      }
+
+      // 모바일에서 실제로 다른 위치로 이동했는지 확인
+      if (mode === 'mobile' || mode === 'tablet') {
+        const oldIndex = bookmarks.findIndex((item: Bookmark) => item.id === active.id);
+        const newIndex = bookmarks.findIndex((item: Bookmark) => item.id === over.id);
+
+        // 같은 위치면 드래그 취소 (스크롤로 간주)
+        if (oldIndex === newIndex) {
+          setIsEditMode(false);
+          return;
+        }
+      }
+
+      if (over && active.id !== over.id) {
+        setBookmarks((items: Bookmark[]) => {
+          const oldIndex = items.findIndex((item: Bookmark) => item.id === active.id);
+          const newIndex = items.findIndex((item: Bookmark) => item.id === over.id);
+
+          return arrayMove(items, oldIndex, newIndex);
+        });
+
+        // TODO: 백엔드에 순서 변경 API 호출
+      }
+
+      // 드래그가 끝났으므로 모바일/태블릿에서는 편집 모드 자동 종료
       if (mode === 'mobile' || mode === 'tablet') {
         setIsEditMode(false);
       }
-      return;
-    }
-
-    // 모바일에서 실제로 다른 위치로 이동했는지 확인
-    if (mode === 'mobile' || mode === 'tablet') {
-      const oldIndex = bookmarks.findIndex((item: Bookmark) => item.id === active.id);
-      const newIndex = bookmarks.findIndex((item: Bookmark) => item.id === over.id);
-
-      // 같은 위치면 드래그 취소 (스크롤로 간주)
-      if (oldIndex === newIndex) {
-        setIsEditMode(false);
-        return;
-      }
-    }
-
-    if (over && active.id !== over.id) {
-      setBookmarks((items: Bookmark[]) => {
-        const oldIndex = items.findIndex((item: Bookmark) => item.id === active.id);
-        const newIndex = items.findIndex((item: Bookmark) => item.id === over.id);
-
-        return arrayMove(items, oldIndex, newIndex);
-      });
-
-      // TODO: 백엔드에 순서 변경 API 호출
-    }
-
-    // 드래그가 끝났으므로 모바일/태블릿에서는 편집 모드 자동 종료
-    if (mode === 'mobile' || mode === 'tablet') {
-      setIsEditMode(false);
-    }
-  }, [mode, bookmarks]);
+    },
+    [mode, bookmarks],
+  );
 
   const canAddMore = bookmarks.length < MAX_BOOKMARKS;
   const isDraggable = isEditMode;
@@ -253,7 +259,6 @@ export default function Bookmark() {
     }
   }, [mode, windowWidth]);
   const gridColumns = Math.min(totalItems, maxColumns);
-  
 
   // 생성/편집 폼 렌더링 헬퍼
   const renderForm = useCallback(() => {
@@ -281,7 +286,7 @@ export default function Bookmark() {
   // 북마크 그리드 렌더링 헬퍼
   const renderBookmarkGrid = useCallback(() => {
     const gridStyle = {
-      '--grid-columns': gridColumns
+      '--grid-columns': gridColumns,
     } as React.CSSProperties;
 
     return (
@@ -291,7 +296,9 @@ export default function Bookmark() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <SortableContext items={bookmarkIds} strategy={rectSortingStrategy}>          <div className="bookmark-page__grid" style={gridStyle}>
+        <SortableContext items={bookmarkIds} strategy={rectSortingStrategy}>
+          {' '}
+          <div className="bookmark-page__grid" style={gridStyle}>
             {bookmarks.map((bookmark: Bookmark) => (
               <BookmarkCard
                 key={bookmark.id}

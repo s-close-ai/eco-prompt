@@ -11,7 +11,9 @@ export default function Topbar() {
 
   // 설정, 대시보드, 북마크 페이지에서는 채팅 아이콘 표시 (단어 포함 체크)
   const pathsToShowChat = ['settings', 'dashboard', 'bookmark'];
-  const showChatIcon = pathsToShowChat.some(path => location.pathname.includes(path)) || location.search.includes('tab');
+  const showChatIcon =
+    pathsToShowChat.some((path) => location.pathname.includes(path)) ||
+    location.search.includes('tab');
 
   const handleTopbarClick = () => {
     // 태블릿 모드에서 헤더 클릭 시 프로젝트 생성 카드 닫기
@@ -30,9 +32,9 @@ export default function Topbar() {
         <img src="/logo/header_img.png" alt="Eco Prompt" className="topbar-logo" />
 
         {showChatIcon ? (
-          <button 
-            aria-label="채팅" 
-            className="icon-button" 
+          <button
+            aria-label="채팅"
+            className="icon-button"
             onClick={() => {
               const targetPath = '/';
               if (location.pathname !== targetPath) {

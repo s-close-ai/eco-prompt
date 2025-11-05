@@ -7,7 +7,11 @@ interface UserMessageProps {
   isLastUserMessage?: boolean;
 }
 
-export default function UserMessage({ message, onUpdate, isLastUserMessage = false }: UserMessageProps) {
+export default function UserMessage({
+  message,
+  onUpdate,
+  isLastUserMessage = false,
+}: UserMessageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedMessage, setEditedMessage] = useState(message);
 

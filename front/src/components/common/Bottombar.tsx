@@ -28,9 +28,9 @@ export default function Bottombar({ variant, onSendMessage }: BottombarProps) {
   return (
     <footer className="bottombar bottombar--menu" data-variant="menu">
       <div className="bottombar-content">
-        <button 
-          aria-label="chat" 
-          className="icon-button" 
+        <button
+          aria-label="chat"
+          className="icon-button"
           onClick={() => {
             const targetPath = '/';
             if (location.pathname !== targetPath) {
@@ -40,21 +40,21 @@ export default function Bottombar({ variant, onSendMessage }: BottombarProps) {
         >
           <img src="/icons/chat.svg" alt="chat" />
         </button>
-        <button 
-          aria-label="dashboard" 
-          className="icon-button" 
+        <button
+          aria-label="dashboard"
+          className="icon-button"
           onClick={() => {
             const targetPath = '/dashboard';
-              if (location.pathname !== targetPath) {
-                navigate(targetPath);
-              }
+            if (location.pathname !== targetPath) {
+              navigate(targetPath);
+            }
           }}
         >
           <img src="/icons/dashboard.svg" alt="dashboard" />
         </button>
-        <button 
-          aria-label="bookmark" 
-          className="icon-button" 
+        <button
+          aria-label="bookmark"
+          className="icon-button"
           onClick={() => {
             const targetPath = '/bookmark';
             if (location.pathname !== targetPath) {
@@ -64,9 +64,9 @@ export default function Bottombar({ variant, onSendMessage }: BottombarProps) {
         >
           <img src="/icons/bookmark.svg" alt="bookmark" />
         </button>
-        <button 
-          aria-label="settings" 
-          className="icon-button" 
+        <button
+          aria-label="settings"
+          className="icon-button"
           onClick={() => {
             const targetPath = '/settings';
             if (location.pathname !== targetPath) {

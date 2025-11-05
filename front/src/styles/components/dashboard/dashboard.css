@@ -163,11 +163,11 @@
 }
 
 .my-score-dot {
-  background: #487C4E;
+  background: #487c4e;
 }
 
 .average-score-dot {
-  background: #72A774;
+  background: #72a774;
 }
 
 .dashboard-metrics {
@@ -586,4 +586,3 @@
     transition: none !important;
   }
 }
-

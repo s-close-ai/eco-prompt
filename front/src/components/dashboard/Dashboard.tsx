@@ -36,12 +36,7 @@ function CircularProgress({
         height: 'clamp(7rem, 6.77vw, 9rem)',
       }}
     >
-      <svg
-        width="100%"
-        height="100%"
-        viewBox={`0 0 ${size} ${size}`}
-        className="circular-progress"
-      >
+      <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} className="circular-progress">
         {/* 배경 원 (연한 회색) */}
         <circle
           cx={size / 2}

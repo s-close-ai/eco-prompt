@@ -35,7 +35,6 @@
   overflow: hidden;
 }
 
-
 .eco-pick-header {
   display: flex;
   justify-content: space-between;
@@ -307,7 +306,6 @@
   margin: 6px 0;
 }
 
-
 :root[data-mode='tablet'] .metric-label,
 :root[data-mode='desktop'] .metric-label {
   font-size: 13px;
@@ -368,4 +366,3 @@
 .carousel-button-bottom:hover:not(:disabled) svg {
   color: #006400;
 }
-

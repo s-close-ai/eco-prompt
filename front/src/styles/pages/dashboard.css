@@ -159,13 +159,12 @@
   overflow: visible;
 }
 
-.section-title-wrapper{
+.section-title-wrapper {
   display: flex;
   flex-direction: row;
 }
 
-.section-title-wrapper .ep-tooltip-wrapper{
+.section-title-wrapper .ep-tooltip-wrapper {
   margin-left: 8px;
   margin-bottom: 12px;
 }
-

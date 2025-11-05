@@ -349,7 +349,6 @@
 
 /* :is()로 data-mode 선택자를 묶고, CSS Nesting(&)으로 중첩합니다. */
 :is(:root[data-mode='tablet'], :root[data-mode='desktop']) .ranking-table tbody {
-
   /* 1. 공통 스타일 (1등 ~ 10등) */
   & tr:nth-child(-n + 10) {
     display: flex;
@@ -455,4 +454,3 @@
   width: 24px;
   height: 24px;
 }
-

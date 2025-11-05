@@ -141,7 +141,9 @@
   background: #f3f4f6;
 }
 
-.sidebar-icon-btn:hover img { filter: none; }
+.sidebar-icon-btn:hover img {
+  filter: none;
+}
 
 /* 펼쳐진 사이드바 */
 .sidebar-content {
@@ -247,7 +249,9 @@
   flex-shrink: 0;
 }
 
-.sidebar-action-btn:hover img { filter: none; }
+.sidebar-action-btn:hover img {
+  filter: none;
+}
 
 /* 검색창 */
 .sidebar-search {
@@ -405,7 +409,9 @@
   flex-shrink: 0;
 }
 
-.sidebar-list-item:hover img { filter: none; }
+.sidebar-list-item:hover img {
+  filter: none;
+}
 
 /* 프로젝트 아이템 (아이콘과 텍스트 분리) */
 .sidebar-list-item-project {
@@ -606,7 +612,9 @@
   transition: background 0.15s ease;
 }
 
-.sidebar-project-move-portal-item:hover { background: #f5f5f5; }
+.sidebar-project-move-portal-item:hover {
+  background: #f5f5f5;
+}
 
 /* 채팅 아이템 (메뉴 포함) */
 .sidebar-list-item-chat {
@@ -638,7 +646,9 @@
   border-radius: 8px 0 0 8px;
 }
 
-.sidebar-list-item-icon-btn:hover { filter: none; }
+.sidebar-list-item-icon-btn:hover {
+  filter: none;
+}
 
 .sidebar-list-item-icon-btn img {
   width: 18px;
@@ -673,9 +683,13 @@
   color: inherit;
 }
 
-.sidebar-list-item-project:hover .sidebar-list-item-text-btn { color: inherit; }
+.sidebar-list-item-project:hover .sidebar-list-item-text-btn {
+  color: inherit;
+}
 
-.sidebar-list-item-chat:hover .sidebar-list-item-text-btn { color: inherit; }
+.sidebar-list-item-chat:hover .sidebar-list-item-text-btn {
+  color: inherit;
+}
 
 .sidebar-list-item-text {
   flex: 1;
@@ -732,7 +746,10 @@
   text-align: left;
 }
 
-.sidebar-explore-btn:hover { background: #f3f4f6; color: inherit; }
+.sidebar-explore-btn:hover {
+  background: #f3f4f6;
+  color: inherit;
+}
 
 .sidebar-explore-btn img {
   width: 18px;
@@ -740,4 +757,6 @@
   flex-shrink: 0;
 }
 
-.sidebar-explore-btn:hover img { filter: none; }
+.sidebar-explore-btn:hover img {
+  filter: none;
+}

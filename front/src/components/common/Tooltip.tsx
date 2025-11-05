@@ -94,15 +94,17 @@ export default function Tooltip({ content }: TooltipProps) {
           ref={tooltipRef}
           className={`ep-tooltip-content ${isVisible ? 'ep-tooltip-visible' : ''}`}
           role="tooltip"
-          style={{
-            ...(position
-              ? {
-                  top: `${position.top}px`,
-                  left: `${position.left}px`,
-                  '--arrow-left': `${arrowPosition}px`,
-                }
-              : { visibility: 'hidden' }),
-          } as React.CSSProperties}
+          style={
+            {
+              ...(position
+                ? {
+                    top: `${position.top}px`,
+                    left: `${position.left}px`,
+                    '--arrow-left': `${arrowPosition}px`,
+                  }
+                : { visibility: 'hidden' }),
+            } as React.CSSProperties
+          }
           data-placement={placement}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}

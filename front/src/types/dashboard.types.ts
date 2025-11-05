@@ -43,4 +43,3 @@ export interface DashboardStats {
   myMileage: number;
   promptCount: number;
 }
-
