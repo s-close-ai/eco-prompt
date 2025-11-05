@@ -15,6 +15,7 @@ import DashboardPage from './pages/Dashboard';
 import Dashboard from '@/components/dashboard/Dashboard';
 import Ranking from '@/components/dashboard/Ranking';
 import EcoPick from '@/components/dashboard/EcoPick';
+import Landing from './pages/Landing';
 
 // PWA Service Worker 등록 (개발 환경에서는 비활성화)
 if (import.meta.env.PROD) {
@@ -30,11 +31,18 @@ installDeviceMode({ mobileMax: 768, tabletMax: 1024 });
 const router = createBrowserRouter([
   {
     path: '/',
+    element: <Landing />,
+  },
+  {
+    path: '/api/v1/auth/login',
+  },
+  {
+    path: '/',
     element: <AppShell />,
     children: [
-      { index: true, element: <Home /> },
-      { path: 'chat', element: <Chat /> },
-      { path: 'chat/:chatId', element: <Chat /> },
+      { index: false, element: <Home /> },
+      { path: 'chat/mock', element: <Chat /> },
+      { path: 'chat/mock/:chatId', element: <Chat /> },
       { path: 'project', element: <Project /> },
       { path: 'settings', element: <Settings /> },
       { path: 'bookmark', element: <Bookmark /> },

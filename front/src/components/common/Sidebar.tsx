@@ -734,7 +734,7 @@ export default function Sidebar() {
                                         if (mode === 'mobile') {
                                           closeSidebar();
                                         }
-                                        navigate(`/chat/${chat.id}`);
+                                        navigate(`/chat/mock/${chat.id}`);
                                       }}
                                       onMouseDown={(e) =>
                                         mode !== 'desktop' &&
@@ -804,7 +804,7 @@ export default function Sidebar() {
                               if (mode === 'mobile') {
                                 closeSidebar();
                               }
-                              navigate(`/chat/${chat.id}`);
+                              navigate(`/chat/mock/${chat.id}`);
                             }}
                             onMouseDown={(e) =>
                               mode !== 'desktop' && handleChatMenuLongPress(chat.id, e)
