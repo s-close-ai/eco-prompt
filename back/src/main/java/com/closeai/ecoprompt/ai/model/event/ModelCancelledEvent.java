@@ -9,12 +9,12 @@ import lombok.Getter;
 @Getter
 public class ModelCancelledEvent extends ApplicationEvent{
 
-	private final MessageDocument messageDocument;
+	private final MessageDocument message;
 	private final String content;
 
-	public ModelCancelledEvent(Object source, MessageDocument messageDocument, String content) {
+	public ModelCancelledEvent(Object source, MessageDocument message, String content) {
 		super(source);
-		this.messageDocument = messageDocument;
+		this.message = message;
 		this.content = content;
 	}
 }
