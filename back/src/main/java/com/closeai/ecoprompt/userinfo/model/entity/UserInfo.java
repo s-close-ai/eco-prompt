@@ -42,8 +42,13 @@ public class UserInfo extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private UserInfo(Integer totalMileage, Double highScore, User user) {
+    @Column(name = "prompt_count",  nullable = false)
+    private Integer promptCount = 0;
+
+    private UserInfo(Integer totalMileage, Double highScore, int promptCount, User user) {
         this.totalMileage = totalMileage;
+        this.highScore = highScore;
+        this.promptCount = promptCount;
         this.user = user;
         this.sharingInformationUpdatedAt = CustomUtil.dateConverter(LocalDateTime.now());
     }
@@ -53,6 +58,7 @@ public class UserInfo extends BaseEntity {
         return new UserInfo(
                 0,
                 0.0,
+                0,
                 user
         );
     }
