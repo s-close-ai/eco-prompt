@@ -1,5 +1,6 @@
 package com.closeai.ecoprompt.ranking.service;
 
+import com.closeai.ecoprompt.common.config.RedisCacheConfig;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.model.dto.response.DailyRankingProjection;
@@ -8,6 +9,7 @@ import com.closeai.ecoprompt.ranking.model.entity.Ranking;
 import com.closeai.ecoprompt.ranking.model.entity.RankingChange;
 import com.closeai.ecoprompt.ranking.repository.RankingRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,11 @@ public class RankingService {
      *
      * @return 오늘 Top10 RankingResponse(NEW/UP/DOWN/KEEP 포함)
      */
+    @Cacheable(
+            value = RedisCacheConfig.TODAY_TOP10_CACHE,
+            key   = "'today'",
+            unless = "#result == null || #result.isEmpty()"
+    )
     public List<RankingResponse> getTodayTop10WithChange() {
         AppLogger.start("오늘의 실시간 랭킹 조회");
         // 1) 오늘 범위 문자열
@@ -92,6 +99,11 @@ public class RankingService {
     /**
      * "yyyy.MM.dd" 문자열로 들어온 날짜의 스냅샷(00:00:00)을 조회
      */
+    @Cacheable(
+            value = RedisCacheConfig.SNAPSHOT_CACHE,
+            key   = "#date.toString()", // 예: "2025-11-04"
+            unless = "#result == null || #result.isEmpty()"
+    )
     public List<RankingResponse> getSnapshotByDate(LocalDate date) {
         AppLogger.start(date + " 의 랭킹 스냅샷 조회");
         // 1) 날짜 파싱 및 00:00:00 세팅
