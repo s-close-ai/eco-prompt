@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.closeai.ecoprompt.common.ApiResponse;
 import com.closeai.ecoprompt.message.model.dto.response.GetMessageResponse;
+import com.closeai.ecoprompt.message.model.dto.response.MessagePageResponse;
 import com.closeai.ecoprompt.message.service.MessageService;
 
 import lombok.RequiredArgsConstructor;
@@ -22,9 +23,11 @@ public class ChattingController implements ChattingControllerDocs {
 	private final MessageService messageService;
 
 	@GetMapping("/{chattingId}/messages")
-	public ResponseEntity<ApiResponse<Page<GetMessageResponse>>> getChattingMessages(@PathVariable Long chattingId,
+	public ResponseEntity<ApiResponse<MessagePageResponse>> getChattingMessages(@PathVariable Long chattingId,
 		@RequestParam(required = false, defaultValue = "0") Integer page) {
 
-		return ApiResponse.success(messageService.getMessages(chattingId, page));
+		Page<GetMessageResponse> messageResponse = messageService.getMessages(chattingId, page);
+
+		return ApiResponse.success(MessagePageResponse.from(messageResponse));
 	}
 }
