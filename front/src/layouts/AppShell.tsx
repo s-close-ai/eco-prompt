@@ -2,7 +2,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { AppShellProvider, useAppShell } from '../context/AppShellContext';
 import Topbar from '../components/common/Topbar';
-import Sidebar from '../components/common/Sidebar';
+import { Sidebar } from '@/components/common/Sidebar/Sidebar';
 import Bottombar from '../components/common/Bottombar';
 import useDeviceMode from '../hooks/useDeviceMode';
 import ProjectCreateOverlay from '@/components/project_create/ProjectCreateOverlay';

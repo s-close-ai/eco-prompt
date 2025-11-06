@@ -21,7 +21,7 @@ export const updateProject = async (projectId: number, request: ProjectCreateReq
 
 // 프로젝트 삭제
 export const deleteProject = async ( request: ProjectDeleteRequest): Promise<ProjectDeleteResponse> => {
-    const response = await apiClient.patch<ProjectDeleteResponse>(`/api/v1/projects/delete/`, request);
+    const response = await apiClient.patch<ProjectDeleteResponse>(`/api/v1/projects/delete`, request);
     return response.data;
 }
 
