@@ -52,4 +52,16 @@ public class Bookmark extends BaseEntity {
 	public void updateIsDelete() {
 		this.isDeleted = 'Y';
 	}
+
+	public void updateTitle(String title) {
+		this.title = title;
+	}
+
+	public void updateUrl(String url) {
+		this.url = url;
+	}
+
+	public void updateDescription(String description) {
+		this.description = description;
+	}
 }

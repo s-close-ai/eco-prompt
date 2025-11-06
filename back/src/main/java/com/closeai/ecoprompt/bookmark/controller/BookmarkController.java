@@ -2,6 +2,7 @@ package com.closeai.ecoprompt.bookmark.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,6 +32,12 @@ public class BookmarkController implements BookmarkControllerDocs {
 	@PatchMapping("/delete")
 	public ResponseEntity<ApiResponse<Void>> deleteBookmark(@RequestBody DeleteBookmarkRequest request) {
 		return ApiResponse.noContent(bookmarkService.deleteBookmark(request));
+	}
+
+	@PatchMapping("/{bookmarkId}")
+	public ResponseEntity<ApiResponse<Void>> updateBookmark(@PathVariable Long bookmarkId,
+		@RequestBody @Valid CreateBookmarkRequest request) {
+		return ApiResponse.success(bookmarkService.updateBookmark(bookmarkId, request));
 	}
 
 }

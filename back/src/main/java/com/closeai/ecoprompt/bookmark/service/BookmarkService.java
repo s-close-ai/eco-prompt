@@ -45,7 +45,7 @@ public class BookmarkService {
 		Integer maxSequence = bookmarkRepository.findMaxSequenceByUserId(userId);
 
 		Bookmark bookmark = Bookmark.builder()
-			.title(request.url())
+			.title(request.title())
 			.url(request.url())
 			.description(request.description())
 			.sequence(maxSequence + 1)
@@ -65,6 +65,21 @@ public class BookmarkService {
 		Bookmark bookmark = validateBookmark(bookmarkId);
 
 		bookmark.updateIsDelete();
+		return null;
+	}
+
+	/**
+	 * 북마크 수정 API 처리 함수
+	 * */
+	@Transactional
+	public Void updateBookmark(Long bookmarkId, CreateBookmarkRequest request) {
+
+		Bookmark bookmark = validateBookmark(bookmarkId);
+
+		bookmark.updateTitle(request.title());
+		bookmark.updateUrl(request.url());
+		bookmark.updateDescription(request.description());
+
 		return null;
 	}
 

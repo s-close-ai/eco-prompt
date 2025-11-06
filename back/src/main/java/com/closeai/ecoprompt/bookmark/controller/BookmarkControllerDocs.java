@@ -15,4 +15,7 @@ public interface BookmarkControllerDocs {
 
 	@Operation(summary = "북마크를 삭제하는 API")
 	ResponseEntity<ApiResponse<Void>> deleteBookmark(DeleteBookmarkRequest request);
+
+	@Operation(summary = "북마크 정보 수정하는 API")
+	ResponseEntity<ApiResponse<Void>> updateBookmark(Long bookmarkId, CreateBookmarkRequest request);
 }
