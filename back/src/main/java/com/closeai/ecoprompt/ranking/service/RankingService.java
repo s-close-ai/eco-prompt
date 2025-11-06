@@ -1,0 +1,130 @@
+package com.closeai.ecoprompt.ranking.service;
+
+import com.closeai.ecoprompt.common.config.RedisCacheConfig;
+import com.closeai.ecoprompt.common.logging.AppLogger;
+import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
+import com.closeai.ecoprompt.message.model.dto.response.DailyRankingProjection;
+import com.closeai.ecoprompt.ranking.model.dto.response.RankingResponse;
+import com.closeai.ecoprompt.ranking.model.entity.Ranking;
+import com.closeai.ecoprompt.ranking.model.entity.RankingChange;
+import com.closeai.ecoprompt.ranking.repository.RankingRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class RankingService {
+
+    private final RankingRepository rankingRepository;
+    private final MessageJpaRepository messageJpaRepository;
+
+    private static final DateTimeFormatter CREATED_FMT = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss");
+    private static final DateTimeFormatter SNAPSHOT_FMT = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss");
+
+    /**
+     * 오늘 Top10을 집계하고, 어제(00:00:00) 스냅샷과 비교하여 RankingChange를 계산.
+     *
+     * @return 오늘 Top10 RankingResponse(NEW/UP/DOWN/KEEP 포함)
+     */
+    @Cacheable(
+            value = RedisCacheConfig.TODAY_TOP10_CACHE,
+            key   = "'today'",
+            unless = "#result == null || #result.isEmpty()"
+    )
+    public List<RankingResponse> getTodayTop10WithChange() {
+        AppLogger.start("오늘의 실시간 랭킹 조회");
+        // 1) 오늘 범위 문자열
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        String startStr = startOfDay.format(CREATED_FMT);
+        String nowStr = now.format(CREATED_FMT);
+
+        // 2) 오늘 Top10 조회
+        List<DailyRankingProjection> today = messageJpaRepository.findTodayTop10WithName(startStr, nowStr);
+
+        // 3) 어제 스냅샷 조회 (yyyy.MM.dd.00.00.00)
+        LocalDate yesterday = now.toLocalDate().minusDays(1);
+        String yesterdayBatch = LocalDateTime.of(yesterday, LocalTime.MIDNIGHT).format(SNAPSHOT_FMT);
+        // SNAPSHOT_FMT는 HH.mm.ss까지 포함 → 00.00.00 자동 생성
+        List<Ranking> ySnapshot = rankingRepository.findSnapshotByBatchSchedule(yesterdayBatch);
+
+        // 4) 어제 순위 맵(userId -> rank)
+        Map<Integer, Integer> prevRankMap = new HashMap<>();
+        for (Ranking r : ySnapshot) {
+            prevRankMap.put(r.getUser().getId(), r.getRanking_number());
+        }
+
+        // 5) 오늘 순위 + 변동 계산
+        List<RankingResponse> result = new ArrayList<>();
+        int rank = 1;
+        for (DailyRankingProjection row : today) {
+            Integer userId = row.getUserId();
+            Integer prevRank = prevRankMap.get(userId);
+
+            RankingChange change;
+            if (prevRank == null) {
+                change = RankingChange.NEW;
+            } else if (prevRank > rank) {
+                change = RankingChange.UP;
+            } else if (prevRank < rank) {
+                change = RankingChange.DOWN;
+            } else {
+                change = RankingChange.KEEP;
+            }
+
+            result.add(new RankingResponse(
+                    rank++,
+                    row.getName(),
+                    row.getMaxScore(),
+                    row.getMileageSum(),
+                    row.getPromptCount(),
+                    change
+            ));
+        }
+        return result;
+    }
+
+    /**
+     * "yyyy.MM.dd" 문자열로 들어온 날짜의 스냅샷(00:00:00)을 조회
+     */
+    @Cacheable(
+            value = RedisCacheConfig.SNAPSHOT_CACHE,
+            key   = "#date.toString()", // 예: "2025-11-04"
+            unless = "#result == null || #result.isEmpty()"
+    )
+    public List<RankingResponse> getSnapshotByDate(LocalDate date) {
+        AppLogger.start(date + " 의 랭킹 스냅샷 조회");
+        // 1) 날짜 파싱 및 00:00:00 세팅
+        String batchSchedule = LocalDateTime.of(date, LocalTime.MIDNIGHT).format(SNAPSHOT_FMT); // yyyy.MM.dd.00.00.00
+
+        // 2) 스냅샷 조회
+        List<Ranking> rows = rankingRepository.findSnapshotByBatchSchedule(batchSchedule);
+
+        // 3) RankingResponse로 변환 (스냅샷 표시용: change는 KEEP로 고정)
+        List<RankingResponse> result = new ArrayList<>();
+        for (Ranking r : rows) {
+            result.add(new RankingResponse(
+                    r.getRanking_number(),
+                    r.getUser().getName(),
+                    r.getScore(),
+                    r.getMileage(),
+                    r.getPromptCount(),
+                    r.getRankingChange()
+            ));
+        }
+        return result;
+    }
+
+}

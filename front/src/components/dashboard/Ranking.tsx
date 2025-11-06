@@ -26,7 +26,6 @@ export default function Ranking() {
   const mode = useDeviceMode();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentRankings, setCurrentRankings] = useState<RankingData | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const containerRef = useRef<HTMLDivElement>(null);
 
   // 날짜 목록 생성 (오늘부터 6일 전까지)
@@ -40,7 +39,6 @@ export default function Ranking() {
   useEffect(() => {
     const data = mockRankingData.find((d) => isSameDate(d.date, selectedDate));
     setCurrentRankings(data || null);
-    setLastUpdated(new Date());
   }, [selectedDate]);
 
   // 업데이트 시간 포맷 함수

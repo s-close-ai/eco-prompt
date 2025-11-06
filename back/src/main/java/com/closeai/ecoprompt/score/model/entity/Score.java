@@ -1,5 +1,6 @@
 package com.closeai.ecoprompt.score.model.entity;
 
+import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
 import com.closeai.ecoprompt.common.entity.BaseEntity;
 import com.closeai.ecoprompt.message.model.entity.Message;
 import jakarta.persistence.*;
@@ -16,6 +17,9 @@ public class Score extends BaseEntity {
     @Column(name = "score_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name="total_score", nullable = false)
+    private Double totalScore;
 
     @Column(name = "clarity_score", nullable = false)
     @Comment("명확성")
@@ -37,4 +41,12 @@ public class Score extends BaseEntity {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_id", nullable = false)
     private Message message;
+
+    public void updateScores(ScoreInfo scoreInfo){
+        this.totalScore = scoreInfo.totalScore();
+        this.clarityScore = scoreInfo.clarityScore();
+        this.specificityScore = scoreInfo.specificityScore();
+        this.formatScore = scoreInfo.formatScore();
+        this.safetyScore = scoreInfo.safetyScore();
+    }
 }
