@@ -3,7 +3,7 @@ import type { ConsentUpdateResponse, UserInfoResponse } from "@/types/auth.types
 
 // SSAFY OAuth 로그인 시작
 export const startSsafyLogin = () => {
-  const loginUrl = `http://localhost:8080/api/v1/auth/sign-in`;
+  const loginUrl = `${apiClient.defaults.baseURL}/api/v1/auth/sign-in`;
   window.location.href = loginUrl;
 };
 
