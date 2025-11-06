@@ -1,4 +1,3 @@
-
 // useSidebarData 훅이 반환하는 전체 데이터 구조
 export interface SidebarData {
   projects: SidebarProjectItem[];

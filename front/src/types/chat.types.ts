@@ -38,5 +38,4 @@ export interface ChatMessageSSERequest {
 
 export interface ChatMessageSSEResponse {
   timeout: number;
-
 }

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { getAllChattingRooms, getChattingRooms } from '@/services/api/chattingroom';
+import { getPersonalProjects, getChattingsWithPaging } from '@/services/api/project';
 
 export interface ChatItem {
   chattingId: number;
@@ -41,7 +41,7 @@ export function useSidebarData() {
     setError(null);
 
     try {
-      const response = await getAllChattingRooms();
+      const response = await getPersonalProjects();
       const projectResponses = response.data.personalProjectResponses;
 
       const projects: ProjectItem[] = [];
@@ -96,37 +96,40 @@ export function useSidebarData() {
   }, []);
 
   // 프로젝트의 더 많은 채팅 로드
-  const loadMoreProjectChats = useCallback(async (projectId: number) => {
-    const project = data.projects.find((p) => p.projectId === projectId);
-    if (!project || !project.hasMore) return;
+  const loadMoreProjectChats = useCallback(
+    async (projectId: number) => {
+      const project = data.projects.find((p) => p.projectId === projectId);
+      if (!project || !project.hasMore) return;
 
-    try {
-      // const nextPage = project.currentPage + 1;
-      const response = await getChattingRooms(projectId);
+      try {
+        // const nextPage = project.currentPage + 1;
+        const response = await getChattingsWithPaging(projectId);
 
-      const newChats = response.data.content.map((chat) => ({
-        chattingId: chat.chattingId,
-        title: chat.title,
-        projectId: chat.projectId,
-      }));
+        const newChats = response.data.content.map((chat) => ({
+          chattingId: chat.chattingId,
+          title: chat.title,
+          projectId: chat.projectId,
+        }));
 
-      setData((prev) => ({
-        ...prev,
-        projects: prev.projects.map((p) =>
-          p.projectId === projectId
-            ? {
-                ...p,
-                chats: [...p.chats, ...newChats],
-                currentPage: response.data.number,
-                hasMore: !response.data.last,
-              }
-            : p
-        ),
-      }));
-    } catch (err) {
-      console.error(`Failed to load more chats for project ${projectId}:`, err);
-    }
-  }, [data.projects]);
+        setData((prev) => ({
+          ...prev,
+          projects: prev.projects.map((p) =>
+            p.projectId === projectId
+              ? {
+                  ...p,
+                  chats: [...p.chats, ...newChats],
+                  currentPage: response.data.number,
+                  hasMore: !response.data.last,
+                }
+              : p,
+          ),
+        }));
+      } catch (err) {
+        console.error(`Failed to load more chats for project ${projectId}:`, err);
+      }
+    },
+    [data.projects],
+  );
 
   // 일반 채팅의 더 많은 항목 로드
   const loadMoreGeneralChats = useCallback(async () => {
@@ -134,7 +137,7 @@ export function useSidebarData() {
 
     try {
       // const nextPage = data.generalChatsPage + 1;
-      const response = await getChattingRooms(1); // projectId 1은 기본 프로젝트
+      const response = await getChattingsWithPaging(1); // projectId 1은 기본 프로젝트
 
       const newChats = response.data.content.map((chat) => ({
         chattingId: chat.chattingId,
