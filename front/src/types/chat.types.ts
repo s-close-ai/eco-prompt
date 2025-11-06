@@ -17,3 +17,26 @@ export interface ChatMessage {
   timestamp: Date;
   score?: PromptScore;
 }
+
+export interface ChatMessageRequest {
+  projectId: number;
+  chattingId: number;
+  content: string;
+}
+
+export interface ChatMessageResponse {
+  status: string;
+  data: {
+    chattingId: number;
+    messageUUID: string;
+  };
+}
+
+export interface ChatMessageSSERequest {
+  messageUUID: string;
+}
+
+export interface ChatMessageSSEResponse {
+  timeout: number;
+
+}
