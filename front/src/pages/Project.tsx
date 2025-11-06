@@ -1,11 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ChatCard from '@/components/project/ChatCard';
-import { mockProjectList } from '@/data/mockData';
 import { generateChatId } from '@/utils/id';
 import { ICON_SIZE } from '@/constants/ui';
 import type { ProjectLocationState } from '@/types/navigation.types';
 import '@/styles/pages/project.css';
+
+// 임시 타입 정의 (추후 API 연동 시 수정 필요)
+interface ProjectChat {
+  id: number;
+  title: string;
+  preview: string;
+  timestamp: Date;
+}
+
+interface MockProject {
+  id: number;
+  title: string;
+  chats: ProjectChat[];
+}
+
+// 임시 Mock 데이터 (추후 API 연동으로 대체)
+const mockProjectList: MockProject[] = [];
 
 export default function Project() {
   const location = useLocation();
