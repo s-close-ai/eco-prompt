@@ -5,17 +5,12 @@ from tqdm import tqdm
 from dotenv import load_dotenv
 
 load_dotenv()
-API_KEY = os.getenv("API_KEY")
+API_KEY=os.getenv("API_KEY")
 UPSTAGE_CHAT_URL = "https://api.upstage.ai/v1/chat/completions"
 UPSTAGE_MODEL_NAME = os.getenv("UPSTAGE_MODEL_NAME")
 
-dataset = load_dataset("pacovaldez/stackoverflow-questions", split="train", streaming=True)
-# print(dataset)
-# HTML 일반 텍스트 변환
-def html_to_plain_text(html):
-    return BeautifulSoup(html, "html.parser").get_text(separator="\n").strip()
-
-
+dataset = load_dataset("fka/awesome-chatgpt-prompts", split="train", streaming=True)
+# print(f"[dataset] {dataset}")
 
 SYSTEM_PROMPT = """\
         당신은 사용자 '질의(prompt)'의 품질을 평가하는 심사 모델입니다.
@@ -137,14 +132,14 @@ SYSTEM_PROMPT = """\
     """
 
 
-def call_upstage(question: str, max_retries: int = 3, backoff: float = 2.0) -> dict:
+def call_upstage(question: str, max_retries: int = 3, backoff: float = 2.0):
     payload = {
         "model": UPSTAGE_MODEL_NAME,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": question}
         ],
-        "temperature": 1.0,
+        "temperature": 0.2,
         "max_tokens": 1024,
         "response_format": {"type": "json_object"},
     }
@@ -160,19 +155,17 @@ def call_upstage(question: str, max_retries: int = 3, backoff: float = 2.0) -> d
             )
             res.raise_for_status()
             data = res.json()
-            # print(f"[data]{data}")
             content = data["choices"][0]["message"]["content"]
             return json.loads(content)
-            
+        
         except Exception as e:
             wait = backoff * (attempt + 1) + random.uniform(0, 0.5)
             print(f"[WARN] 요청 실패 (시도 {attempt+1}/{max_retries}): {e} → {wait:.1f}s 대기")
             time.sleep(wait)
-
+        
     raise RuntimeError(f"최대 재시도 {max_retries}회 초과")
 
-
-output_path = "korquad_labeled_stream_with_source.jsonl"
+output_path = "re_ap_labeled_stream_with_source.jsonl"
 processed_ids = set()
 
 if os.path.exists(output_path):
@@ -180,37 +173,35 @@ if os.path.exists(output_path):
         for line in f:
             try:
                 obj = json.loads(line)
-                if obj.get("source") == "stackoverflow":
+                if obj.get("source") == "awesomeprompt":
                     processed_ids.add(obj.get("id"))
             except Exception:
                 continue
 
 
 with open(output_path, "a", encoding="utf-8") as f_out:
-    for idx, item in tqdm(enumerate(dataset), desc="Processing SO questions",unit="q"):
-        sample_id  = f"so_{idx}"
+    for idx, item in tqdm(enumerate(dataset), desc="Processing AP questions", unit="q"):
+        sample_id = f"ap_{idx}"
 
-        if sample_id in processed_ids:  
+        if sample_id in processed_ids:
             continue
-
-        body_html = item.get("body", "")
-        userInput = html_to_plain_text(body_html)
         
+        # print(f"[item]{item}")
+        userInput = item.get("prompt", "")
         try:
             result = call_upstage(userInput)
         except Exception as e:
             print(f"[Error] {sample_id}: {e}")
             continue
-
         # print(f"[result] {result}")
         record = {
-            "id": sample_id,   
-            "question": result.get("question_ko", "").strip(),
+            "id": sample_id,
+            "question": result.get("question_ko","").strip(),
             "labels": {
                 "summary": result.get("summary", ""),
                 "scoreInfo": result.get("scoreInfo", {})
             },
-            "source": "stackoverflow"
+            "source": "awesomeprompt"
         }
 
         f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
