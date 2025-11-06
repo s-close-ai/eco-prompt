@@ -1,5 +1,45 @@
-// 랭킹 관련 타입
-export interface RankingEntry {
+// API 응답 타입
+export interface RecordResponse {
+  status: string;
+  data: {
+    highScore: number;
+    averageScore: number;
+    totalMileage: number;
+    promptCount: number;
+  };
+}
+
+export interface EcoPickResponse {
+  status: string;
+  data: {
+    ecoPick: EcoPickItem[];
+  };
+}
+
+export interface EcoPickItem {
+  name: string;
+  sumOfScore: number;
+  prompt: string;
+  detailScore: DetailScoreItem;
+}
+
+export interface DetailScoreResponse {
+  status: string;
+  data: {
+    myScoreResponse: DetailScoreItem[];
+    allScoreResponse: DetailScoreItem[];
+  };
+}
+
+export interface DetailScoreItem {
+  clarityScore: number;
+  specificityScore: number;
+  formatScore: number;
+  safetyScore: number;
+}
+
+// UI/Mock용 타입
+export interface MockRankingEntry {
   rank: number;
   name: string;
   highScore: number;
@@ -7,13 +47,12 @@ export interface RankingEntry {
   rankChange: 'up' | 'down' | 'stay' | 'new';
 }
 
-export interface RankingData {
+export interface MockRankingData {
   date: Date;
-  rankings: RankingEntry[];
+  rankings: MockRankingEntry[];
 }
 
-// Eco 픽 프롬프트 타입
-export interface EcoPickPrompt {
+export interface MockEcoPickPrompt {
   id: number;
   name: string;
   score: number;
@@ -28,16 +67,14 @@ export interface EcoPickPrompt {
   };
 }
 
-// 대시보드 메트릭 타입
-export interface DashboardMetric {
+export interface MockDashboardMetric {
   name: 'clarity' | 'specificity' | 'formatCompliance' | 'safety';
   displayName: string;
   myScore: number;
   averageScore: number;
 }
 
-// 대시보드 통계 타입
-export interface DashboardStats {
+export interface MockDashboardStats {
   highestRecord: number;
   averageScore: number;
   myMileage: number;
