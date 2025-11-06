@@ -38,8 +38,7 @@ public class ChattingService {
 	public Chatting getOrCreateChatting(Long chattingId, Integer projectId) {
 
 		if (chattingId != null) {
-			Chatting chatting = chattingRepository.findById(chattingId)
-				.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
+			Chatting chatting = validateChatting(chattingId);
 
 			if (chatting.getProject().getId().equals(projectId)) {
 				return chatting;
@@ -72,12 +71,15 @@ public class ChattingService {
 	 * 채팅방 이름 변경하는 함수
 	 * */
 	@Transactional
-	public void setChattingTitle(Long chattingId, String title) {
+	public Void setChattingTitle(Long chattingId, String title) {
 
-		Chatting chatting = chattingRepository.findById(chattingId)
-			.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
+		Chatting chatting = validateChatting(chattingId);
 
+		if (title.isEmpty()) {
+			title = "CHAT";
+		}
 		updateChattingTitle(chatting, title);
+		return null;
 	}
 
 	/**
@@ -86,13 +88,15 @@ public class ChattingService {
 	@Transactional
 	public void updateUpdateAt(Long chattingId) {
 
-		Chatting chatting = chattingRepository.findById(chattingId)
-			.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
+		Chatting chatting = validateChatting(chattingId);
 
 		chatting.updateUpdatedAt();
 	}
 
-	public boolean validateChatting(Long chattingId) {
+	/**
+	 * 사용자가 생성한 채팅방이 맞는지 검증하는 함수
+	 * */
+	public Chatting validateChatting(Long chattingId) {
 
 		Optional<Chatting> chatting = chattingRepository.findByIdAndIsDeleted(chattingId, 'N');
 		Integer userId = CustomUtil.getCurrentUserId();
@@ -100,15 +104,17 @@ public class ChattingService {
 		if (!chatting.isPresent() || !chatting.get().getProject().getOwner().getId().equals(userId)) {
 			throw new BusinessException("채팅방이 없습니다.");
 		}
-		
-		return true;
+
+		return chatting.get();
 	}
 
+	/**
+	 * DB에 변경된 채팅방명을 수정하는 함수
+	 * */
 	private void updateChattingTitle(Chatting chatting, String title) {
 
 		chatting.setTitle(title);
 		chattingRepository.save(chatting);
-
 	}
 
 }
