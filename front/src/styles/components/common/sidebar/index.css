@@ -1,3 +1,4 @@
+
 /* 사이드바 배경 오버레이 (모바일/태블릿) */
 .sidebar-backdrop {
   position: fixed;
@@ -676,6 +677,7 @@
   cursor: pointer;
   text-align: left;
   border-radius: 0 8px 8px 0;
+  min-width: 0; /* Fix for ellipsis in flexbox */
 }
 
 .sidebar-list-item-text-btn-chat {
@@ -729,7 +731,7 @@
 /* 하단 고정 영역 */
 .sidebar-footer {
   flex-shrink: 0;
-  padding: 0px 16px;
+  padding: 16px 16px;
   border-top: 1px solid #e5e7eb;
 }
 
