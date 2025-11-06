@@ -52,18 +52,27 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         runtimeCaching: [
-          {
+           // ✅ 1. 이미지 캐싱 (유지)
+           {
             urlPattern: ({ request }) => request.destination === 'image',
             handler: 'CacheFirst',
             options: {
               cacheName: 'images',
-              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 30 },
+              expiration: {
+                maxEntries: 60,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
             },
           },
+          // ✅ 2. 정적 리소스 캐싱 (단, /api/v1은 제외)
           {
-            urlPattern: ({ url }) => url.origin === self.location.origin,
+            urlPattern: ({ url }) =>
+              url.origin === self.location.origin &&
+              !url.pathname.startsWith('/api/v1'), // 여기서 제외 처리
             handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'static-resources' },
+            options: {
+              cacheName: 'static-resources',
+            },
           },
         ],
       },
