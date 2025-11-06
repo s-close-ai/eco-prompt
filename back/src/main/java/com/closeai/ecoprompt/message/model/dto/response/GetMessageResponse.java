@@ -7,7 +7,7 @@ public record GetMessageResponse(
 	ScoreMessage scoreMessage,
 	AiMessage aiMessage
 ) {
-	public static GetMessageResponse from(MessageDocument userMessage, MessageDocument aiMessage) {
+	public static GetMessageResponse of(MessageDocument userMessage, MessageDocument aiMessage) {
 		return new GetMessageResponse(
 			UserMessage.from(userMessage),
 			ScoreMessage.from(userMessage),
