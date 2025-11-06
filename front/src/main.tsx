@@ -16,6 +16,8 @@ import Dashboard from '@/components/dashboard/Dashboard';
 import Ranking from '@/components/dashboard/Ranking';
 import EcoPick from '@/components/dashboard/EcoPick';
 import Landing from './pages/Landing';
+import Consent from './pages/Consent';
+import ConsentGuard from './components/auth/ConsentGuard';
 
 // PWA Service Worker 등록 (개발 환경에서는 비활성화)
 if (import.meta.env.PROD) {
@@ -34,13 +36,19 @@ const router = createBrowserRouter([
     element: <Landing />,
   },
   {
-    path: '/api/v1/auth/login',
+    path: '/consent',
+    element: <Consent />,
   },
   {
     path: '/',
-    element: <AppShell />,
+    element: (
+      <ConsentGuard>
+        <AppShell />
+      </ConsentGuard>
+    ),
     children: [
       { index: false, element: <Home /> },
+      { path: 'chat', element: <Home /> },
       { path: 'chat/mock', element: <Chat /> },
       { path: 'chat/mock/:chatId', element: <Chat /> },
       { path: 'project', element: <Project /> },

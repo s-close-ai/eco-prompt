@@ -1,0 +1,137 @@
+.consent-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f5faf4 0%, #e8f5e9 100%);
+}
+
+.consent-container {
+  width: 100%;
+  max-width: 600px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+}
+
+.consent-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.consent-icon {
+  display: flex;
+  justify-content: center;
+  color: var(--color-primary-500);
+}
+
+.consent-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  text-align: center;
+  color: #1f2937;
+  margin: 0;
+}
+
+.consent-description {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  color: #4b5563;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.consent-description p {
+  margin: 0;
+}
+
+.consent-description ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.consent-description li {
+  color: #374151;
+}
+
+.consent-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.consent-note {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* 태블릿 (768px ~ 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .consent-container {
+    max-width: 640px;
+    padding: 2.5rem;
+  }
+
+  .consent-title {
+    font-size: 2rem;
+  }
+
+  .consent-description {
+    font-size: 1.0625rem;
+  }
+}
+
+/* 데스크탑 (1024px 이상) */
+@media (min-width: 1024px) {
+  .consent-container {
+    max-width: 680px;
+    padding: 3rem;
+  }
+
+  .consent-title {
+    font-size: 2.25rem;
+  }
+
+  .consent-description {
+    font-size: 1.0625rem;
+  }
+
+  .consent-actions {
+    flex-direction: row;
+    gap: 1rem;
+  }
+
+  .consent-actions .ep-button {
+    flex: 1;
+  }
+}
+
+/* 모바일 작은 화면 (400px 미만) */
+@media (max-width: 399px) {
+  .consent-container {
+    padding: 1.5rem;
+  }
+
+  .consent-title {
+    font-size: 1.5rem;
+  }
+
+  .consent-description {
+    font-size: 0.9375rem;
+  }
+
+  .consent-icon svg {
+    width: 48px;
+    height: 48px;
+  }
+}
