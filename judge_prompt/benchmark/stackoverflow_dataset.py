@@ -10,7 +10,7 @@ UPSTAGE_CHAT_URL = "https://api.upstage.ai/v1/chat/completions"
 UPSTAGE_MODEL_NAME = os.getenv("UPSTAGE_MODEL_NAME")
 
 dataset = load_dataset("pacovaldez/stackoverflow-questions", split="train", streaming=True)
-
+print(dataset)
 # HTML 일반 텍스트 변환
 def html_to_plain_text(html):
     return BeautifulSoup(html, "html.parser").get_text(separator="\n").strip()
@@ -22,7 +22,7 @@ SYSTEM_PROMPT = """\
 
         userInput은 보통 영어로 주어집니다.
         1단계: userInput을 그대로 "question_orig" 필드에 복사합니다.
-        2단계: userInput을 자연스러운 fluent Korean으로 번역하여 "question_ko" 필드에 작성합니다.
+        2단계: userInput을 자연스러운 사용자 반말 질문체(구어체)로 번역하여 "question_ko" 필드에 작성합니다.
         3단계: 아래 4개 항목의 평가는 **반드시 question_ko(번역된 한국어 문장)** 의 품질을 기준으로만 수행합니다.
                원본 영어 표현의 문법/형식/명확성 등은 평가 기준에 포함하지 마세요.
 
@@ -137,6 +137,7 @@ def call_upstage(question: str, max_retries: int = 3, backoff: float = 2.0) -> d
             print(f"[data]{data}")
             content = data["choices"][0]["message"]["content"]
             return json.loads(content)
+            
         except Exception as e:
             wait = backoff * (attempt + 1) + random.uniform(0, 0.5)
             print(f"[WARN] 요청 실패 (시도 {attempt+1}/{max_retries}): {e} → {wait:.1f}s 대기")
@@ -146,26 +147,45 @@ def call_upstage(question: str, max_retries: int = 3, backoff: float = 2.0) -> d
 
 
 output_path = "korquad_labeled_stream_with_source.jsonl"
+processed_ids = set()
+
+if os.path.exists(output_path):
+    with open(output_path, "r", encoding="utf-8") as f:
+        for line in f:
+            try:
+                obj = json.loads(line)
+                if obj.get("source") == "stackoverflow":
+                    processed_ids.add(obj.get("id"))
+            except Exception:
+                continue
+
+
 with open(output_path, "a", encoding="utf-8") as f_out:
-    for item in tqdm(dataset, desc="Processing SO questions"):
+    for idx, item in tqdm(enumerate(dataset), desc="Processing SO questions",unit="q"):
+        sample_id  = f"so_{idx}"
+
+        if sample_id in processed_ids:  
+            continue
+
         body_html = item.get("body", "")
         userInput = html_to_plain_text(body_html)
         
         try:
             result = call_upstage(userInput)
-
-            print(f"[result] {result}")
-            record = {
-                "id": str(item.get("id", idx)),   # id 없으면 순번으로 대체
-                "question": result.get("question_ko", "").strip(),
-                "labels": {
-                    "summary": result.get("summary", ""),
-                    "scoreInfo": result.get("scoreInfo", {})
-                },
-                "source": "stackoverflow"
-            }
-
-            f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
-
         except Exception as e:
-            print(f"[Error] {e}")
+            print(f"[Error] {sample_id}: {e}")
+            continue
+
+        print(f"[result] {result}")
+        record = {
+            "id": sample_id,   
+            "question": result.get("question_ko", "").strip(),
+            "labels": {
+                "summary": result.get("summary", ""),
+                "scoreInfo": result.get("scoreInfo", {})
+            },
+            "source": "stackoverflow"
+        }
+
+        f_out.write(json.dumps(record, ensure_ascii=False) + "\n")
+        f_out.flush()
