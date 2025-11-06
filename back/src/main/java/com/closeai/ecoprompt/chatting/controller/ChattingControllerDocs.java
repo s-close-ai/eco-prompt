@@ -21,4 +21,7 @@ public interface ChattingControllerDocs {
 
 	@Operation(summary = "채팅방 프로젝트 변경하는 API")
 	ResponseEntity<ApiResponse<Void>> updateChattingProject(Long chattingId, UpdateChattingProjectRequest request);
+
+	@Operation(summary = "채팅방 삭제하는 API")
+	ResponseEntity<ApiResponse<Void>> deleteChatting(Long chattingId);
 }

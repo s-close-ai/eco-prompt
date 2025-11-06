@@ -103,6 +103,18 @@ public class ChattingService {
 	}
 
 	/**
+	 * 채팅방 삭제하는 함수
+	 * */
+	@Transactional
+	public Void deleteChatting(Long chattingId) {
+
+		Chatting chatting = validateChatting(chattingId);
+		chatting.updateIsDeleted();
+
+		return null;
+	}
+
+	/**
 	 * 채팅방 수정날짜 바꾸는 함수
 	 * */
 	@Transactional

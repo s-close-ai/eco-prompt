@@ -52,4 +52,9 @@ public class ChattingController implements ChattingControllerDocs {
 		@RequestBody UpdateChattingProjectRequest request) {
 		return ApiResponse.success(chattingService.updateChattingProject(chattingId, request));
 	}
+
+	@PatchMapping("/delete")
+	public ResponseEntity<ApiResponse<Void>> deleteChatting(@RequestParam Long chattingId) {
+		return ApiResponse.noContent(chattingService.deleteChatting(chattingId));
+	}
 }
