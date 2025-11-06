@@ -36,7 +36,7 @@ function ShellBody() {
   const [settingsData, setSettingsData] = useState<SettingsFormData>(mockSettingsData);
 
   const handleSendMessage = (message: string) => {
-    navigate('/chat', { state: { isNew: true, message: message } });
+    navigate('/chat/mock', { state: { isNew: true, message: message } });
   };
 
   useEffect(() => {
