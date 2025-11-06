@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import '@/styles/components/common/sidebar/index.css';
 import { useAppShell } from '@/context/AppShellContext';
@@ -38,12 +37,7 @@ export function Sidebar() {
   } = useSidebarData();
 
   // 컨텍스트 메뉴 관리 훅
-  const {
-    openMenus,
-    toggleMenu,
-    closeMenu,
-    getMenuProps,
-  } = useContextMenu();
+  const { openMenus, toggleMenu, closeMenu, getMenuProps } = useContextMenu();
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -61,33 +55,86 @@ export function Sidebar() {
 
   // --- 메뉴 렌더링 로직 ---
   const renderProjectMenu = (id: number, position: { top: number; left: number }) => (
-    <ContextMenu key={`${PROJECT_MENU_PREFIX}${id}`} position={position} menuProps={getMenuProps(`${PROJECT_MENU_PREFIX}${id}`)}>
-      <button className="sidebar-list-item-menu-item" onClick={() => handleMenuAction(`${PROJECT_MENU_PREFIX}${id}`, 'rename')}>
-        <img src="/icons/edit.svg" alt="" width={ICON_SIZE.SM} height={ICON_SIZE.SM} aria-hidden="true" />
+    <ContextMenu
+      key={`${PROJECT_MENU_PREFIX}${id}`}
+      position={position}
+      menuProps={getMenuProps(`${PROJECT_MENU_PREFIX}${id}`)}
+    >
+      <button
+        className="sidebar-list-item-menu-item"
+        onClick={() => handleMenuAction(`${PROJECT_MENU_PREFIX}${id}`, 'rename')}
+      >
+        <img
+          src="/icons/edit.svg"
+          alt=""
+          width={ICON_SIZE.SM}
+          height={ICON_SIZE.SM}
+          aria-hidden="true"
+        />
         <span>이름 바꾸기</span>
       </button>
-      <button className="sidebar-list-item-menu-item" onClick={() => handleMenuAction(`${PROJECT_MENU_PREFIX}${id}`, 'delete')}>
-        <img src="/icons/delete.svg" alt="" width={ICON_SIZE.SM} height={ICON_SIZE.SM} aria-hidden="true" />
+      <button
+        className="sidebar-list-item-menu-item"
+        onClick={() => handleMenuAction(`${PROJECT_MENU_PREFIX}${id}`, 'delete')}
+      >
+        <img
+          src="/icons/delete.svg"
+          alt=""
+          width={ICON_SIZE.SM}
+          height={ICON_SIZE.SM}
+          aria-hidden="true"
+        />
         <span>프로젝트 삭제</span>
       </button>
     </ContextMenu>
   );
 
-  const renderChatMenu = (id: number, position: { top: number; left: number }, isNested = false) => {
+  const renderChatMenu = (
+    id: number,
+    position: { top: number; left: number },
+    isNested = false,
+  ) => {
     const menuId = `${isNested ? NESTED_CHAT_MENU_PREFIX : CHAT_MENU_PREFIX}${id}`;
     return (
       <ContextMenu key={menuId} position={position} menuProps={getMenuProps(menuId)}>
-        <button className="sidebar-list-item-menu-item" onClick={() => handleMenuAction(menuId, 'rename')}>
-          <img src="/icons/edit.svg" alt="" width={ICON_SIZE.SM} height={ICON_SIZE.SM} aria-hidden="true" />
+        <button
+          className="sidebar-list-item-menu-item"
+          onClick={() => handleMenuAction(menuId, 'rename')}
+        >
+          <img
+            src="/icons/edit.svg"
+            alt=""
+            width={ICON_SIZE.SM}
+            height={ICON_SIZE.SM}
+            aria-hidden="true"
+          />
           <span>이름 바꾸기</span>
         </button>
         {/* 프로젝트 이동 메뉴 (추후 구현) */}
-        <button className="sidebar-list-item-menu-item" onClick={() => handleMenuAction(menuId, 'move')}>
-          <img src="/icons/folder.svg" alt="" width={ICON_SIZE.SM} height={ICON_SIZE.SM} aria-hidden="true" />
+        <button
+          className="sidebar-list-item-menu-item"
+          onClick={() => handleMenuAction(menuId, 'move')}
+        >
+          <img
+            src="/icons/folder.svg"
+            alt=""
+            width={ICON_SIZE.SM}
+            height={ICON_SIZE.SM}
+            aria-hidden="true"
+          />
           <span>프로젝트 이동</span>
         </button>
-        <button className="sidebar-list-item-menu-item" onClick={() => handleMenuAction(menuId, 'delete')}>
-          <img src="/icons/delete.svg" alt="" width={ICON_SIZE.SM} height={ICON_SIZE.SM} aria-hidden="true" />
+        <button
+          className="sidebar-list-item-menu-item"
+          onClick={() => handleMenuAction(menuId, 'delete')}
+        >
+          <img
+            src="/icons/delete.svg"
+            alt=""
+            width={ICON_SIZE.SM}
+            height={ICON_SIZE.SM}
+            aria-hidden="true"
+          />
           <span>채팅 삭제</span>
         </button>
       </ContextMenu>
@@ -111,8 +158,12 @@ export function Sidebar() {
               <ProjectList
                 projects={sidebarData.projects}
                 onLoadMoreChats={loadMoreProjectChats}
-                onMenuToggle={(projectId, e) => toggleMenu(`${PROJECT_MENU_PREFIX}${projectId}`, e.currentTarget as HTMLElement)}
-                onNestedMenuToggle={(chatId, e) => toggleMenu(`${NESTED_CHAT_MENU_PREFIX}${chatId}`, e.currentTarget as HTMLElement)}
+                onMenuToggle={(projectId, e) =>
+                  toggleMenu(`${PROJECT_MENU_PREFIX}${projectId}`, e.currentTarget as HTMLElement)
+                }
+                onNestedMenuToggle={(chatId, e) =>
+                  toggleMenu(`${NESTED_CHAT_MENU_PREFIX}${chatId}`, e.currentTarget as HTMLElement)
+                }
               />
               <ChatList
                 title="채팅"
@@ -120,7 +171,9 @@ export function Sidebar() {
                 hasMore={sidebarData.generalChatsHasMore}
                 isLoading={isDataLoading}
                 onLoadMore={loadMoreGeneralChats}
-                onMenuToggle={(chatId, e) => toggleMenu(`${CHAT_MENU_PREFIX}${chatId}`, e.currentTarget as HTMLElement)}
+                onMenuToggle={(chatId, e) =>
+                  toggleMenu(`${CHAT_MENU_PREFIX}${chatId}`, e.currentTarget as HTMLElement)
+                }
               />
             </div>
             <SidebarFooter />

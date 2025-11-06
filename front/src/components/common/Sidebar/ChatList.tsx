@@ -1,4 +1,3 @@
-
 import { ChatListItem } from './ChatListItem';
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import type { SidebarChatItem } from '@/types/sidebar.types';
@@ -15,7 +14,14 @@ interface ChatListProps {
 /**
  * 일반 채팅 목록을 표시하는 컴포넌트. 무한 스크롤 기능을 포함.
  */
-export function ChatList({ title, chats, hasMore, isLoading, onLoadMore, onMenuToggle }: ChatListProps) {
+export function ChatList({
+  title,
+  chats,
+  hasMore,
+  isLoading,
+  onLoadMore,
+  onMenuToggle,
+}: ChatListProps) {
   // 무한 스크롤을 위한 센티널(감시 대상) 요소 설정
   const sentinelRef = useInfiniteScroll({
     onLoadMore,

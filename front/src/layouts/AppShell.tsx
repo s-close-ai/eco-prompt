@@ -25,7 +25,8 @@ function ShellBody() {
   const location = useLocation();
   const navigate = useNavigate();
   const mode = useDeviceMode();
-  const { isSidebarCollapsed, isSidebarOpen, isSettingsOpen, closeSettings, closeSearch } = useAppShell();
+  const { isSidebarCollapsed, isSidebarOpen, isSettingsOpen, closeSettings, closeSearch } =
+    useAppShell();
   const isChat = location.pathname.startsWith('/chat');
   const isProjectRoute = location.pathname.startsWith('/project');
   const isHome = location.pathname === '/';
@@ -117,7 +118,8 @@ function ShellBody() {
           onSubmit={handleSettingsSubmit}
           onAutoSave={handleSettingsAutoSave}
         />
-      )} <SearchModal />
+      )}{' '}
+      <SearchModal />
     </div>
   );
 }

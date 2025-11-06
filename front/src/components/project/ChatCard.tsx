@@ -69,7 +69,14 @@ function ChatCard({
 
   return (
     <div className="project-chat-card-wrapper">
-      <div className="project-chat-card" onClick={handleClick} onKeyDown={handleKeyDown} role="button" tabIndex={0} aria-label={`${title} 채팅 열기`}>
+      <div
+        className="project-chat-card"
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+        aria-label={`${title} 채팅 열기`}
+      >
         <div className="project-chat-card__title-row">
           <span className="project-chat-card__title">{title}</span>
         </div>

@@ -1,4 +1,3 @@
-
 import { ProjectListItem } from './ProjectListItem';
 import type { SidebarProjectItem } from '@/types/sidebar.types';
 
@@ -12,7 +11,12 @@ interface ProjectListProps {
 /**
  * 프로젝트 목록 전체를 렌더링하는 컴포넌트
  */
-export function ProjectList({ projects, onMenuToggle, onNestedMenuToggle, onLoadMoreChats }: ProjectListProps) {
+export function ProjectList({
+  projects,
+  onMenuToggle,
+  onNestedMenuToggle,
+  onLoadMoreChats,
+}: ProjectListProps) {
   // 프로젝트가 없으면 아무것도 렌더링하지 않음
   if (projects.length === 0) {
     return null;

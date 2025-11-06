@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppShell } from '@/context/AppShellContext';
@@ -19,7 +18,12 @@ interface ProjectListItemProps {
  * 사이드바에 표시되는 개별 프로젝트 아이템 컴포넌트.
  * 확장/축소 기능과 내부에 채팅 목록을 포함.
  */
-export function ProjectListItem({ project, onMenuToggle, onNestedMenuToggle, onLoadMoreChats }: ProjectListItemProps) {
+export function ProjectListItem({
+  project,
+  onMenuToggle,
+  onNestedMenuToggle,
+  onLoadMoreChats,
+}: ProjectListItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const navigate = useNavigate();
   const mode = useDeviceMode();

@@ -23,7 +23,7 @@ export function useInfiniteScroll({
         onLoadMore();
       }
     },
-    [hasMore, isLoading, onLoadMore]
+    [hasMore, isLoading, onLoadMore],
   );
 
   useEffect(() => {

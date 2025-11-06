@@ -1,4 +1,3 @@
-
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';

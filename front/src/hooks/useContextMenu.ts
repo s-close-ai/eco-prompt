@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 
 type MenuId = string | number;
@@ -19,7 +18,7 @@ interface ToggleMenuOptions {
 export function useContextMenu() {
   // 열려있는 메뉴들의 ID와 위치를 관리하는 Map
   const [openMenus, setOpenMenus] = useState<Map<MenuId, MenuPosition>>(new Map());
-  
+
   // 메뉴 DOM 요소와 트리거 DOM 요소를 참조하기 위한 Ref
   const menuRefs = useRef<Map<MenuId, HTMLDivElement>>(new Map());
   const triggerRefs = useRef<Map<MenuId, HTMLElement>>(new Map());
@@ -30,30 +29,33 @@ export function useContextMenu() {
    * @param anchorEl - 메뉴 위치의 기준이 될 DOM 요소
    * @param options - 위치 오프셋 옵션
    */
-  const toggleMenu = useCallback((id: MenuId, anchorEl: HTMLElement, options: ToggleMenuOptions = {}) => {
-    const { leftOffset = -170, topOffset = 8 } = options;
-    setOpenMenus(prev => {
-      const newMenus = new Map(prev);
-      if (newMenus.has(id)) {
-        newMenus.delete(id);
-        triggerRefs.current.delete(id);
-      } else {
-        const rect = anchorEl.getBoundingClientRect();
-        const top = rect.bottom + topOffset;
-        const left = rect.right + leftOffset;
-        newMenus.set(id, { top, left });
-        triggerRefs.current.set(id, anchorEl);
-      }
-      return newMenus;
-    });
-  }, []);
+  const toggleMenu = useCallback(
+    (id: MenuId, anchorEl: HTMLElement, options: ToggleMenuOptions = {}) => {
+      const { leftOffset = -170, topOffset = 8 } = options;
+      setOpenMenus((prev) => {
+        const newMenus = new Map(prev);
+        if (newMenus.has(id)) {
+          newMenus.delete(id);
+          triggerRefs.current.delete(id);
+        } else {
+          const rect = anchorEl.getBoundingClientRect();
+          const top = rect.bottom + topOffset;
+          const left = rect.right + leftOffset;
+          newMenus.set(id, { top, left });
+          triggerRefs.current.set(id, anchorEl);
+        }
+        return newMenus;
+      });
+    },
+    [],
+  );
 
   /**
    * 특정 메뉴를 닫는 함수
    * @param id - 닫을 메뉴의 ID
    */
   const closeMenu = useCallback((id: MenuId) => {
-    setOpenMenus(prev => {
+    setOpenMenus((prev) => {
       const newMenus = new Map(prev);
       if (newMenus.has(id)) {
         newMenus.delete(id);

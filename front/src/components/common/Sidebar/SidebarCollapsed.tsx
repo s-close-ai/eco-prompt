@@ -1,4 +1,3 @@
-
 import { useNavigate } from 'react-router-dom';
 import { useAppShell } from '@/context/AppShellContext';
 
@@ -48,7 +47,11 @@ export function SidebarCollapsed() {
         >
           <img src="/icons/search.svg" alt="search" width={20} height={20} />
         </button>
-        <button className="sidebar-icon-btn" aria-label="새 채팅" onClick={() => handleNavigate('/')}>
+        <button
+          className="sidebar-icon-btn"
+          aria-label="새 채팅"
+          onClick={() => handleNavigate('/')}
+        >
           <img src="/icons/add_chat.svg" alt="add chat" width={20} height={20} />
         </button>
         <button className="sidebar-icon-btn" aria-label="새 프로젝트" onClick={handleCreateProject}>
