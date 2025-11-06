@@ -1,41 +1,38 @@
-import { clientsClaim } from 'workbox-core';
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
-import { registerRoute, NavigationRoute } from 'workbox-routing';
-import { StaleWhileRevalidate, CacheFirst } from 'workbox-strategies';
-import { ExpirationPlugin } from 'workbox-expiration';
+// sw.js (Workbox v6+ 예시)
+import {registerRoute} from 'workbox-routing';
+import {NetworkOnly} from 'workbox-strategies';
+import {setCatchHandler} from 'workbox-routing';
+import {cleanupOutdatedCaches} from 'workbox-precaching';
 
-self.skipWaiting();
-clientsClaim();
-
-// 기존 프리캐시 목록 등록
-precacheAndRoute(self.__WB_MANIFEST || []);
+// 구버전 캐시 정리
 cleanupOutdatedCaches();
 
-// ✅ /api/v1 요청은 캐시에서 제외
+// ❗ API는 절대 캐시 금지 + 네트워크만
 registerRoute(
-  ({ url }) => url.pathname.startsWith('/api/v1'),
-  null // 가로채지 않음
+  ({url, request}) => url.pathname.startsWith('/api/') || request.url.includes('/api/'),
+  new NetworkOnly(),
+  'GET'
+);
+registerRoute(
+  ({url, request}) => url.pathname.startsWith('/api/') || request.url.includes('/api/'),
+  new NetworkOnly(),
+  'POST'
 );
 
-// 이미지 캐시 전략
-registerRoute(
-  ({ request }) => request.destination === 'image',
-  new CacheFirst({
-    cacheName: 'images',
-    plugins: [new ExpirationPlugin({ maxEntries: 60, maxAgeSeconds: 30 * 24 * 60 * 60 })],
-  })
-);
+// SPA 네비게이션 fallback 사용 시, API/DOCS 등은 제외
+workbox.routing.registerNavigationRoute('/index.html', {
+  denylist: [
+    new RegExp('^/api/'), 
+    new RegExp('^/swagger'), 
+    new RegExp('\\.(?:png|jpg|jpeg|gif|svg|json)$')
+  ],
+});
 
-// 정적 리소스 캐시 전략
-registerRoute(
-  ({ url }) =>
-    url.origin === self.location.origin && !url.pathname.startsWith('/api/v1'),
-  new StaleWhileRevalidate({ cacheName: 'static-resources' })
-);
-
-// SPA 라우팅 지원
-registerRoute(
-  new NavigationRoute(new StaleWhileRevalidate({ cacheName: 'pages' }), {
-    allowlist: [/^\/$/],
-  })
-);
+// (선택) 전역 에러 핸들러
+setCatchHandler(async ({event}) => {
+  // navigate 요청이면 오프라인 페이지 등 반환, 그 외는 그냥 실패
+  if (event.request.mode === 'navigate') {
+    return caches.match('/offline.html') || Response.error();
+  }
+  return Response.error();
+});

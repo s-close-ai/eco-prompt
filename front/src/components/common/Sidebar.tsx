@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';
+import { useSidebarData } from '@/hooks/useSidebarData';
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll';
 import '@/styles/components/common/sidebar.css';
-import { mockProjectList, mockChatList } from '@/data/mockData';
 import { ICON_SIZE } from '@/constants/ui';
 
 export default function Sidebar() {
@@ -20,6 +21,17 @@ export default function Sidebar() {
     toggleSettings,
     toggleSearch,
   } = useAppShell();
+
+  // Sidebar 데이터 관리
+  const {
+    data: sidebarData,
+    isLoading: isDataLoading,
+    loadInitialData,
+    loadMoreProjectChats,
+    loadMoreGeneralChats,
+  } = useSidebarData();
+
+  // UI 상태
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedProjects, setExpandedProjects] = useState<Set<number>>(new Set());
   const [openProjectMenus, setOpenProjectMenus] = useState<Set<number>>(new Set());
@@ -31,9 +43,9 @@ export default function Sidebar() {
     left: number;
     filterProjectId?: number;
   } | null>(null);
-  const projectMoveMenuRef = useRef<HTMLDivElement | null>(null);
 
-  // 포털로 렌더링할 메뉴 위치 정보
+  // Refs
+  const projectMoveMenuRef = useRef<HTMLDivElement | null>(null);
   const [projectMenus, setProjectMenus] = useState<Map<number, { top: number; left: number }>>(
     new Map(),
   );
@@ -47,7 +59,19 @@ export default function Sidebar() {
   const [longPressTimer, setLongPressTimer] = useState<Map<number, number>>(new Map());
   const menuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
-  // 모든 오버레이 닫기 헬퍼 함수
+  // 일반 채팅 무한 스크롤
+  const generalChatsSentinelRef = useInfiniteScroll({
+    onLoadMore: loadMoreGeneralChats,
+    hasMore: sidebarData.generalChatsHasMore,
+    isLoading: isDataLoading,
+  });
+
+  // 초기 데이터 로드
+  useEffect(() => {
+    loadInitialData();
+  }, [loadInitialData]);
+
+  // 모든 오버레이 닫기
   const closeAllOverlays = () => {
     window.dispatchEvent(new CustomEvent('project-create-close'));
     window.dispatchEvent(new CustomEvent('settings-close'));
@@ -57,16 +81,13 @@ export default function Sidebar() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       const target = event.target as Node;
-      // 포털 내부 클릭은 무시
       if (projectMoveMenuRef.current && projectMoveMenuRef.current.contains(target)) {
         return;
       }
 
-      // 프로젝트 메뉴 닫기 - 메뉴 외부 클릭 시 닫기
       openProjectMenus.forEach((projectId) => {
         const menuRef = projectMenuRefs.current.get(projectId);
         const triggerRef = menuRefs.current.get(projectId);
-        // 메뉴 외부를 클릭했고, 트리거 버튼도 아닌 경우
         if (
           menuRef &&
           !menuRef.contains(target) &&
@@ -86,11 +107,9 @@ export default function Sidebar() {
         }
       });
 
-      // 채팅 메뉴 닫기 - 메뉴 외부 클릭 시 닫기
       openChatMenus.forEach((chatId) => {
         const menuRef = chatMenuRefs.current.get(chatId);
         const triggerRef = menuRefs.current.get(chatId + 10000);
-        // 메뉴 외부를 클릭했고, 트리거 버튼도 아닌 경우
         if (
           menuRef &&
           !menuRef.contains(target) &&
@@ -111,11 +130,9 @@ export default function Sidebar() {
         }
       });
 
-      // 중첩 채팅 메뉴 닫기 - 메뉴 외부 클릭 시 닫기
       openNestedChatMenus.forEach((chatId) => {
         const menuRef = nestedChatMenuRefs.current.get(chatId);
         const triggerRef = menuRefs.current.get(chatId + 20000);
-        // 메뉴 외부를 클릭했고, 트리거 버튼도 아닌 경우
         if (
           menuRef &&
           !menuRef.contains(target) &&
@@ -136,7 +153,6 @@ export default function Sidebar() {
         }
       });
 
-      // 프로젝트 이동 포털 닫기 - 포털 외부 클릭 시 닫기
       if (projectMoveMenu && projectMoveMenuRef.current && !projectMoveMenuRef.current.contains(target)) {
         setProjectMoveMenu(null);
       }
@@ -148,7 +164,6 @@ export default function Sidebar() {
       openNestedChatMenus.size > 0 ||
       projectMoveMenu
     ) {
-      // capture phase에서 이벤트를 먼저 처리하여 메뉴가 확실히 닫히도록 함
       document.addEventListener('mousedown', handleClickOutside, true);
       document.addEventListener('touchstart', handleClickOutside, true);
       return () => {
@@ -184,6 +199,11 @@ export default function Sidebar() {
         newSet.delete(projectId);
       } else {
         newSet.add(projectId);
+        // 프로젝트 확장 시 더 많은 채팅이 필요한지 확인
+        const project = sidebarData.projects.find((p) => p.projectId === projectId);
+        if (project && project.chats.length === 0 && project.hasMore) {
+          loadMoreProjectChats(projectId);
+        }
       }
       return newSet;
     });
@@ -212,7 +232,7 @@ export default function Sidebar() {
         if (anchorEl) {
           const rect = anchorEl.getBoundingClientRect();
           const top = rect.bottom + 8;
-          const left = rect.right - 170; // 메뉴 너비만큼 왼쪽으로
+          const left = rect.right - 170;
           setProjectMenus((prevMenus) => {
             const newMenus = new Map(prevMenus);
             newMenus.set(projectId, { top, left });
@@ -239,7 +259,7 @@ export default function Sidebar() {
         if (anchorEl) {
           const rect = anchorEl.getBoundingClientRect();
           const top = rect.bottom + 8;
-          const left = rect.right - 170; // 메뉴 너비만큼 왼쪽으로
+          const left = rect.right - 170;
           setChatMenus((prevMenus) => {
             const newMenus = new Map(prevMenus);
             newMenus.set(chatId, { top, left });
@@ -333,7 +353,6 @@ export default function Sidebar() {
   };
 
   const handleProjectMenuAction = (projectId: number, action: 'rename' | 'delete') => {
-    // 메뉴 닫기 - 모든 상태 정리
     setOpenProjectMenus((prev) => {
       const newSet = new Set(prev);
       newSet.delete(projectId);
@@ -344,7 +363,6 @@ export default function Sidebar() {
       newMenus.delete(projectId);
       return newMenus;
     });
-    // TODO: 실제 액션 구현
     console.log(`Project ${projectId} ${action}`);
   };
 
@@ -363,7 +381,7 @@ export default function Sidebar() {
         if (anchorEl) {
           const rect = anchorEl.getBoundingClientRect();
           const top = rect.bottom + 8;
-          const left = rect.right - 170; // 메뉴 너비만큼 왼쪽으로
+          const left = rect.right - 170;
           setNestedChatMenus((prevMenus) => {
             const newMenus = new Map(prevMenus);
             newMenus.set(chatId, { top, left });
@@ -418,7 +436,6 @@ export default function Sidebar() {
   };
 
   const handleNestedChatMenuAction = (chatId: number, action: 'rename' | 'delete') => {
-    // 메뉴 닫기 - 모든 상태 정리
     setOpenNestedChatMenus((prev) => {
       const newSet = new Set(prev);
       newSet.delete(chatId);
@@ -429,13 +446,11 @@ export default function Sidebar() {
       newMenus.delete(chatId);
       return newMenus;
     });
-    setProjectMoveMenu(null); // 프로젝트 이동 포털도 닫기
-    // TODO: 실제 액션 구현
+    setProjectMoveMenu(null);
     console.log(`Nested Chat ${chatId} ${action}`);
   };
 
   const handleChatMenuAction = (chatId: number, action: 'rename' | 'delete') => {
-    // 메뉴 닫기 - 모든 상태 정리
     setOpenChatMenus((prev) => {
       const newSet = new Set(prev);
       newSet.delete(chatId);
@@ -446,8 +461,7 @@ export default function Sidebar() {
       newMenus.delete(chatId);
       return newMenus;
     });
-    setProjectMoveMenu(null); // 프로젝트 이동 포털도 닫기
-    // TODO: 실제 액션 구현
+    setProjectMoveMenu(null);
     console.log(`Chat ${chatId} ${action}`);
   };
 
@@ -477,7 +491,6 @@ export default function Sidebar() {
       newMenus.delete(chatId);
       return newMenus;
     });
-    // TODO: 실제 프로젝트 이동 구현
     console.log(
       `Chat ${chatId} moved to project ${targetProjectId} from ${currentProjectId || 'none'}`,
     );
@@ -489,13 +502,12 @@ export default function Sidebar() {
     filterProjectId?: number,
   ) => {
     const rect = anchorEl.getBoundingClientRect();
-    const top = Math.max(8, Math.min(rect.top, window.innerHeight - 248)); // 8px padding, submenu max 240+8
-    const left = rect.right + 8; // 사이드바 오른쪽으로 띄움
+    const top = Math.max(8, Math.min(rect.top, window.innerHeight - 248));
+    const left = rect.right + 8;
     setProjectMoveMenu({ chatId, top, left, filterProjectId });
   };
 
   const handleSidebarClick = () => {
-    // 태블릿 모드에서 사이드바 클릭 시 모든 오버레이 닫기
     if (mode === 'tablet') {
       closeAllOverlays();
     }
@@ -638,7 +650,7 @@ export default function Sidebar() {
                 </button>
               </div>
 
-              {/* 검색창 - 데스크탑은 버튼, 모바일/태블릿은 입력창 */}
+              {/* 검색창 */}
               <button
                 className="sidebar-search sidebar-search-desktop"
                 onClick={() => {
@@ -692,25 +704,25 @@ export default function Sidebar() {
               </div>
             </div>
 
-            {/* 스크롤 가능한 중간 영역 (프로젝트 + 채팅) */}
+            {/* 스크롤 가능한 중간 영역 */}
             <div className="sidebar-scroll">
               {/* 프로젝트 목록 */}
               <div className="sidebar-section">
                 <h3 className="sidebar-section-title">프로젝트</h3>
                 <ul className="sidebar-list">
-                  {mockProjectList.map((project) => {
-                    const isExpanded = expandedProjects.has(project.id);
-                    const isMenuOpen = openProjectMenus.has(project.id);
+                  {sidebarData.projects.map((project) => {
+                    const isExpanded = expandedProjects.has(project.projectId);
+                    const isMenuOpen = openProjectMenus.has(project.projectId);
 
                     return (
-                      <li key={project.id}>
+                      <li key={project.projectId}>
                         <div className="sidebar-list-item sidebar-list-item-project">
                           <button
                             className="sidebar-list-item-icon-btn"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              toggleProject(project.id);
+                              toggleProject(project.projectId);
                             }}
                             aria-label={isExpanded ? '채팅 목록 접기' : '채팅 목록 열기'}
                           >
@@ -726,13 +738,13 @@ export default function Sidebar() {
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              handleProjectNameClick(project.id);
+                              handleProjectNameClick(project.projectId);
                             }}
                             onMouseDown={(e) =>
-                              mode !== 'desktop' && handleProjectMenuLongPress(project.id, e)
+                              mode !== 'desktop' && handleProjectMenuLongPress(project.projectId, e)
                             }
                             onTouchStart={(e) =>
-                              mode !== 'desktop' && handleProjectMenuLongPress(project.id, e)
+                              mode !== 'desktop' && handleProjectMenuLongPress(project.projectId, e)
                             }
                           >
                             <span className="sidebar-list-item-text">{project.title}</span>
@@ -741,9 +753,9 @@ export default function Sidebar() {
                             className="sidebar-list-item-menu-wrapper"
                             ref={(el) => {
                               if (el) {
-                                menuRefs.current.set(project.id, el);
+                                menuRefs.current.set(project.projectId, el);
                               } else {
-                                menuRefs.current.delete(project.id);
+                                menuRefs.current.delete(project.projectId);
                               }
                             }}
                           >
@@ -752,7 +764,7 @@ export default function Sidebar() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                toggleProjectMenu(project.id, e.currentTarget);
+                                toggleProjectMenu(project.projectId, e.currentTarget);
                               }}
                               aria-label="프로젝트 메뉴"
                               aria-expanded={isMenuOpen}
@@ -770,10 +782,10 @@ export default function Sidebar() {
                         {isExpanded && (
                           <ul className="sidebar-nested-list">
                             {project.chats.map((chat) => {
-                              const isNestedMenuOpen = openNestedChatMenus.has(chat.id);
+                              const isNestedMenuOpen = openNestedChatMenus.has(chat.chattingId);
 
                               return (
-                                <li key={chat.id}>
+                                <li key={chat.chattingId}>
                                   <div className="sidebar-list-item sidebar-list-item-chat sidebar-nested-item">
                                     <button
                                       className="sidebar-list-item-text-btn sidebar-list-item-text-btn-chat"
@@ -782,15 +794,15 @@ export default function Sidebar() {
                                         if (mode === 'mobile') {
                                           closeSidebar();
                                         }
-                                        navigate(`/chat/mock/${chat.id}`);
+                                        navigate(`/chat/mock/${chat.chattingId}`);
                                       }}
                                       onMouseDown={(e) =>
                                         mode !== 'desktop' &&
-                                        handleNestedChatMenuLongPress(chat.id, e)
+                                        handleNestedChatMenuLongPress(chat.chattingId, e)
                                       }
                                       onTouchStart={(e) =>
                                         mode !== 'desktop' &&
-                                        handleNestedChatMenuLongPress(chat.id, e)
+                                        handleNestedChatMenuLongPress(chat.chattingId, e)
                                       }
                                     >
                                       <span className="sidebar-list-item-text">{chat.title}</span>
@@ -799,9 +811,9 @@ export default function Sidebar() {
                                       className="sidebar-list-item-menu-wrapper"
                                       ref={(el) => {
                                         if (el) {
-                                          menuRefs.current.set(chat.id + 20000, el);
+                                          menuRefs.current.set(chat.chattingId + 20000, el);
                                         } else {
-                                          menuRefs.current.delete(chat.id + 20000);
+                                          menuRefs.current.delete(chat.chattingId + 20000);
                                         }
                                       }}
                                     >
@@ -810,7 +822,7 @@ export default function Sidebar() {
                                         onClick={(e) => {
                                           e.preventDefault();
                                           e.stopPropagation();
-                                          toggleNestedChatMenu(chat.id, e.currentTarget);
+                                          toggleNestedChatMenu(chat.chattingId, e.currentTarget);
                                         }}
                                         aria-label="채팅 메뉴"
                                         aria-expanded={isNestedMenuOpen}
@@ -828,6 +840,26 @@ export default function Sidebar() {
                                 </li>
                               );
                             })}
+                            {/* 프로젝트 채팅 무한 스크롤 센티널 */}
+                            {project.hasMore && (
+                              <div
+                                ref={(el) => {
+                                  if (el && isExpanded) {
+                                    const observer = new IntersectionObserver(
+                                      (entries) => {
+                                        if (entries[0].isIntersecting) {
+                                          loadMoreProjectChats(project.projectId);
+                                        }
+                                      },
+                                      { threshold: 0, rootMargin: '100px' }
+                                    );
+                                    observer.observe(el);
+                                    return () => observer.disconnect();
+                                  }
+                                }}
+                                style={{ height: '1px' }}
+                              />
+                            )}
                           </ul>
                         )}
                       </li>
@@ -836,15 +868,15 @@ export default function Sidebar() {
                 </ul>
               </div>
 
-              {/* 채팅 목록 */}
+              {/* 일반 채팅 목록 */}
               <div className="sidebar-section">
                 <h3 className="sidebar-section-title">채팅</h3>
                 <ul className="sidebar-list">
-                  {mockChatList.map((chat) => {
-                    const isMenuOpen = openChatMenus.has(chat.id);
+                  {sidebarData.generalChats.map((chat) => {
+                    const isMenuOpen = openChatMenus.has(chat.chattingId);
 
                     return (
-                      <li key={chat.id}>
+                      <li key={chat.chattingId}>
                         <div className="sidebar-list-item sidebar-list-item-chat">
                           <button
                             className="sidebar-list-item-text-btn sidebar-list-item-text-btn-chat"
@@ -852,13 +884,13 @@ export default function Sidebar() {
                               if (mode === 'mobile') {
                                 closeSidebar();
                               }
-                              navigate(`/chat/mock/${chat.id}`);
+                              navigate(`/chat/mock/${chat.chattingId}`);
                             }}
                             onMouseDown={(e) =>
-                              mode !== 'desktop' && handleChatMenuLongPress(chat.id, e)
+                              mode !== 'desktop' && handleChatMenuLongPress(chat.chattingId, e)
                             }
                             onTouchStart={(e) =>
-                              mode !== 'desktop' && handleChatMenuLongPress(chat.id, e)
+                              mode !== 'desktop' && handleChatMenuLongPress(chat.chattingId, e)
                             }
                           >
                             <span className="sidebar-list-item-text">{chat.title}</span>
@@ -867,9 +899,9 @@ export default function Sidebar() {
                             className="sidebar-list-item-menu-wrapper"
                             ref={(el) => {
                               if (el) {
-                                menuRefs.current.set(chat.id + 10000, el); // 채팅 ID와 구분하기 위해 오프셋 사용
+                                menuRefs.current.set(chat.chattingId + 10000, el);
                               } else {
-                                menuRefs.current.delete(chat.id + 10000);
+                                menuRefs.current.delete(chat.chattingId + 10000);
                               }
                             }}
                           >
@@ -878,7 +910,7 @@ export default function Sidebar() {
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                toggleChatMenu(chat.id, e.currentTarget);
+                                toggleChatMenu(chat.chattingId, e.currentTarget);
                               }}
                               aria-label="채팅 메뉴"
                               aria-expanded={isMenuOpen}
@@ -896,6 +928,10 @@ export default function Sidebar() {
                       </li>
                     );
                   })}
+                  {/* 일반 채팅 무한 스크롤 센티널 */}
+                  {sidebarData.generalChatsHasMore && (
+                    <div ref={generalChatsSentinelRef} style={{ height: '1px' }} />
+                  )}
                 </ul>
               </div>
             </div>
@@ -955,7 +991,7 @@ export default function Sidebar() {
 
       {/* 프로젝트 메뉴 포털 */}
       {Array.from(projectMenus.entries()).map(([projectId, position]) => {
-        const project = mockProjectList.find((p) => p.id === projectId);
+        const project = sidebarData.projects.find((p) => p.projectId === projectId);
         if (!project) return null;
         return createPortal(
           <div
@@ -1014,7 +1050,7 @@ export default function Sidebar() {
 
       {/* 채팅 메뉴 포털 */}
       {Array.from(chatMenus.entries()).map(([chatId, position]) => {
-        const chat = mockChatList.find((c) => c.id === chatId);
+        const chat = sidebarData.generalChats.find((c) => c.chattingId === chatId);
         if (!chat) return null;
         return createPortal(
           <div
@@ -1100,10 +1136,10 @@ export default function Sidebar() {
 
       {/* 중첩 채팅 메뉴 포털 */}
       {Array.from(nestedChatMenus.entries()).map(([chatId, position]) => {
-        const allChats = mockProjectList.flatMap((p) => p.chats);
-        const chat = allChats.find((c) => c.id === chatId);
+        const allChats = sidebarData.projects.flatMap((p) => p.chats);
+        const chat = allChats.find((c) => c.chattingId === chatId);
         if (!chat) return null;
-        const project = mockProjectList.find((p) => p.chats.some((c) => c.id === chatId));
+        const project = sidebarData.projects.find((p) => p.chats.some((c) => c.chattingId === chatId));
         return createPortal(
           <div
             key={chatId}
@@ -1142,7 +1178,7 @@ export default function Sidebar() {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  openProjectMovePortal(chatId, e.currentTarget as HTMLElement, project?.id);
+                  openProjectMovePortal(chatId, e.currentTarget as HTMLElement, project?.projectId);
                 }}
               >
                 <img
@@ -1196,18 +1232,18 @@ export default function Sidebar() {
             style={{ top: projectMoveMenu.top, left: projectMoveMenu.left }}
           >
             {(projectMoveMenu.filterProjectId
-              ? mockProjectList.filter((p) => p.id !== projectMoveMenu.filterProjectId)
-              : mockProjectList
+              ? sidebarData.projects.filter((p) => p.projectId !== projectMoveMenu.filterProjectId)
+              : sidebarData.projects
             ).map((p) => (
               <button
-                key={p.id}
+                key={p.projectId}
                 className="sidebar-project-move-portal-item"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   handleMoveToProject(
                     projectMoveMenu.chatId,
-                    p.id,
+                    p.projectId,
                     projectMoveMenu.filterProjectId,
                   );
                 }}
