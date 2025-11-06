@@ -2,14 +2,14 @@ import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useClickOutside } from '@/hooks/useClickOutside';
-import type { Bookmark } from '@/types/bookmark.types';
+import type { MockBookmark } from '@/types/bookmark.types';
 import '@/styles/components/bookmark/bookmark-card.css';
 
 type BookmarkCardProps = {
-  bookmark: Bookmark;
-  onClick?: (bookmark: Bookmark) => void;
-  onDelete?: (bookmark: Bookmark) => void;
-  onEdit?: (bookmark: Bookmark) => void;
+  bookmark: MockBookmark;
+  onClick?: (bookmark: MockBookmark) => void;
+  onDelete?: (bookmark: MockBookmark) => void;
+  onEdit?: (bookmark: MockBookmark) => void;
   onLongPress?: () => void;
   isDraggable?: boolean;
   isEditMode?: boolean;

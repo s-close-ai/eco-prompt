@@ -1,5 +1,5 @@
 import { mockDashboardMetrics, mockDashboardStats } from '@/data/mockData';
-import type { DashboardMetric } from '@/types/dashboard.types';
+import type { MockDashboardMetric } from '@/types/dashboard.types';
 import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/dashboard.css';
 
@@ -15,7 +15,7 @@ function CircularProgress({
   size = 130,
   strokeWidth = 12,
 }: {
-  metric: DashboardMetric;
+  metric: MockDashboardMetric;
   size?: number;
   strokeWidth?: number;
 }) {

@@ -2,17 +2,17 @@
 
 import type { ChatMessage } from '@/types/chat.types';
 import type {
-  RankingData,
-  EcoPickPrompt,
-  DashboardMetric,
-  DashboardStats,
+  MockRankingData,
+  MockEcoPickPrompt,
+  MockDashboardMetric,
+  MockDashboardStats,
 } from '@/types/dashboard.types';
 export type { ChatMessage, PromptScore } from '@/types/chat.types';
 export type {
-  RankingData,
-  EcoPickPrompt,
-  DashboardMetric,
-  DashboardStats,
+  MockRankingData,
+  MockEcoPickPrompt,
+  MockDashboardMetric,
+  MockDashboardStats,
 } from '@/types/dashboard.types';
 
 // 채팅 메시지 목 데이터
@@ -110,7 +110,7 @@ function getDaysAgo(days: number): Date {
   return date;
 }
 
-export const mockRankingData: RankingData[] = [
+export const mockRankingData: MockRankingData[] = [
   {
     date: getDaysAgo(0), // 오늘 (월요일)
     rankings: [
@@ -219,7 +219,7 @@ export const mockRankingData: RankingData[] = [
 ];
 
 // Eco 픽 Mock 데이터
-export const mockEcoPickPrompts: EcoPickPrompt[] = [
+export const mockEcoPickPrompts: MockEcoPickPrompt[] = [
   {
     id: 1,
     name: '서성수',
@@ -283,7 +283,7 @@ export const mockEcoPickPrompts: EcoPickPrompt[] = [
 ];
 
 // 대시보드 Mock 데이터
-export const mockDashboardMetrics: DashboardMetric[] = [
+export const mockDashboardMetrics: MockDashboardMetric[] = [
   {
     name: 'clarity',
     displayName: '명확성',
@@ -310,7 +310,7 @@ export const mockDashboardMetrics: DashboardMetric[] = [
   },
 ];
 
-export const mockDashboardStats: DashboardStats = {
+export const mockDashboardStats: MockDashboardStats = {
   highestRecord: 98,
   averageScore: 85,
   myMileage: 2000,

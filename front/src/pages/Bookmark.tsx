@@ -15,12 +15,12 @@ import BookmarkCreateOverlay from '@/components/bookmark/BookmarkCreateOverlay';
 import BookmarkCreateForm from '@/components/bookmark/BookmarkCreateForm';
 import Button from '@/components/common/Button';
 import { getFaviconUrl, normalizeUrl } from '@/utils/bookmark';
-import type { Bookmark } from '@/types/bookmark.types';
+import type { MockBookmark } from '@/types/bookmark.types';
 import type { BookmarkFormData } from '@/components/bookmark/BookmarkCreateForm';
 import '@/styles/pages/bookmark.css';
 
 // TODO: 실제 API에서 데이터를 가져오도록 수정
-const mockBookmarks: Bookmark[] = [
+const mockBookmarks: MockBookmark[] = [
   {
     id: 1,
     title: '에듀 싸피',
@@ -43,9 +43,9 @@ type FormMode = 'create' | 'edit';
 
 export default function Bookmark() {
   const mode = useDeviceMode();
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>(mockBookmarks);
+  const [bookmarks, setBookmarks] = useState<MockBookmark[]>(mockBookmarks);
   const [formMode, setFormMode] = useState<FormMode | null>(null);
-  const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
+  const [editingBookmark, setEditingBookmark] = useState<MockBookmark | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 1024,
@@ -79,7 +79,7 @@ export default function Bookmark() {
   );
 
   const handleBookmarkClick = useCallback(
-    (bookmark: Bookmark) => {
+    (bookmark: MockBookmark) => {
       // 모달이 열려있으면 먼저 닫기
       if (formMode !== null) {
         setFormMode(null);
@@ -89,7 +89,7 @@ export default function Bookmark() {
     [formMode],
   );
 
-  const handleEdit = useCallback((bookmark: Bookmark) => {
+  const handleEdit = useCallback((bookmark: MockBookmark) => {
     // 다른 북마크 편집 시 기존 모달 닫고 새로 열기
     setEditingBookmark(bookmark);
     setFormMode('edit');
@@ -101,8 +101,8 @@ export default function Bookmark() {
 
       const normalizedUrl = normalizeUrl(data.url);
 
-      setBookmarks((prev: Bookmark[]) =>
-        prev.map((b: Bookmark) =>
+      setBookmarks((prev: MockBookmark[]) =>
+        prev.map((b: MockBookmark) =>
           b.id === editingBookmark.id
             ? {
                 ...b,
@@ -125,9 +125,11 @@ export default function Bookmark() {
     setEditingBookmark(null);
   }, []);
 
-  const handleDelete = useCallback((bookmark: Bookmark) => {
+  const handleDelete = useCallback((bookmark: MockBookmark) => {
     if (confirm(`"${bookmark.title}" 북마크를 삭제하시겠습니까?`)) {
-      setBookmarks((prev: Bookmark[]) => prev.filter((b: Bookmark) => b.id !== bookmark.id));
+      setBookmarks((prev: MockBookmark[]) =>
+        prev.filter((b: MockBookmark) => b.id !== bookmark.id),
+      );
     }
   }, []);
 
@@ -140,7 +142,7 @@ export default function Bookmark() {
 
       const normalizedUrl = normalizeUrl(data.url);
 
-      const newBookmark: Bookmark = {
+      const newBookmark: MockBookmark = {
         id: Date.now() + Math.random(), // 더 안전한 ID 생성
         title: data.title,
         url: normalizedUrl,
@@ -148,7 +150,7 @@ export default function Bookmark() {
         icon: getFaviconUrl(normalizedUrl),
       };
 
-      setBookmarks((prev: Bookmark[]) => [...prev, newBookmark]);
+      setBookmarks((prev: MockBookmark[]) => [...prev, newBookmark]);
       setFormMode(null);
     },
     [bookmarks.length],
@@ -208,8 +210,8 @@ export default function Bookmark() {
 
       // 모바일에서 실제로 다른 위치로 이동했는지 확인
       if (mode === 'mobile' || mode === 'tablet') {
-        const oldIndex = bookmarks.findIndex((item: Bookmark) => item.id === active.id);
-        const newIndex = bookmarks.findIndex((item: Bookmark) => item.id === over.id);
+        const oldIndex = bookmarks.findIndex((item: MockBookmark) => item.id === active.id);
+        const newIndex = bookmarks.findIndex((item: MockBookmark) => item.id === over.id);
 
         // 같은 위치면 드래그 취소 (스크롤로 간주)
         if (oldIndex === newIndex) {
@@ -219,9 +221,9 @@ export default function Bookmark() {
       }
 
       if (over && active.id !== over.id) {
-        setBookmarks((items: Bookmark[]) => {
-          const oldIndex = items.findIndex((item: Bookmark) => item.id === active.id);
-          const newIndex = items.findIndex((item: Bookmark) => item.id === over.id);
+        setBookmarks((items: MockBookmark[]) => {
+          const oldIndex = items.findIndex((item: MockBookmark) => item.id === active.id);
+          const newIndex = items.findIndex((item: MockBookmark) => item.id === over.id);
 
           return arrayMove(items, oldIndex, newIndex);
         });
@@ -240,7 +242,7 @@ export default function Bookmark() {
   const canAddMore = bookmarks.length < MAX_BOOKMARKS;
   const isDraggable = isEditMode;
   const isFormOpen = formMode !== null;
-  const bookmarkIds = useMemo(() => bookmarks.map((b: Bookmark) => b.id), [bookmarks]);
+  const bookmarkIds = useMemo(() => bookmarks.map((b: MockBookmark) => b.id), [bookmarks]);
 
   // 동적 그리드 컬럼 수 계산
   const totalItems = bookmarks.length + (canAddMore && !isEditMode ? 1 : 0);
@@ -299,7 +301,7 @@ export default function Bookmark() {
         <SortableContext items={bookmarkIds} strategy={rectSortingStrategy}>
           {' '}
           <div className="bookmark-page__grid" style={gridStyle}>
-            {bookmarks.map((bookmark: Bookmark) => (
+            {bookmarks.map((bookmark: MockBookmark) => (
               <BookmarkCard
                 key={bookmark.id}
                 bookmark={bookmark}

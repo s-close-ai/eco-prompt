@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { mockEcoPickPrompts } from '@/data/mockData';
-import type { EcoPickPrompt } from '@/types/dashboard.types';
+import type { MockEcoPickPrompt } from '@/types/dashboard.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import '@/styles/components/dashboard/eco-pick.css';
 
@@ -102,7 +102,7 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
     }
   };
 
-  const renderPromptCard = (prompt: EcoPickPrompt, index: number) => (
+  const renderPromptCard = (prompt: MockEcoPickPrompt, index: number) => (
     <div key={prompt.id} className="eco-pick-card">
       <div className="eco-pick-header">
         <div className="eco-pick-name-wrapper">
@@ -119,13 +119,13 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
         </div>
         <div className="eco-pick-tasks">
           <p className="tasks-title">작업:</p>
-          {prompt.tasks.map((task, idx) => (
+          {prompt.tasks.map((task: string, idx: number) => (
             <p key={idx}>{task}</p>
           ))}
         </div>
         <div className="eco-pick-principles">
           <p className="principles-title">원칙:</p>
-          {prompt.principles.map((principle, idx) => (
+          {prompt.principles.map((principle: string, idx: number) => (
             <p key={idx}>{principle}</p>
           ))}
         </div>
