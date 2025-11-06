@@ -10,13 +10,11 @@ export function useLongPress(
   callback: (event: React.TouchEvent | React.MouseEvent) => void,
   ms = 500,
 ) {
-  const timeout = useRef<NodeJS.Timeout | null>(null);
-  const eventRef = useRef<React.TouchEvent | React.MouseEvent>();
+  const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const eventRef = useRef<React.TouchEvent | React.MouseEvent | undefined>(undefined);
 
   const start = useCallback(
     (event: React.TouchEvent | React.MouseEvent) => {
-      // 이벤트 객체를 재사용하기 위해 persist 호출
-      event.persist();
       eventRef.current = event;
 
       if (timeout.current) {

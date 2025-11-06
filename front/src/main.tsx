@@ -1,7 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { registerSW } from 'virtual:pwa-register';
 import { installAppViewportUnit } from './lib/viewport';
 import { installDeviceMode } from './lib/deviceMode';
 import './styles/app.css';
