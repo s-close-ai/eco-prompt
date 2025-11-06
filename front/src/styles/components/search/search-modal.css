@@ -1,0 +1,33 @@
+.search-modal .ep-sheet__panel {
+  max-width: 600px;
+  border-radius: 8px;
+}
+
+.search-modal-content {
+  padding: 16px;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--gray-200);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.search-input {
+  flex-grow: 1;
+  border: none;
+  outline: none;
+  font-size: 1.2rem;
+  margin-left: 12px;
+  background-color: transparent;
+}
+
+.search-results {
+  min-height: 200px; /* 검색 결과가 없을 때도 최소 높이 유지 */
+  color: var(--gray-500);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

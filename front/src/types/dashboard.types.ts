@@ -30,7 +30,7 @@ export interface EcoPickPrompt {
 
 // 대시보드 메트릭 타입
 export interface DashboardMetric {
-  name: 'clarity' | 'specificity' | 'formatCompliance' | 'stability';
+  name: 'clarity' | 'specificity' | 'formatCompliance' | 'safety';
   displayName: string;
   myScore: number;
   averageScore: number;
@@ -43,4 +43,3 @@ export interface DashboardStats {
   myMileage: number;
   promptCount: number;
 }
-

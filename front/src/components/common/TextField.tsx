@@ -29,9 +29,9 @@ const TextField = forwardRef<HTMLInputElement, TextFieldProps>(function TextFiel
     <label className={wrapperClass}>
       {label ? <span className="ep-text-field__label">{label}</span> : null}
       <div className="ep-text-field__control">
-        {leftIconSrc ? <img src={leftIconSrc} alt="" aria-hidden width={18} height={18} /> : null}
+        {/* {leftIconSrc ? <img src={leftIconSrc} alt="" aria-hidden width={18} height={18} /> : null} */}
         <input ref={ref} {...rest} />
-        {rightIconSrc ? <img src={rightIconSrc} alt="" aria-hidden width={18} height={18} /> : null}
+        {/* {rightIconSrc ? <img src={rightIconSrc} alt="" aria-hidden width={18} height={18} /> : null} */}
       </div>
       {assistiveText ? (
         <span className="ep-text-field__assist" aria-live="polite">

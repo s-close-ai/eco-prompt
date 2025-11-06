@@ -5,6 +5,8 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  isLoading?: boolean;
+  onStop?: () => void;
 }
 
 const MAX_CHARACTERS = 15000;
@@ -13,6 +15,8 @@ export default function ChatInput({
   onSend,
   disabled = false,
   placeholder = 'Ask Eco prompt',
+  isLoading = false,
+  onStop,
 }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const [showAlert, setShowAlert] = useState(false);
@@ -60,18 +64,24 @@ export default function ChatInput({
           onChange={handleInput}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          disabled={disabled}
+          disabled={disabled || isLoading}
           className="chat-input-textarea"
           rows={1}
         />
-        <button
-          onClick={handleSend}
-          disabled={!message.trim() || disabled}
-          className="chat-input-send-btn"
-          title="전송	"
-        >
-          <img src="/icons/send.svg" alt="전송" width={16} height={16} color="white" />
-        </button>
+        {isLoading ? (
+          <button onClick={onStop} className="chat-input-send-btn" title="중지">
+            <img src="/icons/stop.svg" alt="중지" width={16} height={16} />
+          </button>
+        ) : (
+          <button
+            onClick={handleSend}
+            disabled={!message.trim() || disabled}
+            className="chat-input-send-btn"
+            title="전송"
+          >
+            <img src="/icons/send.svg" alt="전송" width={16} height={16} color="white" />
+          </button>
+        )}
       </div>
       <div className="chat-input-footer">
         <p className="chat-input-disclaimer">

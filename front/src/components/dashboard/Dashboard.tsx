@@ -1,6 +1,14 @@
 import { mockDashboardMetrics, mockDashboardStats } from '@/data/mockData';
 import type { DashboardMetric } from '@/types/dashboard.types';
+import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/dashboard.css';
+
+const metricDescriptions: Record<string, string> = {
+  clarity: '질문이 명확하고 오해의 여지가 없는 정도를 나타냅니다.',
+  specificity: '필요한 정보와 제한조건이 구체적으로 제시된 정도를 나타냅니다.',
+  formatCompliance: '출력 형식, 언어, 길이 등이 명확히 지시된 정도를 나타냅니다.',
+  safety: '안전하고 윤리적으로 문제 없는 정도를 나타냅니다.',
+};
 
 function CircularProgress({
   metric,
@@ -11,6 +19,7 @@ function CircularProgress({
   size?: number;
   strokeWidth?: number;
 }) {
+  // 내부 계산은 기준 크기(size)를 사용하고, 실제 표시 크기는 컨테이너의 CSS clamp로 제어한다.
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const maxScore = Math.max(metric.myScore, metric.averageScore) * 1.2; // 여유 공간
@@ -20,8 +29,14 @@ function CircularProgress({
   const averageOffset = circumference - (averagePercentage / 100) * circumference;
 
   return (
-    <div className="circular-progress-container">
-      <svg width={size} height={size} className="circular-progress">
+    <div
+      className="circular-progress-container"
+      style={{
+        width: 'clamp(7rem, 6.77vw, 9rem)',
+        height: 'clamp(7rem, 6.77vw, 9rem)',
+      }}
+    >
+      <svg width="100%" height="100%" viewBox={`0 0 ${size} ${size}`} className="circular-progress">
         {/* 배경 원 (연한 회색) */}
         <circle
           cx={size / 2}
@@ -42,7 +57,7 @@ function CircularProgress({
           strokeDasharray={circumference}
           strokeDashoffset={averageOffset}
           strokeLinecap="round"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          transform={`rotate( ${size / 2} ${size / 2})`}
           className="average-circle"
         />
         {/* 내 점수 원 (진한 초록색) */}
@@ -56,7 +71,7 @@ function CircularProgress({
           strokeDasharray={circumference}
           strokeDashoffset={myOffset}
           strokeLinecap="round"
-          transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          transform={`rotate( ${size / 2} ${size / 2})`}
           className="my-score-circle"
         />
       </svg>
@@ -77,7 +92,10 @@ export default function Dashboard() {
       <div className="dashboard-metrics">
         {metrics.map((metric) => (
           <div key={metric.name} className="metric-card">
-            <h3 className="metric-title">{metric.displayName}</h3>
+            <div className="metric-title-wrapper">
+              <h3 className="metric-title">{metric.displayName}</h3>
+              <Tooltip content={metricDescriptions[metric.name] || ''} />
+            </div>
             <CircularProgress metric={metric} />
           </div>
         ))}
@@ -117,7 +135,10 @@ export function DashboardMetrics() {
       <div className="dashboard-metrics">
         {metrics.map((metric) => (
           <div key={metric.name} className="metric-card">
-            <h3 className="metric-title">{metric.displayName}</h3>
+            <div className="metric-title-wrapper">
+              <h3 className="metric-title">{metric.displayName}</h3>
+              <Tooltip content={metricDescriptions[metric.name] || ''} />
+            </div>
             <CircularProgress metric={metric} />
           </div>
         ))}

@@ -2,11 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { mockRankingData } from '@/data/mockData';
 import type { RankingData } from '@/types/dashboard.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
+import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/ranking.css';
+import newIcon from '/icons/new.svg';
 
-function getDayName(date: Date): string {
-  const days = ['일', '월', '화', '수', '목', '금', '토'];
-  return days[date.getDay()];
+function getDateNumber(date: Date): string {
+  return date.getDate().toString();
 }
 
 function formatDate(date: Date): string {
@@ -17,11 +18,15 @@ function isSameDate(date1: Date, date2: Date): boolean {
   return formatDate(date1) === formatDate(date2);
 }
 
+function getMonthLabel(date: Date): string {
+  return `${date.getMonth() + 1}월`;
+}
+
 export default function Ranking() {
   const mode = useDeviceMode();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentRankings, setCurrentRankings] = useState<RankingData | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const containerRef = useRef<HTMLDivElement>(null);
 
   // 날짜 목록 생성 (오늘부터 6일 전까지)
@@ -35,75 +40,18 @@ export default function Ranking() {
   useEffect(() => {
     const data = mockRankingData.find((d) => isSameDate(d.date, selectedDate));
     setCurrentRankings(data || null);
+    setLastUpdated(new Date());
   }, [selectedDate]);
 
-  // 새로고침 함수
-  const handleRefresh = async () => {
-    if (mode === 'desktop') {
-      setIsRefreshing(true);
-      // 실제로는 API 호출
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const data = mockRankingData.find((d) => isSameDate(d.date, selectedDate));
-      setCurrentRankings(data || null);
-      setIsRefreshing(false);
-    }
+  // 업데이트 시간 포맷 함수
+  const getUpdateTimeText = () => {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const period = hours < 12 ? '오전' : '오후';
+    const displayHours = hours % 12 || 12;
+    return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')} 업데이트`;
   };
-
-  // Pull-to-refresh (모바일/태블릿)
-  useEffect(() => {
-    if (mode === 'desktop') return;
-
-    const container = containerRef.current;
-    if (!container) return;
-
-    let startY = 0;
-    let isPulling = false;
-
-    const handleTouchStart = (e: TouchEvent) => {
-      if (container.scrollTop === 0) {
-        startY = e.touches[0].clientY;
-        isPulling = true;
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isPulling) return;
-      const currentY = e.touches[0].clientY;
-      const diff = currentY - startY;
-
-      if (diff > 0 && container.scrollTop === 0) {
-        e.preventDefault();
-      } else {
-        isPulling = false;
-      }
-    };
-
-    const handleTouchEnd = async (e: TouchEvent) => {
-      if (!isPulling) return;
-      const currentY = e.changedTouches[0].clientY;
-      const diff = currentY - startY;
-
-      if (diff > 100) {
-        setIsRefreshing(true);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        const data = mockRankingData.find((d) => isSameDate(d.date, selectedDate));
-        setCurrentRankings(data || null);
-        setIsRefreshing(false);
-      }
-
-      isPulling = false;
-    };
-
-    container.addEventListener('touchstart', handleTouchStart);
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd);
-
-    return () => {
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [mode, selectedDate]);
 
   const getRankIcon = (rank: number) => {
     if (rank <= 3) {
@@ -121,50 +69,32 @@ export default function Ranking() {
     <div className="ranking-container" ref={containerRef}>
       <div className="ranking-header">
         <div className="ranking-header-left">
-          <h2 className="ranking-title">Top 10 Rankings</h2>
+          <div className="ranking-title-wrapper">
+            <h2 className="ranking-title">Top 10 Rankings</h2>
+            <Tooltip content="오늘 최고 점수 기준으로 랭킹이 결정됩니다. 동점일 경우 마일리지가 높은 순으로, 그래도 동점이면 프롬프트 수가 적은 순으로 정렬됩니다." />
+          </div>
           <div className="date-selector">
             {dateList.map((date) => {
-              const dayName = getDayName(date);
+              const dateNumber = getDateNumber(date);
+              const monthLabel = getMonthLabel(date);
               const isSelected = isSameDate(date, selectedDate);
               return (
                 <button
                   key={formatDate(date)}
-                  className={`date-button ${isSelected ? 'active' : ''}`}
+                  className={`date-button has-month ${isSelected ? 'active' : ''}`}
                   onClick={() => setSelectedDate(date)}
                 >
-                  {dayName}
+                  <span className="month-label">{monthLabel}</span>
+                  <span className="date-number">{dateNumber}</span>
                 </button>
               );
             })}
           </div>
         </div>
-        {mode === 'desktop' && (
-          <button
-            className="refresh-button"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            aria-label="새로고침"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={isRefreshing ? 'spinning' : ''}
-            >
-              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
-            </svg>
-          </button>
+        {mode !== 'mobile' && (
+          <div className="update-time-text">{getUpdateTimeText()}</div>
         )}
       </div>
-
-      {isRefreshing && mode !== 'desktop' && (
-        <div className="refresh-indicator">새로고침 중...</div>
-      )}
 
       {currentRankings && (
         <div className="ranking-table-wrapper">
@@ -196,7 +126,7 @@ export default function Ranking() {
                   <td className="mileage-cell">{entry.mileage.toLocaleString()}</td>
                   <td className="change-cell">
                     {entry.rankChange === 'new' ? (
-                      <span className="new-badge">NEW</span>
+                      <img src={newIcon} alt="new" className="change-icon" />
                     ) : (
                       getRankChangeIcon(entry.rankChange) && (
                         <img
@@ -216,4 +146,3 @@ export default function Ranking() {
     </div>
   );
 }
-

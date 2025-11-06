@@ -39,12 +39,12 @@ select {
   --app-vh: 1vh;
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
-  --header-height: 56px;
-  --footer-height: 64px;
+  --header-height: 3.5rem;
+  --footer-height: 4rem;
   /* Sidebar layout variables */
-  --sidebar-width: 280px;
-  --sidebar-collapsed-width: 64px;
-  --sidebar-tablet-width: min(50vw, 280px);
+  --sidebar-width: 17.5rem;
+  --sidebar-collapsed-width: 4rem;
+  --sidebar-tablet-width: 17.5rem;
 
   /* Color Palette */
   /* Primary Colors */
@@ -99,6 +99,16 @@ select {
   --border: rgba(255, 255, 255, 0.08);
 }
 
+html {
+  font-size: 1rem;
+}
+
+@media (max-width: 767px) {
+  html {
+    font-size: 0.9375rem;
+  }
+}
+
 html,
 body,
 #app {
@@ -124,14 +134,52 @@ body {
     system-ui,
     sans-serif;
   -webkit-tap-highlight-color: transparent;
+  /* 텍스트 선택 비활성화 (채팅 페이지 제외) */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* 채팅 페이지와 채팅 관련 컴포넌트에서만 텍스트 선택 허용 */
+.chat-page-container,
+.chat-messages,
+.chat-messages *,
+.user-message-container,
+.user-message,
+.user-message-text,
+.ai-message-container,
+.ai-message,
+.ai-message-text,
+.error-message-container,
+.error-message,
+.error-message-text,
+.chat-loading-container,
+.chat-loading,
+.chat-loading-text {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* 입력 필드와 텍스트 영역은 항상 선택 가능 */
+input,
+textarea,
+[contenteditable],
+[contenteditable] * {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 .app-shell {
   display: grid;
   grid-template-rows: auto 1fr auto;
   height: calc(var(--app-vh) * 100);
-  padding-top: max(var(--safe-top), 0px);
-  padding-bottom: max(var(--safe-bottom), 0px);
+  padding-top: max(var(--safe-top), 0);
+  padding-bottom: max(var(--safe-bottom), 0);
   overflow: hidden;
   gap: 0; /* ensure no column/row gap */
 }
@@ -174,11 +222,17 @@ body {
   position: relative; /* 인라인 오버레이 기준 */
 }
 
+/* 데스크탑/태블릿 배경색 white */
+:root[data-mode='desktop'] .app-main,
+:root[data-mode='tablet'] .app-main {
+  background: #ffffff;
+}
+
 .container {
-  max-width: 960px;
+  max-width: 60rem;
   margin: 0 auto;
   width: 100%;
-  padding-inline: 16px;
+  padding-inline: 1rem;
 }
 
 /* 메인 영역에서는 사이드바와의 간격(좌측 margin)을 없앱니다 */
@@ -193,15 +247,15 @@ body {
 
 .brand {
   font-weight: 700;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.0125rem;
 }
 
 .chat-input {
   width: 100%;
-  max-width: 960px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
+  max-width: 60rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 0.0625rem solid var(--border);
   background: rgba(255, 255, 255, 0.02);
   color: var(--fg);
 }
@@ -226,7 +280,7 @@ body {
 
 /* 입력 특성 기반 보조 분기 */
 :root[data-pointer='coarse'] .needs-large-hit {
-  padding: 14px 16px;
+  padding: 0.875rem 1rem;
 }
 :root[data-hover='hover'] .show-on-hover:hover {
   opacity: 1;

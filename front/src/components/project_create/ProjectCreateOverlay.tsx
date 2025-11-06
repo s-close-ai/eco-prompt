@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import Sheet from '@/components/common/Sheet';
 import ProjectCreateForm from '@/components/project_create/ProjectCreateForm';
 
@@ -14,11 +15,16 @@ export default function ProjectCreateOverlay({
   variant,
 }: ProjectCreateOverlayProps) {
   if (variant === 'inline') {
-    return open ? (
-      <div className="project-create-inline">
-        <ProjectCreateForm onSubmit={() => onClose()} onClose={onClose} />
-      </div>
-    ) : null;
+    return open
+      ? createPortal(
+          <div className="project-create-inline" onClick={onClose}>
+            <div onClick={(e) => e.stopPropagation()}>
+              <ProjectCreateForm onSubmit={() => onClose()} onClose={onClose} />
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
   }
 
   const sheetVariant =

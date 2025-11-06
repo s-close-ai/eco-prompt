@@ -1,7 +1,7 @@
 .ep-sheet {
   position: fixed;
   inset: 0;
-  z-index: 100; /* overlay 최상단 */
+  z-index: 1300; /* 사이드바(z-index: 1200)보다 위에 표시하여 사이드바 조작 불가능하게 */
 }
 
 .ep-sheet__backdrop {
@@ -10,6 +10,7 @@
   background: rgba(0, 0, 0, 0);
   backdrop-filter: blur(0px);
   transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
 }
 
 .ep-sheet.is-open .ep-sheet__backdrop {
@@ -27,12 +28,13 @@
   display: flex;
   flex-direction: column;
   transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
 }
 
 /* modal(center) */
 .ep-sheet__panel[data-variant='modal'] {
-  width: min(640px, 92vw);
-  max-height: min(700px, 85vh);
+  max-width: 380px;
+  width: 100%;
   left: 50%;
   top: 50%;
   transform: translate(-50%, calc(-50% + 20px));
@@ -103,13 +105,18 @@
 }
 
 .ep-sheet__content {
-  padding: 16px 16px 20px;
+  padding: 16px 16px 24px;
   overflow: auto;
   max-height: 100%;
   flex: 1;
 }
 
 /* 북마크 생성 모달 특별 스타일 */
+.ep-sheet.bookmark-create-overlay-sheet .ep-sheet__panel[data-variant='modal'] {
+  max-width: 500px;
+  width: 100%;
+}
+
 .ep-sheet__content:has(.bookmark-create-form) {
   padding: 0;
   overflow: hidden;
@@ -117,4 +124,22 @@
 
 .ep-sheet__content .bookmark-create-form {
   height: 100%;
+}
+
+/* 설정 모달 특별 스타일 */
+.ep-sheet.settings-overlay-sheet .ep-sheet__panel[data-variant='modal'] {
+  max-width: 600px;
+  max-height: min(700px, 85vh);
+  overflow: visible;
+}
+
+.ep-sheet__content:has(.settings-form) {
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.ep-sheet__content .settings-form {
+  height: 100%;
+  padding: 16px 24px 24px;
 }

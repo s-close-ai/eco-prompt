@@ -11,6 +11,10 @@ import Chat from './pages/Chat';
 import Project from './pages/Project';
 import Settings from './pages/Settings';
 import Bookmark from './pages/Bookmark';
+import DashboardPage from './pages/Dashboard';
+import Dashboard from '@/components/dashboard/Dashboard';
+import Ranking from '@/components/dashboard/Ranking';
+import EcoPick from '@/components/dashboard/EcoPick';
 
 // PWA Service Worker 등록 (개발 환경에서는 비활성화)
 if (import.meta.env.PROD) {
@@ -34,6 +38,15 @@ const router = createBrowserRouter([
       { path: 'project', element: <Project /> },
       { path: 'settings', element: <Settings /> },
       { path: 'bookmark', element: <Bookmark /> },
+      {
+        path: 'dashboard',
+        element: <DashboardPage />,
+        children: [
+          { index: true, element: <Dashboard /> },
+          { path: 'ranking', element: <Ranking /> },
+          { path: 'eco-pick', element: <EcoPick /> },
+        ],
+      },
     ],
   },
 ]);

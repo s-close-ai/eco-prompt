@@ -8,55 +8,92 @@ import ErrorMessage from '@/components/chat/ErrorMessage';
 import { mockChatMessages } from '@/data/mockData';
 import type { ChatMessage } from '@/types/chat.types';
 import type { ChatLocationState } from '@/types/navigation.types';
+import { useAppShell } from '@/context/AppShellContext';
 import '@/styles/pages/chat.css';
 
 export default function Chat() {
   const { chatId } = useParams<{ chatId: string }>();
   const location = useLocation();
+  const { isLoading, setIsLoading, setOnStopGeneration } = useAppShell();
 
   // 타입 안전한 방식으로 location state 추출
   const locationState = location.state as ChatLocationState | undefined;
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const initialMessageSent = useRef(false);
+  const aiResponseTimerRef = useRef<number | null>(null);
+
+  const handleStopGeneration = useCallback(() => {
+    if (aiResponseTimerRef.current) {
+      clearTimeout(aiResponseTimerRef.current);
+      aiResponseTimerRef.current = null;
+
+      // 로딩 중에 중지되었으므로 빈 AI 메시지 추가
+      setMessages((prev) => {
+        const newAIMessage: ChatMessage = {
+          id: prev.length + 1,
+          type: 'ai',
+          message: '', // 빈 메시지
+          timestamp: new Date(),
+        };
+        return [...prev, newAIMessage];
+      });
+    }
+    setIsLoading(false);
+  }, [setIsLoading]);
+
+  useEffect(() => {
+    setOnStopGeneration(() => handleStopGeneration);
+  }, [handleStopGeneration, setOnStopGeneration]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSendMessage = useCallback((message: string) => {
-    setMessages((prev) => {
-      const newUserMessage: ChatMessage = {
-        id: prev.length + 1,
-        type: 'user',
-        message,
-        timestamp: new Date(),
-        score: {
-          clarity: Math.floor(Math.random() * 5) + 20,
-          specificity: Math.floor(Math.random() * 5) + 20,
-          format: Math.floor(Math.random() * 5) + 20,
-          completeness: Math.floor(Math.random() * 5) + 20,
-          totalScore: Math.floor(Math.random() * 20) + 80,
-        },
-      };
-      return [...prev, newUserMessage];
-    });
-
-    setIsLoading(true);
-    setTimeout(() => {
+  const handleSendMessage = useCallback(
+    (message: string) => {
       setMessages((prev) => {
-        const newAIMessage: ChatMessage = {
+        const newUserMessage: ChatMessage = {
           id: prev.length + 1,
-          type: 'ai',
-          message: `"${message}"에 대한 응답입니다. 이것은 목 데이터를 통해 생성된 테스트 응답입니다.`,
+          type: 'user',
+          message,
           timestamp: new Date(),
+          score: {
+            clarity: Math.floor(Math.random() * 5) + 20,
+            specificity: Math.floor(Math.random() * 5) + 20,
+            format: Math.floor(Math.random() * 5) + 20,
+            completeness: Math.floor(Math.random() * 5) + 20,
+            totalScore: Math.floor(Math.random() * 20) + 80,
+          },
         };
-        return [...prev, newAIMessage];
+        return [...prev, newUserMessage];
       });
-      setIsLoading(false);
-    }, 2000);
+
+      setIsLoading(true);
+      aiResponseTimerRef.current = setTimeout(() => {
+        setMessages((prev) => {
+          const newAIMessage: ChatMessage = {
+            id: prev.length + 1,
+            type: 'ai',
+            message: `"${message}"에 대한 응답입니다. 이것은 목 데이터를 통해 생성된 테스트 응답입니다.`,
+            timestamp: new Date(),
+          };
+          return [...prev, newAIMessage];
+        });
+        setIsLoading(false);
+      }, 2000);
+    },
+    [setIsLoading],
+  );
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (aiResponseTimerRef.current) {
+        clearTimeout(aiResponseTimerRef.current);
+      }
+    };
   }, []);
 
   // 채팅 데이터 로드
@@ -86,14 +123,13 @@ export default function Chat() {
 
   // 새 채팅인 경우 첫 메시지 자동 전송
   useEffect(() => {
-    const isNewChat = locationState?.isNew;
     const initialMessage = locationState?.message;
 
-    if (isNewChat && initialMessage && !initialMessageSent.current && messages.length === 0) {
+    if (initialMessage && !initialMessageSent.current) {
       initialMessageSent.current = true;
       handleSendMessage(initialMessage);
     }
-  }, [locationState, messages.length, handleSendMessage]);
+  }, [locationState, handleSendMessage]);
 
   // 스크롤 처리
   useEffect(() => {
@@ -113,19 +149,61 @@ export default function Chat() {
   const handleRetry = (errorMessageId: number) => {
     const errorIndex = messages.findIndex((m) => m.id === errorMessageId);
     if (errorIndex === -1) return;
-    let userMessageToRetry: ChatMessage | null = null;
+
+    let userMessageIndex = -1;
     for (let i = errorIndex - 1; i >= 0; i--) {
       if (messages[i].type === 'user') {
-        userMessageToRetry = messages[i];
+        userMessageIndex = i;
         break;
       }
     }
-    if (!userMessageToRetry) return;
-    setMessages((prev) =>
-      prev.filter((m) => m.id !== errorMessageId && m.id !== userMessageToRetry!.id),
-    );
+    if (userMessageIndex === -1) return;
+
+    const userMessageToRetry = messages[userMessageIndex];
+
+    setMessages((prev) => {
+      // Remove all messages from the user message up to and including the error message
+      return prev.slice(0, userMessageIndex);
+    });
+
     handleSendMessage(userMessageToRetry.message);
   };
+
+  const handleEditAndResendMessage = (messageId: number, newMessage: string) => {
+    let userMessageIndex = -1;
+
+    setMessages((prev) => {
+      userMessageIndex = prev.findIndex((msg) => msg.id === messageId);
+      if (userMessageIndex === -1) return prev;
+
+      // Find the next AI message to remove it
+      let nextAiMessageIndex = -1;
+      for (let i = userMessageIndex + 1; i < prev.length; i++) {
+        if (prev[i].type === 'ai') {
+          nextAiMessageIndex = i;
+          break;
+        }
+      }
+
+      const filteredMessages = [...prev];
+      if (nextAiMessageIndex !== -1) {
+        filteredMessages.splice(nextAiMessageIndex, 1);
+      }
+      filteredMessages.splice(userMessageIndex, 1);
+
+      return filteredMessages;
+    });
+
+    handleSendMessage(newMessage);
+  };
+
+  // 마지막 user 메시지 ID 찾기
+  const lastUserMessageId = messages.reduce((lastId, msg) => {
+    if (msg.type === 'user') {
+      return msg.id;
+    }
+    return lastId;
+  }, -1);
 
   return (
     <div className="chat-page-container">
@@ -134,7 +212,11 @@ export default function Chat() {
           if (msg.type === 'user') {
             return (
               <div key={msg.id}>
-                <UserMessage message={msg.message} />
+                <UserMessage
+                  message={msg.message}
+                  onUpdate={(newMessage) => handleEditAndResendMessage(msg.id, newMessage)}
+                  isLastUserMessage={msg.id === lastUserMessageId}
+                />
                 {msg.score && (
                   <PromptScore
                     scores={{

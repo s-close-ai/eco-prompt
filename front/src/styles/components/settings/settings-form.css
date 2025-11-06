@@ -1,9 +1,10 @@
 .settings-form {
-  display: grid;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   max-height: 100%;
   overflow: hidden;
-  grid-template-rows: auto 1fr auto;
+  position: relative;
 }
 
 .settings-form__header {
@@ -44,8 +45,9 @@
 }
 
 .settings-form__body {
-  display: grid;
-  gap: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   overflow-y: auto;
   flex: 1;
   padding-right: 4px;
@@ -63,7 +65,8 @@
 
 .settings-form__section {
   display: grid;
-  gap: 12px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .settings-form__section-header {
@@ -74,11 +77,24 @@
   padding: 16px;
   background: var(--color-primary-50);
   border-radius: 12px;
+  overflow: visible;
+  position: relative;
+  flex-shrink: 0;
 }
 
 .settings-form__section-content {
   display: grid;
-  gap: 12px;
+  gap: 8px;
+  overflow: visible;
+  position: relative;
+}
+
+.settings-form__section-label-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: visible;
+  position: relative;
 }
 
 .settings-form__section-label {
@@ -126,26 +142,6 @@
   font-size: 14px;
   color: rgba(0, 0, 0, 0.6);
   line-height: 1.5;
-}
-
-.settings-form__tip {
-  display: flex;
-  gap: 8px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 8px;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.settings-form__tip-label {
-  font-weight: 600;
-  color: #111827;
-  flex-shrink: 0;
-}
-
-.settings-form__tip-text {
-  color: rgba(0, 0, 0, 0.6);
 }
 
 .settings-form__footer {
@@ -199,13 +195,42 @@
 
   .settings-form__section-header {
     gap: 12px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    min-height: auto;
+    max-height: none;
+    align-items: center;
+    height: auto;
+    padding: 16px;
+  }
+
+  .settings-form__section-label-wrapper {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .settings-form__section-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .settings-form__section-value {
+    flex-shrink: 0;
+    white-space: nowrap;
   }
 
   .settings-form__footer {
+    position: sticky;
+    bottom: calc(var(--footer-height, 60px));
+    background: #ffffff;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    margin-top: auto;
+    margin-bottom: 0;
     flex-direction: column-reverse;
     gap: 8px;
-    margin-bottom: 24px;
+    z-index: 10;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
   }
 
   .settings-form__footer .ep-button {
@@ -216,6 +241,11 @@
 
   .settings-form__save-btn {
     min-width: 100%;
+  }
+
+  /* 모바일에서 TextArea 최소 높이 보장 */
+  .settings-form__section-content .ep-text-area__control textarea {
+    min-height: 66px; /* 최소 3줄 */
   }
 }
 

@@ -10,6 +10,21 @@ interface AppShellContextValue {
   collapseSidebar: () => void;
   expandSidebar: () => void;
   toggleSidebarCollapsed: () => void;
+
+  isSettingsOpen: boolean;
+  openSettings: () => void;
+  closeSettings: () => void;
+  toggleSettings: () => void;
+
+  isSearchOpen: boolean;
+  openSearch: () => void;
+  closeSearch: () => void;
+  toggleSearch: () => void;
+
+  isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
+  onStopGeneration: () => void;
+  setOnStopGeneration: (fn: () => void) => void;
 }
 
 const AppShellContext = createContext<AppShellContextValue | null>(null);
@@ -17,14 +32,41 @@ const AppShellContext = createContext<AppShellContextValue | null>(null);
 export function AppShellProvider({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [onStopGeneration, setOnStopGeneration] = useState(() => () => {});
 
   const openSidebar = useCallback(() => setIsSidebarOpen(true), []);
-  const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
-  const toggleSidebar = useCallback(() => setIsSidebarOpen((v) => !v), []);
+  const closeSidebar = useCallback(() => {
+    setIsSidebarOpen(false);
+    window.dispatchEvent(new CustomEvent('project-create-close'));
+  }, []);
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarOpen((v) => !v);
+    window.dispatchEvent(new CustomEvent('project-create-close'));
+  }, []);
 
-  const collapseSidebar = useCallback(() => setIsSidebarCollapsed(true), []);
-  const expandSidebar = useCallback(() => setIsSidebarCollapsed(false), []);
-  const toggleSidebarCollapsed = useCallback(() => setIsSidebarCollapsed((v) => !v), []);
+  const collapseSidebar = useCallback(() => {
+    setIsSidebarCollapsed(true);
+    window.dispatchEvent(new CustomEvent('project-create-close'));
+  }, []);
+  const expandSidebar = useCallback(() => {
+    setIsSidebarCollapsed(false);
+    window.dispatchEvent(new CustomEvent('project-create-close'));
+  }, []);
+  const toggleSidebarCollapsed = useCallback(() => {
+    setIsSidebarCollapsed((v) => !v);
+    window.dispatchEvent(new CustomEvent('project-create-close'));
+  }, []);
+
+  const openSettings = useCallback(() => setIsSettingsOpen(true), []);
+  const closeSettings = useCallback(() => setIsSettingsOpen(false), []);
+  const toggleSettings = useCallback(() => setIsSettingsOpen((v) => !v), []);
+
+  const openSearch = useCallback(() => setIsSearchOpen(true), []);
+  const closeSearch = useCallback(() => setIsSearchOpen(false), []);
+  const toggleSearch = useCallback(() => setIsSearchOpen((v) => !v), []);
 
   const value = useMemo(
     () => ({
@@ -36,6 +78,18 @@ export function AppShellProvider({ children }: { children: React.ReactNode }) {
       collapseSidebar,
       expandSidebar,
       toggleSidebarCollapsed,
+      isSettingsOpen,
+      openSettings,
+      closeSettings,
+      toggleSettings,
+      isSearchOpen,
+      openSearch,
+      closeSearch,
+      toggleSearch,
+      isLoading,
+      setIsLoading,
+      onStopGeneration,
+      setOnStopGeneration,
     }),
     [
       isSidebarOpen,
@@ -46,6 +100,16 @@ export function AppShellProvider({ children }: { children: React.ReactNode }) {
       collapseSidebar,
       expandSidebar,
       toggleSidebarCollapsed,
+      isSettingsOpen,
+      openSettings,
+      closeSettings,
+      toggleSettings,
+      isSearchOpen,
+      openSearch,
+      closeSearch,
+      toggleSearch,
+      isLoading,
+      onStopGeneration,
     ],
   );
 

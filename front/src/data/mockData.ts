@@ -2,10 +2,20 @@
 
 import type { ChatItem, ProjectItem } from '@/types/sidebar.types';
 import type { ChatMessage } from '@/types/chat.types';
-import type { RankingData, EcoPickPrompt, DashboardMetric, DashboardStats } from '@/types/dashboard.types';
+import type {
+  RankingData,
+  EcoPickPrompt,
+  DashboardMetric,
+  DashboardStats,
+} from '@/types/dashboard.types';
 export type { ChatItem, ProjectItem } from '@/types/sidebar.types';
 export type { ChatMessage, PromptScore } from '@/types/chat.types';
-export type { RankingData, EcoPickPrompt, DashboardMetric, DashboardStats } from '@/types/dashboard.types';
+export type {
+  RankingData,
+  EcoPickPrompt,
+  DashboardMetric,
+  DashboardStats,
+} from '@/types/dashboard.types';
 
 export const mockChatList: ChatItem[] = [
   { id: 1, title: '일일체팅' },
@@ -389,8 +399,8 @@ export const mockDashboardMetrics: DashboardMetric[] = [
     averageScore: 12.47,
   },
   {
-    name: 'stability',
-    displayName: '안정성',
+    name: 'safety',
+    displayName: '안전성',
     myScore: 18.76,
     averageScore: 22.47,
   },

@@ -44,6 +44,12 @@
   flex-shrink: 0;
 }
 
+.eco-pick-name-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .eco-pick-name {
   font-size: 16px;
   font-weight: 700;
@@ -208,10 +214,10 @@
   color: #006400;
 }
 
-/* 태블릿/데스크탑 스타일 - 세로로 긴 레이아웃 */
+/* 태블릿/데스크탑 스타일 - 가로 레이아웃 */
 :root[data-mode='tablet'] .eco-pick-container,
 :root[data-mode='desktop'] .eco-pick-container {
-  padding: 18px;
+  padding: 0;
   overflow: visible;
 }
 
@@ -221,6 +227,7 @@
   flex-direction: column;
   gap: 0;
   overflow: visible;
+  height: 100%;
 }
 
 :root[data-mode='tablet'] .carousel-track,
@@ -299,13 +306,6 @@
   margin: 6px 0;
 }
 
-:root[data-mode='tablet'] .eco-pick-metrics,
-:root[data-mode='desktop'] .eco-pick-metrics {
-  margin-top: auto;
-  padding: 14px;
-  margin-bottom: 14px;
-}
-
 :root[data-mode='tablet'] .metric-label,
 :root[data-mode='desktop'] .metric-label {
   font-size: 13px;
@@ -318,19 +318,98 @@
   font-weight: 700;
 }
 
-:root[data-mode='tablet'] .eco-pick-indicators,
-:root[data-mode='desktop'] .eco-pick-indicators {
+/* 데스크탑: 좌우 버튼 + 인디케이터 */
+:root[data-mode='desktop'] .eco-pick-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
   padding: 12px 0 16px 0;
 }
 
-:root[data-mode='tablet'] .indicator-dot,
+:root[data-mode='desktop'] .eco-pick-indicators {
+  padding: 0;
+}
+
 :root[data-mode='desktop'] .indicator-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d0d0d0;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
-:root[data-mode='tablet'] .indicator-dot.active,
 :root[data-mode='desktop'] .indicator-dot.active {
-  width: 20px;
+  background: #006400;
+  width: 18px;
+  border-radius: 3px;
 }
 
+:root[data-mode='desktop'] .indicator-dot:hover {
+  background: #999;
+}
+
+:root[data-mode='desktop'] .indicator-dot.active:hover {
+  background: #004d00;
+}
+
+.carousel-button-bottom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 8px;
+  transition: opacity 0.2s;
+}
+
+.carousel-button-bottom:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.carousel-button-bottom svg {
+  color: #666;
+}
+
+.carousel-button-bottom:hover:not(:disabled) svg {
+  color: #006400;
+}
+
+/* 태블릿: 인디케이터만 (모바일과 동일) */
+:root[data-mode='tablet'] .eco-pick-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0 12px 0;
+  flex-shrink: 0;
+}
+
+:root[data-mode='tablet'] .indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d0d0d0;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+:root[data-mode='tablet'] .indicator-dot.active {
+  background: #006400;
+  width: 18px;
+  border-radius: 3px;
+}
+
+:root[data-mode='tablet'] .indicator-dot:hover {
+  background: #999;
+}
+
+:root[data-mode='tablet'] .indicator-dot.active:hover {
+  background: #004d00;
+}

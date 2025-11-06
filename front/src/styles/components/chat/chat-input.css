@@ -128,7 +128,7 @@
   .chat-input-footer {
     max-width: 56rem;
     width: 80%;
-    margin: 0 auto;
+    margin: 8px auto 0;
   }
 }
 @media (max-width: 768px) {

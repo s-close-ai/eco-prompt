@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Button from '@/components/common/Button';
 import TextArea from '@/components/common/TextArea';
 import Toggle from '@/components/common/Toggle';
+import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/settings/settings-form.css';
 
 export type SettingsFormData = {
@@ -30,9 +31,64 @@ export default function SettingsForm({
   const [personalizedPrompt, setPersonalizedPrompt] = useState(
     initialData?.personalizedPrompt ?? '',
   );
+  const [textareaRows, setTextareaRows] = useState(6);
+  const sectionRef = useRef<HTMLDivElement>(null);
 
   const privacyConsent = initialData?.privacyConsent ?? { agreed: false };
   const isPrivacyConsented = privacyConsent.agreed;
+
+  // 화면 높이에 따라 TextArea rows 동적 조정
+  useEffect(() => {
+    const updateTextareaRows = () => {
+      if (typeof window === 'undefined') return;
+
+      const isMobile = window.innerWidth <= 768;
+      if (!isMobile) {
+        setTextareaRows(6);
+        return;
+      }
+
+      // 모바일에서만 계산 - 실제 DOM 요소 높이 사용
+      const formElement = document.querySelector('.settings-form');
+      if (!formElement) return;
+
+      const bodyElement = formElement.querySelector('.settings-form__body');
+      if (!bodyElement) return;
+
+      const bodyHeight = bodyElement.getBoundingClientRect().height;
+
+      // 다른 섹션들의 높이 계산
+      const otherSections = bodyElement.querySelectorAll('.settings-form__section');
+      let otherSectionHeight = 0;
+      otherSections.forEach((section) => {
+        if (section !== sectionRef.current) {
+          otherSectionHeight += section.getBoundingClientRect().height + 16; // gap 포함
+        }
+      });
+
+      const labelHeight = 24; // 라벨 높이
+      const charCountHeight = 20; // 문자 카운트 높이
+      const padding = 20; // 추가 여유 공간
+      const lineHeight = 22.5; // line-height 1.5 * font-size 15px
+
+      const availableHeight =
+        bodyHeight - otherSectionHeight - labelHeight - charCountHeight - padding;
+      const maxRows = Math.max(3, Math.floor(availableHeight / lineHeight));
+
+      setTextareaRows(Math.min(maxRows, 6));
+    };
+
+    // 초기 계산은 약간의 지연 후 실행 (DOM 렌더링 완료 후)
+    const timeoutId = setTimeout(updateTextareaRows, 100);
+    window.addEventListener('resize', updateTextareaRows);
+    window.addEventListener('orientationchange', updateTextareaRows);
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('resize', updateTextareaRows);
+      window.removeEventListener('orientationchange', updateTextareaRows);
+    };
+  }, [isPrivacyConsented]);
 
   const handleToggleChange = (value: boolean) => {
     setPromptPublic(value);
@@ -77,7 +133,10 @@ export default function SettingsForm({
         {/* 개인정보 활용 동의 */}
         <div className="settings-form__section">
           <div className="settings-form__section-header">
-            <span className="settings-form__section-label">개인정보 활용 동의</span>
+            <div className="settings-form__section-label-wrapper">
+              <span className="settings-form__section-label">개인정보 활용 동의</span>
+              <Tooltip content="프롬프트 내용과 답변을 AI 학습에 활용하는 것에 동의합니다." />
+            </div>
             <div className="settings-form__section-value">
               {isPrivacyConsented ? (
                 <>
@@ -103,7 +162,10 @@ export default function SettingsForm({
             {/* 프롬프트 공개 여부 */}
             <div className="settings-form__section">
               <div className="settings-form__section-header">
-                <span className="settings-form__section-label">프롬프트 공개 여부</span>
+                <div className="settings-form__section-label-wrapper">
+                  <span className="settings-form__section-label">프롬프트 공개 여부</span>
+                  <Tooltip content="Eco 픽에 좋은 프롬프트로 공개될 수 있습니다." />
+                </div>
                 <Toggle
                   value={promptPublic}
                   onChange={handleToggleChange}
@@ -114,28 +176,20 @@ export default function SettingsForm({
             </div>
 
             {/* 개인화 프롬프트 */}
-            <div className="settings-form__section">
+            <div className="settings-form__section" ref={sectionRef}>
               <div className="settings-form__section-content">
-                <span className="settings-form__section-label">개인화 프롬프트</span>
-                <p className="settings-form__description">
-                  AI가 모든 대화에서 참고할 기본 지침을 설정하세요. 예를 들어, 답변 스타일, 선호하는
-                  형식, 특정 관점 등을 지정할 수 있습니다.
-                </p>
-                <div className="settings-form__tip">
-                  <span className="settings-form__tip-label">팁</span>
-                  <span className="settings-form__tip-text">
-                    기본 프롬프트는 모든 대화의 시작 부분에 자동으로 포함됩니다. 구체적이고 명확한
-                    지침을 작성하면 더 나은 결과를 얻을 수 있습니다.
-                  </span>
+                <div className="settings-form__section-label-wrapper">
+                  <span className="settings-form__section-label">개인화 프롬프트</span>
+                  <Tooltip content="기본 프롬프트는 모든 대화의 시작 부분에 자동으로 포함됩니다. 구체적이고 명확한 지침을 작성하면 더 나은 결과를 얻을 수 있습니다." />
                 </div>
                 <TextArea
                   value={personalizedPrompt}
                   onChange={(e) => setPersonalizedPrompt(e.target.value)}
-                  placeholder="개인화 프롬프트를 입력하세요..."
+                  placeholder="AI가 모든 대화에서 참고할 기본 지침을 설정하세요. 예를 들어, 답변 스타일, 선호하는 형식, 특정 관점 등을 지정할 수 있습니다."
                   maxLength={1000}
                   showCharCount
                   fullWidth
-                  rows={8}
+                  rows={textareaRows}
                 />
               </div>
             </div>
@@ -144,11 +198,6 @@ export default function SettingsForm({
       </div>
 
       <footer className="settings-form__footer">
-        {onClose && (
-          <Button variant="ghost" onClick={onClose} size="md" className="settings-form__close-btn">
-            닫기
-          </Button>
-        )}
         <Button
           variant="primary"
           onClick={handleSubmit}
@@ -157,7 +206,7 @@ export default function SettingsForm({
           ariaLabel="변경사항 저장"
           className="settings-form__save-btn"
         >
-          {hasChanges ? '변경사항 저장' : '저장됨'}
+          저장
         </Button>
       </footer>
     </section>

@@ -91,9 +91,13 @@ export default function BookmarkCreateForm({
     <section className="bookmark-create-form container">
       <header className="bookmark-create-form__header">
         <div className="bookmark-create-form__title">
-          {mode !== 'mobile' && (
-            <img src="/icons/bookmark.svg" alt="" aria-hidden width={24} height={24} />
-          )}
+          <img
+            src={initialData ? '/icons/bookmark.svg' : '/icons/bookmark_add.svg'}
+            alt=""
+            aria-hidden
+            width={24}
+            height={24}
+          />
           <h2>{initialData ? '북마크 수정' : '북마크 생성'}</h2>
         </div>
         {onClose && (

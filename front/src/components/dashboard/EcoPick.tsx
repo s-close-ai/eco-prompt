@@ -22,12 +22,13 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
   const prompts = mockEcoPickPrompts;
   const currentPrompt = prompts[currentIndex];
 
-  // 태블릿/데스크탑: 3개의 프롬프트를 캐러셀로 표시
-  const isDesktopMode = mode === 'tablet' || mode === 'desktop';
+  // 태블릿/데스크탑 구분
+  const isDesktopMode = mode === 'desktop';
+  const isTabletMode = mode === 'tablet';
 
-  // 스와이프 처리 (모바일)
+  // 스와이프 처리 (모바일, 태블릿)
   useEffect(() => {
-    if (mode !== 'mobile') return;
+    if (mode === 'desktop') return;
 
     const container = containerRef.current;
     if (!container) return;
@@ -104,7 +105,9 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
   const renderPromptCard = (prompt: EcoPickPrompt, index: number) => (
     <div key={prompt.id} className="eco-pick-card">
       <div className="eco-pick-header">
-        <h3 className="eco-pick-name">{prompt.name}</h3>
+        <div className="eco-pick-name-wrapper">
+          <h3 className="eco-pick-name">{prompt.name}</h3>
+        </div>
         <div className="eco-pick-score">{prompt.score}</div>
       </div>
 
@@ -153,7 +156,60 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
     <div className="eco-pick-container" ref={containerRef}>
       <div className="eco-pick-carousel">
         {isDesktopMode ? (
-          // 태블릿/데스크탑: 캐러셀 (3개 프롬프트)
+          // 데스크탑: 좌우 화살표 버튼 + 인디케이터
+          <>
+            <div className="carousel-track" ref={carouselRef}>
+              {renderPromptCard(currentPrompt, currentIndex)}
+            </div>
+            <div className="eco-pick-controls">
+              <button
+                className="carousel-button-bottom prev"
+                onClick={handlePrev}
+                aria-label="이전"
+                disabled={currentIndex === 0}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+              <div className="eco-pick-indicators">
+                {prompts.map((_, idx) => (
+                  <button
+                    key={idx}
+                    className={`indicator-dot ${idx === currentIndex ? 'active' : ''}`}
+                    onClick={() => setCurrentIndex(idx)}
+                    aria-label={`${idx + 1}번째 프롬프트`}
+                  />
+                ))}
+              </div>
+              <button
+                className="carousel-button-bottom next"
+                onClick={handleNext}
+                aria-label="다음"
+                disabled={currentIndex === prompts.length - 1}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </button>
+            </div>
+          </>
+        ) : isTabletMode ? (
+          // 태블릿: 인디케이터만 (모바일과 동일)
           <>
             <div className="carousel-track" ref={carouselRef}>
               {renderPromptCard(currentPrompt, currentIndex)}
@@ -168,48 +224,24 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
                 />
               ))}
             </div>
-            {currentIndex > 0 && (
-              <button className="carousel-button prev" onClick={handlePrev} aria-label="이전">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-            )}
-            {currentIndex < prompts.length - 1 && (
-              <button className="carousel-button next" onClick={handleNext} aria-label="다음">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </button>
-            )}
           </>
         ) : (
-          // 모바일: 한 번에 하나씩
+          // 모바일: 인디케이터만
           <>
-            <div className="eco-pick-card-wrapper">{renderPromptCard(currentPrompt, currentIndex)}</div>
+            <div className="eco-pick-card-wrapper">
+              {renderPromptCard(currentPrompt, currentIndex)}
+            </div>
             <div className="eco-pick-indicators">
               {prompts.map((_, idx) => (
-                <span key={idx} className={`indicator-dot ${idx === currentIndex ? 'active' : ''}`} />
+                <span
+                  key={idx}
+                  className={`indicator-dot ${idx === currentIndex ? 'active' : ''}`}
+                />
               ))}
             </div>
-            {currentIndex > 0 && (
-              <button className="carousel-button prev" onClick={handlePrev} aria-label="이전">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-            )}
-            {currentIndex < prompts.length - 1 && (
-              <button className="carousel-button next" onClick={handleNext} aria-label="다음">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </button>
-            )}
           </>
         )}
       </div>
     </div>
   );
 }
-

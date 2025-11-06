@@ -5,7 +5,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8faf9 0%, #ffffff 100%);
+  background: #ffffff;
 }
 
 .bookmark-create-page .bookmark-create-form {
@@ -24,7 +24,7 @@
 @media (max-width: 768px) {
   .bookmark-create-page {
     padding: 0;
-    background: #f7fbf6;
+    background: #ffffff;
     height: 100%;
     max-height: 100%;
     overflow: hidden;
@@ -51,7 +51,7 @@
 @media (min-width: 769px) and (max-width: 1023px) {
   .bookmark-create-page {
     padding: 24px;
-    background: #f7fbf6;
+    background: #ffffff;
   }
 
   .bookmark-create-page .bookmark-create-form {
@@ -71,23 +71,27 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f8faf9 0%, #ffffff 100%);
+  background: #ffffff;
 }
 
 .bookmark-page__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 32px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid rgba(94, 148, 98, 0.1);
+  padding: 8px 0 12px;
+  flex-shrink: 0;
 }
 
 .bookmark-page__title {
-  font-size: 24px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bookmark-page__title h2 {
+  font-size: 20px;
+  font-weight: 700;
   color: #111827;
-  margin: 0;
 }
 
 .bookmark-page__add-btn {
@@ -102,7 +106,7 @@
 
 .bookmark-page__grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(var(--grid-columns, 2), 160px);
   gap: 24px;
   flex: 1;
   align-content: center;
@@ -141,7 +145,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.5;
+  opacity: 1;
   transition: opacity 200ms ease;
 }
 
@@ -151,18 +155,18 @@
 }
 
 .bookmark-card--add:hover .bookmark-card__add-icon {
-  opacity: 0.7;
+  opacity: 1;
 }
 
 .bookmark-card__add-label {
   font-size: 16px;
   font-weight: 600;
-  color: rgba(0, 0, 0, 0.5);
+  color: rgba(0, 0, 0, 0.7);
   transition: color 200ms ease;
 }
 
 .bookmark-card--add:hover .bookmark-card__add-label {
-  color: rgba(0, 0, 0, 0.7);
+  color: rgba(0, 0, 0, 0.9);
 }
 
 /* 모바일 스타일 */
@@ -170,32 +174,20 @@
   .bookmark-page {
     padding: 0;
     padding-bottom: calc(var(--footer-height, 60px) + 8px);
-    background: var(--color-primary-50);
+    background: #ffffff;
   }
 
   .bookmark-page__header {
-    margin-bottom: 0;
-    padding: 12px;
-    padding-bottom: 16px;
-    background: #ffffff;
-    border-bottom: none;
-    justify-content: center;
+    padding: 12px 0 16px;
   }
 
-  .bookmark-page__title {
-    font-size: 15px;
-    font-weight: 400;
-    color: #111827;
-    background: none;
-    -webkit-background-clip: unset;
-    -webkit-text-fill-color: #111827;
-    background-clip: unset;
-    text-align: center;
+  .bookmark-page__title h2 {
+    font-size: 24px;
   }
 
   .bookmark-page__grid {
     gap: 10px;
-    grid-template-columns: repeat(2, 160px);
+    grid-template-columns: repeat(var(--grid-columns, 2), 160px);
     max-width: 100%;
     padding: 12px;
     align-content: center;
@@ -216,27 +208,15 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
-  /* 추가 버튼이 혼자 있을 때 중앙 정렬 */
-  .bookmark-card--add:nth-child(odd):last-child {
-    grid-column: 1 / -1;
-    justify-self: center;
-  }
-
   .bookmark-card__add-icon {
     width: 28px;
     height: 28px;
   }
 
-  .bookmark-card__add-icon img {
-    width: 20px;
-    height: 20px;
-    opacity: 0.5;
-  }
-
   .bookmark-card__add-label {
     font-size: 13px;
     font-weight: 400;
-    color: rgba(0, 0, 0, 0.5);
+    color: rgba(0, 0, 0, 0.7);
   }
 }
 
@@ -253,12 +233,8 @@
     padding-bottom: 18px;
   }
 
-  .bookmark-page__title {
-    font-size: 22px;
-  }
-
   .bookmark-page__grid {
-    grid-template-columns: repeat(3, 200px);
+    grid-template-columns: repeat(var(--grid-columns, 3), 200px);
     gap: 20px;
     max-width: 660px;
   }
@@ -279,21 +255,9 @@
     aspect-ratio: auto;
   }
 
-  /* 추가 버튼이 혼자 있을 때 중앙 정렬 */
-  .bookmark-card--add:nth-child(3n + 1):last-child {
-    grid-column: 1 / -1;
-    justify-self: center;
-    max-width: 240px;
-  }
-
   .bookmark-card__add-icon {
     width: 36px;
     height: 36px;
-  }
-
-  .bookmark-card__add-icon img {
-    width: 28px;
-    height: 28px;
   }
 
   .bookmark-card__add-label {
@@ -319,22 +283,18 @@
 /* 데스크탑 스타일 */
 @media (min-width: 1024px) {
   .bookmark-page {
-    padding: 48px;
-    max-width: 1400px;
+    padding: 24px;
     margin: 0 auto;
   }
 
   .bookmark-page__header {
-    margin-bottom: 40px;
+    margin-top: 24px;
+    margin-bottom: 24px;
     padding-bottom: 24px;
   }
 
-  .bookmark-page__title {
-    font-size: 26px;
-  }
-
   .bookmark-page__grid {
-    grid-template-columns: repeat(4, 200px);
+    grid-template-columns: repeat(var(--grid-columns, 4), 200px);
     gap: 24px;
     max-width: 872px;
   }
@@ -355,21 +315,9 @@
     aspect-ratio: auto;
   }
 
-  /* 추가 버튼이 혼자 있을 때 중앙 정렬 */
-  .bookmark-card--add:nth-child(4n + 1):last-child {
-    grid-column: 1 / -1;
-    justify-self: center;
-    max-width: 230px;
-  }
-
   .bookmark-card__add-icon {
     width: 40px;
     height: 40px;
-  }
-
-  .bookmark-card__add-icon img {
-    width: 30px;
-    height: 30px;
   }
 
   .bookmark-card__add-label {
