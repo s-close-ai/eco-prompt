@@ -1,29 +1,40 @@
-import { apiClient } from "@/services/axios";
-import type { ConsentUpdateResponse, UserInfoResponse } from "@/types/auth.types";
+import { apiClient } from '@/services/axios';
+import type { UserInfoResponse } from '@/types/auth.types';
 
-// SSAFY OAuth 로그인 시작
-export const startSsafyLogin = () => {
+/**
+ * SSAFY OAuth 로그인 페이지로 리다이렉트
+ * Endpoint: GET /api/v1/auth/sign-in
+ */
+export const signIn = () => {
   const loginUrl = `${apiClient.defaults.baseURL}/api/v1/auth/sign-in`;
   window.location.href = loginUrl;
 };
 
-// 동의 상태 업데이트
-export const updateConsent = async (): Promise<ConsentUpdateResponse> => {
-  const response = await apiClient.patch<ConsentUpdateResponse>("/api/v1/user-infos/sharing-information");
+/**
+ * 정보 공유 동의 상태 조회
+ * Endpoint: GET /api/v1/user-infos/sharing-information
+ */
+export const getSharingInformation = async (): Promise<UserInfoResponse> => {
+  const response = await apiClient.get<UserInfoResponse>('/api/v1/user-infos/sharing-information');
   return response.data;
 };
 
-export const getUserInfo = async (): Promise<UserInfoResponse> => {
-  const response = await apiClient.get<UserInfoResponse>("/api/v1/user-infos/sharing-information");
+/**
+ * 정보 공유 동의 상태 토글
+ * Endpoint: PATCH /api/v1/user-infos/sharing-information
+ */
+export const toggleSharingInformation = async (): Promise<UserInfoResponse> => {
+  const response = await apiClient.patch<UserInfoResponse>(
+    '/api/v1/user-infos/sharing-information',
+  );
   return response.data;
 };
 
-// 로그아웃 (쿠키 삭제)
-export const logout = async (): Promise<void> => {
-//   await apiClient.post("/api/v1/auth/sign-out");
-//   // 쿠키는 백엔드에서 삭제되지만, 클라이언트에서도 명시적으로 삭제
-  document.cookie.split(";").forEach((cookie) => {
-    const name = cookie.split("=")[0].trim();
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-  });
+/**
+ * 로그아웃 (쿠키 삭제)
+ * 클라이언트에서 쿠키를 삭제하여 로그아웃 처리
+ */
+export const logout = () => {
+  const logoutUrl = `${apiClient.defaults.baseURL}/api/v1/auth/sign-out`;
+  window.location.href = logoutUrl;
 };
