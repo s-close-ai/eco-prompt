@@ -23,7 +23,7 @@ export default function ConsentGuard({ children }: ConsentGuardProps) {
         const userInfo = await getUserInfo();
 
         // 동의하지 않은 경우 동의 페이지로 리다이렉트
-        if (userInfo.sharingInformation === 'N') {
+        if (userInfo.data.sharingInformation === 'N') {
           navigate('/consent', { replace: true });
         } else {
           setIsChecking(false);

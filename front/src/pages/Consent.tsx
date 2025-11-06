@@ -13,7 +13,7 @@ export default function Consent() {
     try {
       await updateConsent();
       // 동의 완료 후 홈으로 이동
-      navigate('/home');
+      navigate('/chat');
     } catch (error) {
       console.error('동의 업데이트 실패:', error);
       alert('동의 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
