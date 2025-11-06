@@ -1,12 +1,10 @@
-import { useNavigate } from 'react-router-dom';
-
-export default function Landing() {
-  const navigate = useNavigate();
+import { startSsafyLogin } from '@/services/api/auth';
+export default function Landing() { 
   return (
     <div>
       <h1>Landing Page</h1>
       <button onClick={() => {
-        navigate('/api/v1/auth/login');
+        startSsafyLogin();
       }}>
         Login
       </button>
