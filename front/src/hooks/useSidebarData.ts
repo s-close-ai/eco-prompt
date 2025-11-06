@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { getAllChattingRooms, getChattingRooms } from '@/services/api/chattingroom';
 
 export interface ChatItem {
@@ -101,7 +101,7 @@ export function useSidebarData() {
     if (!project || !project.hasMore) return;
 
     try {
-      const nextPage = project.currentPage + 1;
+      // const nextPage = project.currentPage + 1;
       const response = await getChattingRooms(projectId);
 
       const newChats = response.data.content.map((chat) => ({
@@ -133,7 +133,7 @@ export function useSidebarData() {
     if (!data.generalChatsHasMore) return;
 
     try {
-      const nextPage = data.generalChatsPage + 1;
+      // const nextPage = data.generalChatsPage + 1;
       const response = await getChattingRooms(1); // projectId 1은 기본 프로젝트
 
       const newChats = response.data.content.map((chat) => ({
