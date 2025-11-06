@@ -1,5 +1,6 @@
 package com.closeai.ecoprompt.bookmark.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,6 +15,8 @@ public interface BookmarkRepository extends JpaRepository<Bookmark, Integer> {
 
 	@Query("SELECT COALESCE(MAX(b.sequence), 0) FROM Bookmark b WHERE b.owner.id = :userId")
 	Integer findMaxSequenceByUserId(@Param("userId") Integer userId);
-	
+
 	Optional<Bookmark> findById(Long id);
+
+	List<Bookmark> getBookmarkByOwnerIdAndIsDeletedOrderBySequenceAsc(Integer ownerId, char isDeleted);
 }

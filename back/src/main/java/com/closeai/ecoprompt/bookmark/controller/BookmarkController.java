@@ -1,6 +1,7 @@
 package com.closeai.ecoprompt.bookmark.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.closeai.ecoprompt.bookmark.model.dto.request.CreateBookmarkRequest;
 import com.closeai.ecoprompt.bookmark.model.dto.request.DeleteBookmarkRequest;
 import com.closeai.ecoprompt.bookmark.model.dto.request.UpdateBookmarkSequence;
+import com.closeai.ecoprompt.bookmark.model.dto.response.GetBookmarkResponse;
 import com.closeai.ecoprompt.bookmark.service.BookmarkService;
 import com.closeai.ecoprompt.common.ApiResponse;
 
@@ -44,6 +46,11 @@ public class BookmarkController implements BookmarkControllerDocs {
 	@PatchMapping("/sequence")
 	public ResponseEntity<ApiResponse<Void>> updateBookmarkSequence(@RequestBody UpdateBookmarkSequence request) {
 		return ApiResponse.success(bookmarkService.updateBookmarkSequence(request));
+	}
+
+	@GetMapping
+	public ResponseEntity<ApiResponse<GetBookmarkResponse>> getBookmarks() {
+		return ApiResponse.success(bookmarkService.getBookmarks());
 	}
 
 }
