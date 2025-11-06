@@ -76,7 +76,22 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         // JSON 응답
         res.setStatus(HttpServletResponse.SC_OK);
         res.setContentType("application/json; charset=UTF-8");
+
+        // ✅ 현재 요청의 Origin (https://host.duckdns.org) 기준으로 리다이렉트
+        String redirectUrl = req.getScheme() + "://" + req.getServerName();
+
+        // 포트가 명시된 경우 (예: localhost:8080)
+        if ((req.getServerPort() != 80 && req.getServerPort() != 443)) {
+            redirectUrl += ":" + req.getServerPort();
+        }
+
+        redirectUrl += "/chat"; // 원하는 경로
+
+        AppLogger.info("리다이렉트 경로: " + redirectUrl);
+
         try {
+            res.sendRedirect(redirectUrl);
+
             new ObjectMapper().writeValue(res.getWriter(), responseBody);
             res.getWriter().flush();
 
