@@ -1,7 +1,7 @@
 package com.closeai.ecoprompt.chatting.service;
 
-import com.closeai.ecoprompt.chatting.model.dto.response.ChattingResponse;
-import com.closeai.ecoprompt.common.logging.AppLogger;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -9,9 +9,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.closeai.ecoprompt.chatting.model.dto.response.ChattingResponse;
 import com.closeai.ecoprompt.chatting.model.entity.Chatting;
 import com.closeai.ecoprompt.chatting.repository.ChattingRepository;
+import com.closeai.ecoprompt.common.CustomUtil;
 import com.closeai.ecoprompt.common.exception.BusinessException;
+import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.project.model.entity.Project;
 import com.closeai.ecoprompt.project.service.ProjectService;
 
@@ -26,17 +29,17 @@ public class ChattingService {
 
 	private final ChattingRepository chattingRepository;
 
-    private static final int CHAT_PAGE_SIZE = 20;
+	private static final int CHAT_PAGE_SIZE = 20;
 
 	/**
 	 * 채팅방 id에 해당하는 chatting이 있는 경우 반환
 	 * 아니라면 새로 생성 후 반환
 	 * */
-	public Chatting getOrCreateChatting(Long chattingId, Integer projectId){
+	public Chatting getOrCreateChatting(Long chattingId, Integer projectId) {
 
-		if(chattingId != null){
+		if (chattingId != null) {
 			Chatting chatting = chattingRepository.findById(chattingId)
-					.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
+				.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
 
 			if (chatting.getProject().getId().equals(projectId)) {
 				return chatting;
@@ -53,24 +56,9 @@ public class ChattingService {
 		return chattingRepository.save(chatting);
 	}
 
-	@Transactional
-	public void setChattingTitle(Long chattingId, String title){
-
-		Chatting chatting = chattingRepository.findById(chattingId)
-			.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
-
-		updateChattingTitle(chatting, title);
-	}
-
-	@Transactional
-	public void updateUpdateAt(Long chattingId){
-
-		Chatting chatting = chattingRepository.findById(chattingId)
-			.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
-
-		chatting.updateUpdatedAt();
-	}
-
+	/**
+	 * 프로젝트 내부 채팅방 목록 조회 함수
+	 * */
 	public Page<ChattingResponse> getChattings(Integer projectId, int page) {
 		AppLogger.start(projectId + " 프로젝트의 " + page + " 페이지 조회");
 
@@ -80,11 +68,47 @@ public class ChattingService {
 		return chattingPage.map(ChattingResponse::from);
 	}
 
-	private void updateChattingTitle(Chatting chatting, String title){
+	/**
+	 * 채팅방 이름 변경하는 함수
+	 * */
+	@Transactional
+	public void setChattingTitle(Long chattingId, String title) {
+
+		Chatting chatting = chattingRepository.findById(chattingId)
+			.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
+
+		updateChattingTitle(chatting, title);
+	}
+
+	/**
+	 * 채팅방 수정날짜 바꾸는 함수
+	 * */
+	@Transactional
+	public void updateUpdateAt(Long chattingId) {
+
+		Chatting chatting = chattingRepository.findById(chattingId)
+			.orElseThrow(() -> new BusinessException("채팅방을 찾을 수 없습니다."));
+
+		chatting.updateUpdatedAt();
+	}
+
+	public boolean validateChatting(Long chattingId) {
+
+		Optional<Chatting> chatting = chattingRepository.findByIdAndIsDeleted(chattingId, 'N');
+		Integer userId = CustomUtil.getCurrentUserId();
+
+		if (!chatting.isPresent() || !chatting.get().getProject().getOwner().getId().equals(userId)) {
+			throw new BusinessException("채팅방이 없습니다.");
+		}
+		
+		return true;
+	}
+
+	private void updateChattingTitle(Chatting chatting, String title) {
 
 		chatting.setTitle(title);
 		chattingRepository.save(chatting);
 
 	}
-	
+
 }
