@@ -9,12 +9,10 @@ import lombok.Getter;
 @Getter
 public class ModelErrorEvent extends ApplicationEvent {
 
-	private final MessageDocument message;
 	private final String messageUUID;
 
-	public ModelErrorEvent(Object source, MessageDocument message, String messageUUID) {
+	public ModelErrorEvent(Object source, String messageUUID) {
 		super(source);
-		this.message = message;
 		this.messageUUID = messageUUID;
 	}
 }

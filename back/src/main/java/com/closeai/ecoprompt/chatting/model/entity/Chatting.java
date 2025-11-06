@@ -20,6 +20,7 @@ public class Chatting extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Builder.Default
     @Column(name = "title", length = 100)
     private String title = "NEW CHAT";
 

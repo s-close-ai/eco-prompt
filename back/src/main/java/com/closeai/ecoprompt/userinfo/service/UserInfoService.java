@@ -70,7 +70,7 @@ public class UserInfoService {
 
         UserInfo userInfo = getUserInfo(userId);
 
-        return userInfo.getPersonalPrompt();
+        return userInfo.getPersonalPrompt() == null ? "" : userInfo.getPersonalPrompt();
     }
 
     /**
@@ -87,25 +87,24 @@ public class UserInfoService {
      * 사용자의 최고 점수를 수정하는 함수
      */
     @Transactional
-    public void recalculateAndUpdateHighScore(Integer userId, Double oriHighScore, Double newHighScore) {
+    public void recalculateAndUpdateHighScore(Integer userId, Double oriTotalScore, Double newTotalScore) {
 
         UserInfo userInfo = getUserInfo(userId);
         Double curHighScore = userInfo.getHighScore();
 
-        // 새로운 점수가 현재 최고 점수보다 높은 경우
-        if (newHighScore > curHighScore) {
-            userInfo.updateHighScore(newHighScore);
-            userInfo.updateTotalScore(newHighScore - oriHighScore);
+        userInfo.updateTotalScore(newTotalScore - oriTotalScore);
 
-            userInfoRepository.save(userInfo);
-        } else if (curHighScore.equals(oriHighScore) && newHighScore < oriHighScore) {
+        // 새로운 점수가 현재 최고 점수보다 높은 경우
+        if (newTotalScore > curHighScore) {
+            userInfo.updateHighScore(newTotalScore);
+        }
+        else if (curHighScore.equals(oriTotalScore) && newTotalScore < oriTotalScore) {
             Double newCalHighScore = scoreRepository.findMaxTotalScoreByUserId(userId).orElse(0.0);
 
             userInfo.updateHighScore(newCalHighScore);
-            userInfo.updateTotalScore(newHighScore - oriHighScore);
-
-            userInfoRepository.save(userInfo);
         }
+
+        userInfoRepository.save(userInfo);
     }
 
     /**
