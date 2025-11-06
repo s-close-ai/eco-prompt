@@ -61,16 +61,16 @@ public class ProjectService {
     }
 
     @Transactional
-    public List<PersonalProjectResponse> saveProject(PersonalProjectRequest projectRequest) {
+    public int saveProject(PersonalProjectRequest projectRequest) {
         AppLogger.info("프로젝트 생성 \nDATA: " + projectRequest.toString());
 
         int userId = CustomUtil.getCurrentUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."));
 
-        projectRepository.save(Project.of(projectRequest.title(), user));
+        Project project = projectRepository.save(Project.of(projectRequest.title(), user));
 
-        return getNotDeletedPersonalProjectResponse(userId);
+        return project.getId();
     }
 
     @Transactional

@@ -27,10 +27,10 @@ public class ProjectController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<SidebarResponse>> saveProject(
+    public ResponseEntity<ApiResponse<Integer>> saveProject(
             @RequestBody PersonalProjectRequest projectRequest
     ) {
-        return ApiResponse.success(new SidebarResponse(projectService.saveProject(projectRequest)));
+        return ApiResponse.success(projectService.saveProject(projectRequest));
     }
 
     @GetMapping("/{projectId}")
