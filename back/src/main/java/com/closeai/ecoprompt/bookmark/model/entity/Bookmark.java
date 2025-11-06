@@ -64,4 +64,8 @@ public class Bookmark extends BaseEntity {
 	public void updateDescription(String description) {
 		this.description = description;
 	}
+
+	public void updateSequence(Integer sequence) {
+		this.sequence = sequence;
+	}
 }

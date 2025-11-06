@@ -1,5 +1,6 @@
 package com.closeai.ecoprompt.bookmark.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -7,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.closeai.ecoprompt.bookmark.model.dto.request.CreateBookmarkRequest;
 import com.closeai.ecoprompt.bookmark.model.dto.request.DeleteBookmarkRequest;
+import com.closeai.ecoprompt.bookmark.model.dto.request.UpdateBookmarkSequence;
 import com.closeai.ecoprompt.bookmark.model.entity.Bookmark;
 import com.closeai.ecoprompt.bookmark.repository.BookmarkRepository;
 import com.closeai.ecoprompt.common.CustomUtil;
@@ -79,6 +81,24 @@ public class BookmarkService {
 		bookmark.updateTitle(request.title());
 		bookmark.updateUrl(request.url());
 		bookmark.updateDescription(request.description());
+
+		return null;
+	}
+
+	/**
+	 * 북마크 순서 수정 API 처리 함수
+	 * */
+	@Transactional
+	public Void updateBookmarkSequence(UpdateBookmarkSequence request) {
+
+		List<Long> bookmarkIds = request.bookmarkIds();
+
+		for (int index = 1; index <= bookmarkIds.size(); index++) {
+			Bookmark bookmark = validateBookmark(bookmarkIds.get(index - 1));
+
+			bookmark.updateSequence(index);
+			bookmarkRepository.save(bookmark);
+		}
 
 		return null;
 	}

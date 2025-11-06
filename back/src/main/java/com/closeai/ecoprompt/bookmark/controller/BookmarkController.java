@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.closeai.ecoprompt.bookmark.model.dto.request.CreateBookmarkRequest;
 import com.closeai.ecoprompt.bookmark.model.dto.request.DeleteBookmarkRequest;
+import com.closeai.ecoprompt.bookmark.model.dto.request.UpdateBookmarkSequence;
 import com.closeai.ecoprompt.bookmark.service.BookmarkService;
 import com.closeai.ecoprompt.common.ApiResponse;
 
@@ -38,6 +39,11 @@ public class BookmarkController implements BookmarkControllerDocs {
 	public ResponseEntity<ApiResponse<Void>> updateBookmark(@PathVariable Long bookmarkId,
 		@RequestBody @Valid CreateBookmarkRequest request) {
 		return ApiResponse.success(bookmarkService.updateBookmark(bookmarkId, request));
+	}
+
+	@PatchMapping("/sequence")
+	public ResponseEntity<ApiResponse<Void>> updateBookmarkSequence(@RequestBody UpdateBookmarkSequence request) {
+		return ApiResponse.success(bookmarkService.updateBookmarkSequence(request));
 	}
 
 }
