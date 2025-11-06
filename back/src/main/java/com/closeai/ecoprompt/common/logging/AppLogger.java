@@ -40,7 +40,7 @@ public class AppLogger {
 	/**
 	 * 사용자 ID와 함께 정보 로그
 	 */
-	public static void info(String message, Long userId) {
+	public static void info(String message, Integer userId) {
 		logger.info("[INFO] [USER:{}] {}", userId, message);
 	}
 

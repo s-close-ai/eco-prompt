@@ -462,10 +462,20 @@ export default function Sidebar() {
       newSet.delete(chatId);
       return newSet;
     });
+    setChatMenus((prevMenus) => {
+      const newMenus = new Map(prevMenus);
+      newMenus.delete(chatId);
+      return newMenus;
+    });
     setOpenNestedChatMenus((prev) => {
       const newSet = new Set(prev);
       newSet.delete(chatId);
       return newSet;
+    });
+    setNestedChatMenus((prevMenus) => {
+      const newMenus = new Map(prevMenus);
+      newMenus.delete(chatId);
+      return newMenus;
     });
     // TODO: 실제 프로젝트 이동 구현
     console.log(

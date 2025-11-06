@@ -1,86 +1,103 @@
-# app.py — 명세 반영: 수동 AI 모델 학습 트리거
+#judge_llm/main.py
+from __future__ import annotations
 import os
-import uuid
-from datetime import datetime, timezone
-from typing import Dict, Any, Optional
+import asyncio
+import datetime
+from typing import Dict, Any, Optional, List, Union
 
-from fastapi import FastAPI, Header, BackgroundTasks
+from fastapi import FastAPI, Body, Query, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from dotenv import load_dotenv
 
-from app.wiring import build_pipeline  # 현재는 더미 구현체로 조립
+BASE_DIR = os.path.dirname(__file__)
+ENV_PATHS = [
+    os.path.join(BASE_DIR, "api/.env"),
+    os.path.join(BASE_DIR, ".env"),
+]
+for path in ENV_PATHS:
+    if os.path.isfile(path):
+        load_dotenv(path, override=True)
+        print(f"[.env 로드]: {path}")
+        break
 
-app = FastAPI(title="메인 LLM 훈련 트리거")
+from api.app.wiring import build_pipeline
 
-# Bearer 토큰 검사 (명세: Authorization: Bearer accessToken)
-AUTH_ENV = "AUTH_BEARER_TOKEN"  # .env에 설정하면 검사, 없으면 검사 생략
+app = FastAPI(title="JudgeLLM API", version="1.0")
 
-def _require_bearer(authorization: Optional[str]) -> None:
-    expected = os.getenv(AUTH_ENV)
-    if not expected:
-        return  # 검사 비활성화(개발/로컬)
-    if not authorization or not authorization.startswith("Bearer "):
-        raise_value_error()
-    token = authorization.split(" ", 1)[1].strip()
-    if token != expected:
-        raise_value_error()
+class TrainPayload(BaseModel):
+    batchId: Optional[str] = None
+    items: List[dict]
 
-def raise_value_error():
-    # 명세는 실패를 200 + {"status":"FAIL"}로 응답
-    # FastAPI 예외를 쓰지 않고 호출부에서 FAIL 응답을 내려주기 위해 예외로 신호만 던짐
-    raise ValueError("UNAUTHORIZED")
+@app.on_event("startup")
+async def on_startup() -> None:
+    app.state.pipe = build_pipeline()
+    try:
+        from api.app.adapters.db.mongo_connector import ping as mongo_ping
+        mongo_ping()
+    except Exception as e:
+        print(f"MongoDB 연결 실패: {e}")
+    try:
+        _ = await app.state.pipe.judge.evaluate("ping", "pong")
+        print("Judge 서버 연결 확인 완료")
+    except Exception as e:
+        print(f"Judge 서버 연결 실패: {e}")
+    print("서버 시작 완료")
+
+@app.on_event("shutdown")
+async def on_shutdown() -> None:
+    print("서버 종료 중...")
+    print("서버 종료 완료")
 
 @app.get("/health")
 async def health():
+    auth = "활성화" if os.getenv("API_BEARER_TOKEN") else "비활성화"
     return {
         "ok": True,
-        "service": "메인 LLM 훈련 로직 서버 동작중",
-        "auth": "bearer" if os.getenv(AUTH_ENV) else "disabled",
+        "서비스": "메인 LLM 훈련 서버 동작 중",
+        "인증": auth,
+        "시간": datetime.datetime.utcnow().isoformat() + "Z",
     }
 
-async def _run_training_job(payload: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    실제 수동 학습 파이프라인 실행.
-    - 현재는 더미 DI (Mongo/Judge/Mask/Repo)로 동작
-    - 이후 실제 구현체로 wiring 교체
-    """
-    pipeline = build_pipeline(seed_data=[
-        # 운영에서는 빈 리스트 유지. 필요시 로컬 스모크 데이터만 일시 사용.
-        # {"pair_id":"p1","prompt":"hello 010-1234-5678","answer":"world","score":70},
-    ])
-    return await pipeline.run(payload or {})
-
-@app.post("/api/v1/ai/training", status_code=202)
-async def manual_training(
-    background: BackgroundTasks,
-    body: Dict[str, Any] | None = None,
-    Authorization: Optional[str] = Header(default=None)
+@app.post("/api/v1/ai/training")
+async def post_training(
+    request: Request,
+    sync: int | None = Query(default=None, description="1이면 동기 처리"),
 ):
-    """
-    [수동 AI 모델 학습]
-    - 명세서: POST /api/v1/ai/training
-    - Header: Authorization: Bearer <accessToken>
-    - Body: {} (입력 없음, 확장 가능)
-    - 성공: 202 + {"status":"SUCCESS","data":{"jobId","message","timestamp"}}
-    - 실패: 200 + {"status":"FAIL","data":{"message"}}
-    """
-    try:
-        _require_bearer(Authorization)
-    except ValueError:
-        return {
-            "status": "FAIL",
-            "data": {"message": "학습에 실패하였습니다."}
-        }
+    pipe = getattr(app.state, "pipe", None) or build_pipeline()
+    app.state.pipe = pipe
 
-    job_id = str(uuid.uuid4())
-    timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    body = await request.json()
 
-    # 비동기 백그라운드로 파이프라인 실행
-    background.add_task(_run_training_job, body or {})
+    async def _do_run() -> Dict[str, Any]:
+        if isinstance(body, list):
+            return await pipe.run(body)
+        if isinstance(body, dict):
+            return await pipe.run(body)
+        raise ValueError("Invalid payload type")
 
-    return {
-        "status": "SUCCESS",
-        "data": {
-            "jobId": job_id,
-            "message": "모델 학습 작업이 성공적으로 시작되었습니다.",
-            "timestamp": timestamp
-        }
-    }
+    if sync == 1:
+        try:
+            data = await _do_run()
+            return JSONResponse({"status": "OK", "data": data}, status_code=200)
+        except Exception as e:
+            return JSONResponse({"status": "ERROR", "error": str(e)}, status_code=500)
+    else:
+        async def _bg():
+            try:
+                await _do_run()
+                print("비동기 학습 요청 처리 완료")
+            except Exception as e:
+                print(f"비동기 학습 처리 중 오류: {e}")
+        asyncio.create_task(_bg())
+        return JSONResponse({"status":"SUCCESS","data":{
+            "jobId": os.urandom(12).hex(),
+            "message":"학습 작업이 시작되었습니다.",
+            "timestamp": datetime.datetime.utcnow().isoformat()+"Z"}}, status_code=202)
+
+if __name__ == "__main__":
+    import uvicorn
+    host = os.getenv("API_HOST", "0.0.0.0")
+    port = int(os.getenv("API_PORT", "8081"))
+    print(f"JudgeLLM 서버 실행 중: {host}:{port}")
+    uvicorn.run("main:app", host=host, port=port, reload=False)

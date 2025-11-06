@@ -1,9 +1,12 @@
 package com.closeai.ecoprompt.userinfo.model.entity;
 
+import com.closeai.ecoprompt.common.CustomUtil;
 import com.closeai.ecoprompt.common.entity.BaseEntity;
 import com.closeai.ecoprompt.user.model.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
@@ -29,10 +32,63 @@ public class UserInfo extends BaseEntity {
     private String sharingInformation = "N";  // 기본값 N
 
     @Column(name = "sharing_information_updated_at", nullable = false)
-    private java.time.LocalDateTime sharingInformationUpdatedAt;
+    private String sharingInformationUpdatedAt;
+
+    @Column(name = "sharing_prompt", length = 1, nullable = false, columnDefinition = "VARCHAR(1) DEFAULT 'N'")
+    private String sharingPrompt = "N";  // 기본값 N
+
+    @Column(name="total_prompt_count", nullable = false)
+    private Long totalPromptCount = 0L;
+
+    @Column(name="total_score", nullable = false)
+    private Double totalScore = 0.0;
 
     // FK: user_info.user_id -> user.user_id (1:1 가정)
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(name = "prompt_count",  nullable = false)
+    private Integer promptCount = 0;
+
+    private UserInfo(Integer totalMileage, Double highScore, int promptCount, Double totalScore, User user) {
+        this.totalMileage = totalMileage;
+        this.highScore = highScore;
+        this.promptCount = promptCount;
+        this.totalScore = totalScore;
+        this.user = user;
+        this.sharingInformationUpdatedAt = CustomUtil.dateConverter(LocalDateTime.now());
+    }
+
+    public static UserInfo makeDefaultUserInfo(User user) {
+
+        return new UserInfo(
+                0,
+                0.0,
+                0,
+                0.0,
+                user
+        );
+    }
+
+    public void updateSharingInformationUpdatedAt() {
+        this.sharingInformationUpdatedAt = CustomUtil.dateConverter(LocalDateTime.now());
+    }
+
+    public void updateTotalPromptCount() {
+        this.totalPromptCount++;
+    }
+
+    public void updateHighScore(Double highScore) {
+        this.highScore = highScore;
+    }
+
+    public void updateTotalMileage(Integer value){
+        this.totalMileage = this.totalMileage+value;
+    }
+
+    public void updateTotalScore(Double score){
+        this.totalScore += score;
+    }
+
 }
