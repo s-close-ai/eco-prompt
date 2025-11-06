@@ -99,7 +99,6 @@ public class BookmarkService {
 			Bookmark bookmark = validateBookmark(bookmarkIds.get(index - 1));
 
 			bookmark.updateSequence(index);
-			bookmarkRepository.save(bookmark);
 		}
 
 		return null;
