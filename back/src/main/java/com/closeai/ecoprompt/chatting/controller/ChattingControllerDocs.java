@@ -2,6 +2,7 @@ package com.closeai.ecoprompt.chatting.controller;
 
 import org.springframework.http.ResponseEntity;
 
+import com.closeai.ecoprompt.chatting.model.dto.request.UpdateChattingProjectRequest;
 import com.closeai.ecoprompt.chatting.model.dto.request.UpdateChattingTitleRequest;
 import com.closeai.ecoprompt.common.ApiResponse;
 import com.closeai.ecoprompt.message.model.dto.response.MessagePageResponse;
@@ -16,5 +17,8 @@ public interface ChattingControllerDocs {
 
 	@Operation(summary = "채팅방 이름 변경하는 API",
 		description = "채팅방 이름의 길이가 0인 경우에는 CHAT으로 변경, 만약 공백만 있다면 공백 그대로 저장됩니다.")
-	ResponseEntity<ApiResponse<Void>> updateChattingTitle(Long chattindId, UpdateChattingTitleRequest request);
+	ResponseEntity<ApiResponse<Void>> updateChattingTitle(Long chattingId, UpdateChattingTitleRequest request);
+
+	@Operation(summary = "채팅방 프로젝트 변경하는 API")
+	ResponseEntity<ApiResponse<Void>> updateChattingProject(Long chattingId, UpdateChattingProjectRequest request);
 }

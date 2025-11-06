@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.closeai.ecoprompt.chatting.model.dto.request.UpdateChattingProjectRequest;
 import com.closeai.ecoprompt.chatting.model.dto.response.ChattingResponse;
 import com.closeai.ecoprompt.chatting.model.entity.Chatting;
 import com.closeai.ecoprompt.chatting.repository.ChattingRepository;
@@ -79,6 +80,25 @@ public class ChattingService {
 			title = "CHAT";
 		}
 		updateChattingTitle(chatting, title);
+		return null;
+	}
+
+	/**
+	 * 채팅방 프로젝트 변경하는 함수
+	 * */
+	@Transactional
+	public Void updateChattingProject(Long chattingId, UpdateChattingProjectRequest request) {
+
+		Chatting chatting = validateChatting(chattingId);
+		Integer projectId = request.projectId();
+
+		if (chatting.getProject().getId() == projectId) {
+			throw new BusinessException("기존의 프로젝트로는 이동이 불가능 합니다.");
+		}
+
+		Project project = projectService.getProject(projectId);
+		chatting.setProject(project);
+
 		return null;
 	}
 

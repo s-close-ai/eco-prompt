@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.closeai.ecoprompt.chatting.model.dto.request.UpdateChattingProjectRequest;
 import com.closeai.ecoprompt.chatting.model.dto.request.UpdateChattingTitleRequest;
 import com.closeai.ecoprompt.chatting.service.ChattingService;
 import com.closeai.ecoprompt.common.ApiResponse;
@@ -44,5 +45,11 @@ public class ChattingController implements ChattingControllerDocs {
 		String title = request.title();
 
 		return ApiResponse.success(chattingService.setChattingTitle(chattingId, title));
+	}
+
+	@PatchMapping("/{chattingId}/project")
+	public ResponseEntity<ApiResponse<Void>> updateChattingProject(@PathVariable Long chattingId,
+		@RequestBody UpdateChattingProjectRequest request) {
+		return ApiResponse.success(chattingService.updateChattingProject(chattingId, request));
 	}
 }
