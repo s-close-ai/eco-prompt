@@ -2,16 +2,21 @@ export interface ChattingTitleRequest {
   title: string;
 }
 
-export interface ChattingResponse {
+export interface ChattingTitleResponse {
   status: string;
-  data: '';
+  data: void;
 }
 
 export interface ChattingProjectRequest {
   projectId: number;
 }
 
-export interface GetChattingMessagesResponse {
+export interface ChattingProjectResponse {
+  status: string;
+  data: void;
+}
+
+export interface ChattingMessagesResponse {
   status: string;
   data: {
     content: ChatMessage[];

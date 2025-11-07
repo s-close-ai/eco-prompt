@@ -6,14 +6,14 @@ import type {
   MockEcoPickPrompt,
   MockDashboardMetric,
   MockDashboardStats,
-} from '@/types/dashboard.types';
+} from '@/types/api/dashboard.types';
 export type { ChatMessage, PromptScore } from '@/types/chat.types';
 export type {
   MockRankingData,
   MockEcoPickPrompt,
   MockDashboardMetric,
   MockDashboardStats,
-} from '@/types/dashboard.types';
+} from '@/types/api/dashboard.types';
 
 // 채팅 메시지 목 데이터
 export const mockChatMessages: ChatMessage[] = [

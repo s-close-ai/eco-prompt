@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { mockRankingData } from '@/data/mockData';
-import type { MockRankingData } from '@/types/dashboard.types';
+import type { MockRankingData } from '@/types/api/dashboard.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/ranking.css';

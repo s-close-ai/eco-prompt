@@ -2,7 +2,7 @@ import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useClickOutside } from '@/hooks/useClickOutside';
-import type { MockBookmark } from '@/types/bookmark.types';
+import type { MockBookmark } from '@/types/api/bookmark.types';
 import '@/styles/components/bookmark/bookmark-card.css';
 
 type BookmarkCardProps = {

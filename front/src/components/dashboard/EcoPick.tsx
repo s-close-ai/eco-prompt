@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { mockEcoPickPrompts } from '@/data/mockData';
-import type { MockEcoPickPrompt } from '@/types/dashboard.types';
+import type { MockEcoPickPrompt } from '@/types/api/dashboard.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import '@/styles/components/dashboard/eco-pick.css';
 

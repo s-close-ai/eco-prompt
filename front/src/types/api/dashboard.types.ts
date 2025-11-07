@@ -11,9 +11,7 @@ export interface RecordResponse {
 
 export interface EcoPickResponse {
   status: string;
-  data: {
-    ecoPick: EcoPickItem[];
-  };
+  data: EcoPickItem[];
 }
 
 export interface EcoPickItem {
@@ -26,8 +24,8 @@ export interface EcoPickItem {
 export interface DetailScoreResponse {
   status: string;
   data: {
-    myScoreResponse: DetailScoreItem[];
-    allScoreResponse: DetailScoreItem[];
+    myScoreResponse: DetailScoreItem;
+    allScoreResponse: DetailScoreItem;
   };
 }
 

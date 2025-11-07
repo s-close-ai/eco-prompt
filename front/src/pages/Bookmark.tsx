@@ -15,7 +15,7 @@ import BookmarkCreateOverlay from '@/components/bookmark/BookmarkCreateOverlay';
 import BookmarkCreateForm from '@/components/bookmark/BookmarkCreateForm';
 import Button from '@/components/common/Button';
 import { getFaviconUrl, normalizeUrl } from '@/utils/bookmark';
-import type { MockBookmark } from '@/types/bookmark.types';
+import type { MockBookmark } from '@/types/api/bookmark.types';
 import type { BookmarkFormData } from '@/components/bookmark/BookmarkCreateForm';
 import '@/styles/pages/bookmark.css';
 

@@ -1,5 +1,5 @@
 import { mockDashboardMetrics, mockDashboardStats } from '@/data/mockData';
-import type { MockDashboardMetric } from '@/types/dashboard.types';
+import type { MockDashboardMetric } from '@/types/api/dashboard.types';
 import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/dashboard.css';
 
