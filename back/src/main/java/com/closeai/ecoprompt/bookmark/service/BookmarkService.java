@@ -10,6 +10,7 @@ import com.closeai.ecoprompt.bookmark.model.dto.request.CreateBookmarkRequest;
 import com.closeai.ecoprompt.bookmark.model.dto.request.DeleteBookmarkRequest;
 import com.closeai.ecoprompt.bookmark.model.dto.request.UpdateBookmarkSequence;
 import com.closeai.ecoprompt.bookmark.model.dto.response.BookmarkResponse;
+import com.closeai.ecoprompt.bookmark.model.dto.response.CreateBookmarkResponse;
 import com.closeai.ecoprompt.bookmark.model.dto.response.GetBookmarkResponse;
 import com.closeai.ecoprompt.bookmark.model.entity.Bookmark;
 import com.closeai.ecoprompt.bookmark.repository.BookmarkRepository;
@@ -34,7 +35,7 @@ public class BookmarkService {
 	 * 북마크 생성하는 API 처리 함수
 	 * */
 	@Transactional
-	public Long createBookmark(CreateBookmarkRequest request) {
+	public CreateBookmarkResponse createBookmark(CreateBookmarkRequest request) {
 
 		Integer userId = CustomUtil.getCurrentUserId();
 		long bookmarkCount = bookmarkRepository.countByOwnerIdAndIsDeleted(userId, 'N');
@@ -56,7 +57,9 @@ public class BookmarkService {
 			.owner(user)
 			.build();
 
-		return bookmarkRepository.save(bookmark).getId();
+		Long bookmarkId = bookmarkRepository.save(bookmark).getId();
+
+		return new CreateBookmarkResponse(bookmarkId);
 	}
 
 	/**
