@@ -42,9 +42,7 @@ public class ChattingController implements ChattingControllerDocs {
 	public ResponseEntity<ApiResponse<Void>> updateChattingTitle(@PathVariable Long chattingId,
 		@RequestBody @Valid UpdateChattingTitleRequest request) {
 
-		String title = request.title();
-
-		return ApiResponse.success(chattingService.setChattingTitle(chattingId, title));
+		return ApiResponse.success(chattingService.updateChattingTitle(chattingId, request));
 	}
 
 	@PatchMapping("/{chattingId}/project")
