@@ -64,7 +64,7 @@ public class ChattingService {
 		AppLogger.start(projectId + " 프로젝트의 " + page + " 페이지 조회");
 
 		Pageable pageable = PageRequest.of(page, CHAT_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "updatedAt"));
-		Page<Chatting> chattingPage = chattingRepository.findByProject_Id(projectId, pageable);
+		Page<Chatting> chattingPage = chattingRepository.findByProject_IdAndIsDeleted(projectId, 'N', pageable);
 
 		return chattingPage.map(ChattingResponse::from);
 	}
