@@ -123,7 +123,7 @@ public class ProjectService {
 
 	private List<PersonalProjectResponse> getNotDeletedPersonalProjectResponse(int userId) {
 		// 1. 유저의 모든 프로젝트 조회
-		List<Project> projects = projectRepository.findAllByOwner_IdAndIsDeleted(userId, 'N');
+		List<Project> projects = projectRepository.findAllByOwner_IdAndIsDeletedOrderByCreatedAtDesc(userId, 'N');
 
 		// 2. 채팅 페이지네이션 (updatedAt 내림차순)
 		Pageable pageable = PageRequest.of(0, CHAT_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "updatedAt"));
