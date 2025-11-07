@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.closeai.ecoprompt.chatting.model.dto.request.UpdateChattingProjectRequest;
+import com.closeai.ecoprompt.chatting.model.dto.request.UpdateChattingTitleRequest;
 import com.closeai.ecoprompt.chatting.model.dto.response.ChattingResponse;
 import com.closeai.ecoprompt.chatting.model.entity.Chatting;
 import com.closeai.ecoprompt.chatting.repository.ChattingRepository;
@@ -72,14 +73,29 @@ public class ChattingService {
 	 * 채팅방 이름 변경하는 함수
 	 * */
 	@Transactional
-	public Void setChattingTitle(Long chattingId, String title) {
+	public Void setChattingTitle(Long chattingId, String title, Integer userId) {
 
-		Chatting chatting = validateChatting(chattingId);
+		Optional<Chatting> chatting = chattingRepository.findByIdAndIsDeleted(chattingId, 'N');
+
+		if (!chatting.isPresent() || !chatting.get().getProject().getOwner().getId().equals(userId)) {
+			throw new BusinessException("채팅방이 없습니다.");
+		}
 
 		if (title.isEmpty()) {
 			title = "CHAT";
 		}
-		updateChattingTitle(chatting, title);
+		chatting.get().setTitle(title);
+		return null;
+	}
+
+	@Transactional
+	public Void updateChattingTitle(Long chattingId, UpdateChattingTitleRequest request) {
+
+		String title = request.title();
+		Chatting chatting = validateChatting(chattingId);
+
+		chatting.setTitle(title);
+
 		return null;
 	}
 
@@ -138,15 +154,6 @@ public class ChattingService {
 		}
 
 		return chatting.get();
-	}
-
-	/**
-	 * DB에 변경된 채팅방명을 수정하는 함수
-	 * */
-	private void updateChattingTitle(Chatting chatting, String title) {
-
-		chatting.setTitle(title);
-		chattingRepository.save(chatting);
 	}
 
 }
