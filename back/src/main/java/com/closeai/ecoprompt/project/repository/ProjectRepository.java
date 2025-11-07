@@ -10,6 +10,7 @@ import com.closeai.ecoprompt.project.model.entity.Project;
 public interface ProjectRepository extends JpaRepository<Project, Integer> {
 
 	Optional<Project> findById(Integer id);
-	List<Project> findAllByOwner_IdAndIsDeleted(Integer userId, char isDeleted);
+
+	List<Project> findAllByOwner_IdAndIsDeletedOrderByCreatedAtDesc(Integer userId, char isDeleted);
 
 }
