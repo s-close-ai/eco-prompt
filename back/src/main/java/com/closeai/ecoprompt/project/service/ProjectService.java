@@ -47,7 +47,7 @@ public class ProjectService {
 	private static final int CHAT_PAGE_SIZE = 20;
 
 	public Project getProject(Integer projectId) {
-		return projectRepository.findById(projectId)
+		return projectRepository.findByIdAndIsDeleted(projectId, 'N')
 			.orElseThrow(() -> new BusinessException("프로젝트를 찾을 수 없습니다."));
 	}
 
@@ -101,7 +101,7 @@ public class ProjectService {
 		// 2. 채팅 페이지네이션 (updatedAt 내림차순)
 		Pageable pageable = PageRequest.of(0, CHAT_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "updatedAt"));
 
-		Page<Chatting> chattingPage = chattingRepository.findByProject_Id(project.getId(), pageable);
+		Page<Chatting> chattingPage = chattingRepository.findByProject_IdAndIsDeleted(project.getId(), 'N', pageable);
 
 		List<ChattingWithLastMessageResponse> chattingResponses = chattingPage
 			.map(c -> {
@@ -131,7 +131,8 @@ public class ProjectService {
 		// 3. 프로젝트별 채팅 조회 및 DTO 변환
 		List<PersonalProjectResponse> responses = new ArrayList<>();
 		for (Project project : projects) {
-			Page<ChattingResponse> chattingResponses = chattingRepository.findByProject_Id(project.getId(), pageable)
+			Page<ChattingResponse> chattingResponses = chattingRepository.findByProject_IdAndIsDeleted(project.getId(),
+					'N', pageable)
 				.map(c -> new ChattingResponse(project.getId(), c.getId(), c.getTitle()));
 
 			responses.add(PersonalProjectResponse.of(project, chattingResponses));
