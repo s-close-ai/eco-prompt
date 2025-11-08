@@ -35,19 +35,15 @@ public class UserInfoService {
 			.orElseThrow(() -> new BusinessException("해당하는 사용자가 없습니다."));
 
 		if (userInfo.getSharingInformation().equals("Y")) {
-			userInfo.setSharingInformation("N");
-
-			AppLogger.info("정보 제공 상태: Y -> N", userId);
+			AppLogger.info("이미 정보 제공 동의를 했습니다.", userId);
 		} else if (userInfo.getSharingInformation().equals("N")) {
 			userInfo.setSharingInformation("Y");
+			userInfo.updateSharingInformationUpdatedAt();
+			userInfoRepository.save(userInfo);
 
 			AppLogger.info("정보 제공 상태: N -> Y", userId);
+			AppLogger.complete("정보 제공 동의 상태 변경 @" + userInfo.getSharingInformationUpdatedAt());
 		}
-		userInfo.updateSharingInformationUpdatedAt();
-
-		userInfoRepository.save(userInfo);
-
-		AppLogger.complete("정보 제공 동의 상태 변경 @" + userInfo.getSharingInformationUpdatedAt());
 
 		return SharingInformationStatusResponse.from(userInfo);
 	}
