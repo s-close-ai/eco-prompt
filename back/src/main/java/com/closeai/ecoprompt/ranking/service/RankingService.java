@@ -31,7 +31,7 @@ public class RankingService {
     private final MessageJpaRepository messageJpaRepository;
 
     private static final DateTimeFormatter CREATED_FMT = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss");
-    private static final DateTimeFormatter SNAPSHOT_FMT = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss");
+    private static final DateTimeFormatter SNAPSHOT_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
 
     /**
      * 오늘 Top10을 집계하고, 어제(00:00:00) 스냅샷과 비교하여 RankingChange를 계산.
@@ -44,6 +44,8 @@ public class RankingService {
             unless = "#result == null || #result.isEmpty()"
     )
     public List<RankingResponse> getTodayTop10WithChange() {
+        
+        // TODO: 레디스에 업데이트 된 시각을 함께 넣어서 전달하기
         AppLogger.start("오늘의 실시간 랭킹 조회");
         // 1) 오늘 범위 문자열
         LocalDateTime now = LocalDateTime.now();
