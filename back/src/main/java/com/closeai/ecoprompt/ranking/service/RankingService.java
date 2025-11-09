@@ -65,7 +65,7 @@ public class RankingService {
         // 4) 어제 순위 맵(userId -> rank)
         Map<Integer, Integer> prevRankMap = new HashMap<>();
         for (Ranking r : ySnapshot) {
-            prevRankMap.put(r.getUser().getId(), r.getRanking_number());
+            prevRankMap.put(r.getUser().getId(), r.getRankingNumber());
         }
 
         // 5) 오늘 순위 + 변동 계산
@@ -118,7 +118,7 @@ public class RankingService {
         List<RankingResponse> result = new ArrayList<>();
         for (Ranking r : rows) {
             result.add(new RankingResponse(
-                    r.getRanking_number(),
+                    r.getRankingNumber(),
                     r.getUser().getName(),
                     r.getScore(),
                     r.getMileage(),

@@ -20,7 +20,7 @@ public class Ranking extends BaseEntity {
     private Integer id;
 
     @Column(name = "ranking_number", nullable = false)
-    private Integer ranking_number;
+    private Integer rankingNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ranking_change", nullable = false, columnDefinition = "varchar(16) comment 'NEW, UP, DOWN, KEEP'")

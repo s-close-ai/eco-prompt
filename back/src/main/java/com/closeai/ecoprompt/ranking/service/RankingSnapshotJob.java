@@ -68,7 +68,7 @@ public class RankingSnapshotJob {
                 .stream()
                 .collect(Collectors.toMap(
                         r -> r.getUser().getId(),
-                        Ranking::getRanking_number
+                        Ranking::getRankingNumber
                 ));
 
         // 3) 멱등성: 기존 스냅샷 soft delete 후 재삽입
@@ -95,7 +95,7 @@ public class RankingSnapshotJob {
             User userRef = em.getReference(User.class, userId);
 
             toSave.add(Ranking.builder()
-                    .ranking_number(rank++)
+                    .rankingNumber(rank++)
                     .rankingChange(change)
                     .batchSchedule(batchKey)
                     .user(userRef)

@@ -18,7 +18,7 @@ public interface RankingRepository extends JpaRepository<Ranking, Integer> {
         JOIN FETCH r.user u
         WHERE r.isDeleted = 'N'
           AND r.batchSchedule = :batchSchedule
-        ORDER BY r.ranking_number ASC
+        ORDER BY r.rankingNumber ASC
     """)
     List<Ranking> findSnapshotByBatchSchedule(
             @Param("batchSchedule") String batchSchedule
