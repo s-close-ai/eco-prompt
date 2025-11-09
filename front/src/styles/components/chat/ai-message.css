@@ -1,16 +1,19 @@
 .ai-message-container {
   width: 100%;
   padding: 16px 24px;
+  background-color: transparent;
   max-width: 48rem;
   margin: 0 auto;
 }
-@media (min-width: 1023px) {
+
+/* 반응형 최대 너비 조정 */
+@media (min-width: 1280px) {
   .ai-message-container {
     max-width: 56rem;
-    width: 80%;
-    margin: 0 auto;
   }
 }
+
+/* 모바일 */
 @media (max-width: 768px) {
   .ai-message-container {
     max-width: 100%;
@@ -27,141 +30,134 @@
   position: relative;
   padding-bottom: 28px;
 }
+
 .ai-message-text {
   margin: 0;
   color: #1e1e1e;
   font-size: 15px;
-  line-height: 1.8;
+  line-height: 1.6;
   word-wrap: break-word;
 }
-.ai-message-text pre {
-  overflow-x: auto;
-  margin: 12px 0;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  position: relative;
-  /* max-width: 85%; */
+
+/* 스트리밍 커서 */
+.streaming-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  animation: blink 1s infinite;
+  color: #1e1e1e;
 }
 
-/* react-markdown code block wrapper */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* 코드 블록 래퍼 */
 .code-block-wrapper {
-  position: relative;
-  margin: 12px 0;
-  max-width: 85%;
+  margin: 16px 0;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid #e5e5e5;
+  max-width: 85%;
 }
 
+/* 코드 블록 헤더 */
 .code-block-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  background-color: #ececec;
+  align-items: center;
   padding: 8px 12px;
-  border-bottom: 1px solid #d5d5d5;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #e5e5e5;
 }
 
-.code-block-language {
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 13px;
-  color: #1e1e1e;
+.code-language {
+  font-size: 12px;
   font-weight: 500;
-  text-transform: lowercase;
+  color: #666;
+  text-transform: uppercase;
 }
 
+/* 코드 블록 복사 버튼 */
 .code-copy-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: transparent;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  color: #1e1e1e;
+  background: none;
+  border: none;
+  color: #666;
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 4px;
   transition: all 0.2s;
-  font-size: 12px;
-  gap: 4px;
 }
+
 .code-copy-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.15);
+  background-color: #e5e5e5;
 }
+
+.code-copy-btn img {
+  width: 16px;
+  height: 16px;
+}
+
 .code-copy-btn svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
+
+/* SyntaxHighlighter 스타일 오버라이드 */
+.ai-message-text pre {
+  margin: 0 !important;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .ai-message-text code {
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 14px;
 }
+
+/* 인라인 코드 */
 .ai-message-text :not(pre) > code {
+  background-color: #f0f0f0;
   color: #1e1e1e;
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 13px;
-  background-color: #f0f0f0;
-  border: 1px solid #e5e5e5;
 }
+
+/* 굵은 텍스트 */
+.ai-message-text strong {
+  font-weight: 600;
+}
+
+/* 리스트 스타일 */
 .ai-message-text ul,
 .ai-message-text ol {
   margin: 8px 0;
   padding-left: 24px;
 }
+
 .ai-message-text li {
   margin: 4px 0;
 }
+
+/* 문단 간격 */
 .ai-message-text p {
   margin: 8px 0;
 }
+
 .ai-message-text p:first-child {
   margin-top: 0;
 }
+
 .ai-message-text p:last-child {
   margin-bottom: 0;
 }
 
-/* react-markdown 추가 스타일 */
-.ai-message-text strong {
-  font-weight: 600;
-}
-.ai-message-text em {
-  font-style: italic;
-}
-.ai-message-text blockquote {
-  border-left: 4px solid #5e9462;
-  padding-left: 16px;
-  margin: 12px 0;
-  color: #5a5a5a;
-}
-.ai-message-text a {
-  color: #5e9462;
-  text-decoration: underline;
-}
-.ai-message-text a:hover {
-  color: #4a7a4e;
-}
-.ai-message-text hr {
-  border: none;
-  border-top: 1px solid #e0e0e0;
-  margin: 16px 0;
-}
-.ai-message-text table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 12px 0;
-}
-.ai-message-text th,
-.ai-message-text td {
-  border: 1px solid #e0e0e0;
-  padding: 8px 12px;
-  text-align: left;
-}
-.ai-message-text th {
-  font-weight: 600;
-}
+/* 전체 메시지 복사 버튼 */
 .ai-message-copy-btn {
   position: absolute;
   bottom: 0;
@@ -177,23 +173,26 @@
   border-radius: 4px;
   font-size: 11px;
   opacity: 0;
-  transition:
-    opacity 0.2s,
-    color 0.2s;
+  transition: opacity 0.2s, color 0.2s;
 }
+
 .ai-message:hover .ai-message-copy-btn {
   opacity: 1;
 }
+
 .ai-message-copy-btn:hover {
   color: #757575;
 }
+
 .ai-message-copy-btn:active {
   transform: scale(0.95);
 }
-.ai-message-copy-btn svg {
+
+.ai-message-copy-btn img {
   width: 16px;
   height: 16px;
 }
+
 .ai-message-copied {
   position: absolute;
   top: -24px;
@@ -206,6 +205,7 @@
   white-space: nowrap;
   animation: fadeInOut 2s;
 }
+
 @keyframes fadeInOut {
   0% {
     opacity: 0;
@@ -217,96 +217,10 @@
   }
   90% {
     opacity: 1;
+    transform: translateY(0);
   }
   100% {
     opacity: 0;
     transform: translateY(-4px);
-  }
-}
-
-/* 모바일 반응형 스타일 */
-@media (max-width: 768px) {
-  .code-block-wrapper {
-    max-width: 100%;
-    margin: 12px 0;
-    border-radius: 6px;
-  }
-
-  .code-block-header {
-    padding: 6px 10px;
-  }
-
-  .code-block-language {
-    font-size: 12px;
-  }
-
-  .code-copy-btn {
-    padding: 3px 6px;
-    font-size: 11px;
-  }
-
-  .code-copy-btn svg,
-  .code-copy-btn img {
-    width: 16px;
-    height: 16px;
-  }
-
-  .ai-message-text pre {
-    font-size: 9px !important;
-    margin: 12px -8px;
-  }
-
-  .ai-message-text :not(pre) > code {
-    font-size: 9px !important;
-    padding: 1px 4px;
-  }
-
-  /* react-syntax-highlighter가 인라인 스타일로 폰트를 지정하므로 강제 오버라이드 */
-  .code-block-wrapper pre,
-  .code-block-wrapper code {
-    font-size: 11px !important;
-    line-height: 1.6;
-  }
-}
-
-/* 태블릿 반응형 스타일 */
-@media (min-width: 769px) and (max-width: 1023px) {
-  .code-block-wrapper {
-    max-width: 90%;
-    border-radius: 8px;
-  }
-
-  .code-block-header {
-    padding: 7px 11px;
-  }
-
-  .code-block-language {
-    font-size: 12.5px;
-  }
-
-  .code-copy-btn {
-    padding: 3px 8px;
-    font-size: 11.5px;
-  }
-
-  .ai-message-text pre {
-    font-size: 12px !important;
-  }
-
-  .ai-message-text :not(pre) > code {
-    font-size: 12px !important;
-  }
-
-  .code-block-wrapper pre,
-  .code-block-wrapper code {
-    font-size: 12px !important;
-    line-height: 1.7;
-  }
-}
-
-/* 데스크탑 세부 조정 */
-@media (min-width: 1024px) {
-  .code-block-wrapper {
-    max-width: 80%;
   }
 }
