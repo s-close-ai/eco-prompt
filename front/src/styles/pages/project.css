@@ -349,9 +349,9 @@
 
 .project-chat-card-menu-submenu {
   position: absolute;
-  right: 100%;
+  left: 100%;
   top: 0;
-  margin-right: 4px;
+  margin-left: 4px;
   width: 160px;
   background: #ffffff;
   border: 1px solid #d9d9e3;

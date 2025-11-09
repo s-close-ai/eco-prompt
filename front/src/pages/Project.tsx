@@ -1,43 +1,111 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ChatCard from '@/components/project/ChatCard';
-import { generateChatId } from '@/utils/id';
 import { ICON_SIZE } from '@/constants/ui';
 import type { ProjectLocationState } from '@/types/navigation.types';
 import '@/styles/pages/project.css';
-
-// 임시 타입 정의 (추후 API 연동 시 수정 필요)
-interface ProjectChat {
-  id: number;
-  title: string;
-  preview: string;
-  timestamp: Date;
-}
-
-interface MockProject {
-  id: number;
-  title: string;
-  chats: ProjectChat[];
-}
-
-// 임시 Mock 데이터 (추후 API 연동으로 대체)
-const mockProjectList: MockProject[] = [];
+import { getProject, deleteProject, updateProject } from '@/services/api/project';
+import { deleteChatting, updateChattingProject } from '@/services/api/chatting';
+import type { ProjectResponse } from '@/types/api/project.types';
+import { useProjectStore } from '@/store/projectStore';
+import { MenuItem } from '@/components/common/MenuItem';
 
 export default function Project() {
   const location = useLocation();
   const navigate = useNavigate();
+  const {
+    projects,
+    removeProject,
+    updateProjectTitle,
+    removeChat,
+    moveChatToProject,
+    setEditingChatId,
+  } = useProjectStore();
 
-  // 타입 안전한 방식으로 location state 추출
   const locationState = location.state as ProjectLocationState | undefined;
   const projectId = locationState?.projectId ?? NaN;
+  const [project, setProject] = useState<ProjectResponse['data'] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  const project = useMemo(() => mockProjectList.find((p) => p.id === projectId), [projectId]);
+  // 초기 프로젝트 데이터 로드
+  useEffect(() => {
+    if (isNaN(projectId)) {
+      setError(new Error('Invalid project ID'));
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchProject = async () => {
+      try {
+        const response = await getProject(projectId);
+        setProject(response.data);
+      } catch (err) {
+        setError(err as Error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProject();
+  }, [projectId]);
+
+  // projectStore 상태를 기반으로 로컬 project state 동기화
+  useEffect(() => {
+    if (isNaN(projectId) || !project) return;
+
+    const storeProject = projects.find((p) => p.projectId === projectId);
+    if (storeProject) {
+      // projectStore의 채팅 목록을 기반으로 로컬 project state 업데이트
+      const updatedChats = storeProject.chats.map((chat) => {
+        // 기존 채팅 정보 유지 (lastMessage 등)
+        const existingChat = project.chattingResponses.find(
+          (c) => c.chattingId === chat.chattingId,
+        );
+        return existingChat
+          ? { ...existingChat, title: chat.title }
+          : {
+              chattingId: chat.chattingId,
+              projectId: chat.projectId,
+              title: chat.title,
+              lastMessage: '',
+            };
+      });
+
+      // 실제 변경사항이 있을 때만 업데이트 (무한 루프 방지)
+      const hasChanges =
+        project.title !== storeProject.title ||
+        project.chattingResponses.length !== updatedChats.length ||
+        project.chattingResponses.some(
+          (chat) => !updatedChats.find((c) => c.chattingId === chat.chattingId),
+        ) ||
+        updatedChats.some((chat) => {
+          const existing = project.chattingResponses.find((c) => c.chattingId === chat.chattingId);
+          return !existing || existing.title !== chat.title;
+        });
+
+      if (hasChanges) {
+        setProject((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            title: storeProject.title,
+            chattingResponses: updatedChats,
+          };
+        });
+      }
+    }
+  }, [projects, projectId]);
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [openChatMenus, setOpenChatMenus] = useState<Set<number>>(new Set());
   const [showProjectMoveMenu, setShowProjectMoveMenu] = useState<number | null>(null);
   const chatMenuRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
+  // 프로젝트 이름 편집 상태
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState('');
 
   // 메뉴 외부 클릭 감지
   useEffect(() => {
@@ -83,17 +151,56 @@ export default function Project() {
   }, [openChatMenus]);
 
   // 메뉴 액션 핸들러들
-  const handleRenameProject = useCallback(() => {
+  const handleRenameProjectClick = useCallback(() => {
     setMenuOpen(false);
-    // TODO: 프로젝트 이름 변경 모달 열기
-    // 실제 구현 시 onRenameProject prop 또는 상태 관리 사용
+    setEditedTitle(project?.title || '');
+    setIsEditingTitle(true);
+  }, [project?.title]);
+
+  const handleSaveTitle = useCallback(async () => {
+    if (!editedTitle.trim()) {
+      alert('프로젝트 이름을 입력해주세요.');
+      return;
+    }
+
+    // 로컬 상태 즉시 업데이트
+    setProject((prev) => (prev ? { ...prev, title: editedTitle } : null));
+    updateProjectTitle(projectId, editedTitle);
+    setIsEditingTitle(false);
+
+    // 백그라운드에서 API 호출
+    updateProject(projectId, { title: editedTitle }).catch((error) => {
+      console.error('프로젝트 이름 변경 API 실패:', error);
+    });
+  }, [editedTitle, projectId, updateProjectTitle]);
+
+  const handleCancelEdit = useCallback(() => {
+    setIsEditingTitle(false);
+    setEditedTitle('');
   }, []);
 
   const handleDeleteProject = useCallback(() => {
     setMenuOpen(false);
-    // TODO: 삭제 확인 모달 열기
-    // 실제 구현 시 onDeleteProject prop 또는 상태 관리 사용
-  }, []);
+
+    const chatCount = project?.chattingResponses?.length ?? 0;
+    const confirmMessage =
+      chatCount > 0
+        ? '프로젝트 삭제 시 내부 채팅 목록도 삭제됩니다. 정말 삭제하시겠습니까?'
+        : '정말 삭제하시겠습니까?';
+
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    // 로컬 상태 즉시 업데이트
+    removeProject(projectId);
+    navigate('/chat');
+
+    // 백그라운드에서 API 호출
+    deleteProject(projectId).catch((error) => {
+      console.error('프로젝트 삭제 API 실패:', error);
+    });
+  }, [navigate, projectId, project, removeProject]);
 
   // 채팅 카드 클릭 핸들러
   const handleChatClick = useCallback(
@@ -124,27 +231,64 @@ export default function Project() {
   // 채팅 메뉴 액션
   const handleChatMenuAction = useCallback(
     (chatId: number, action: 'rename' | 'delete' | 'moveToProject', targetProjectId?: number) => {
+      // 메뉴 닫기
       setOpenChatMenus((prev) => {
         const newSet = new Set(prev);
         newSet.delete(chatId);
         return newSet;
       });
       setShowProjectMoveMenu(null);
-      // TODO: 실제 액션 구현
-      console.log(
-        `Chat ${chatId} ${action}`,
-        targetProjectId ? `to project ${targetProjectId}` : '',
-      );
+
+      if (action === 'rename') {
+        setEditingChatId(chatId);
+      } else if (action === 'delete') {
+        if (confirm('채팅을 삭제하시겠습니까?')) {
+          // 로컬 상태 즉시 업데이트
+          removeChat(chatId);
+          // 로컬 project state도 즉시 업데이트
+          setProject((prev) => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              chattingResponses: prev.chattingResponses.filter(
+                (chat) => chat.chattingId !== chatId,
+              ),
+            };
+          });
+          // 백그라운드에서 API 호출
+          deleteChatting(chatId).catch((error) => {
+            console.error('채팅 삭제 API 실패:', error);
+            // TODO: 실패 시 롤백 로직
+          });
+        }
+      } else if (action === 'moveToProject' && targetProjectId) {
+        // 로컬 상태 즉시 업데이트
+        moveChatToProject(chatId, targetProjectId);
+        // 로컬 project state도 즉시 업데이트
+        setProject((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            chattingResponses: prev.chattingResponses.filter(
+              (chat) => chat.chattingId !== chatId,
+            ),
+          };
+        });
+        // 백그라운드에서 API 호출
+        updateChattingProject(chatId, { projectId: targetProjectId }).catch((error) => {
+          console.error('채팅 이동 API 실패:', error);
+          // TODO: 실패 시 롤백 로직
+        });
+      }
     },
-    [],
+    [removeChat, moveChatToProject, setEditingChatId],
   );
 
   // 프로젝트 화면에서 새 채팅 시작
   const handleSendFromProject = useCallback(
     (message: string) => {
-      const newChatId = generateChatId();
-      navigate(`/chat/${newChatId}`, {
-        state: { chatId: newChatId, projectId, isNew: true, message },
+      navigate('/chat', {
+        state: { projectId, isNew: true, message },
       });
     },
     [navigate, projectId],
@@ -156,7 +300,6 @@ export default function Project() {
       const detail = (e as CustomEvent<{ message: string }>).detail;
       if (!detail?.message) return;
 
-      // 이벤트 전파 중지하여 Chat 페이지에서 중복 수신 방지
       e.stopImmediatePropagation();
 
       handleSendFromProject(detail.message);
@@ -165,33 +308,66 @@ export default function Project() {
     return () => window.removeEventListener('chat-send', onChatSend as EventListener);
   }, [handleSendFromProject]);
 
-  if (!project) {
-    return (
-      <div className="project-page-container">
-        <div className="project-page-hero">
-          <div className="project-page-hero-inner">
-            <h1 className="project-page-title">프로젝트를 선택하세요</h1>
-          </div>
-        </div>
-      </div>
-    );
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
+
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
+
+  if (!project) {
+    return <div>Project not found</div>;
+  }
+
+  const chats = project.chattingResponses;
 
   return (
     <div className="project-page-container">
       <div className="project-page-hero">
         <div className="project-page-hero-inner">
           <div className="project-page-header-row">
-            <h1 className="project-page-title">
-              <img
-                src="/icons/folder_open.svg"
-                alt=""
-                width={ICON_SIZE.MD}
-                height={ICON_SIZE.MD}
-                aria-hidden="true"
-              />
-              {project.title}
-            </h1>
+            {isEditingTitle ? (
+              <div className="project-page-title-edit">
+                <img
+                  src="/icons/folder_open.svg"
+                  alt=""
+                  width={ICON_SIZE.MD}
+                  height={ICON_SIZE.MD}
+                  aria-hidden="true"
+                />
+                <input
+                  type="text"
+                  value={editedTitle}
+                  onChange={(e) => setEditedTitle(e.target.value)}
+                  className="project-page-title-input"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveTitle();
+                    if (e.key === 'Escape') handleCancelEdit();
+                  }}
+                />
+                <div className="project-page-title-actions">
+                  <button onClick={handleSaveTitle} className="project-page-save-btn">
+                    저장
+                  </button>
+                  <button onClick={handleCancelEdit} className="project-page-cancel-btn">
+                    취소
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <h1 className="project-page-title">
+                <img
+                  src="/icons/folder_open.svg"
+                  alt=""
+                  width={ICON_SIZE.MD}
+                  height={ICON_SIZE.MD}
+                  aria-hidden="true"
+                />
+                {project.title}
+              </h1>
+            )}
             <div className="project-page-actions" ref={menuRef}>
               <button
                 className="project-page-more-btn"
@@ -209,65 +385,51 @@ export default function Project() {
               </button>
               {menuOpen && (
                 <div className="project-page-menu" role="menu">
-                  <button
+                  <MenuItem
+                    icon="/icons/edit.svg"
+                    label="이름 바꾸기"
+                    onClick={handleRenameProjectClick}
                     className="project-page-menu-item"
                     role="menuitem"
-                    onClick={handleRenameProject}
-                  >
-                    <img
-                      src="/icons/edit.svg"
-                      alt=""
-                      width={ICON_SIZE.SM}
-                      height={ICON_SIZE.SM}
-                      aria-hidden="true"
-                    />
-                    <span>이름 바꾸기</span>
-                  </button>
-                  <button
-                    className="project-page-menu-item"
-                    role="menuitem"
+                  />
+                  <MenuItem
+                    icon="/icons/delete.svg"
+                    label="프로젝트 삭제"
                     onClick={handleDeleteProject}
-                  >
-                    <img
-                      src="/icons/delete.svg"
-                      alt=""
-                      width={ICON_SIZE.SM}
-                      height={ICON_SIZE.SM}
-                      aria-hidden="true"
-                    />
-                    <span>프로젝트 삭제</span>
-                  </button>
+                    className="project-page-menu-item"
+                    role="menuitem"
+                  />
                 </div>
               )}
             </div>
           </div>
-          <p className="project-page-subtitle">{project.chats.length}개의 채팅</p>
+          <p className="project-page-subtitle">{chats.length}개의 채팅</p>
         </div>
       </div>
 
       <div className="project-page-content">
-        {project.chats.length > 0 ? (
+        {chats.length > 0 ? (
           <div className="project-page-chats">
-            {project.chats.map((chat) => (
+            {chats.map((chat) => (
               <ChatCard
-                key={chat.id}
-                id={chat.id}
+                key={chat.chattingId}
+                id={chat.chattingId}
                 title={chat.title}
-                preview={chat.preview}
-                timestamp={chat.timestamp}
+                preview={chat.lastMessage}
+                // timestamp={new Date()}
                 onClick={handleChatClick}
                 onMenuToggle={handleChatMenuToggle}
                 onMenuAction={handleChatMenuAction}
-                isMenuOpen={openChatMenus.has(chat.id)}
+                isMenuOpen={openChatMenus.has(chat.chattingId)}
                 projectId={projectId}
-                allProjects={mockProjectList.map((p) => ({ id: p.id, title: p.title }))}
-                showProjectMoveMenu={showProjectMoveMenu === chat.id}
+                allProjects={projects}
+                showProjectMoveMenu={showProjectMoveMenu === chat.chattingId}
                 onProjectMoveToggle={handleProjectMoveToggle}
                 menuRef={(el) => {
                   if (el) {
-                    chatMenuRefs.current.set(chat.id, el);
+                    chatMenuRefs.current.set(chat.chattingId, el);
                   } else {
-                    chatMenuRefs.current.delete(chat.id);
+                    chatMenuRefs.current.delete(chat.chattingId);
                   }
                 }}
               />
@@ -290,8 +452,6 @@ export default function Project() {
           </div>
         )}
       </div>
-
-      {/* 입력창은 전역 Bottombar(ChatInput)를 사용하여 모든 페이지에서 동일한 UI 유지 */}
     </div>
   );
 }

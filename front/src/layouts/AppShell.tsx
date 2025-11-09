@@ -37,7 +37,14 @@ function ShellBody() {
   const [settingsData, setSettingsData] = useState<SettingsFormData>(mockSettingsData);
 
   const handleSendMessage = (message: string) => {
-    navigate('/chat/mock', { state: { isNew: true, message: message } });
+    // Chat 페이지일 때는 전역 이벤트 발생 (MainChat에서 리스닝)
+    // Chat 페이지가 아닐 때만 전역 이벤트 발생
+    if (!isChat) {
+      window.dispatchEvent(new CustomEvent('chat-send', { detail: { message } }));
+    } else {
+      // Chat 페이지일 때는 chat-input-send 이벤트 발생
+      window.dispatchEvent(new CustomEvent('chat-input-send', { detail: { message } }));
+    }
   };
 
   useEffect(() => {
