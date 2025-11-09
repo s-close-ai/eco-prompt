@@ -33,7 +33,7 @@ public class RankingService {
     private final MessageJpaRepository messageJpaRepository;
 
     private static final DateTimeFormatter CREATED_FMT = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss");
-    private static final DateTimeFormatter SNAPSHOT_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+    private static final DateTimeFormatter SNAPSHOT_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     /**
      * 오늘 Top10을 집계하고, 어제(00:00:00) 스냅샷과 비교하여 RankingChange를 계산.
@@ -46,8 +46,6 @@ public class RankingService {
             unless = "#result == null || #result.isEmpty()"
     )
     public TodayRankingResponse getTodayTop10WithChange() {
-        
-        // TODO: 레디스에 업데이트 된 시각을 함께 넣어서 전달하기
         AppLogger.start("오늘의 실시간 랭킹 조회");
         // 1) 오늘 범위 문자열
         LocalDateTime now = LocalDateTime.now();
@@ -111,7 +109,7 @@ public class RankingService {
     public List<RankingResponse> getSnapshotByDate(LocalDate date) {
         AppLogger.start(date + " 의 랭킹 스냅샷 조회");
         // 1) 날짜 파싱 및 00:00:00 세팅
-        String batchSchedule = LocalDateTime.of(date, LocalTime.MIDNIGHT).format(SNAPSHOT_FMT); // yyyy.MM.dd.00.00.00
+        String batchSchedule = LocalDateTime.of(date, LocalTime.MIDNIGHT).format(SNAPSHOT_FMT); // yyyy-MM-dd
 
         // 2) 스냅샷 조회
         List<Ranking> rows = rankingRepository.findSnapshotByBatchSchedule(batchSchedule);
