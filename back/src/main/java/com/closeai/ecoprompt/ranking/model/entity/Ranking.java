@@ -20,17 +20,13 @@ public class Ranking extends BaseEntity {
     private Integer id;
 
     @Column(name = "ranking_number", nullable = false)
-    private Integer ranking_number;
+    private Integer rankingNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "ranking_change", nullable = false, columnDefinition = "varchar(16) comment 'NEW, UP, DOWN, KEEP'")
     private RankingChange rankingChange;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false, columnDefinition = "varchar(16) comment 'MONTHLY, WEEKLY, REALTIME'")
-    private RankingType type;
-
-    @Column(name = "batch_schedule", length = 12, nullable = false) // yyyyMMddHHmm
+    @Column(name = "batch_schedule", length = 10, nullable = false) // yyyy-MM-dd
     private String batchSchedule;
 
     // FK: ranking.user_id -> user.user_id
