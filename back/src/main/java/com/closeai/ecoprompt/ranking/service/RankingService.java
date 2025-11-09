@@ -1,10 +1,12 @@
 package com.closeai.ecoprompt.ranking.service;
 
+import com.closeai.ecoprompt.common.CustomUtil;
 import com.closeai.ecoprompt.common.config.RedisCacheConfig;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.model.dto.response.DailyRankingProjection;
 import com.closeai.ecoprompt.ranking.model.dto.response.RankingResponse;
+import com.closeai.ecoprompt.ranking.model.dto.response.TodayRankingResponse;
 import com.closeai.ecoprompt.ranking.model.entity.Ranking;
 import com.closeai.ecoprompt.ranking.model.entity.RankingChange;
 import com.closeai.ecoprompt.ranking.repository.RankingRepository;
@@ -43,7 +45,7 @@ public class RankingService {
             key   = "'today'",
             unless = "#result == null || #result.isEmpty()"
     )
-    public List<RankingResponse> getTodayTop10WithChange() {
+    public TodayRankingResponse getTodayTop10WithChange() {
         
         // TODO: 레디스에 업데이트 된 시각을 함께 넣어서 전달하기
         AppLogger.start("오늘의 실시간 랭킹 조회");
@@ -95,7 +97,7 @@ public class RankingService {
                     change
             ));
         }
-        return result;
+        return new TodayRankingResponse(result, CustomUtil.dateConverter(LocalDateTime.now()));
     }
 
     /**
