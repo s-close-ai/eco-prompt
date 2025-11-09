@@ -26,8 +26,6 @@ export default function ChatInput({
     if (message.trim() && !disabled) {
       const trimmed = message.trim();
       onSend(trimmed);
-      // 전역 이벤트로도 송신 (페이지가 하단바를 통해 수신 가능하도록)
-      window.dispatchEvent(new CustomEvent('chat-send', { detail: { message: trimmed } }));
       setMessage('');
     }
   };

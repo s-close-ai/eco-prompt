@@ -10,6 +10,8 @@ interface MenuPosition {
 interface ToggleMenuOptions {
   leftOffset?: number;
   topOffset?: number;
+  direction?: 'left' | 'right';
+  menuWidth?: number;
 }
 
 /**
@@ -31,7 +33,7 @@ export function useContextMenu() {
    */
   const toggleMenu = useCallback(
     (id: MenuId, anchorEl: HTMLElement, options: ToggleMenuOptions = {}) => {
-      const { leftOffset = -170, topOffset = 8 } = options;
+      const { leftOffset = 0, topOffset = 8, direction = 'left', menuWidth = 170 } = options;
       setOpenMenus((prev) => {
         const newMenus = new Map(prev);
         if (newMenus.has(id)) {
@@ -40,7 +42,24 @@ export function useContextMenu() {
         } else {
           const rect = anchorEl.getBoundingClientRect();
           const top = rect.bottom + topOffset;
-          const left = rect.right + leftOffset;
+
+          let left: number;
+          if (direction === 'right') {
+            // 메뉴를 트리거 요소의 중간에 위치시키기 위해
+            // 트리거 요소의 오른쪽에서 메뉴 너비의 절반을 뺀 위치에 배치
+            left = rect.right - menuWidth / 2 + leftOffset;
+          } else {
+            left = rect.right - menuWidth + leftOffset;
+          }
+
+          // Viewport collision detection
+          if (left + menuWidth > window.innerWidth) {
+            left = window.innerWidth - menuWidth - 8; // 8px padding from edge
+          }
+          if (left < 8) {
+            left = 8; // 8px padding from edge
+          }
+
           newMenus.set(id, { top, left });
           triggerRefs.current.set(id, anchorEl);
         }

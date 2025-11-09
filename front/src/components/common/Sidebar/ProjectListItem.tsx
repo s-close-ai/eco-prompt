@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';
@@ -6,9 +6,12 @@ import { useLongPress } from '@/hooks/useLongPress';
 import { ChatListItem } from './ChatListItem';
 import { ICON_SIZE } from '@/constants/ui';
 import type { SidebarProjectItem } from '@/types/sidebar.types';
+import { useProjectStore } from '@/store/projectStore';
+import { updateProject } from '@/services/api/project';
 
 interface ProjectListItemProps {
   project: SidebarProjectItem;
+  scrollContainer: HTMLElement | null;
   onMenuToggle: (event: React.MouseEvent | React.TouchEvent) => void;
   onNestedMenuToggle: (chatId: number, e: React.MouseEvent | React.TouchEvent) => void;
   onLoadMoreChats: (projectId: number) => void;
@@ -20,21 +23,65 @@ interface ProjectListItemProps {
  */
 export function ProjectListItem({
   project,
+  scrollContainer,
   onMenuToggle,
   onNestedMenuToggle,
   onLoadMoreChats,
 }: ProjectListItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(project.title);
   const navigate = useNavigate();
   const mode = useDeviceMode();
   const { closeSidebar } = useAppShell();
+  const { editingProjectId, setEditingProjectId, updateProjectTitle: updateStoreTitle } = useProjectStore();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const isEditing = editingProjectId === project.projectId;
+
+  // 편집 모드로 전환 시 input에 포커스
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  // props가 변경되면 editedTitle 업데이트
+  useEffect(() => {
+    setEditedTitle(project.title);
+  }, [project.title]);
 
   // 프로젝트 타이틀 클릭 시 프로젝트 상세 페이지로 이동
   const handleProjectClick = () => {
+    if (isEditing) return; // 편집 중에는 클릭 무시
     if (mode === 'mobile') {
       closeSidebar();
     }
     navigate('/project', { state: { projectId: project.projectId } });
+  };
+
+  // 제목 저장
+  const handleSaveTitle = async () => {
+    if (!editedTitle.trim() || editedTitle === project.title) {
+      setEditingProjectId(null);
+      setEditedTitle(project.title);
+      return;
+    }
+
+    // 로컬 상태 즉시 업데이트
+    updateStoreTitle(project.projectId, editedTitle);
+    setEditingProjectId(null);
+
+    // 백그라운드에서 API 호출
+    updateProject(project.projectId, { title: editedTitle }).catch((error) => {
+      console.error('프로젝트 이름 변경 API 실패:', error);
+    });
+  };
+
+  // 제목 편집 취소
+  const handleCancelEdit = () => {
+    setEditedTitle(project.title);
+    setEditingProjectId(null);
   };
 
   // 프로젝트 확장/축소 토글
@@ -61,21 +108,39 @@ export function ProjectListItem({
   };
 
   // 프로젝트 하위 채팅 목록 무한 스크롤을 위한 Intersection Observer
-  const sentinelRef = (node: HTMLDivElement | null) => {
-    if (node && isExpanded && project.hasMore) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (entries[0].isIntersecting) {
-            onLoadMoreChats(project.projectId);
-          }
-        },
-        { threshold: 0, rootMargin: '100px' },
-      );
-      observer.observe(node);
-      // 컴포넌트 언마운트 시 observer 연결 해제
-      return () => observer.disconnect();
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isExpanded || !project.hasMore || !scrollContainer) return;
+
+    let isMounted = true;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && isMounted) {
+          onLoadMoreChats(project.projectId);
+        }
+      },
+      {
+        root: scrollContainer,
+        threshold: 0,
+        rootMargin: '100px',
+      },
+    );
+
+    const currentSentinel = sentinelRef.current;
+    if (currentSentinel) {
+      observer.observe(currentSentinel);
     }
-  };
+
+    return () => {
+      isMounted = false;
+      if (currentSentinel) {
+        observer.unobserve(currentSentinel);
+      }
+      observer.disconnect();
+    };
+  }, [isExpanded, project.hasMore, project.projectId, scrollContainer, onLoadMoreChats]);
 
   return (
     <li>
@@ -92,14 +157,31 @@ export function ProjectListItem({
             height={18}
           />
         </button>
-        <button
-          className="sidebar-list-item-text-btn"
-          onClick={handleProjectClick}
-          onContextMenu={handleContextMenu}
-          {...(mode !== 'desktop' ? longPressEvents : {})}
-        >
-          <span className="sidebar-list-item-text">{project.title}</span>
-        </button>
+        {isEditing ? (
+          <div className="sidebar-list-item-edit">
+            <input
+              ref={inputRef}
+              type="text"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveTitle();
+                if (e.key === 'Escape') handleCancelEdit();
+              }}
+              onBlur={handleSaveTitle}
+              className="sidebar-list-item-input"
+            />
+          </div>
+        ) : (
+          <button
+            className="sidebar-list-item-text-btn"
+            onClick={handleProjectClick}
+            onContextMenu={handleContextMenu}
+            {...(mode !== 'desktop' ? longPressEvents : {})}
+          >
+            <span className="sidebar-list-item-text">{project.title}</span>
+          </button>
+        )}
         <div className="sidebar-list-item-menu-wrapper">
           <button
             className="sidebar-list-item-menu-btn"

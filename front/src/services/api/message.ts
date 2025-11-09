@@ -48,5 +48,7 @@ export const stopMessage = async (messageUUID: string): Promise<void> => {
  * @returns EventSource 객체
  */
 export const subscribeMessage = (messageUUID: string): EventSource => {
-  return new EventSource(`${apiClient.defaults.baseURL}/messages/subscribe/${messageUUID}`);
+  return new EventSource(`${apiClient.defaults.baseURL}/messages/subscribe/${messageUUID}`, {
+    withCredentials: true,
+  });
 };

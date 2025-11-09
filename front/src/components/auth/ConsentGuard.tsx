@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { getSharingInformation } from '@/services/api/auth';
 
 interface ConsentGuardProps {
@@ -8,17 +8,10 @@ interface ConsentGuardProps {
 
 export default function ConsentGuard({ children }: ConsentGuardProps) {
   const navigate = useNavigate();
-  const location = useLocation();
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     const checkConsent = async () => {
-      // 랜딩 페이지나 동의 페이지는 검증 스킵
-      if (location.pathname === '/' || location.pathname === '/consent') {
-        setIsChecking(false);
-        return;
-      }
-
       try {
         const userInfo = await getSharingInformation();
 
@@ -36,7 +29,7 @@ export default function ConsentGuard({ children }: ConsentGuardProps) {
     };
 
     checkConsent();
-  }, [location.pathname, navigate]);
+  }, [navigate]);
 
   // 검증 중일 때는 로딩 표시
   if (isChecking) {

@@ -9,7 +9,6 @@ import ProjectCreateOverlay from '@/components/project_create/ProjectCreateOverl
 import SettingsOverlay from '@/components/settings/SettingsOverlay';
 import SearchModal from '@/components/search/SearchModal';
 import type { SettingsFormData } from '@/components/settings/SettingsForm';
-import { useNavigate } from 'react-router-dom';
 
 // TODO: 실제 API에서 데이터를 가져오도록 수정
 const mockSettingsData: SettingsFormData = {
@@ -23,7 +22,6 @@ const mockSettingsData: SettingsFormData = {
 
 function ShellBody() {
   const location = useLocation();
-  const navigate = useNavigate();
   const mode = useDeviceMode();
   const { isSidebarCollapsed, isSidebarOpen, isSettingsOpen, closeSettings, closeSearch } =
     useAppShell();
@@ -37,7 +35,14 @@ function ShellBody() {
   const [settingsData, setSettingsData] = useState<SettingsFormData>(mockSettingsData);
 
   const handleSendMessage = (message: string) => {
-    navigate('/chat/mock', { state: { isNew: true, message: message } });
+    // Chat 페이지일 때는 전역 이벤트 발생 (MainChat에서 리스닝)
+    // Chat 페이지가 아닐 때만 전역 이벤트 발생
+    if (!isChat) {
+      window.dispatchEvent(new CustomEvent('chat-send', { detail: { message } }));
+    } else {
+      // Chat 페이지일 때는 chat-input-send 이벤트 발생
+      window.dispatchEvent(new CustomEvent('chat-input-send', { detail: { message } }));
+    }
   };
 
   useEffect(() => {

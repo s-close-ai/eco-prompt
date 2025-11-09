@@ -6,6 +6,7 @@ import type {
   ChattingTitleRequest,
   ChattingTitleResponse,
 } from '@/types/api/chatting.types';
+import type { ChatMessageRequest, ChatMessageResponse } from '@/types/chat.types';
 
 /**
  * 채팅방 메시지 조회
@@ -71,4 +72,17 @@ export const deleteChatting = async (chattingId: number): Promise<void> => {
       params: { chattingId },
     },
   );
+};
+
+/**
+ * 새 메시지 전송
+ * Endpoint: POST /chattings/messages
+ * @param request - 메시지 전송 요청 데이터
+ * @returns {Promise<ChatMessageResponse>}
+ */
+export const sendChatMessage = async (
+  request: ChatMessageRequest,
+): Promise<ChatMessageResponse> => {
+  const response = await apiClient.post<ChatMessageResponse>('/chattings/messages', request);
+  return response.data;
 };
