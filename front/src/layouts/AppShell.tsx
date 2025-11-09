@@ -9,7 +9,6 @@ import ProjectCreateOverlay from '@/components/project_create/ProjectCreateOverl
 import SettingsOverlay from '@/components/settings/SettingsOverlay';
 import SearchModal from '@/components/search/SearchModal';
 import type { SettingsFormData } from '@/components/settings/SettingsForm';
-import { useNavigate } from 'react-router-dom';
 
 // TODO: 실제 API에서 데이터를 가져오도록 수정
 const mockSettingsData: SettingsFormData = {
@@ -23,7 +22,6 @@ const mockSettingsData: SettingsFormData = {
 
 function ShellBody() {
   const location = useLocation();
-  const navigate = useNavigate();
   const mode = useDeviceMode();
   const { isSidebarCollapsed, isSidebarOpen, isSettingsOpen, closeSettings, closeSearch } =
     useAppShell();
