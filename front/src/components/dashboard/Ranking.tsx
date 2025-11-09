@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { mockRankingData } from '@/data/mockData';
-import type { MockRankingData } from '@/types/api/dashboard.types';
+import { getTodayRankings, getSpecificDateRankings } from '@/services/api/ranking';
+import type { RankingItem } from '@/types/api/ranking.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/ranking.css';
@@ -25,7 +25,8 @@ function getMonthLabel(date: Date): string {
 export default function Ranking() {
   const mode = useDeviceMode();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [currentRankings, setCurrentRankings] = useState<MockRankingData | null>(null);
+  const [currentRankings, setCurrentRankings] = useState<RankingItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // 날짜 목록 생성 (오늘부터 6일 전까지)
@@ -37,8 +38,23 @@ export default function Ranking() {
 
   // 선택된 날짜의 랭킹 데이터 로드
   useEffect(() => {
-    const data = mockRankingData.find((d) => isSameDate(d.date, selectedDate));
-    setCurrentRankings(data || null);
+    const fetchRankings = async () => {
+      try {
+        setLoading(true);
+        const today = new Date();
+        const response = isSameDate(selectedDate, today)
+          ? await getTodayRankings()
+          : await getSpecificDateRankings(formatDate(selectedDate));
+        setCurrentRankings(response.data);
+      } catch (error) {
+        console.error('Failed to fetch rankings:', error);
+        setCurrentRankings([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRankings();
   }, [selectedDate]);
 
   // 업데이트 시간 포맷 함수
@@ -59,9 +75,13 @@ export default function Ranking() {
   };
 
   const getRankChangeIcon = (change: string) => {
-    if (change === 'new') return null;
-    return `/icons/${change}.svg`;
+    if (change === 'NEW') return null;
+    return `/icons/${change.toLowerCase()}.svg`;
   };
+
+  if (loading) {
+    return <div className="ranking-container">Loading...</div>;
+  }
 
   return (
     <div className="ranking-container" ref={containerRef}>
@@ -92,7 +112,7 @@ export default function Ranking() {
         {mode !== 'mobile' && <div className="update-time-text">{getUpdateTimeText()}</div>}
       </div>
 
-      {currentRankings && (
+      {currentRankings.length > 0 && (
         <div className="ranking-table-wrapper">
           <table className="ranking-table">
             <thead>
@@ -104,48 +124,43 @@ export default function Ranking() {
               </tr>
             </thead>
             <tbody>
-              {currentRankings.rankings.map(
-                (entry: {
-                  rank: number;
-                  name: string;
-                  highScore: number;
-                  mileage: number;
-                  rankChange: string;
-                }) => (
-                  <tr key={entry.rank}>
-                    <td className="rank-cell">
-                      {getRankIcon(entry.rank) ? (
+              {currentRankings.map((entry: RankingItem) => (
+                <tr key={entry.ranking}>
+                  <td className="rank-cell">
+                    {getRankIcon(entry.ranking) ? (
+                      <img
+                        src={getRankIcon(entry.ranking)!}
+                        alt={`${entry.ranking}등`}
+                        className="rank-icon"
+                      />
+                    ) : (
+                      <span className="rank-number">{entry.ranking}</span>
+                    )}
+                    <span className="rank-name">{entry.name}</span>
+                  </td>
+                  <td className="score-cell">{entry.score}</td>
+                  <td className="mileage-cell">{entry.mileage.toLocaleString()}</td>
+                  <td className="change-cell">
+                    {entry.change === 'NEW' ? (
+                      <img src={newIcon} alt="new" className="change-icon" />
+                    ) : (
+                      getRankChangeIcon(entry.change) && (
                         <img
-                          src={getRankIcon(entry.rank)!}
-                          alt={`${entry.rank}등`}
-                          className="rank-icon"
+                          src={getRankChangeIcon(entry.change)!}
+                          alt={entry.change}
+                          className="change-icon"
                         />
-                      ) : (
-                        <span className="rank-number">{entry.rank}</span>
-                      )}
-                      <span className="rank-name">{entry.name}</span>
-                    </td>
-                    <td className="score-cell">{entry.highScore}</td>
-                    <td className="mileage-cell">{entry.mileage.toLocaleString()}</td>
-                    <td className="change-cell">
-                      {entry.rankChange === 'new' ? (
-                        <img src={newIcon} alt="new" className="change-icon" />
-                      ) : (
-                        getRankChangeIcon(entry.rankChange) && (
-                          <img
-                            src={getRankChangeIcon(entry.rankChange)!}
-                            alt={entry.rankChange}
-                            className="change-icon"
-                          />
-                        )
-                      )}
-                    </td>
-                  </tr>
-                ),
-              )}
+                      )
+                    )}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
+      )}
+      {currentRankings.length === 0 && !loading && (
+        <div className="ranking-empty">랭킹 데이터가 없습니다.</div>
       )}
     </div>
   );

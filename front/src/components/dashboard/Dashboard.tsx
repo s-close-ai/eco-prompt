@@ -1,21 +1,36 @@
-import { mockDashboardMetrics, mockDashboardStats } from '@/data/mockData';
-import type { MockDashboardMetric } from '@/types/api/dashboard.types';
+import { useEffect, useState } from 'react';
+import { getRecord, getDetailScore } from '@/services/api/dashboard';
+import type { DetailScoreItem } from '@/types/api/dashboard.types';
 import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/dashboard.css';
 
 const metricDescriptions: Record<string, string> = {
-  clarity: '질문이 명확하고 오해의 여지가 없는 정도를 나타냅니다.',
-  specificity: '필요한 정보와 제한조건이 구체적으로 제시된 정도를 나타냅니다.',
-  formatCompliance: '출력 형식, 언어, 길이 등이 명확히 지시된 정도를 나타냅니다.',
-  safety: '안전하고 윤리적으로 문제 없는 정도를 나타냅니다.',
+  clarityScore: '질문이 명확하고 오해의 여지가 없는 정도를 나타냅니다.',
+  specificityScore: '필요한 정보와 제한조건이 구체적으로 제시된 정도를 나타냅니다.',
+  formatScore: '출력 형식, 언어, 길이 등이 명확히 지시된 정도를 나타냅니다.',
+  safetyScore: '안전하고 윤리적으로 문제 없는 정도를 나타냅니다.',
 };
+
+const metricDisplayNames: Record<string, string> = {
+  clarityScore: '명확성',
+  specificityScore: '구체성',
+  formatScore: '형식 준수',
+  safetyScore: '안정성',
+};
+
+interface MetricData {
+  name: string;
+  displayName: string;
+  myScore: number;
+  averageScore: number;
+}
 
 function CircularProgress({
   metric,
   size = 130,
   strokeWidth = 12,
 }: {
-  metric: MockDashboardMetric;
+  metric: MetricData;
   size?: number;
   strokeWidth?: number;
 }) {
@@ -84,8 +99,50 @@ function CircularProgress({
 }
 
 export default function Dashboard() {
-  const metrics = mockDashboardMetrics;
-  const stats = mockDashboardStats;
+  const [metrics, setMetrics] = useState<MetricData[]>([]);
+  const [stats, setStats] = useState({
+    highScore: 0,
+    averageScore: 0,
+    totalMileage: 0,
+    promptCount: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const [recordData, detailScoreData] = await Promise.all([
+          getRecord(),
+          getDetailScore(),
+        ]);
+
+        setStats(recordData.data);
+
+        // API 타입의 DetailScoreItem을 MetricData로 변환
+        const metricsData: MetricData[] = Object.keys(detailScoreData.data.myScoreResponse).map(
+          (key) => ({
+            name: key,
+            displayName: metricDisplayNames[key] || key,
+            myScore: detailScoreData.data.myScoreResponse[key as keyof DetailScoreItem],
+            averageScore: detailScoreData.data.allScoreResponse[key as keyof DetailScoreItem],
+          }),
+        );
+
+        setMetrics(metricsData);
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (loading) {
+    return <div className="dashboard-container">Loading...</div>;
+  }
 
   return (
     <div className="dashboard-container">
@@ -106,7 +163,7 @@ export default function Dashboard() {
         <div className="stats-list">
           <div className="stat-item">
             <span className="stat-label">최고기록</span>
-            <span className="stat-value">{stats.highestRecord}점</span>
+            <span className="stat-value">{stats.highScore}점</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">평균 점수</span>
@@ -114,7 +171,7 @@ export default function Dashboard() {
           </div>
           <div className="stat-item">
             <span className="stat-label">내 마일리지</span>
-            <span className="stat-value">{stats.myMileage.toLocaleString()}마일</span>
+            <span className="stat-value">{stats.totalMileage.toLocaleString()}마일</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">입력한 프롬프트 개수</span>
@@ -128,7 +185,38 @@ export default function Dashboard() {
 
 // 대시보드 메트릭만 표시하는 컴포넌트
 export function DashboardMetrics() {
-  const metrics = mockDashboardMetrics;
+  const [metrics, setMetrics] = useState<MetricData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDetailScore = async () => {
+      try {
+        setLoading(true);
+        const detailScoreData = await getDetailScore();
+
+        const metricsData: MetricData[] = Object.keys(detailScoreData.data.myScoreResponse).map(
+          (key) => ({
+            name: key,
+            displayName: metricDisplayNames[key] || key,
+            myScore: detailScoreData.data.myScoreResponse[key as keyof DetailScoreItem],
+            averageScore: detailScoreData.data.allScoreResponse[key as keyof DetailScoreItem],
+          }),
+        );
+
+        setMetrics(metricsData);
+      } catch (error) {
+        console.error('Failed to fetch detail score:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDetailScore();
+  }, []);
+
+  if (loading) {
+    return <div className="dashboard-metrics-container">Loading...</div>;
+  }
 
   return (
     <div className="dashboard-metrics-container">
@@ -149,7 +237,33 @@ export function DashboardMetrics() {
 
 // 기록 통계만 표시하는 컴포넌트
 export function DashboardStats() {
-  const stats = mockDashboardStats;
+  const [stats, setStats] = useState({
+    highScore: 0,
+    averageScore: 0,
+    totalMileage: 0,
+    promptCount: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRecord = async () => {
+      try {
+        setLoading(true);
+        const recordData = await getRecord();
+        setStats(recordData.data);
+      } catch (error) {
+        console.error('Failed to fetch record:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecord();
+  }, []);
+
+  if (loading) {
+    return <div className="dashboard-stats-container">Loading...</div>;
+  }
 
   return (
     <div className="dashboard-stats-container">
@@ -157,7 +271,7 @@ export function DashboardStats() {
       <div className="stats-list">
         <div className="stat-item">
           <span className="stat-label">최고기록</span>
-          <span className="stat-value">{stats.highestRecord}점</span>
+          <span className="stat-value">{stats.highScore}점</span>
         </div>
         <div className="stat-item">
           <span className="stat-label">평균 점수</span>
@@ -165,7 +279,7 @@ export function DashboardStats() {
         </div>
         <div className="stat-item">
           <span className="stat-label">내 마일리지</span>
-          <span className="stat-value">{stats.myMileage.toLocaleString()}마일</span>
+          <span className="stat-value">{stats.totalMileage.toLocaleString()}마일</span>
         </div>
         <div className="stat-item">
           <span className="stat-label">입력한 프롬프트 개수</span>
