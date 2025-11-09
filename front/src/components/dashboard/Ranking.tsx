@@ -42,10 +42,13 @@ export default function Ranking() {
       try {
         setLoading(true);
         const today = new Date();
-        const response = isSameDate(selectedDate, today)
-          ? await getTodayRankings()
-          : await getSpecificDateRankings(formatDate(selectedDate));
-        setCurrentRankings(response.data);
+        if (isSameDate(selectedDate, today)) {
+          const response = await getTodayRankings();
+          setCurrentRankings(response.data.content);
+        } else {
+          const response = await getSpecificDateRankings(formatDate(selectedDate));
+          setCurrentRankings(response.data);
+        }
       } catch (error) {
         console.error('Failed to fetch rankings:', error);
         setCurrentRankings([]);
