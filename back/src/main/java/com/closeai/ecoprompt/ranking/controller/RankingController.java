@@ -2,6 +2,7 @@ package com.closeai.ecoprompt.ranking.controller;
 
 import com.closeai.ecoprompt.common.ApiResponse;
 import com.closeai.ecoprompt.ranking.model.dto.response.RankingResponse;
+import com.closeai.ecoprompt.ranking.model.dto.response.TodayRankingResponse;
 import com.closeai.ecoprompt.ranking.service.RankingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ public class RankingController implements RankingControllerDocs {
     private final RankingService rankingService;
 
     @GetMapping("/today")
-    public ResponseEntity<ApiResponse<List<RankingResponse>>> getTodayRankings() {
+    public ResponseEntity<ApiResponse<TodayRankingResponse>> getTodayRankings() {
         return ApiResponse.success(rankingService.getTodayTop10WithChange());
     }
 

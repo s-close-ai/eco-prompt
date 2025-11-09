@@ -27,7 +27,7 @@ public class RedisCacheConfig {
             RedisConnectionFactory connectionFactory,
             ObjectMapper objectMapper
     ) {
-        var valueSer = new GenericJackson2JsonRedisSerializer(objectMapper);
+        var valueSer = new GenericJackson2JsonRedisSerializer(/*objectMapper*/);
 
         RedisCacheConfiguration defaultConf = RedisCacheConfiguration.defaultCacheConfig()
                 .disableCachingNullValues()
