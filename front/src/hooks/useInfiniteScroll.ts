@@ -5,6 +5,7 @@ interface UseInfiniteScrollOptions {
   hasMore: boolean;
   isLoading?: boolean;
   threshold?: number;
+  root?: HTMLElement | null; // 스크롤 컨테이너 지정
 }
 
 export function useInfiniteScroll({
@@ -12,6 +13,7 @@ export function useInfiniteScroll({
   hasMore,
   isLoading = false,
   threshold = 100,
+  root = null, // 기본값은 viewport
 }: UseInfiniteScrollOptions) {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -28,7 +30,7 @@ export function useInfiniteScroll({
 
   useEffect(() => {
     const options = {
-      root: null,
+      root: root, // 스크롤 컨테이너 지정
       rootMargin: `${threshold}px`,
       threshold: 0,
     };
@@ -45,7 +47,7 @@ export function useInfiniteScroll({
         observerRef.current.unobserve(currentSentinel);
       }
     };
-  }, [handleObserver, threshold]);
+  }, [handleObserver, threshold, root]);
 
   return sentinelRef;
 }
