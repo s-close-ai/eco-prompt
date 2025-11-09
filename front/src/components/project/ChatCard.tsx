@@ -1,6 +1,8 @@
-import { memo } from 'react';
+import { memo, useState, useRef, useEffect } from 'react';
 import { ICON_SIZE } from '@/constants/ui';
 import '@/styles/pages/project.css';
+import { useProjectStore } from '@/store/projectStore';
+import { updateChattingTitle } from '@/services/api/chatting';
 
 interface ChatCardProps {
   id: number;
@@ -16,7 +18,7 @@ interface ChatCardProps {
   ) => void;
   isMenuOpen?: boolean;
   projectId?: number;
-  allProjects?: Array<{ id: number; title: string }>;
+  allProjects?: Array<{ projectId: number; title: string }>;
   showProjectMoveMenu?: boolean;
   onProjectMoveToggle?: (chatId: number) => void;
   menuRef?: (el: HTMLDivElement | null) => void;
@@ -36,12 +38,49 @@ function ChatCard({
   onProjectMoveToggle,
   menuRef,
 }: ChatCardProps) {
+  const [editedTitle, setEditedTitle] = useState(title);
+  const { editingChatId, setEditingChatId, updateChatTitle } = useProjectStore();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const isEditing = editingChatId === id;
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  useEffect(() => {
+    setEditedTitle(title);
+  }, [title]);
+
+  const handleSaveTitle = async () => {
+    if (!editedTitle.trim() || editedTitle === title) {
+      setEditingChatId(null);
+      setEditedTitle(title);
+      return;
+    }
+    updateChatTitle(id, editedTitle);
+    setEditingChatId(null);
+    updateChattingTitle(id, { title: editedTitle }).catch((error) => {
+      console.error('채팅 이름 변경 API 실패:', error);
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditedTitle(title);
+    setEditingChatId(null);
+  };
+
   const handleClick = (e: React.MouseEvent) => {
+    if (isEditing) return;
     e.stopPropagation();
     onClick(id);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (isEditing) return;
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       e.stopPropagation();
@@ -77,11 +116,31 @@ function ChatCard({
         tabIndex={0}
         aria-label={`${title} 채팅 열기`}
       >
-        <div className="project-chat-card__title-row">
-          <span className="project-chat-card__title">{title}</span>
-        </div>
-        {preview && <p className="project-chat-card__preview">{preview}</p>}
-        {onMenuToggle && (
+        {isEditing ? (
+          <div className="sidebar-list-item-edit">
+            <input
+              ref={inputRef}
+              type="text"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveTitle();
+                if (e.key === 'Escape') handleCancelEdit();
+              }}
+              onBlur={handleSaveTitle}
+              className="sidebar-list-item-input"
+            />
+          </div>
+        ) : (
+          <>
+            <div className="project-chat-card__title-row">
+              <span className="project-chat-card__title">{title}</span>
+            </div>
+            {preview && <p className="project-chat-card__preview">{preview}</p>}
+          </>
+        )}
+
+        {onMenuToggle && !isEditing && (
           <div className="project-chat-card-menu-wrapper" ref={menuRef}>
             <button
               className="project-chat-card-menu-btn"
@@ -141,27 +200,17 @@ function ChatCard({
                   </button>
                   {showProjectMoveMenu && (
                     <div className="project-chat-card-menu-submenu">
-                      {projectId
-                        ? allProjects
-                            .filter((p) => p.id !== projectId)
-                            .map((targetProject) => (
-                              <button
-                                key={targetProject.id}
-                                className="project-chat-card-menu-submenu-item"
-                                onClick={(e) => handleProjectSelect(targetProject.id, e)}
-                              >
-                                <span>{targetProject.title}</span>
-                              </button>
-                            ))
-                        : allProjects.map((targetProject) => (
-                            <button
-                              key={targetProject.id}
-                              className="project-chat-card-menu-submenu-item"
-                              onClick={(e) => handleProjectSelect(targetProject.id, e)}
-                            >
-                              <span>{targetProject.title}</span>
-                            </button>
-                          ))}
+                      {allProjects
+                        .filter((p) => p.projectId !== projectId)
+                        .map((targetProject) => (
+                          <button
+                            key={targetProject.projectId}
+                            className="project-chat-card-menu-submenu-item"
+                            onClick={(e) => handleProjectSelect(targetProject.projectId, e)}
+                          >
+                            <span>{targetProject.title}</span>
+                          </button>
+                        ))}
                     </div>
                   )}
                 </div>
