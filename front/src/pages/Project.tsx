@@ -269,9 +269,7 @@ export default function Project() {
           if (!prev) return null;
           return {
             ...prev,
-            chattingResponses: prev.chattingResponses.filter(
-              (chat) => chat.chattingId !== chatId,
-            ),
+            chattingResponses: prev.chattingResponses.filter((chat) => chat.chattingId !== chatId),
           };
         });
         // 백그라운드에서 API 호출

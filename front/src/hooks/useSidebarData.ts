@@ -80,7 +80,8 @@ export function useSidebarData() {
         }));
         generalChatsPage = firstChattingResponse.number;
         generalChatsTotalPages = firstChattingResponse.totalPages;
-        generalChatsHasMore = firstChattingResponse.content.length > 20 || !firstChattingResponse.last;
+        generalChatsHasMore =
+          firstChattingResponse.content.length > 20 || !firstChattingResponse.last;
       }
 
       setProjects(projects);

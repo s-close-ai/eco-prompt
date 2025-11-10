@@ -29,8 +29,14 @@ export function ChatMenu({
   menuProps,
   onDelete,
 }: ChatMenuProps) {
-  const { projects, generalChats, defaultProjectId, setEditingChatId, removeChat, moveChatToProject } =
-    useProjectStore();
+  const {
+    projects,
+    generalChats,
+    defaultProjectId,
+    setEditingChatId,
+    removeChat,
+    moveChatToProject,
+  } = useProjectStore();
   const [showProjectMoveMenu, setShowProjectMoveMenu] = useState(false);
 
   const handleRename = useCallback(() => {
@@ -88,9 +94,10 @@ export function ChatMenu({
   const availableProjects =
     currentProjectId === defaultProjectId
       ? projects // 기본 프로젝트에서는 다른 프로젝트들만
-      : [{ projectId: defaultProjectId, title: '일반 채팅', chats: generalChats } as any, ...projects].filter(
-          (p) => p.projectId !== currentProjectId,
-        );
+      : [
+          { projectId: defaultProjectId, title: '일반 채팅', chats: generalChats } as any,
+          ...projects,
+        ].filter((p) => p.projectId !== currentProjectId);
 
   return (
     <ContextMenu position={position} menuProps={menuProps}>

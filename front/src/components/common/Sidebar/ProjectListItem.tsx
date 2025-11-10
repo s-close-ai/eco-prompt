@@ -33,7 +33,11 @@ export function ProjectListItem({
   const navigate = useNavigate();
   const mode = useDeviceMode();
   const { closeSidebar } = useAppShell();
-  const { editingProjectId, setEditingProjectId, updateProjectTitle: updateStoreTitle } = useProjectStore();
+  const {
+    editingProjectId,
+    setEditingProjectId,
+    updateProjectTitle: updateStoreTitle,
+  } = useProjectStore();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isEditing = editingProjectId === project.projectId;

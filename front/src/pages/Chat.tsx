@@ -118,7 +118,7 @@ export default function Chat() {
           // 실제 사용된 projectId를 state에 저장
           navigate('/chat', {
             replace: true,
-            state: { chatId: returnedChattingId, projectId: actualProjectId }
+            state: { chatId: returnedChattingId, projectId: actualProjectId },
           });
         } else if (currentChatId && typeof currentChatId === 'number') {
           // 기존 채팅인 경우 맨 위로 이동
@@ -178,9 +178,7 @@ export default function Chat() {
               // 이후 토큰: 메시지에 추가
               shouldScrollToBottomRef.current = true; // 스트리밍 중에는 맨 아래로 스크롤
               setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === aiMessageId ? { ...m, message: m.message + token } : m,
-                ),
+                prev.map((m) => (m.id === aiMessageId ? { ...m, message: m.message + token } : m)),
               );
             }
           } catch (error) {
@@ -213,9 +211,10 @@ export default function Chat() {
 
           if (targetProjectId !== defaultProjectId) {
             // 프로젝트 채팅인 경우 (기본 프로젝트가 아닌 경우)
-            const existingChat = useProjectStore.getState().projects
-              .find(p => p.projectId === targetProjectId)
-              ?.chats.find(c => c.chattingId === returnedChattingId);
+            const existingChat = useProjectStore
+              .getState()
+              .projects.find((p) => p.projectId === targetProjectId)
+              ?.chats.find((c) => c.chattingId === returnedChattingId);
 
             if (!existingChat) {
               // 새로운 채팅이면 맨 위에 추가
@@ -230,8 +229,9 @@ export default function Chat() {
             }
           } else {
             // 일반 채팅인 경우 (기본 프로젝트)
-            const existingChat = useProjectStore.getState().generalChats
-              .find(c => c.chattingId === returnedChattingId);
+            const existingChat = useProjectStore
+              .getState()
+              .generalChats.find((c) => c.chattingId === returnedChattingId);
 
             if (!existingChat) {
               // 새로운 채팅이면 맨 위에 추가 (5개 제한)
@@ -240,9 +240,9 @@ export default function Chat() {
                 { chattingId: returnedChattingId, title: newTitle, projectId: defaultProjectId! },
                 ...generalChats,
               ];
-              useProjectStore.getState().setGeneralChats(
-                newChats.length > 5 ? newChats.slice(0, 5) : newChats
-              );
+              useProjectStore
+                .getState()
+                .setGeneralChats(newChats.length > 5 ? newChats.slice(0, 5) : newChats);
             } else {
               // 기존 채팅이면 제목 업데이트 및 맨 위로 이동
               updateChatTitle(returnedChattingId, newTitle);
@@ -307,7 +307,17 @@ export default function Chat() {
         });
       }
     },
-    [chattingId, projectId, defaultProjectId, navigate, setCurrentChatting, updateCurrentTitle, addChatToProject, updateChatTitle, moveChatToTop],
+    [
+      chattingId,
+      projectId,
+      defaultProjectId,
+      navigate,
+      setCurrentChatting,
+      updateCurrentTitle,
+      addChatToProject,
+      updateChatTitle,
+      moveChatToTop,
+    ],
   );
 
   useEffect(() => {
@@ -329,13 +339,15 @@ export default function Chat() {
           type: 'user',
           message: msg.userMessage.content,
           timestamp: new Date(),
-          score: msg.scoreMessage?.scoreInfo ? {
-            clarityScore: msg.scoreMessage.scoreInfo.clarityScore,
-            specificityScore: msg.scoreMessage.scoreInfo.specificityScore,
-            formatScore: msg.scoreMessage.scoreInfo.formatScore,
-            safetyScore: msg.scoreMessage.scoreInfo.safetyScore,
-            totalScore: msg.scoreMessage.scoreInfo.totalScore,
-          } : undefined,
+          score: msg.scoreMessage?.scoreInfo
+            ? {
+                clarityScore: msg.scoreMessage.scoreInfo.clarityScore,
+                specificityScore: msg.scoreMessage.scoreInfo.specificityScore,
+                formatScore: msg.scoreMessage.scoreInfo.formatScore,
+                safetyScore: msg.scoreMessage.scoreInfo.safetyScore,
+                totalScore: msg.scoreMessage.scoreInfo.totalScore,
+              }
+            : undefined,
         });
       }
 
@@ -386,7 +398,7 @@ export default function Chat() {
       const apiMessages = response.data.content;
       const newMessages = parseMessages(apiMessages);
 
-        if (newMessages.length > 0) {
+      if (newMessages.length > 0) {
         // 이전 스크롤 높이와 스크롤 위치 저장
         if (scrollContainerRef.current) {
           previousScrollHeightRef.current = scrollContainerRef.current.scrollHeight;
@@ -429,7 +441,11 @@ export default function Chat() {
       }
     }
     // 새 메시지가 맨 아래에 추가된 경우 (메시지 수가 증가하고, 로딩 중이 아닐 때)
-    else if (!isLoadingMore && currentMessagesLength > previousMessagesLength && shouldScrollToBottomRef.current) {
+    else if (
+      !isLoadingMore &&
+      currentMessagesLength > previousMessagesLength &&
+      shouldScrollToBottomRef.current
+    ) {
       // 약간의 지연을 두어 DOM 업데이트가 완료된 후 스크롤
       setTimeout(() => {
         scrollToBottom();
@@ -600,9 +616,7 @@ export default function Chat() {
 
           shouldScrollToBottomRef.current = true; // 스트리밍 중에는 맨 아래로 스크롤
           setMessages((prev) =>
-            prev.map((m) =>
-              m.id === aiMessageId ? { ...m, message: m.message + token } : m,
-            ),
+            prev.map((m) => (m.id === aiMessageId ? { ...m, message: m.message + token } : m)),
           );
         } catch (error) {
           console.error('Failed to parse LLM_TOKEN:', error);
@@ -637,11 +651,7 @@ export default function Chat() {
         setMessages((prev) => {
           const filtered = prev
             .filter((m) => m.id !== aiMessageId)
-            .map((m) =>
-              m.id === userMessageToRetry.id
-                ? { ...m, score: undefined }
-                : m,
-            );
+            .map((m) => (m.id === userMessageToRetry.id ? { ...m, score: undefined } : m));
           return [
             ...filtered,
             {
@@ -658,11 +668,7 @@ export default function Chat() {
       setMessages((prev) => {
         const filtered = prev
           .filter((m) => m.id !== aiMessageId)
-          .map((m) =>
-            m.id === userMessageToRetry.id
-              ? { ...m, score: undefined }
-              : m,
-          );
+          .map((m) => (m.id === userMessageToRetry.id ? { ...m, score: undefined } : m));
         return [
           ...filtered,
           {
@@ -724,9 +730,7 @@ export default function Chat() {
           const token = data.token || '';
 
           setMessages((prev) =>
-            prev.map((m) =>
-              m.id === aiMessageId ? { ...m, message: m.message + token } : m,
-            ),
+            prev.map((m) => (m.id === aiMessageId ? { ...m, message: m.message + token } : m)),
           );
         } catch (error) {
           console.error('Failed to parse LLM_TOKEN:', error);
@@ -760,11 +764,7 @@ export default function Chat() {
         setMessages((prev) => {
           const filtered = prev
             .filter((m) => m.id !== aiMessageId)
-            .map((m) =>
-              m.id === messageId
-                ? { ...m, score: undefined }
-                : m,
-            );
+            .map((m) => (m.id === messageId ? { ...m, score: undefined } : m));
           return [
             ...filtered,
             {
@@ -781,11 +781,7 @@ export default function Chat() {
       setMessages((prev) => {
         const filtered = prev
           .filter((m) => m.id !== aiMessageId)
-          .map((m) =>
-            m.id === messageId
-              ? { ...m, score: undefined }
-              : m,
-          );
+          .map((m) => (m.id === messageId ? { ...m, score: undefined } : m));
         return [
           ...filtered,
           {
@@ -817,10 +813,7 @@ export default function Chat() {
           <div className="chat-error-content">
             <h2>채팅을 불러올 수 없습니다</h2>
             <p>{error.message || '채팅방을 찾을 수 없거나 접근 권한이 없습니다.'}</p>
-            <button
-              className="chat-error-back-btn"
-              onClick={() => navigate('/chat')}
-            >
+            <button className="chat-error-back-btn" onClick={() => navigate('/chat')}>
               새 채팅 시작하기
             </button>
           </div>
@@ -850,7 +843,9 @@ export default function Chat() {
                     onUpdate={(newMessage) => handleEditAndResendMessage(msg.id, newMessage)}
                     isLastUserMessage={msg.id === lastUserMessageId}
                   />
-                  {msg.score && <PromptScore scores={msg.score} totalScore={msg.score?.totalScore} />}
+                  {msg.score && (
+                    <PromptScore scores={msg.score} totalScore={msg.score?.totalScore} />
+                  )}
                 </div>
               );
             }
@@ -862,8 +857,7 @@ export default function Chat() {
                   onRetry={() => handleRetry(msg.id)}
                 />
               );
-            if (msg.type === 'loading')
-              return <ChatLoading key={msg.id} />;
+            if (msg.type === 'loading') return <ChatLoading key={msg.id} />;
             if (msg.type === 'ai')
               return (
                 <AIMessage

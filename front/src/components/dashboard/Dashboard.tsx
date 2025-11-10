@@ -111,10 +111,7 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const [recordData, detailScoreData] = await Promise.all([
-          getRecord(),
-          getDetailScore(),
-        ]);
+        const [recordData, detailScoreData] = await Promise.all([getRecord(), getDetailScore()]);
 
         setStats(recordData.data);
 

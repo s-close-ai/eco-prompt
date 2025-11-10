@@ -138,11 +138,9 @@ export function Sidebar() {
                 onLoadMore={loadMoreProjects}
                 onLoadMoreChats={loadMoreProjectChats}
                 onMenuToggle={(projectId, e) =>
-                  toggleMenu(
-                    `${PROJECT_MENU_PREFIX}${projectId}`,
-                    e.currentTarget as HTMLElement,
-                    { direction: 'right' },
-                  )
+                  toggleMenu(`${PROJECT_MENU_PREFIX}${projectId}`, e.currentTarget as HTMLElement, {
+                    direction: 'right',
+                  })
                 }
                 onNestedMenuToggle={(chatId, e) =>
                   toggleMenu(
