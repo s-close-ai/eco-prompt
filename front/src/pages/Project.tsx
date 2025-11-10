@@ -205,7 +205,7 @@ export default function Project() {
   // 채팅 카드 클릭 핸들러
   const handleChatClick = useCallback(
     (chatId: number) => {
-      navigate(`/chat/${chatId}`, { state: { chatId, projectId } });
+      navigate('/chat', { state: { chatId, projectId } });
     },
     [navigate, projectId],
   );

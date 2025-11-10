@@ -40,7 +40,6 @@ const router = createBrowserRouter([
     ),
     children: [
       { path: '/chat', element: <Chat /> },
-      { path: '/chat/:chatId', element: <Chat /> },
       { path: '/project', element: <Project /> },
       { path: '/settings', element: <Settings /> },
       { path: '/bookmark', element: <Bookmark /> },

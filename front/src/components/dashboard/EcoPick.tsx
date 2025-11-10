@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { mockEcoPickPrompts } from '@/data/mockData';
-import type { MockEcoPickPrompt } from '@/types/api/dashboard.types';
+import { getEcoPick } from '@/services/api/dashboard';
+import type { EcoPickItem } from '@/types/api/dashboard.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import '@/styles/components/dashboard/eco-pick.css';
 
@@ -13,13 +13,30 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
   const mode = useDeviceMode();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [prompts, setPrompts] = useState<EcoPickItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef<number>(0);
   const currentXRef = useRef<number>(0);
   const isDraggingRef = useRef(false);
 
-  const prompts = mockEcoPickPrompts;
+  useEffect(() => {
+    const fetchEcoPick = async () => {
+      try {
+        setLoading(true);
+        const response = await getEcoPick();
+        setPrompts(response.data);
+      } catch (error) {
+        console.error('Failed to fetch eco pick:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEcoPick();
+  }, []);
+
   const currentPrompt = prompts[currentIndex];
 
   // 태블릿/데스크탑 구분
@@ -102,55 +119,47 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
     }
   };
 
-  const renderPromptCard = (prompt: MockEcoPickPrompt, index: number) => (
-    <div key={prompt.id} className="eco-pick-card">
+  const renderPromptCard = (prompt: EcoPickItem, index: number) => (
+    <div key={index} className="eco-pick-card">
       <div className="eco-pick-header">
         <div className="eco-pick-name-wrapper">
           <h3 className="eco-pick-name">{prompt.name}</h3>
         </div>
-        <div className="eco-pick-score">{prompt.score}</div>
+        <div className="eco-pick-score">{prompt.sumOfScore}</div>
       </div>
 
       <div className={`eco-pick-content ${expandedIndex === index ? 'expanded' : ''}`}>
-        <p className="eco-pick-description">{prompt.description}</p>
-        <div className="eco-pick-tasks">
-          <p className="tasks-title">개발 환경:</p>
-          <p>React, TypeScript</p>
-        </div>
-        <div className="eco-pick-tasks">
-          <p className="tasks-title">작업:</p>
-          {prompt.tasks.map((task: string, idx: number) => (
-            <p key={idx}>{task}</p>
-          ))}
-        </div>
-        <div className="eco-pick-principles">
-          <p className="principles-title">원칙:</p>
-          {prompt.principles.map((principle: string, idx: number) => (
-            <p key={idx}>{principle}</p>
-          ))}
-        </div>
+        <p className="eco-pick-description">{prompt.prompt}</p>
       </div>
 
       <div className="eco-pick-metrics">
         <div className="metric-item">
           <span className="metric-label">명확성</span>
-          <span className="metric-value">{prompt.metrics.clarity}점</span>
+          <span className="metric-value">{prompt.detailScore.clarityScore}점</span>
         </div>
         <div className="metric-item">
           <span className="metric-label">구체성</span>
-          <span className="metric-value">{prompt.metrics.specificity}점</span>
+          <span className="metric-value">{prompt.detailScore.specificityScore}점</span>
         </div>
         <div className="metric-item">
           <span className="metric-label">형식 준수</span>
-          <span className="metric-value">{prompt.metrics.formatCompliance}점</span>
+          <span className="metric-value">{prompt.detailScore.formatScore}점</span>
         </div>
         <div className="metric-item">
           <span className="metric-label">안정성</span>
-          <span className="metric-value">{prompt.metrics.stability}점</span>
+          <span className="metric-value">{prompt.detailScore.safetyScore}점</span>
         </div>
       </div>
     </div>
   );
+
+  if (loading) {
+    return <div className="eco-pick-container">Loading...</div>;
+  }
+
+  if (!prompts.length) {
+    return <div className="eco-pick-container">추천 프롬프트가 없습니다.</div>;
+  }
 
   return (
     <div className="eco-pick-container" ref={containerRef}>
