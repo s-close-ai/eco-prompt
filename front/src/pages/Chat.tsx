@@ -7,7 +7,7 @@ import ErrorMessage from '@/components/chat/ErrorMessage';
 import ChatLoading from '@/components/chat/ChatLoading';
 import MainChat from '@/components/home/MainChat';
 import { getChattingMessages } from '@/services/api/chatting';
-import { submitMessage, subscribeMessage } from '@/services/api/message';
+import { submitMessage, subscribeMessage, stopMessage } from '@/services/api/message';
 import type { ChatMessage, PromptScore as PromptScoreType } from '@/types/chat.types';
 import type { ChatLocationState } from '@/types/navigation.types';
 import { useAppShell } from '@/context/AppShellContext';
@@ -18,7 +18,7 @@ import '@/styles/pages/chat.css';
 export default function Chat() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setOnStopGeneration } = useAppShell();
+  const { setOnStopGeneration, setIsLoading } = useAppShell();
 
   const locationState = location.state as ChatLocationState | undefined;
   const chattingId = locationState?.chatId;
@@ -32,6 +32,7 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesStartRef = useRef<HTMLDivElement>(null);
   const eventSourcesRef = useRef<Map<string, EventSource>>(new Map());
+  const messageUUIDsRef = useRef<Map<string, string>>(new Map()); // aiMessageId -> messageUUID 매핑
   const initialMessageSent = useRef(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
@@ -43,17 +44,35 @@ export default function Chat() {
   const shouldScrollToBottomRef = useRef<boolean>(false);
   const isCreatingNewChatRef = useRef<boolean>(false);
 
-  const handleStopGeneration = useCallback(() => {
+  const handleStopGeneration = useCallback(async () => {
     const lastStreamingMessageId = [...messages].reverse().find((m) => m.isStreaming)?.id;
     if (lastStreamingMessageId) {
       const eventSource = eventSourcesRef.current.get(lastStreamingMessageId);
+      const messageUUID = messageUUIDsRef.current.get(lastStreamingMessageId);
+      
+      // SSE 연결 종료
       eventSource?.close();
       eventSourcesRef.current.delete(lastStreamingMessageId);
+      messageUUIDsRef.current.delete(lastStreamingMessageId);
+      
+      // API 호출로 서버에 중지 요청
+      if (messageUUID) {
+        try {
+          await stopMessage(messageUUID);
+        } catch (error) {
+          console.error('메시지 중지 API 실패:', error);
+        }
+      }
+      
+      // 메시지 상태 업데이트
       setMessages((prev) =>
         prev.map((m) => (m.id === lastStreamingMessageId ? { ...m, isStreaming: false } : m)),
       );
+      
+      // 로딩 상태 해제
+      setIsLoading(false);
     }
-  }, [messages]);
+  }, [messages, setIsLoading]);
 
   useEffect(() => {
     setOnStopGeneration(() => handleStopGeneration);
@@ -65,6 +84,12 @@ export default function Chat() {
 
   const handleSendMessage = useCallback(
     async (message: string) => {
+      // 스트리밍 중이면 새로운 메시지 전송 방지
+      const isCurrentlyStreaming = messages.some((m) => m.isStreaming);
+      if (isCurrentlyStreaming) {
+        return;
+      }
+
       const userMessageId = crypto.randomUUID();
       const loadingMessageId = crypto.randomUUID();
       const aiMessageId = crypto.randomUUID();
@@ -79,6 +104,9 @@ export default function Chat() {
         console.error('기본 프로젝트 ID가 설정되지 않았습니다.');
         return;
       }
+
+      // 로딩 상태 시작
+      setIsLoading(true);
 
       const newUserMessage: ChatMessage = {
         id: userMessageId,
@@ -108,6 +136,9 @@ export default function Chat() {
         });
 
         const { chattingId: returnedChattingId, messageUUID } = response.data;
+
+        // messageUUID 매핑 저장
+        messageUUIDsRef.current.set(aiMessageId, messageUUID);
 
         // 새 채팅인 경우 URL 변경 (메시지 로드를 방지하기 위해 ref 사용)
         if (!currentChatId && returnedChattingId) {
@@ -254,15 +285,18 @@ export default function Chat() {
         eventSource.addEventListener('SSE_COMPLETE', () => {
           eventSource.close();
           eventSourcesRef.current.delete(aiMessageId);
+          messageUUIDsRef.current.delete(aiMessageId);
           shouldScrollToBottomRef.current = true; // 스트리밍 완료 시 맨 아래로 스크롤
           setMessages((prev) =>
             prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
           );
+          setIsLoading(false);
         });
 
         eventSource.onerror = () => {
           eventSource.close();
           eventSourcesRef.current.delete(aiMessageId);
+          messageUUIDsRef.current.delete(aiMessageId);
           // 로딩/AI 메시지와 점수 제거하고 에러 표시
           setMessages((prev) => {
             const filtered = prev
@@ -283,6 +317,7 @@ export default function Chat() {
               },
             ];
           });
+          setIsLoading(false);
         };
       } catch (error) {
         // API 호출 실패 시 로딩/AI 메시지와 점수 제거하고 에러 표시
@@ -305,6 +340,7 @@ export default function Chat() {
             },
           ];
         });
+        setIsLoading(false);
       }
     },
     [
@@ -317,6 +353,8 @@ export default function Chat() {
       addChatToProject,
       updateChatTitle,
       moveChatToTop,
+      setIsLoading,
+      messages,
     ],
   );
 
@@ -560,6 +598,12 @@ export default function Chat() {
   }, [handleSendMessage]);
 
   const handleRetry = async (errorMessageId: string) => {
+    // 스트리밍 중이면 재시도 방지
+    const isCurrentlyStreaming = messages.some((m) => m.isStreaming);
+    if (isCurrentlyStreaming) {
+      return;
+    }
+
     const errorIndex = messages.findIndex((m) => m.id === errorMessageId);
     if (errorIndex === -1) return;
 
@@ -574,6 +618,9 @@ export default function Chat() {
 
     const userMessageToRetry = messages[userMessageIndex];
     const aiMessageId = crypto.randomUUID();
+
+    // 로딩 상태 시작
+    setIsLoading(true);
 
     // 에러 메시지를 제거하고 새 AI 응답을 추가
     setMessages((prev) => [
@@ -598,6 +645,9 @@ export default function Chat() {
       });
 
       const { messageUUID } = response.data;
+
+      // messageUUID 매핑 저장
+      messageUUIDsRef.current.set(aiMessageId, messageUUID);
 
       // subscribeMessage API 사용
       const eventSource = subscribeMessage(messageUUID);
@@ -639,15 +689,18 @@ export default function Chat() {
       eventSource.addEventListener('SSE_COMPLETE', () => {
         eventSource.close();
         eventSourcesRef.current.delete(aiMessageId);
+        messageUUIDsRef.current.delete(aiMessageId);
         shouldScrollToBottomRef.current = true; // 스트리밍 완료 시 맨 아래로 스크롤
         setMessages((prev) =>
           prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
         );
+        setIsLoading(false);
       });
 
       eventSource.onerror = () => {
         eventSource.close();
         eventSourcesRef.current.delete(aiMessageId);
+        messageUUIDsRef.current.delete(aiMessageId);
         setMessages((prev) => {
           const filtered = prev
             .filter((m) => m.id !== aiMessageId)
@@ -662,6 +715,7 @@ export default function Chat() {
             },
           ];
         });
+        setIsLoading(false);
       };
     } catch (error) {
       console.error('Failed to retry message:', error);
@@ -679,15 +733,25 @@ export default function Chat() {
           },
         ];
       });
+      setIsLoading(false);
     }
   };
 
   const handleEditAndResendMessage = async (messageId: string, newMessage: string) => {
+    // 스트리밍 중이면 수정 및 재전송 방지
+    const isCurrentlyStreaming = messages.some((m) => m.isStreaming);
+    if (isCurrentlyStreaming) {
+      return;
+    }
+
     const userMessageIndex = messages.findIndex((msg) => msg.id === messageId);
     if (userMessageIndex === -1) return;
 
     const userMessage = messages[userMessageIndex];
     const aiMessageId = crypto.randomUUID();
+
+    // 로딩 상태 시작
+    setIsLoading(true);
 
     // 기존 메시지들을 제거하고 수정된 메시지와 새 AI 응답을 추가
     setMessages((prev) => [
@@ -713,6 +777,9 @@ export default function Chat() {
       });
 
       const { messageUUID } = response.data;
+
+      // messageUUID 매핑 저장
+      messageUUIDsRef.current.set(aiMessageId, messageUUID);
 
       // subscribeMessage API 사용
       const eventSource = subscribeMessage(messageUUID);
@@ -753,14 +820,17 @@ export default function Chat() {
       eventSource.addEventListener('SSE_COMPLETE', () => {
         eventSource.close();
         eventSourcesRef.current.delete(aiMessageId);
+        messageUUIDsRef.current.delete(aiMessageId);
         setMessages((prev) =>
           prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
         );
+        setIsLoading(false);
       });
 
       eventSource.onerror = () => {
         eventSource.close();
         eventSourcesRef.current.delete(aiMessageId);
+        messageUUIDsRef.current.delete(aiMessageId);
         setMessages((prev) => {
           const filtered = prev
             .filter((m) => m.id !== aiMessageId)
@@ -775,6 +845,7 @@ export default function Chat() {
             },
           ];
         });
+        setIsLoading(false);
       };
     } catch (error) {
       console.error('Failed to update message:', error);
@@ -792,6 +863,7 @@ export default function Chat() {
           },
         ];
       });
+      setIsLoading(false);
     }
   };
 
