@@ -5,7 +5,6 @@ import { installAppViewportUnit } from './lib/viewport';
 import { installDeviceMode } from './lib/deviceMode';
 import './styles/app.css';
 import AppShell from './layouts/AppShell';
-import Home from './pages/Home';
 import Chat from './pages/Chat';
 import Project from './pages/Project';
 import Settings from './pages/Settings';
@@ -17,11 +16,6 @@ import EcoPick from '@/components/dashboard/EcoPick';
 import Landing from './pages/Landing';
 import Consent from './pages/Consent';
 import ConsentGuard from './components/auth/ConsentGuard';
-
-// PWA Service Worker 등록 (개발 환경에서는 비활성화)
-// if (!import.meta.env.PROD) {
-//   registerSW({ immediate: true });
-// }
 
 // VisualViewport 기반의 100vh 대체 단위 설정
 installAppViewportUnit();
@@ -39,22 +33,19 @@ const router = createBrowserRouter([
     element: <Consent />,
   },
   {
-    path: '/',
     element: (
       <ConsentGuard>
         <AppShell />
       </ConsentGuard>
     ),
     children: [
-      { index: false, element: <Home /> },
-      { path: 'chat', element: <Home /> },
-      { path: 'chat/mock', element: <Chat /> },
-      { path: 'chat/mock/:chatId', element: <Chat /> },
-      { path: 'project', element: <Project /> },
-      { path: 'settings', element: <Settings /> },
-      { path: 'bookmark', element: <Bookmark /> },
+      { path: '/chat', element: <Chat /> },
+      { path: '/chat/:chatId', element: <Chat /> },
+      { path: '/project', element: <Project /> },
+      { path: '/settings', element: <Settings /> },
+      { path: '/bookmark', element: <Bookmark /> },
       {
-        path: 'dashboard',
+        path: '/dashboard',
         element: <DashboardPage />,
         children: [
           { index: true, element: <Dashboard /> },
@@ -67,6 +58,4 @@ const router = createBrowserRouter([
 ]);
 
 const root = createRoot(document.getElementById('app')!);
-root.render(
-  React.createElement(React.StrictMode, null, React.createElement(RouterProvider, { router })),
-);
+root.render(React.createElement(RouterProvider, { router }));

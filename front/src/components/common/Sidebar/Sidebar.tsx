@@ -1,11 +1,10 @@
-
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import '@/styles/components/common/sidebar/index.css';
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import { useSidebarData } from '@/hooks/useSidebarData';
 import { useContextMenu } from '@/hooks/useContextMenu';
-import { ICON_SIZE } from '@/constants/ui';
+import { useProjectStore } from '@/store/projectStore';
 
 // 분리된 자식 컴포넌트들 임포트
 import { SidebarHeader } from './SidebarHeader';
@@ -13,7 +12,8 @@ import { SidebarFooter } from './SidebarFooter';
 import { SidebarCollapsed } from './SidebarCollapsed';
 import { ProjectList } from './ProjectList';
 import { ChatList } from './ChatList';
-import { ContextMenu } from './ContextMenu';
+import { ProjectMenu } from './ProjectMenu';
+import { ChatMenu } from './ChatMenu';
 
 // 메뉴 ID를 위한 접두사
 const PROJECT_MENU_PREFIX = 'project-';
@@ -27,6 +27,8 @@ const NESTED_CHAT_MENU_PREFIX = 'nested-chat-';
 export function Sidebar() {
   const { isSidebarOpen, closeSidebar, isSidebarCollapsed } = useAppShell();
   const mode = useDeviceMode();
+  const { projects, generalChats } = useProjectStore();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // 사이드바 데이터 로딩 훅
   const {
@@ -35,62 +37,82 @@ export function Sidebar() {
     loadInitialData,
     loadMoreProjectChats,
     loadMoreGeneralChats,
+    loadMoreProjects,
+    projectsHasMore,
   } = useSidebarData();
 
   // 컨텍스트 메뉴 관리 훅
-  const {
-    openMenus,
-    toggleMenu,
-    closeMenu,
-    getMenuProps,
-  } = useContextMenu();
+  const { openMenus, toggleMenu, getMenuProps } = useContextMenu();
 
   // 초기 데이터 로드
   useEffect(() => {
     loadInitialData();
   }, [loadInitialData]);
 
-  // 메뉴 액션 핸들러 (이름 바꾸기, 삭제 등)
-  const handleMenuAction = (menuId: string, action: string) => {
-    console.log(`Action: ${action} on ${menuId}`);
-    closeMenu(menuId);
-  };
-
   const isOpen = mode === 'desktop' || isSidebarOpen;
   const isCollapsed = mode === 'desktop' && isSidebarCollapsed;
 
   // --- 메뉴 렌더링 로직 ---
-  const renderProjectMenu = (id: number, position: { top: number; left: number }) => (
-    <ContextMenu key={`${PROJECT_MENU_PREFIX}${id}`} position={position} menuProps={getMenuProps(`${PROJECT_MENU_PREFIX}${id}`)}>
-      <button className="sidebar-list-item-menu-item" onClick={() => handleMenuAction(`${PROJECT_MENU_PREFIX}${id}`, 'rename')}>
-        <img src="/icons/edit.svg" alt="" width={ICON_SIZE.SM} height={ICON_SIZE.SM} aria-hidden="true" />
-        <span>이름 바꾸기</span>
-      </button>
-      <button className="sidebar-list-item-menu-item" onClick={() => handleMenuAction(`${PROJECT_MENU_PREFIX}${id}`, 'delete')}>
-        <img src="/icons/delete.svg" alt="" width={ICON_SIZE.SM} height={ICON_SIZE.SM} aria-hidden="true" />
-        <span>프로젝트 삭제</span>
-      </button>
-    </ContextMenu>
-  );
+  const renderProjectMenu = (id: number, position: { top: number; left: number }) => {
+    const project = projects.find((p) => p.projectId === id);
+    if (!project) return null;
 
-  const renderChatMenu = (id: number, position: { top: number; left: number }, isNested = false) => {
-    const menuId = `${isNested ? NESTED_CHAT_MENU_PREFIX : CHAT_MENU_PREFIX}${id}`;
     return (
-      <ContextMenu key={menuId} position={position} menuProps={getMenuProps(menuId)}>
-        <button className="sidebar-list-item-menu-item" onClick={() => handleMenuAction(menuId, 'rename')}>
-          <img src="/icons/edit.svg" alt="" width={ICON_SIZE.SM} height={ICON_SIZE.SM} aria-hidden="true" />
-          <span>이름 바꾸기</span>
-        </button>
-        {/* 프로젝트 이동 메뉴 (추후 구현) */}
-        <button className="sidebar-list-item-menu-item" onClick={() => handleMenuAction(menuId, 'move')}>
-          <img src="/icons/folder.svg" alt="" width={ICON_SIZE.SM} height={ICON_SIZE.SM} aria-hidden="true" />
-          <span>프로젝트 이동</span>
-        </button>
-        <button className="sidebar-list-item-menu-item" onClick={() => handleMenuAction(menuId, 'delete')}>
-          <img src="/icons/delete.svg" alt="" width={ICON_SIZE.SM} height={ICON_SIZE.SM} aria-hidden="true" />
-          <span>채팅 삭제</span>
-        </button>
-      </ContextMenu>
+      <ProjectMenu
+        key={`${PROJECT_MENU_PREFIX}${id}`}
+        projectId={id}
+        projectTitle={project.title}
+        position={position}
+        menuProps={{
+          onClose: () => toggleMenu(`${PROJECT_MENU_PREFIX}${id}`, null as unknown as HTMLElement),
+          ...getMenuProps(`${PROJECT_MENU_PREFIX}${id}`),
+        }}
+      />
+    );
+  };
+
+  const renderChatMenu = (
+    id: number,
+    position: { top: number; left: number },
+    isNested = false,
+  ) => {
+    const menuId = `${isNested ? NESTED_CHAT_MENU_PREFIX : CHAT_MENU_PREFIX}${id}`;
+
+    // 채팅 정보 찾기
+    let chattingTitle = '';
+    let currentProjectId = 1; // 기본값은 일반 채팅 (projectId: 1)
+
+    if (isNested) {
+      // 프로젝트 내부의 채팅
+      for (const project of projects) {
+        const chat = project.chats.find((c) => c.chattingId === id);
+        if (chat) {
+          chattingTitle = chat.title;
+          currentProjectId = project.projectId;
+          break;
+        }
+      }
+    } else {
+      // 일반 채팅
+      const generalChat = generalChats.find((c) => c.chattingId === id);
+      if (generalChat) {
+        chattingTitle = generalChat.title;
+        currentProjectId = 1;
+      }
+    }
+
+    return (
+      <ChatMenu
+        key={menuId}
+        chattingId={id}
+        chattingTitle={chattingTitle}
+        currentProjectId={currentProjectId}
+        position={position}
+        menuProps={{
+          onClose: () => toggleMenu(menuId, null as unknown as HTMLElement),
+          ...getMenuProps(menuId),
+        }}
+      />
     );
   };
 
@@ -107,20 +129,41 @@ export function Sidebar() {
         ) : (
           <div className="sidebar-content">
             <SidebarHeader />
-            <div className="sidebar-scroll">
+            <div className="sidebar-scroll" ref={scrollContainerRef}>
               <ProjectList
-                projects={sidebarData.projects}
+                projects={projects}
+                scrollContainer={scrollContainerRef.current}
+                hasMore={projectsHasMore}
+                isLoading={isDataLoading}
+                onLoadMore={loadMoreProjects}
                 onLoadMoreChats={loadMoreProjectChats}
-                onMenuToggle={(projectId, e) => toggleMenu(`${PROJECT_MENU_PREFIX}${projectId}`, e.currentTarget as HTMLElement)}
-                onNestedMenuToggle={(chatId, e) => toggleMenu(`${NESTED_CHAT_MENU_PREFIX}${chatId}`, e.currentTarget as HTMLElement)}
+                onMenuToggle={(projectId, e) =>
+                  toggleMenu(
+                    `${PROJECT_MENU_PREFIX}${projectId}`,
+                    e.currentTarget as HTMLElement,
+                    { direction: 'right' },
+                  )
+                }
+                onNestedMenuToggle={(chatId, e) =>
+                  toggleMenu(
+                    `${NESTED_CHAT_MENU_PREFIX}${chatId}`,
+                    e.currentTarget as HTMLElement,
+                    { direction: 'right' },
+                  )
+                }
               />
               <ChatList
                 title="채팅"
-                chats={sidebarData.generalChats}
+                chats={generalChats}
+                scrollContainer={scrollContainerRef.current}
                 hasMore={sidebarData.generalChatsHasMore}
                 isLoading={isDataLoading}
                 onLoadMore={loadMoreGeneralChats}
-                onMenuToggle={(chatId, e) => toggleMenu(`${CHAT_MENU_PREFIX}${chatId}`, e.currentTarget as HTMLElement)}
+                onMenuToggle={(chatId, e) =>
+                  toggleMenu(`${CHAT_MENU_PREFIX}${chatId}`, e.currentTarget as HTMLElement, {
+                    direction: 'right',
+                  })
+                }
               />
             </div>
             <SidebarFooter />

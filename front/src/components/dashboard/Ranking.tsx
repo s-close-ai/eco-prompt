@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { mockRankingData } from '@/data/mockData';
-import type { RankingData } from '@/types/dashboard.types';
+import type { MockRankingData } from '@/types/api/dashboard.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/ranking.css';
@@ -25,7 +25,7 @@ function getMonthLabel(date: Date): string {
 export default function Ranking() {
   const mode = useDeviceMode();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [currentRankings, setCurrentRankings] = useState<RankingData | null>(null);
+  const [currentRankings, setCurrentRankings] = useState<MockRankingData | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // 날짜 목록 생성 (오늘부터 6일 전까지)
@@ -89,9 +89,7 @@ export default function Ranking() {
             })}
           </div>
         </div>
-        {mode !== 'mobile' && (
-          <div className="update-time-text">{getUpdateTimeText()}</div>
-        )}
+        {mode !== 'mobile' && <div className="update-time-text">{getUpdateTimeText()}</div>}
       </div>
 
       {currentRankings && (
@@ -106,37 +104,45 @@ export default function Ranking() {
               </tr>
             </thead>
             <tbody>
-              {currentRankings.rankings.map((entry) => (
-                <tr key={entry.rank}>
-                  <td className="rank-cell">
-                    {getRankIcon(entry.rank) ? (
-                      <img
-                        src={getRankIcon(entry.rank)!}
-                        alt={`${entry.rank}등`}
-                        className="rank-icon"
-                      />
-                    ) : (
-                      <span className="rank-number">{entry.rank}</span>
-                    )}
-                    <span className="rank-name">{entry.name}</span>
-                  </td>
-                  <td className="score-cell">{entry.highScore}</td>
-                  <td className="mileage-cell">{entry.mileage.toLocaleString()}</td>
-                  <td className="change-cell">
-                    {entry.rankChange === 'new' ? (
-                      <img src={newIcon} alt="new" className="change-icon" />
-                    ) : (
-                      getRankChangeIcon(entry.rankChange) && (
+              {currentRankings.rankings.map(
+                (entry: {
+                  rank: number;
+                  name: string;
+                  highScore: number;
+                  mileage: number;
+                  rankChange: string;
+                }) => (
+                  <tr key={entry.rank}>
+                    <td className="rank-cell">
+                      {getRankIcon(entry.rank) ? (
                         <img
-                          src={getRankChangeIcon(entry.rankChange)!}
-                          alt={entry.rankChange}
-                          className="change-icon"
+                          src={getRankIcon(entry.rank)!}
+                          alt={`${entry.rank}등`}
+                          className="rank-icon"
                         />
-                      )
-                    )}
-                  </td>
-                </tr>
-              ))}
+                      ) : (
+                        <span className="rank-number">{entry.rank}</span>
+                      )}
+                      <span className="rank-name">{entry.name}</span>
+                    </td>
+                    <td className="score-cell">{entry.highScore}</td>
+                    <td className="mileage-cell">{entry.mileage.toLocaleString()}</td>
+                    <td className="change-cell">
+                      {entry.rankChange === 'new' ? (
+                        <img src={newIcon} alt="new" className="change-icon" />
+                      ) : (
+                        getRankChangeIcon(entry.rankChange) && (
+                          <img
+                            src={getRankChangeIcon(entry.rankChange)!}
+                            alt={entry.rankChange}
+                            className="change-icon"
+                          />
+                        )
+                      )}
+                    </td>
+                  </tr>
+                ),
+              )}
             </tbody>
           </table>
         </div>

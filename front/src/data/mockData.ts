@@ -2,101 +2,101 @@
 
 import type { ChatMessage } from '@/types/chat.types';
 import type {
-  RankingData,
-  EcoPickPrompt,
-  DashboardMetric,
-  DashboardStats,
-} from '@/types/dashboard.types';
+  MockRankingData,
+  MockEcoPickPrompt,
+  MockDashboardMetric,
+  MockDashboardStats,
+} from '@/types/api/dashboard.types';
 export type { ChatMessage, PromptScore } from '@/types/chat.types';
 export type {
-  RankingData,
-  EcoPickPrompt,
-  DashboardMetric,
-  DashboardStats,
-} from '@/types/dashboard.types';
+  MockRankingData,
+  MockEcoPickPrompt,
+  MockDashboardMetric,
+  MockDashboardStats,
+} from '@/types/api/dashboard.types';
 
 // 채팅 메시지 목 데이터
 export const mockChatMessages: ChatMessage[] = [
   {
-    id: 1,
+    id: '1',
     type: 'user',
     message: 'React에서 상태 관리를 위한 좋은 라이브러리를 추천해줄 수 있나요?',
     timestamp: new Date(2024, 0, 27, 14, 30),
     score: {
-      clarity: 22,
-      specificity: 20,
-      format: 21,
-      completeness: 24,
+      clarityScore: 22,
+      specificityScore: 20,
+      formatScore: 21,
+      safetyScore: 24,
       totalScore: 87,
     },
   },
   {
-    id: 2,
+    id: '2',
     type: 'ai',
     message:
       'React 상태 관리를 위한 라이브러리는 여러 가지가 있습니다:\n\n1. **Redux** - 가장 널리 사용되는 상태 관리 라이브러리로, 예측 가능한 상태 관리를 제공합니다.\n\n2. **Zustand** - 간단하고 가벼운 상태 관리 솔루션으로, Redux보다 보일러플레이트가 적습니다.\n\n3. **Recoil** - Facebook에서 만든 라이브러리로, React의 hooks와 잘 통합됩니다.\n\n4. **MobX** - 반응형 프로그래밍 방식을 사용하며, 간단한 API를 제공합니다.\n\n프로젝트 규모와 팀의 선호도에 따라 선택하시면 됩니다.',
     timestamp: new Date(2024, 0, 27, 14, 30, 15),
   },
   {
-    id: 3,
+    id: '3',
     type: 'user',
     message: 'Zustand를 사용하는 간단한 예제를 보여줄 수 있나요?',
     timestamp: new Date(2024, 0, 27, 14, 32),
     score: {
-      clarity: 24,
-      specificity: 23,
-      format: 25,
-      completeness: 22,
+      clarityScore: 24,
+      specificityScore: 23,
+      formatScore: 25,
+      safetyScore: 22,
       totalScore: 94,
     },
   },
   {
-    id: 4,
+    id: '4',
     type: 'ai',
     message:
       "물론입니다! Zustand를 사용한 간단한 예제입니다:\n\n```typescript\nimport { create } from 'zustand';\n\ninterface CounterState {\n  count: number;\n  increment: () => void;\n  decrement: () => void;\n}\n\nconst useCounterStore = create<CounterState>((set) => ({\n  count: 0,\n  increment: () => set((state) => ({ count: state.count + 1 })),\n  decrement: () => set((state) => ({ count: state.count - 1 })),\n}));\n\n// 컴포넌트에서 사용\nfunction Counter() {\n  const { count, increment, decrement } = useCounterStore();\n  \n  return (\n    <div>\n      <p>Count: {count}</p>\n      <button onClick={increment}>+</button>\n      <button onClick={decrement}>-</button>\n    </div>\n  );\n}\n```\n\n이렇게 간단하게 전역 상태를 관리할 수 있습니다!",
     timestamp: new Date(2024, 0, 27, 14, 32, 20),
   },
   {
-    id: 5,
+    id: '5',
     type: 'user',
     message: 'TypeScript와 함께 사용할 때 주의할 점이 있나요?',
     timestamp: new Date(2024, 0, 27, 14, 35),
     score: {
-      clarity: 21,
-      specificity: 24,
-      format: 23,
-      completeness: 21,
+      clarityScore: 21,
+      specificityScore: 24,
+      formatScore: 23,
+      safetyScore: 21,
       totalScore: 89,
     },
   },
   {
-    id: 6,
+    id: '6',
     type: 'ai',
     message:
       'TypeScript와 함께 Zustand를 사용할 때 주의할 점들입니다:\n\n1. **인터페이스 정의**: 스토어의 상태와 액션에 대한 타입을 명확히 정의하세요.\n\n2. **Generic 사용**: create 함수에 제네릭 타입을 전달하여 타입 안정성을 확보하세요.\n\n3. **불변성**: TypeScript를 사용하더라도 상태를 직접 변경하지 말고, set 함수를 통해 업데이트하세요.\n\n4. **선택적 구독**: 필요한 상태만 구독하여 불필요한 리렌더링을 방지할 수 있습니다:\n\n```typescript\nconst count = useCounterStore((state) => state.count);\n```\n\n이렇게 하면 count만 변경될 때만 컴포넌트가 리렌더링됩니다.',
     timestamp: new Date(2024, 0, 27, 14, 35, 30),
   },
   {
-    id: 7,
+    id: '7',
     type: 'user',
     message: '성능 최적화 방법도 알려주세요',
     timestamp: new Date(2024, 0, 27, 14, 37),
   },
   {
-    id: 8,
+    id: '8',
     type: 'loading',
     message: '',
     timestamp: new Date(2024, 0, 27, 14, 37, 5),
   },
   {
-    id: 9,
+    id: '9',
     type: 'user',
     message: '에러 처리는 어떻게 하나요?',
     timestamp: new Date(2024, 0, 27, 14, 40),
   },
   {
-    id: 10,
+    id: '10',
     type: 'error',
     message: '메시지를 전송하는 중 오류가 발생했습니다.',
     timestamp: new Date(2024, 0, 27, 14, 40, 5),
@@ -110,7 +110,7 @@ function getDaysAgo(days: number): Date {
   return date;
 }
 
-export const mockRankingData: RankingData[] = [
+export const mockRankingData: MockRankingData[] = [
   {
     date: getDaysAgo(0), // 오늘 (월요일)
     rankings: [
@@ -219,7 +219,7 @@ export const mockRankingData: RankingData[] = [
 ];
 
 // Eco 픽 Mock 데이터
-export const mockEcoPickPrompts: EcoPickPrompt[] = [
+export const mockEcoPickPrompts: MockEcoPickPrompt[] = [
   {
     id: 1,
     name: '서성수',
@@ -283,7 +283,7 @@ export const mockEcoPickPrompts: EcoPickPrompt[] = [
 ];
 
 // 대시보드 Mock 데이터
-export const mockDashboardMetrics: DashboardMetric[] = [
+export const mockDashboardMetrics: MockDashboardMetric[] = [
   {
     name: 'clarity',
     displayName: '명확성',
@@ -310,7 +310,7 @@ export const mockDashboardMetrics: DashboardMetric[] = [
   },
 ];
 
-export const mockDashboardStats: DashboardStats = {
+export const mockDashboardStats: MockDashboardStats = {
   highestRecord: 98,
   averageScore: 85,
   myMileage: 2000,

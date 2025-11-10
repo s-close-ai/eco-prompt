@@ -48,6 +48,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "url": "^0.11.4",
-    "vite-plugin-svgr": "^4.5.0"
+    "vite-plugin-svgr": "^4.5.0",
+    "zustand": "^5.0.8"
   }
 }

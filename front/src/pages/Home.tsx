@@ -1,5 +1,6 @@
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';
+import MainChat from '@/components/home/MainChat';
 import '@/styles/pages/home.css';
 
 export default function Home() {
@@ -20,7 +21,7 @@ export default function Home() {
   return (
     <div className="home-container">
       <div className={`main-content ${getContentClass()}`}>
-        <h1>무엇을 도와드릴까요?</h1>
+        <MainChat />
       </div>
     </div>
   );

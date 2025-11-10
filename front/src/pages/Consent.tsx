@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '@/components/common/Button';
-import { updateConsent, logout } from '@/services/api/auth';
+import { toggleSharingInformation, logout } from '@/services/api/auth';
 import '@/styles/pages/consent.css';
 
 export default function Consent() {
@@ -11,7 +11,7 @@ export default function Consent() {
   const handleAgree = async () => {
     setIsLoading(true);
     try {
-      await updateConsent();
+      await toggleSharingInformation();
       // 동의 완료 후 홈으로 이동
       navigate('/chat');
     } catch (error) {
@@ -24,7 +24,7 @@ export default function Consent() {
 
   const handleDisagree = async () => {
     const confirmed = confirm(
-      'AI 학습에 정보를 제공하지 않으면 서비스를 이용할 수 없습니다.\n정말 거부하시겠습니까?'
+      'AI 학습에 정보를 제공하지 않으면 서비스를 이용할 수 없습니다.\n정말 거부하시겠습니까?',
     );
 
     if (confirmed) {
@@ -66,8 +66,8 @@ export default function Consent() {
 
           <div className="consent-description">
             <p>
-              에코프롬프트는 더 나은 서비스를 제공하기 위해 사용자의 프롬프트 및 대화 내용을 AI 학습에
-              활용합니다.
+              에코프롬프트는 더 나은 서비스를 제공하기 위해 사용자의 프롬프트 및 대화 내용을 AI
+              학습에 활용합니다.
             </p>
             <p>제공된 정보는 다음과 같은 용도로만 사용됩니다:</p>
             <ul>
@@ -75,9 +75,7 @@ export default function Consent() {
               <li>프롬프트 품질 평가 개선</li>
               <li>사용자 경험 최적화</li>
             </ul>
-            <p>
-              수집된 정보는 개인정보가 제거된 형태로 처리되며, 제3자에게 제공되지 않습니다.
-            </p>
+            <p>수집된 정보는 개인정보가 제거된 형태로 처리되며, 제3자에게 제공되지 않습니다.</p>
           </div>
 
           <div className="consent-actions">
@@ -101,9 +99,7 @@ export default function Consent() {
             </Button>
           </div>
 
-          <p className="consent-note">
-            동의하지 않을 경우 서비스 이용이 제한됩니다.
-          </p>
+          <p className="consent-note">동의하지 않을 경우 서비스 이용이 제한됩니다.</p>
         </div>
       </div>
     </div>
