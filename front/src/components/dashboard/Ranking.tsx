@@ -26,6 +26,7 @@ export default function Ranking() {
   const mode = useDeviceMode();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentRankings, setCurrentRankings] = useState<RankingItem[]>([]);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -45,13 +46,16 @@ export default function Ranking() {
         if (isSameDate(selectedDate, today)) {
           const response = await getTodayRankings();
           setCurrentRankings(response.data.content);
+          setUpdatedAt(response.data.updatedAt || null);
         } else {
           const response = await getSpecificDateRankings(formatDate(selectedDate));
           setCurrentRankings(response.data);
+          setUpdatedAt(null); // 과거 날짜는 updatedAt이 없음
         }
       } catch (error) {
         console.error('Failed to fetch rankings:', error);
         setCurrentRankings([]);
+        setUpdatedAt(null);
       } finally {
         setLoading(false);
       }
@@ -62,13 +66,27 @@ export default function Ranking() {
 
   // 업데이트 시간 포맷 함수
   const getUpdateTimeText = () => {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
+    if (!updatedAt) {
+      return null; // updatedAt이 없으면 null 반환 (과거 날짜)
+    }
+
+    // updatedAt 파싱: "2025.11.10.13.38.51" 형식
+    // 형식: YYYY.MM.DD.HH.mm.ss
+    const parts = updatedAt.split('.');
+    if (parts.length !== 6) {
+      return null; // 형식이 맞지 않으면 null 반환
+    }
+
+    const hours = parseInt(parts[3], 10);
+    const minutes = parseInt(parts[4], 10);
     const period = hours < 12 ? '오전' : '오후';
     const displayHours = hours % 12 || 12;
     return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')} 업데이트`;
   };
+
+  // 오늘 날짜인지 확인
+  const isToday = isSameDate(selectedDate, new Date());
+  const updateTimeText = getUpdateTimeText();
 
   const getRankIcon = (rank: number) => {
     if (rank <= 3) {
@@ -112,7 +130,9 @@ export default function Ranking() {
             })}
           </div>
         </div>
-        {mode !== 'mobile' && <div className="update-time-text">{getUpdateTimeText()}</div>}
+        {mode !== 'mobile' && isToday && updateTimeText && (
+          <div className="update-time-text">{updateTimeText}</div>
+        )}
       </div>
 
       {currentRankings.length > 0 && (
