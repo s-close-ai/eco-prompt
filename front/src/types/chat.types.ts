@@ -17,6 +17,7 @@ export interface ChatMessage {
   timestamp: Date;
   score?: PromptScore;
   isStreaming?: boolean;
+  messageUUID?: string; // 서버의 실제 messageUUID (수정 시 필요)
 }
 
 export interface ChatMessageRequest {

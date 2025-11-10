@@ -100,6 +100,13 @@ export default function Chat() {
 
         const { chattingId: returnedChattingId, messageUUID } = response.data;
 
+        // 사용자 메시지에 서버의 messageUUID 저장
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === userMessageId ? { ...m, messageUUID } : m,
+          ),
+        );
+
         // 새 채팅인 경우 URL 변경 (메시지 로드를 방지하기 위해 ref 사용)
         if (!currentChatId && returnedChattingId) {
           setCurrentChatting(returnedChattingId);
@@ -311,6 +318,7 @@ export default function Chat() {
           type: 'user',
           message: msg.userMessage.content,
           timestamp: new Date(),
+          messageUUID: msg.userMessage.messageUUID, // 서버의 messageUUID 저장
           score: msg.scoreMessage?.scoreInfo ? {
             clarityScore: msg.scoreMessage.scoreInfo.clarityScore,
             specificityScore: msg.scoreMessage.scoreInfo.specificityScore,
@@ -547,6 +555,8 @@ export default function Chat() {
     if (userMessageIndex === -1) return;
 
     const userMessage = messages[userMessageIndex];
+    // 서버의 실제 messageUUID 사용 (없으면 id 사용 - 로드된 메시지의 경우 id가 messageUUID임)
+    const actualMessageUUID = userMessage.messageUUID || userMessage.id;
     const aiMessageId = crypto.randomUUID();
 
     // 기존 메시지들을 제거하고 수정된 메시지와 새 AI 응답을 추가
@@ -569,7 +579,7 @@ export default function Chat() {
         projectId: projectId ?? 1,
         chattingId: Number(chattingId),
         content: newMessage,
-        messageUUID: messageId,
+        messageUUID: actualMessageUUID,
       });
 
       const { messageUUID } = response.data;
