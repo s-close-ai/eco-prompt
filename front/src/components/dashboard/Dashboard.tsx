@@ -37,9 +37,10 @@ function CircularProgress({
   // 내부 계산은 기준 크기(size)를 사용하고, 실제 표시 크기는 컨테이너의 CSS clamp로 제어한다.
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const maxScore = Math.max(metric.myScore, metric.averageScore) * 1.2; // 여유 공간
-  const myPercentage = (metric.myScore / maxScore) * 100;
-  const averagePercentage = (metric.averageScore / maxScore) * 100;
+  // 각 점수는 최대 25점이므로, 25를 기준으로 계산
+  const maxScore = 25;
+  const myPercentage = Math.min((metric.myScore / maxScore) * 100, 100);
+  const averagePercentage = Math.min((metric.averageScore / maxScore) * 100, 100);
   const myOffset = circumference - (myPercentage / 100) * circumference;
   const averageOffset = circumference - (averagePercentage / 100) * circumference;
 
@@ -72,7 +73,6 @@ function CircularProgress({
           strokeDasharray={circumference}
           strokeDashoffset={averageOffset}
           strokeLinecap="round"
-          transform={`rotate( ${size / 2} ${size / 2})`}
           className="average-circle"
         />
         {/* 내 점수 원 (진한 초록색) */}
@@ -86,7 +86,6 @@ function CircularProgress({
           strokeDasharray={circumference}
           strokeDashoffset={myOffset}
           strokeLinecap="round"
-          transform={`rotate( ${size / 2} ${size / 2})`}
           className="my-score-circle"
         />
       </svg>
