@@ -441,6 +441,15 @@
   background: #f3f4f6;
 }
 
+.sidebar-list-item-project.active {
+  background: #e8f5e9;
+}
+
+.sidebar-list-item-project.active .sidebar-list-item-text {
+  font-weight: 700;
+  color: #16a34a;
+}
+
 .sidebar-list-item-menu-wrapper {
   flex-shrink: 0;
   display: flex;
@@ -633,6 +642,15 @@
 
 .sidebar-list-item-chat:hover {
   background: #f3f4f6;
+}
+
+.sidebar-list-item-chat.active {
+  background: #e8f5e9;
+}
+
+.sidebar-list-item-chat.active .sidebar-list-item-text {
+  font-weight: 700;
+  color: #16a34a;
 }
 
 .sidebar-list-item-icon-btn {

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import { useLongPress } from '@/hooks/useLongPress';
@@ -20,12 +20,17 @@ interface ChatListItemProps {
 export function ChatListItem({ chat, isNested, onMenuToggle }: ChatListItemProps) {
   const [editedTitle, setEditedTitle] = useState(chat.title);
   const navigate = useNavigate();
+  const location = useLocation();
   const mode = useDeviceMode();
   const { closeSidebar } = useAppShell();
   const { editingChatId, setEditingChatId, updateChatTitle } = useProjectStore();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isEditing = editingChatId === chat.chattingId;
+
+  // 현재 페이지가 이 채팅 페이지인지 확인
+  const locationState = location.state as { chatId?: number } | undefined;
+  const isActive = location.pathname === '/chat' && locationState?.chatId === chat.chattingId;
 
   // 편집 모드로 전환 시 input에 포커스
   useEffect(() => {
@@ -86,7 +91,7 @@ export function ChatListItem({ chat, isNested, onMenuToggle }: ChatListItemProps
     onMenuToggle(e);
   };
 
-  const itemClass = `sidebar-list-item sidebar-list-item-chat ${isNested ? 'sidebar-nested-item' : ''}`;
+  const itemClass = `sidebar-list-item sidebar-list-item-chat ${isNested ? 'sidebar-nested-item' : ''} ${isActive ? 'active' : ''}`;
 
   return (
     <li>

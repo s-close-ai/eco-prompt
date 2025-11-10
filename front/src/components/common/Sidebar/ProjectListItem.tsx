@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import { useLongPress } from '@/hooks/useLongPress';
@@ -31,6 +31,7 @@ export function ProjectListItem({
   const [isExpanded, setIsExpanded] = useState(false);
   const [editedTitle, setEditedTitle] = useState(project.title);
   const navigate = useNavigate();
+  const location = useLocation();
   const mode = useDeviceMode();
   const { closeSidebar } = useAppShell();
   const {
@@ -41,6 +42,17 @@ export function ProjectListItem({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isEditing = editingProjectId === project.projectId;
+
+  // 현재 페이지가 이 프로젝트 페이지인지 확인
+  const locationState = location.state as { projectId?: number } | undefined;
+  const isActiveProject =
+    location.pathname === '/project' && locationState?.projectId === project.projectId;
+
+  // 프로젝트 내 채팅이 활성화되어 있는지 확인
+  const isProjectChatActive =
+    location.pathname === '/chat' &&
+    locationState?.projectId === project.projectId &&
+    project.chats.some((chat) => chat.chattingId === (locationState as any)?.chatId);
 
   // 편집 모드로 전환 시 input에 포커스
   useEffect(() => {
@@ -54,6 +66,13 @@ export function ProjectListItem({
   useEffect(() => {
     setEditedTitle(project.title);
   }, [project.title]);
+
+  // 프로젝트 내 채팅이 활성화되면 자동으로 확장
+  useEffect(() => {
+    if (isProjectChatActive && !isExpanded) {
+      setIsExpanded(true);
+    }
+  }, [isProjectChatActive, isExpanded]);
 
   // 프로젝트 타이틀 클릭 시 프로젝트 상세 페이지로 이동
   const handleProjectClick = () => {
@@ -148,7 +167,9 @@ export function ProjectListItem({
 
   return (
     <li>
-      <div className="sidebar-list-item sidebar-list-item-project">
+      <div
+        className={`sidebar-list-item sidebar-list-item-project ${isActiveProject || isProjectChatActive ? 'active' : ''}`}
+      >
         <button
           className="sidebar-list-item-icon-btn"
           onClick={toggleExpand}
