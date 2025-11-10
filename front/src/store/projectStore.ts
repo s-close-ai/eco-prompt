@@ -9,8 +9,10 @@ export interface Project {
 interface ProjectStore {
   projects: SidebarProjectItem[];
   generalChats: SidebarChatItem[];
+  defaultProjectId: number | null; // 사용자의 기본 프로젝트 ID
   setProjects: (projects: SidebarProjectItem[]) => void;
   setGeneralChats: (chats: SidebarChatItem[]) => void;
+  setDefaultProjectId: (projectId: number) => void; // 기본 프로젝트 ID 설정
   addProject: (project: Project) => void;
   addChatToProject: (projectId: number, chat: SidebarChatItem) => void;
   removeProject: (projectId: number) => void;
@@ -28,8 +30,10 @@ interface ProjectStore {
 export const useProjectStore = create<ProjectStore>((set) => ({
   projects: [],
   generalChats: [],
+  defaultProjectId: null,
   setProjects: (projects) => set({ projects }),
   setGeneralChats: (chats) => set({ generalChats: chats }),
+  setDefaultProjectId: (projectId) => set({ defaultProjectId: projectId }),
   // 새 프로젝트를 맨 위에 추가
   addProject: (project) =>
     set((state) => ({

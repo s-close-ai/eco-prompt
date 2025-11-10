@@ -4,7 +4,7 @@ import type { SidebarProjectItem, SidebarChatItem } from '@/types/sidebar.types'
 import { useProjectStore } from '@/store/projectStore';
 
 export function useSidebarData() {
-  const { setProjects, setGeneralChats } = useProjectStore();
+  const { setProjects, setGeneralChats, setDefaultProjectId } = useProjectStore();
   const [data, setData] = useState<{
     generalChatsPage: number;
     generalChatsTotalPages: number;
@@ -37,9 +37,14 @@ export function useSidebarData() {
       let generalChatsHasMore = false;
 
       // 사용자의 마지막 프로젝트를 기본 프로젝트로 사용
-      const defaultProjectId = projectResponses.length > 0
-        ? projectResponses[projectResponses.length - 1].projectId
-        : 1;
+      if (projectResponses.length === 0) {
+        console.error('프로젝트가 없습니다.');
+        return;
+      }
+      const defaultProjectId = projectResponses[projectResponses.length - 1].projectId;
+
+      // 전역 상태에 기본 프로젝트 ID 저장 (한 번만 설정됨)
+      setDefaultProjectId(defaultProjectId);
 
       // 프로젝트 목록을 처음 20개만 처리 (기본 프로젝트 제외)
       const nonDefaultProjects = projectResponses.filter((p) => p.projectId !== defaultProjectId);
@@ -93,7 +98,7 @@ export function useSidebarData() {
     } finally {
       setIsLoading(false);
     }
-  }, [setProjects, setGeneralChats]);
+  }, [setProjects, setGeneralChats, setDefaultProjectId]);
 
   // 프로젝트 목록 더 불러오기
   const loadMoreProjects = useCallback(async () => {
@@ -105,9 +110,11 @@ export function useSidebarData() {
       const projectResponses = response.data.personalProjectResponses;
 
       // 사용자의 마지막 프로젝트를 기본 프로젝트로 사용
-      const defaultProjectId = projectResponses.length > 0
-        ? projectResponses[projectResponses.length - 1].projectId
-        : 1;
+      if (projectResponses.length === 0) {
+        console.error('프로젝트가 없습니다.');
+        return;
+      }
+      const defaultProjectId = projectResponses[projectResponses.length - 1].projectId;
       const nonDefaultProjects = projectResponses.filter((p) => p.projectId !== defaultProjectId);
 
       const { projects } = useProjectStore.getState();
@@ -190,9 +197,11 @@ export function useSidebarData() {
       // 기본 프로젝트 ID를 가져오기 위해 전체 프로젝트 목록 조회
       const projectsResponse = await getPersonalProjects();
       const projectResponses = projectsResponse.data.personalProjectResponses;
-      const defaultProjectId = projectResponses.length > 0
-        ? projectResponses[projectResponses.length - 1].projectId
-        : 1;
+      if (projectResponses.length === 0) {
+        console.error('프로젝트가 없습니다.');
+        return;
+      }
+      const defaultProjectId = projectResponses[projectResponses.length - 1].projectId;
 
       const response = await getChattingsWithPaging(defaultProjectId, nextPage);
 

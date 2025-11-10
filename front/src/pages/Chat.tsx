@@ -25,10 +25,7 @@ export default function Chat() {
   const projectId = locationState?.projectId;
 
   const { setCurrentChatting, updateCurrentTitle } = useChatStore();
-  const { addChatToProject, updateChatTitle, moveChatToTop, projects } = useProjectStore();
-
-  // 사용자의 마지막 프로젝트를 기본 프로젝트로 사용
-  const defaultProjectId = projects.length > 0 ? projects[projects.length - 1].projectId : 1;
+  const { addChatToProject, updateChatTitle, moveChatToTop, defaultProjectId } = useProjectStore();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [error, setError] = useState<Error | null>(null);
@@ -73,6 +70,15 @@ export default function Chat() {
       const aiMessageId = crypto.randomUUID();
       const currentChatId = chattingId;
       const currentProjectId = projectId;
+      // API에 실제로 전달될 projectId
+      // currentProjectId가 있으면 그것을 사용 (프로젝트 내부에서 채팅)
+      // 없으면 기본 프로젝트 사용 (새 채팅)
+      const actualProjectId = currentProjectId ?? defaultProjectId;
+
+      if (!actualProjectId) {
+        console.error('기본 프로젝트 ID가 설정되지 않았습니다.');
+        return;
+      }
 
       const newUserMessage: ChatMessage = {
         id: userMessageId,
@@ -96,7 +102,7 @@ export default function Chat() {
       try {
         // submitMessage API 사용 (chattingId는 optional)
         const response = await submitMessage({
-          projectId: currentProjectId ?? defaultProjectId,
+          projectId: actualProjectId,
           chattingId: currentChatId ? Number(currentChatId) : undefined,
           content: message,
         });
@@ -109,9 +115,10 @@ export default function Chat() {
           // 메시지가 이미 추가되었으므로 로드하지 않도록 플래그 설정
           initialMessageSent.current = true;
           isCreatingNewChatRef.current = true; // 새 채팅 생성 중 플래그
+          // 실제 사용된 projectId를 state에 저장
           navigate('/chat', {
             replace: true,
-            state: { chatId: returnedChattingId, projectId: currentProjectId }
+            state: { chatId: returnedChattingId, projectId: actualProjectId }
           });
         } else if (currentChatId && typeof currentChatId === 'number') {
           // 기존 채팅인 경우 맨 위로 이동
@@ -201,8 +208,8 @@ export default function Chat() {
           // 현재 채팅 스토어 업데이트
           updateCurrentTitle(newTitle);
 
-          // 사이드바 즉시 업데이트
-          const targetProjectId = currentProjectId ?? defaultProjectId;
+          // 사이드바 즉시 업데이트 - API에 실제로 전달된 projectId 사용
+          const targetProjectId = actualProjectId;
 
           if (targetProjectId !== defaultProjectId) {
             // 프로젝트 채팅인 경우 (기본 프로젝트가 아닌 경우)
@@ -230,7 +237,7 @@ export default function Chat() {
               // 새로운 채팅이면 맨 위에 추가 (5개 제한)
               const { generalChats } = useProjectStore.getState();
               const newChats = [
-                { chattingId: returnedChattingId, title: newTitle, projectId: defaultProjectId },
+                { chattingId: returnedChattingId, title: newTitle, projectId: defaultProjectId! },
                 ...generalChats,
               ];
               useProjectStore.getState().setGeneralChats(
@@ -536,7 +543,7 @@ export default function Chat() {
     return () => window.removeEventListener('chat-input-send', onChatInputSend as EventListener);
   }, [handleSendMessage]);
 
-  const handleRetry = (errorMessageId: string) => {
+  const handleRetry = async (errorMessageId: string) => {
     const errorIndex = messages.findIndex((m) => m.id === errorMessageId);
     if (errorIndex === -1) return;
 
@@ -550,8 +557,123 @@ export default function Chat() {
     if (userMessageIndex === -1) return;
 
     const userMessageToRetry = messages[userMessageIndex];
-    setMessages((prev) => prev.slice(0, userMessageIndex));
-    handleSendMessage(userMessageToRetry.message);
+    const aiMessageId = crypto.randomUUID();
+
+    // 에러 메시지를 제거하고 새 AI 응답을 추가
+    setMessages((prev) => [
+      ...prev.slice(0, errorIndex),
+      {
+        id: aiMessageId,
+        type: 'ai',
+        message: '',
+        timestamp: new Date(),
+        isStreaming: true,
+      },
+    ]);
+
+    try {
+      // updateMessage API 사용 (PATCH)
+      const { updateMessage } = await import('@/services/api/message');
+      const response = await updateMessage({
+        projectId: projectId ?? defaultProjectId!,
+        chattingId: Number(chattingId),
+        content: userMessageToRetry.message,
+        messageUUID: userMessageToRetry.id,
+      });
+
+      const { messageUUID } = response.data;
+
+      // subscribeMessage API 사용
+      const eventSource = subscribeMessage(messageUUID);
+      eventSourcesRef.current.set(aiMessageId, eventSource);
+
+      // LLM_START 이벤트
+      eventSource.addEventListener('LLM_START', () => {
+        // 이미 AI 메시지가 있으므로 아무 작업 안 함
+      });
+
+      // LLM_TOKEN 이벤트 - 실시간으로 토큰 하나씩 받기
+      eventSource.addEventListener('LLM_TOKEN', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          const token = data.token || '';
+
+          shouldScrollToBottomRef.current = true; // 스트리밍 중에는 맨 아래로 스크롤
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === aiMessageId ? { ...m, message: m.message + token } : m,
+            ),
+          );
+        } catch (error) {
+          console.error('Failed to parse LLM_TOKEN:', error);
+        }
+      });
+
+      // JUDGE_PROMPT 이벤트 - 점수 정보
+      eventSource.addEventListener('JUDGE_PROMPT', (event) => {
+        try {
+          const scoreData = JSON.parse(event.data) as PromptScoreType;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === userMessageToRetry.id ? { ...m, score: scoreData } : m)),
+          );
+        } catch (error) {
+          console.error('Failed to parse JUDGE_PROMPT:', error);
+        }
+      });
+
+      // SSE_COMPLETE 이벤트 - 스트리밍 완료
+      eventSource.addEventListener('SSE_COMPLETE', () => {
+        eventSource.close();
+        eventSourcesRef.current.delete(aiMessageId);
+        shouldScrollToBottomRef.current = true; // 스트리밍 완료 시 맨 아래로 스크롤
+        setMessages((prev) =>
+          prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
+        );
+      });
+
+      eventSource.onerror = () => {
+        eventSource.close();
+        eventSourcesRef.current.delete(aiMessageId);
+        setMessages((prev) => {
+          const filtered = prev
+            .filter((m) => m.id !== aiMessageId)
+            .map((m) =>
+              m.id === userMessageToRetry.id
+                ? { ...m, score: undefined }
+                : m,
+            );
+          return [
+            ...filtered,
+            {
+              id: crypto.randomUUID(),
+              type: 'error',
+              message: '스트리밍 중 오류가 발생했습니다.',
+              timestamp: new Date(),
+            },
+          ];
+        });
+      };
+    } catch (error) {
+      console.error('Failed to retry message:', error);
+      setMessages((prev) => {
+        const filtered = prev
+          .filter((m) => m.id !== aiMessageId)
+          .map((m) =>
+            m.id === userMessageToRetry.id
+              ? { ...m, score: undefined }
+              : m,
+          );
+        return [
+          ...filtered,
+          {
+            id: crypto.randomUUID(),
+            type: 'error',
+            message: '메시지 재전송에 실패했습니다.',
+            timestamp: new Date(),
+          },
+        ];
+      });
+    }
   };
 
   const handleEditAndResendMessage = async (messageId: string, newMessage: string) => {
@@ -578,7 +700,7 @@ export default function Chat() {
       // updateMessage API 사용
       const { updateMessage } = await import('@/services/api/message');
       const response = await updateMessage({
-        projectId: projectId ?? defaultProjectId,
+        projectId: projectId ?? defaultProjectId!,
         chattingId: Number(chattingId),
         content: newMessage,
         messageUUID: messageId,

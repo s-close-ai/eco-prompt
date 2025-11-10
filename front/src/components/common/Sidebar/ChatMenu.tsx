@@ -29,7 +29,7 @@ export function ChatMenu({
   menuProps,
   onDelete,
 }: ChatMenuProps) {
-  const { projects, generalChats, setEditingChatId, removeChat, moveChatToProject } =
+  const { projects, generalChats, defaultProjectId, setEditingChatId, removeChat, moveChatToProject } =
     useProjectStore();
   const [showProjectMoveMenu, setShowProjectMoveMenu] = useState(false);
 
@@ -82,9 +82,6 @@ export function ChatMenu({
       console.error('채팅 삭제 API 실패:', error);
     });
   }, [chattingId, menuProps, onDelete, removeChat]);
-
-  // 사용자의 마지막 프로젝트를 기본 프로젝트로 사용
-  const defaultProjectId = projects.length > 0 ? projects[projects.length - 1].projectId : 1;
 
   // 프로젝트 목록: currentProjectId가 기본 프로젝트이면 "일반 채팅" 제외하고 다른 프로젝트들만
   // currentProjectId가 기본 프로젝트가 아니면 "일반 채팅" 포함하고 자기 프로젝트만 제외
