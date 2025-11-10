@@ -182,6 +182,7 @@ export function ProjectListItem({
             onClick={handleProjectClick}
             onContextMenu={handleContextMenu}
             {...(mode !== 'desktop' ? longPressEvents : {})}
+            title={mode === 'desktop' ? project.title : undefined}
           >
             <span className="sidebar-list-item-text">{project.title}</span>
           </button>

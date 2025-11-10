@@ -112,6 +112,7 @@ export function ChatListItem({ chat, isNested, onMenuToggle }: ChatListItemProps
             onClick={handleClick}
             onContextMenu={handleContextMenu}
             {...(mode !== 'desktop' ? longPressEvents : {})}
+            title={mode === 'desktop' ? chat.title : undefined}
           >
             <span className="sidebar-list-item-text">{chat.title}</span>
           </button>
