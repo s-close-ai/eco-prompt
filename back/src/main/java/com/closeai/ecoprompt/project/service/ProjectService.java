@@ -127,13 +127,25 @@ public class ProjectService {
 
 		// 2. 채팅 페이지네이션 (updatedAt 내림차순)
 		Pageable pageable = PageRequest.of(0, CHAT_PAGE_SIZE, Sort.by(Sort.Direction.DESC, "updatedAt"));
+		Pageable pageable_5 = PageRequest.of(0, 5, Sort.by(Sort.Direction.DESC, "updatedAt"));
 
 		// 3. 프로젝트별 채팅 조회 및 DTO 변환
 		List<PersonalProjectResponse> responses = new ArrayList<>();
+
+		int count = 0;
 		for (Project project : projects) {
-			Page<ChattingResponse> chattingResponses = chattingRepository.findByProject_IdAndIsDeleted(project.getId(),
-					'N', pageable)
-				.map(c -> new ChattingResponse(project.getId(), c.getId(), c.getTitle()));
+			count++;
+
+			Page<ChattingResponse> chattingResponses;
+			if (count == projects.size()) {
+				chattingResponses = chattingRepository.findByProject_IdAndIsDeleted(project.getId(),
+								'N', pageable)
+						.map(c -> new ChattingResponse(project.getId(), c.getId(), c.getTitle()));
+			} else {
+				chattingResponses = chattingRepository.findByProject_IdAndIsDeleted(project.getId(),
+								'N', pageable_5)
+						.map(c -> new ChattingResponse(project.getId(), c.getId(), c.getTitle()));
+			}
 
 			responses.add(PersonalProjectResponse.of(project, chattingResponses));
 		}
