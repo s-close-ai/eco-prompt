@@ -1,5 +1,6 @@
 package com.closeai.ecoprompt.message.repository.mongo;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,5 +19,10 @@ public interface MessageMongoRepository extends MongoRepository<MessageDocument,
 
 	List<MessageDocument> findByChattingIdAndMessageUUIDInAndSenderType(Long chattingId, List<String> messageUUIDs,
 		MessageSender senderType);
+
+	// (추가) 여러 UUID + 여러 발신자 타입으로 한 번에 조회
+	List<MessageDocument> findByMessageUUIDInAndSenderTypeIn(
+			Collection<String> messageUUIDs, Collection<MessageSender> senderTypes
+	);
 
 }
