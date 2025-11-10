@@ -43,6 +43,7 @@ export default function Chat() {
   const previousMessagesLengthRef = useRef<number>(0);
   const shouldScrollToBottomRef = useRef<boolean>(false);
   const isCreatingNewChatRef = useRef<boolean>(false);
+  const isUserAtBottomRef = useRef<boolean>(true); // 사용자가 맨 아래에 있는지 추적
 
   const handleStopGeneration = useCallback(async () => {
     const lastStreamingMessageId = [...messages].reverse().find((m) => m.isStreaming)?.id;
@@ -79,8 +80,23 @@ export default function Chat() {
   }, [handleStopGeneration, setOnStopGeneration]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // 사용자가 맨 아래에 있을 때만 자동 스크롤
+    if (isUserAtBottomRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
+
+  // 사용자가 맨 아래에 있는지 체크하는 함수
+  const checkIfUserAtBottom = useCallback(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    const threshold = 100; // 100px 이내면 맨 아래로 간주
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < threshold;
+
+    isUserAtBottomRef.current = isAtBottom;
+  }, []);
 
   const handleSendMessage = useCallback(
     async (message: string) => {
@@ -124,6 +140,7 @@ export default function Chat() {
 
       setMessages((prev) => {
         shouldScrollToBottomRef.current = true; // 새 메시지 추가 시 스크롤 필요
+        isUserAtBottomRef.current = true; // 사용자가 메시지를 보내면 무조건 맨 아래로
         return [...prev, newUserMessage, loadingMessage];
       });
 
@@ -494,13 +511,16 @@ export default function Chat() {
     previousMessagesLengthRef.current = currentMessagesLength;
   }, [messages, isLoadingMore]);
 
-  // 스크롤 이벤트 감지 (상단 도달 시 추가 로드)
+  // 스크롤 이벤트 감지 (상단 도달 시 추가 로드 + 사용자가 맨 아래에 있는지 체크)
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
     const handleScroll = () => {
       const { scrollTop } = container;
+
+      // 사용자가 맨 아래에 있는지 체크
+      checkIfUserAtBottom();
 
       // 맨 위에서 100px 이내일 때 추가 로드
       if (scrollTop < 100 && hasMoreMessages && !isLoadingMore) {
@@ -510,7 +530,7 @@ export default function Chat() {
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [hasMoreMessages, isLoadingMore, loadMoreMessages]);
+  }, [hasMoreMessages, isLoadingMore, loadMoreMessages, checkIfUserAtBottom]);
 
   // 채팅방 메시지 로드
   useEffect(() => {
@@ -549,6 +569,7 @@ export default function Chat() {
         initialMessageSent.current = true;
         previousMessagesLengthRef.current = loadedMessages.length;
         shouldScrollToBottomRef.current = true; // 초기 로드 시 맨 아래로 스크롤
+        isUserAtBottomRef.current = true; // 초기 로드 시 맨 아래로
 
         console.log('Initial load:', {
           messagesCount: loadedMessages.length,
@@ -621,6 +642,9 @@ export default function Chat() {
 
     // 로딩 상태 시작
     setIsLoading(true);
+
+    // 재시도 시 무조건 맨 아래로 스크롤
+    isUserAtBottomRef.current = true;
 
     // 에러 메시지를 제거하고 새 AI 응답을 추가
     setMessages((prev) => [
@@ -752,6 +776,9 @@ export default function Chat() {
 
     // 로딩 상태 시작
     setIsLoading(true);
+
+    // 메시지 수정 및 재전송 시 무조건 맨 아래로 스크롤
+    isUserAtBottomRef.current = true;
 
     // 기존 메시지들을 제거하고 수정된 메시지와 새 AI 응답을 추가
     setMessages((prev) => [
