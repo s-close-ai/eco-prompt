@@ -46,7 +46,7 @@ export function ChatListItem({ chat, isNested, onMenuToggle }: ChatListItemProps
     if (mode === 'mobile') {
       closeSidebar();
     }
-    navigate('/chat', { state: { chatId: chat.chattingId } });
+    navigate('/chat', { state: { chatId: chat.chattingId, projectId: chat.projectId } });
   };
 
   // 제목 저장 (낙관적 업데이트)

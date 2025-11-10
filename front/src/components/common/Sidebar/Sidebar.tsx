@@ -78,9 +78,12 @@ export function Sidebar() {
   ) => {
     const menuId = `${isNested ? NESTED_CHAT_MENU_PREFIX : CHAT_MENU_PREFIX}${id}`;
 
+    // 사용자의 마지막 프로젝트를 기본 프로젝트로 사용
+    const defaultProjectId = projects.length > 0 ? projects[projects.length - 1].projectId : 1;
+
     // 채팅 정보 찾기
     let chattingTitle = '';
-    let currentProjectId = 1; // 기본값은 일반 채팅 (projectId: 1)
+    let currentProjectId = defaultProjectId; // 기본값은 사용자의 마지막 프로젝트
 
     if (isNested) {
       // 프로젝트 내부의 채팅
@@ -97,7 +100,7 @@ export function Sidebar() {
       const generalChat = generalChats.find((c) => c.chattingId === id);
       if (generalChat) {
         chattingTitle = generalChat.title;
-        currentProjectId = 1;
+        currentProjectId = defaultProjectId;
       }
     }
 

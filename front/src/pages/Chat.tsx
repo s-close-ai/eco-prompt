@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import UserMessage from '@/components/chat/UserMessage';
 import AIMessage from '@/components/chat/AIMessage';
 import PromptScore from '@/components/chat/PromptScore';
@@ -18,17 +18,20 @@ import '@/styles/pages/chat.css';
 export default function Chat() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { chatId: chatIdFromParams } = useParams<{ chatId?: string }>();
   const { setOnStopGeneration } = useAppShell();
 
   const locationState = location.state as ChatLocationState | undefined;
-  const chattingId = chatIdFromParams ? Number(chatIdFromParams) : locationState?.chatId;
+  const chattingId = locationState?.chatId;
   const projectId = locationState?.projectId;
 
   const { setCurrentChatting, updateCurrentTitle } = useChatStore();
-  const { addChatToProject, updateChatTitle, moveChatToTop } = useProjectStore();
+  const { addChatToProject, updateChatTitle, moveChatToTop, projects } = useProjectStore();
+
+  // 사용자의 마지막 프로젝트를 기본 프로젝트로 사용
+  const defaultProjectId = projects.length > 0 ? projects[projects.length - 1].projectId : 1;
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [error, setError] = useState<Error | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesStartRef = useRef<HTMLDivElement>(null);
   const eventSourcesRef = useRef<Map<string, EventSource>>(new Map());
@@ -93,7 +96,7 @@ export default function Chat() {
       try {
         // submitMessage API 사용 (chattingId는 optional)
         const response = await submitMessage({
-          projectId: currentProjectId ?? 1, // 1: default project
+          projectId: currentProjectId ?? defaultProjectId,
           chattingId: currentChatId ? Number(currentChatId) : undefined,
           content: message,
         });
@@ -106,7 +109,10 @@ export default function Chat() {
           // 메시지가 이미 추가되었으므로 로드하지 않도록 플래그 설정
           initialMessageSent.current = true;
           isCreatingNewChatRef.current = true; // 새 채팅 생성 중 플래그
-          navigate(`/chat/${returnedChattingId}`, { replace: true, state: { projectId: currentProjectId } });
+          navigate('/chat', {
+            replace: true,
+            state: { chatId: returnedChattingId, projectId: currentProjectId }
+          });
         } else if (currentChatId && typeof currentChatId === 'number') {
           // 기존 채팅인 경우 맨 위로 이동
           moveChatToTop(currentChatId);
@@ -196,35 +202,40 @@ export default function Chat() {
           updateCurrentTitle(newTitle);
 
           // 사이드바 즉시 업데이트
-          if (currentProjectId && currentProjectId !== 1) {
-            // 프로젝트 채팅인 경우
+          const targetProjectId = currentProjectId ?? defaultProjectId;
+
+          if (targetProjectId !== defaultProjectId) {
+            // 프로젝트 채팅인 경우 (기본 프로젝트가 아닌 경우)
             const existingChat = useProjectStore.getState().projects
-              .find(p => p.projectId === currentProjectId)
+              .find(p => p.projectId === targetProjectId)
               ?.chats.find(c => c.chattingId === returnedChattingId);
 
             if (!existingChat) {
               // 새로운 채팅이면 맨 위에 추가
-              addChatToProject(currentProjectId, {
+              addChatToProject(targetProjectId, {
                 chattingId: returnedChattingId,
                 title: newTitle,
-                projectId: currentProjectId,
+                projectId: targetProjectId,
               });
             } else {
               // 기존 채팅이면 제목 업데이트 및 맨 위로 이동
               updateChatTitle(returnedChattingId, newTitle);
             }
           } else {
-            // 일반 채팅인 경우
+            // 일반 채팅인 경우 (기본 프로젝트)
             const existingChat = useProjectStore.getState().generalChats
               .find(c => c.chattingId === returnedChattingId);
 
             if (!existingChat) {
-              // 새로운 채팅이면 맨 위에 추가
+              // 새로운 채팅이면 맨 위에 추가 (5개 제한)
               const { generalChats } = useProjectStore.getState();
-              useProjectStore.getState().setGeneralChats([
-                { chattingId: returnedChattingId, title: newTitle, projectId: 1 },
+              const newChats = [
+                { chattingId: returnedChattingId, title: newTitle, projectId: defaultProjectId },
                 ...generalChats,
-              ]);
+              ];
+              useProjectStore.getState().setGeneralChats(
+                newChats.length > 5 ? newChats.slice(0, 5) : newChats
+              );
             } else {
               // 기존 채팅이면 제목 업데이트 및 맨 위로 이동
               updateChatTitle(returnedChattingId, newTitle);
@@ -289,7 +300,7 @@ export default function Chat() {
         });
       }
     },
-    [chattingId, projectId, navigate, setCurrentChatting, updateCurrentTitle, addChatToProject, updateChatTitle, moveChatToTop],
+    [chattingId, projectId, defaultProjectId, navigate, setCurrentChatting, updateCurrentTitle, addChatToProject, updateChatTitle, moveChatToTop],
   );
 
   useEffect(() => {
@@ -485,6 +496,7 @@ export default function Chat() {
         });
       } catch (error) {
         console.error('Failed to load messages:', error);
+        setError(error as Error);
         setMessages([]);
         setCurrentPage(0);
         setHasMoreMessages(false);
@@ -566,7 +578,7 @@ export default function Chat() {
       // updateMessage API 사용
       const { updateMessage } = await import('@/services/api/message');
       const response = await updateMessage({
-        projectId: projectId ?? 1,
+        projectId: projectId ?? defaultProjectId,
         chattingId: Number(chattingId),
         content: newMessage,
         messageUUID: messageId,
@@ -674,6 +686,26 @@ export default function Chat() {
 
   // chattingId가 없고 메시지도 없을 때 MainChat 표시
   const showMainChat = !chattingId && messages.length === 0;
+
+  // 에러 발생 시 에러 페이지 표시
+  if (error) {
+    return (
+      <div className="chat-page-container">
+        <div className="chat-error-page">
+          <div className="chat-error-content">
+            <h2>채팅을 불러올 수 없습니다</h2>
+            <p>{error.message || '채팅방을 찾을 수 없거나 접근 권한이 없습니다.'}</p>
+            <button
+              className="chat-error-back-btn"
+              onClick={() => navigate('/chat')}
+            >
+              새 채팅 시작하기
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chat-page-container">
