@@ -4,7 +4,7 @@ import type { SidebarProjectItem, SidebarChatItem } from '@/types/sidebar.types'
 import { useProjectStore } from '@/store/projectStore';
 
 export function useSidebarData() {
-  const { setProjects, setGeneralChats } = useProjectStore();
+  const { setProjects, setGeneralChats, setDefaultProjectId } = useProjectStore();
   const [data, setData] = useState<{
     generalChatsPage: number;
     generalChatsTotalPages: number;
@@ -36,8 +36,18 @@ export function useSidebarData() {
       let generalChatsTotalPages = 0;
       let generalChatsHasMore = false;
 
-      // 프로젝트 목록을 처음 20개만 처리 (프로젝트 ID 1 제외)
-      const nonDefaultProjects = projectResponses.filter((p) => p.projectId !== 1);
+      // 사용자의 마지막 프로젝트를 기본 프로젝트로 사용
+      if (projectResponses.length === 0) {
+        console.error('프로젝트가 없습니다.');
+        return;
+      }
+      const defaultProjectId = projectResponses[projectResponses.length - 1].projectId;
+
+      // 전역 상태에 기본 프로젝트 ID 저장 (한 번만 설정됨)
+      setDefaultProjectId(defaultProjectId);
+
+      // 프로젝트 목록을 처음 20개만 처리 (기본 프로젝트 제외)
+      const nonDefaultProjects = projectResponses.filter((p) => p.projectId !== defaultProjectId);
       const initialProjects = nonDefaultProjects.slice(0, 20);
 
       initialProjects.forEach((project) => {
@@ -59,8 +69,8 @@ export function useSidebarData() {
         });
       });
 
-      // 기본 프로젝트(projectId: 1)는 일반 채팅으로 분류
-      const defaultProject = projectResponses.find((p) => p.projectId === 1);
+      // 기본 프로젝트는 일반 채팅으로 분류
+      const defaultProject = projectResponses.find((p) => p.projectId === defaultProjectId);
       if (defaultProject) {
         const firstChattingResponse = defaultProject.chattingResponses;
         generalChats = firstChattingResponse.content.slice(0, 20).map((chat) => ({
@@ -88,7 +98,7 @@ export function useSidebarData() {
     } finally {
       setIsLoading(false);
     }
-  }, [setProjects, setGeneralChats]);
+  }, [setProjects, setGeneralChats, setDefaultProjectId]);
 
   // 프로젝트 목록 더 불러오기
   const loadMoreProjects = useCallback(async () => {
@@ -98,8 +108,15 @@ export function useSidebarData() {
     try {
       const response = await getPersonalProjects();
       const projectResponses = response.data.personalProjectResponses;
-      const nonDefaultProjects = projectResponses.filter((p) => p.projectId !== 1);
-      
+
+      // 사용자의 마지막 프로젝트를 기본 프로젝트로 사용
+      if (projectResponses.length === 0) {
+        console.error('프로젝트가 없습니다.');
+        return;
+      }
+      const defaultProjectId = projectResponses[projectResponses.length - 1].projectId;
+      const nonDefaultProjects = projectResponses.filter((p) => p.projectId !== defaultProjectId);
+
       const { projects } = useProjectStore.getState();
       const currentCount = projects.length;
       const nextProjects = nonDefaultProjects.slice(currentCount, currentCount + 20);
@@ -176,7 +193,17 @@ export function useSidebarData() {
     setIsLoading(true);
     try {
       const nextPage = data.generalChatsPage + 1;
-      const response = await getChattingsWithPaging(1, nextPage); // projectId 1은 기본 프로젝트
+
+      // 기본 프로젝트 ID를 가져오기 위해 전체 프로젝트 목록 조회
+      const projectsResponse = await getPersonalProjects();
+      const projectResponses = projectsResponse.data.personalProjectResponses;
+      if (projectResponses.length === 0) {
+        console.error('프로젝트가 없습니다.');
+        return;
+      }
+      const defaultProjectId = projectResponses[projectResponses.length - 1].projectId;
+
+      const response = await getChattingsWithPaging(defaultProjectId, nextPage);
 
       // 응답 구조 확인 - 실제 응답 구조에 맞게 수정
       // 응답이 data.chattingResponses 형태일 수도 있고, data가 직접 ChattingRoomsItem일 수도 있음

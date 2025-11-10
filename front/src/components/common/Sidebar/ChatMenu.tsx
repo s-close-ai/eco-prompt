@@ -29,7 +29,7 @@ export function ChatMenu({
   menuProps,
   onDelete,
 }: ChatMenuProps) {
-  const { projects, generalChats, setEditingChatId, removeChat, moveChatToProject } =
+  const { projects, generalChats, defaultProjectId, setEditingChatId, removeChat, moveChatToProject } =
     useProjectStore();
   const [showProjectMoveMenu, setShowProjectMoveMenu] = useState(false);
 
@@ -83,12 +83,12 @@ export function ChatMenu({
     });
   }, [chattingId, menuProps, onDelete, removeChat]);
 
-  // 프로젝트 목록: currentProjectId가 1(기본 프로젝트)이면 "일반 채팅" 제외하고 다른 프로젝트들만
-  // currentProjectId가 1이 아니면 "일반 채팅" 포함하고 자기 프로젝트만 제외
+  // 프로젝트 목록: currentProjectId가 기본 프로젝트이면 "일반 채팅" 제외하고 다른 프로젝트들만
+  // currentProjectId가 기본 프로젝트가 아니면 "일반 채팅" 포함하고 자기 프로젝트만 제외
   const availableProjects =
-    currentProjectId === 1
+    currentProjectId === defaultProjectId
       ? projects // 기본 프로젝트에서는 다른 프로젝트들만
-      : [{ projectId: 1, title: '일반 채팅', chats: generalChats } as any, ...projects].filter(
+      : [{ projectId: defaultProjectId, title: '일반 채팅', chats: generalChats } as any, ...projects].filter(
           (p) => p.projectId !== currentProjectId,
         );
 

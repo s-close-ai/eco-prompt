@@ -9,8 +9,10 @@ export interface Project {
 interface ProjectStore {
   projects: SidebarProjectItem[];
   generalChats: SidebarChatItem[];
+  defaultProjectId: number | null; // 사용자의 기본 프로젝트 ID
   setProjects: (projects: SidebarProjectItem[]) => void;
   setGeneralChats: (chats: SidebarChatItem[]) => void;
+  setDefaultProjectId: (projectId: number) => void; // 기본 프로젝트 ID 설정
   addProject: (project: Project) => void;
   addChatToProject: (projectId: number, chat: SidebarChatItem) => void;
   removeProject: (projectId: number) => void;
@@ -28,8 +30,10 @@ interface ProjectStore {
 export const useProjectStore = create<ProjectStore>((set) => ({
   projects: [],
   generalChats: [],
+  defaultProjectId: null,
   setProjects: (projects) => set({ projects }),
   setGeneralChats: (chats) => set({ generalChats: chats }),
+  setDefaultProjectId: (projectId) => set({ defaultProjectId: projectId }),
   // 새 프로젝트를 맨 위에 추가
   addProject: (project) =>
     set((state) => ({
@@ -44,12 +48,17 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         ...state.projects,
       ],
     })),
-  // 프로젝트에 채팅 추가
+  // 프로젝트에 채팅 추가 (맨 위에 추가하고 5개 초과 시 맨 아래 제거)
   addChatToProject: (projectId, chat) =>
     set((state) => ({
-      projects: state.projects.map((p) =>
-        p.projectId === projectId ? { ...p, chats: [chat, ...p.chats] } : p,
-      ),
+      projects: state.projects.map((p) => {
+        if (p.projectId === projectId) {
+          const newChats = [chat, ...p.chats];
+          // 백엔드가 5개만 보내주므로, 6개 이상이면 맨 아래 제거
+          return { ...p, chats: newChats.length > 5 ? newChats.slice(0, 5) : newChats };
+        }
+        return p;
+      }),
     })),
   // 프로젝트 삭제
   removeProject: (projectId) =>
@@ -80,9 +89,10 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         const chat = project.chats.find((c) => c.chattingId === chattingId);
         if (chat) {
           const otherChats = project.chats.filter((c) => c.chattingId !== chattingId);
+          const newChats = [{ ...chat, title }, ...otherChats];
           return {
             ...project,
-            chats: [{ ...chat, title }, ...otherChats],
+            chats: newChats.length > 5 ? newChats.slice(0, 5) : newChats,
           };
         }
         return project;
@@ -107,9 +117,10 @@ export const useProjectStore = create<ProjectStore>((set) => ({
         const chat = project.chats.find((c) => c.chattingId === chattingId);
         if (chat) {
           const otherChats = project.chats.filter((c) => c.chattingId !== chattingId);
+          const newChats = [chat, ...otherChats];
           return {
             ...project,
-            chats: [chat, ...otherChats],
+            chats: newChats.length > 5 ? newChats.slice(0, 5) : newChats,
           };
         }
         return project;
@@ -154,10 +165,11 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       return {
         projects: state.projects.map((p) => {
           if (p.projectId === targetProjectId) {
-            // 대상 프로젝트에 채팅 추가
+            // 대상 프로젝트에 채팅 추가 (5개 제한)
+            const newChats = [chatToMove, ...p.chats];
             return {
               ...p,
-              chats: [chatToMove, ...p.chats],
+              chats: newChats.length > 5 ? newChats.slice(0, 5) : newChats,
             };
           } else {
             // 기존 프로젝트에서 채팅 제거

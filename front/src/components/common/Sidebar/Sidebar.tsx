@@ -27,7 +27,7 @@ const NESTED_CHAT_MENU_PREFIX = 'nested-chat-';
 export function Sidebar() {
   const { isSidebarOpen, closeSidebar, isSidebarCollapsed } = useAppShell();
   const mode = useDeviceMode();
-  const { projects, generalChats } = useProjectStore();
+  const { projects, generalChats, defaultProjectId } = useProjectStore();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // 사이드바 데이터 로딩 훅
@@ -80,7 +80,7 @@ export function Sidebar() {
 
     // 채팅 정보 찾기
     let chattingTitle = '';
-    let currentProjectId = 1; // 기본값은 일반 채팅 (projectId: 1)
+    let currentProjectId = defaultProjectId ?? projects[projects.length - 1].projectId; // 기본값은 전역 상태의 기본 프로젝트 ID
 
     if (isNested) {
       // 프로젝트 내부의 채팅
@@ -97,7 +97,7 @@ export function Sidebar() {
       const generalChat = generalChats.find((c) => c.chattingId === id);
       if (generalChat) {
         chattingTitle = generalChat.title;
-        currentProjectId = 1;
+        currentProjectId = defaultProjectId ?? projects[projects.length - 1].projectId;
       }
     }
 

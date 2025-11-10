@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import Sheet from '@/components/common/Sheet';
 import ProjectCreateForm from '@/components/project_create/ProjectCreateForm';
 import { saveProject } from '@/services/api/project';
@@ -18,15 +19,19 @@ export default function ProjectCreateOverlay({
   variant,
 }: ProjectCreateOverlayProps) {
   const { addProject } = useProjectStore();
+  const navigate = useNavigate();
 
   const handleProjectCreate = async (request: ProjectCreateRequest) => {
     try {
       const response = await saveProject(request);
+      const newProjectId = response.data.projectId;
       addProject({
-        projectId: response.data.projectId,
+        projectId: newProjectId,
         title: request.title,
       });
       onClose();
+      // 프로젝트 생성 후 해당 프로젝트 페이지로 이동
+      navigate('/project', { state: { projectId: newProjectId } });
     } catch (error) {
       console.error('Failed to create project:', error);
       // TODO: Add user-facing error handling
