@@ -2,9 +2,10 @@ import { useState } from 'react';
 import Button from '@/components/common/Button';
 import TextField from '@/components/common/TextField';
 import '@/styles/components/project/project-create.css';
+import type { ProjectCreateRequest } from '@/types/api/project.types';
 
 type ProjectCreateFormProps = {
-  onSubmit?: (name: string) => void;
+  onSubmit?: (request: ProjectCreateRequest) => void;
   onClose?: () => void;
 };
 
@@ -14,7 +15,7 @@ export default function ProjectCreateForm({ onSubmit, onClose }: ProjectCreateFo
   const handleCreate = () => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    onSubmit?.(trimmed);
+    onSubmit?.({ title: trimmed });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

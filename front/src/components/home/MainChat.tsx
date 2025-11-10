@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { generateChatId } from '@/utils/id';
 import '@/styles/components/home/main-chat.css';
 import { useEffect, useCallback } from 'react';
 
@@ -12,9 +11,8 @@ export default function MainChat() {
       const detail = (e as CustomEvent<{ message: string }>).detail;
       if (!detail?.message) return;
 
-      const newChatId = generateChatId();
-      navigate(`/chat/${newChatId}`, {
-        state: { chatId: newChatId, isNew: true, message: detail.message },
+      navigate('/chat', {
+        state: { isNew: true, message: detail.message },
       });
     },
     [navigate],

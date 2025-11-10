@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { createPortal } from 'react-dom';
 
@@ -28,6 +27,6 @@ export function ContextMenu({ children, position, menuProps }: ContextMenuProps)
     >
       {children}
     </div>,
-    document.body
+    document.body,
   );
 }
