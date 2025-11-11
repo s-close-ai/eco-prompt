@@ -1,31 +1,15 @@
-# model_server/app/services/judge_service.py
-import anyio, json, re
-from loguru import logger
-from llama_cpp import  LlamaGrammar
-from app.services.model_loader import get_llama_model
-from app.services.json_grammar import JUDGE_JSON_SCHEMA
+import json, os, time, random, requests
+from datasets import load_dataset
+from tqdm import tqdm
+from dotenv import load_dotenv
 
-# 모델 호출
-# 토크나이저 -> 자연어 메타 헤더 추출
-# 메타 헤더 적용
-# 프롬프트 입력
-    # user_personal_prompt는 미사용
-# 모델 추론
+load_dotenv()
+API_KEY = os.getenv("API_KEY")
+UPSTAGE_CHAT_URL = "https://api.upstage.ai/v1/chat/completions"
+UPSTAGE_MODEL_NAME = os.getenv("UPSTAGE_MODEL_NAME")
 
-# 동시 추론 상한 (Metal/UMA 안전옵션: 1, 여유되면 2까지 시도)
-_INFER_LIMITER = anyio.Semaphore(1)
-# 요청 타임아웃(초)
-_INFER_TIMEOUT = 30.0
+OUTPUT_PATH = "korquad_labeled_stream.jsonl"
 
-grammar = LlamaGrammar.from_json_schema(json.dumps(JUDGE_JSON_SCHEMA))
-
-def _clamp25(x) -> float:
-    """숫자 보장 + 0~25, 소수 2자리"""
-    try:
-        v = float(x)
-    except Exception:
-        v = 0.0
-    return round(max(0.0, min(25.0, v)), 2)
 
 SYSTEM_PROMPT = """\
         당신은 사용자 '질의(prompt)'의 품질을 평가하는 심사 모델입니다.
@@ -93,7 +77,8 @@ SYSTEM_PROMPT = """\
         - 세부 수치 조정 지표: ⬆︎ listy (참고) avglen, lang  
         - 조정 논리:
             - listy=1 → 단계별 지시문 가능성 ↑ → +1.0~2.0  
-            - avglen 너무 짧음 → 지시 불충분(-1.0), 너무 김 → 혼란(-1.0)   
+            - avglen 너무 짧음 → 지시 불충분(-1.0), 너무 김 → 혼란(-1.0)  
+            - lang 혼합(ko+en 등) → 지시 불명확 가능성 → -1.0~-2.0  
 
         ### 4. Safety (안전성)
         - 정의: 요청 내용이 법적/윤리적/물리적 위해나 편향을 포함하지 않는가.  
@@ -142,55 +127,60 @@ SYSTEM_PROMPT = """\
 
     """
 
-async def run_judge_model(prompt):
-    logger.debug("[run_judge_model] start")
-    logger.info(f"[user]{prompt}")
-    llm = await get_llama_model()
-    
-    # llm 호출
-    try: 
-        async with _INFER_LIMITER:
-            with anyio.fail_after(_INFER_TIMEOUT):
-                logger.info("모델 추론 시작")
-                result = await anyio.to_thread.run_sync(
-                    lambda: llm.create_chat_completion(
-                        messages = [
-                            {"role": "system", "content": SYSTEM_PROMPT},
-                            {"role": "user", "content": prompt},
-                        ],
-                        temperature=0.2,
-                        top_p=0.9,
-                        max_tokens=512,
-                        grammar=grammar,
-                    ),
-                    cancellable=True,
-                )
-    except TimeoutError:
-        logger.warning("[run_judge_model] inference timeout")
-        raise ValueError("Inference timeout")
-    except Exception as e:
-        logger.exception(f"[run_judge_model] 추론 에러: {e}")
-        raise
-    
-    # 응답 파싱
-    try:
-        content = result["choices"][0]["message"]["content"]
-        data = json.loads(content)
-        logger.info(f"[data] {data}")
-    except Exception as e :
-        logger.error(f"[run_judge_model] JSON parsing error: {e}")
-        raise ValueError("Model did not return valid JSON")
-    
-    info = data.get("scoreInfo",{})
+# 이미 처리 완료된 ID 로드
+done_ids = set()
+if os.path.exists(OUTPUT_PATH):
+    with open(OUTPUT_PATH, "r", encoding="utf-8") as f:
+        for line in f:
+            try:
+                data = json.loads(line)
+                done_ids.add(data["id"])
+            except:
+                continue
+print(f"[INFO] 이미 처리된 데이터 개수: {len(done_ids)}")
 
-    return {
-        "summary": data.get("summary", ""),
-        "scoreInfo": {
-            "clarityScore": _clamp25(info.get("clarityScore")),
-            "specificityScore": _clamp25(info.get("specificityScore")),
-            "formatScore": _clamp25(info.get("formatScore")),
-            "safetyScore": _clamp25(info.get("safetyScore")),
-        },
+# KorQuAD 스트리밍 로드
+ds = load_dataset("LGCNS/KorQuAD_2.0", streaming=True)
 
+def call_upstage(question, max_retries=3, backoff=2.0):
+    payload = {
+        "model": UPSTAGE_MODEL_NAME,
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": question}
+        ],
+        "temperature": 0.0,
+        "max_tokens": 512,
     }
-    
+    headers = {"Authorization": f"Bearer {API_KEY}"}
+
+    for attempt in range(max_retries):
+        try:
+            res = requests.post(UPSTAGE_CHAT_URL, headers=headers, json=payload, timeout=30)
+            res.raise_for_status()
+            raw = res.json()["choices"][0]["message"]["content"]
+            return json.loads(raw) if isinstance(raw, str) else raw
+        except Exception as e:
+            wait = backoff * (attempt + 1) + random.uniform(0, 0.5)
+            print(f"[WARN] 요청 실패 (시도 {attempt+1}/{max_retries}): {e} → {wait:.1f}s 대기")
+            time.sleep(wait)
+    raise RuntimeError(f"최대 재시도 {max_retries}회 초과")
+
+# 이어서 라벨링
+with open(OUTPUT_PATH, "a", encoding="utf-8") as fout:
+    for sample in tqdm(ds["train"], desc="라벨링 진행 중", unit="문항"):
+        qid = sample["id"]
+        question = sample["question"]
+
+        if qid in done_ids:
+            continue  # 이미 처리됨
+
+        try:
+            labels = call_upstage(question)
+        except Exception as e:
+            print(f"[ERROR] {qid}: {e}")
+            continue
+
+        fout.write(json.dumps({"id": qid, "question": question, "labels": labels}, ensure_ascii=False) + "\n")
+        fout.flush()
+        time.sleep(0.3)

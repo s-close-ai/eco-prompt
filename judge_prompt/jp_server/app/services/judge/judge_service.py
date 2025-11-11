@@ -22,10 +22,20 @@ async def run_judge_model(user_input):
     logger.debug(f"[features] {feats}")
 
     # 초기 모델 성능 테스트 시 메타 헤더 미반영
+
     meta_header = (
-        f"[META] quest={feats.get('quest', 0)} listy={feats.get('listy', 0)} "
-        f"sent={feats.get('sent', 0)} uniq={feats.get('uniq', 0)} lang={feats.get('lang', 'ko')}"
+        f"uniq={feats.get('uniq', 0):.2f} "
+        f"avglen={feats.get('avglen', 0):.2f} "
+        f"tps={feats.get('tps', 0):.2f} "
+        f"stopr={feats.get('stopr', 0):.2f} "
+        f"punct={feats.get('punct', 0):.2f} "
+        f"quest={feats.get('quest', 0)} "
+        f"url={feats.get('url', 0)} "
+        f"listy={feats.get('listy', 0)} "
+        f"sent={feats.get('sent', 0)} "
+        f"lang={feats.get('lang', 'ko')}"
     )
+
 
 
     prompt = (
