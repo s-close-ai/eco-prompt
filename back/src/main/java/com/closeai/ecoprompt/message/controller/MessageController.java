@@ -20,7 +20,7 @@ import com.closeai.ecoprompt.message.model.dto.request.UpdateMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.response.SearchMessageResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SubmitMessageResponse;
 import com.closeai.ecoprompt.message.service.MessageService;
-import com.closeai.ecoprompt.sse.service.SseService;
+import com.closeai.ecoprompt.message.service.SseService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.closeai.ecoprompt.sse.service;
+package com.closeai.ecoprompt.message.service;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

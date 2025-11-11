@@ -23,7 +23,7 @@ import com.closeai.ecoprompt.ai.model.event.ModelErrorEvent;
 import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.model.entity.MessageSender;
-import com.closeai.ecoprompt.sse.service.SseService;
+import com.closeai.ecoprompt.message.service.SseService;
 import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 
 import reactor.core.publisher.Flux;

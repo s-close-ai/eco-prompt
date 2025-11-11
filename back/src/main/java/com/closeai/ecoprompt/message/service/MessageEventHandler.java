@@ -26,7 +26,6 @@ import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
 import com.closeai.ecoprompt.mileage.service.MileageService;
 import com.closeai.ecoprompt.score.service.ScoreService;
-import com.closeai.ecoprompt.sse.service.SseService;
 
 import lombok.RequiredArgsConstructor;
 
