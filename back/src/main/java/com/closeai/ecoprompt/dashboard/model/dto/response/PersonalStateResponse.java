@@ -11,7 +11,7 @@ public record PersonalStateResponse(
     public static PersonalStateResponse from(UserInfo userInfo) {
         return new PersonalStateResponse(
                 userInfo.getHighScore(),
-                userInfo.getTotalPromptCount() != 0 ? userInfo.getTotalScore() / userInfo.getTotalPromptCount() : 0,
+                userInfo.getTotalPromptCount() != 0 ? Math.round(userInfo.getTotalScore() / userInfo.getTotalPromptCount() * 100) / 100.0: 0,
                 userInfo.getTotalMileage(),
                 userInfo.getTotalPromptCount()
         );
