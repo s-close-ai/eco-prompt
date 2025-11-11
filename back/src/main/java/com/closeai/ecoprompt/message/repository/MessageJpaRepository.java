@@ -86,7 +86,9 @@ public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 		ORDER BY sc.total_score DESC
 		LIMIT 3
 	""", nativeQuery = true)
-	List<EcoPickFlatProjection> findDailyEcoPicksTop3(@Param("startUtc") String startUtc,
-													  @Param("endUtc") String endUtc);
+	List<EcoPickFlatProjection> findDailyEcoPicksTop3(
+			@Param("startUtc") String startUtc,
+			@Param("endUtc") String endUtc
+	);
 
 }
