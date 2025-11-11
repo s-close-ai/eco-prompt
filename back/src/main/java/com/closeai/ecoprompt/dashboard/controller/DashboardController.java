@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/dashboard")
-public class DashboardController {
+public class DashboardController implements DashboardControllerDocs {
 
     private final DashboardService dashboardService;
 

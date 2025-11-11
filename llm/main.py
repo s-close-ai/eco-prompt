@@ -2,8 +2,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.api.v1.routers import api_router
-from app.models.llm_loader import load_llm, llm, load_tokenizer, llm_tokenizer
+from app.models.llm_loader import load_tokenizer, llm_tokenizer, load_llm_engine, llm_engine
 from app.models.vectordb_loader import load_vectordb, vector_store, load_embedding_model, embedding_model
+from app.models.mongodb_loader import load_mongodb, mongo_client
 
 import torch
 
@@ -18,16 +19,14 @@ async def lifespan_manager(app: FastAPI):
     load_tokenizer()    # Tokenizer
     load_embedding_model()
     load_vectordb()
-    await load_llm()    # LLM 모델 로드 (GPU 메모리 상주 시작)
+    await load_llm_engine()
+    await load_mongodb()    # MongoDB 로드
     print("Application startup complete!")
 
     # yield가 실행되면 서버가 요청을 받기 시작함.
     yield
 
     # 🛑 서버 종료 (Shutdown) 로직
-    if llm is not None:
-        pass
-
     if vector_store is not None:
         pass
 
@@ -36,7 +35,12 @@ async def lifespan_manager(app: FastAPI):
 
     if embedding_model is not None:
         pass
+    
+    if mongo_client is not None:
+        pass
 
+    if llm_engine is not None:
+        pass
 
 # 1. FastAPI 인스턴스 생성
 app = FastAPI(

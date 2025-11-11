@@ -119,7 +119,7 @@ public class MessageService {
 		// 5. 사용자 메시지 정렬 기준으로 AI 답변을 가져와서 반환
 		return userMessagesPage.map(userMessage -> {
 			MessageDocument aiMessage = aiMessageMap.get(userMessage.getMessageUUID());
-			return GetMessageResponse.from(userMessage, aiMessage);
+			return GetMessageResponse.of(userMessage, aiMessage);
 		});
 	}
 

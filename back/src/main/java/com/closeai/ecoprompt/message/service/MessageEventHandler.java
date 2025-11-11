@@ -10,11 +10,11 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
+import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.ModelCancelledEvent;
 import com.closeai.ecoprompt.ai.model.event.ModelErrorEvent;
 import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
-import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
-import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
 import com.closeai.ecoprompt.chatting.service.ChattingService;
 import com.closeai.ecoprompt.common.exception.BusinessException;
 import com.closeai.ecoprompt.common.logging.AppLogger;
@@ -59,8 +59,8 @@ public class MessageEventHandler {
 		MessageDocument aiMessage = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.AI)
 			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
 
-		if(aiMessage.getStatus() == MessageStatus.ERROR){
-			checkCompletion(messageUUID,"JUDGE");
+		if (aiMessage.getStatus() == MessageStatus.ERROR) {
+			checkCompletion(messageUUID, "JUDGE");
 			return;
 		}
 
@@ -69,7 +69,7 @@ public class MessageEventHandler {
 		Integer userId = event.getUserId();
 
 		// 1. Message의 점수 정보 Update
-		MessageDocument messageToUpdate = updateMongoMessage(messageUUID, MessageSender.USER,null, scoreInfo, null);
+		MessageDocument messageToUpdate = updateMongoMessage(messageUUID, MessageSender.USER, null, scoreInfo, null);
 		Message message = messageJpaRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER)
 			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
 
@@ -79,12 +79,12 @@ public class MessageEventHandler {
 		mileageService.saveOrUpdateMileage(message, userId, scoreInfo.totalScore());
 
 		// 3. 새로 생성된 채팅방인 경우 채팅방의 이름을 첫 입력에 대한 요약 값으로 변경
-		if(summary != null){
-			chattingService.setChattingTitle(messageToUpdate.getChattingId(), summary);
+		if (summary != null) {
+			chattingService.setChattingTitle(messageToUpdate.getChattingId(), summary, userId);
 		}
 
 		// 4. 상태 관리
-		checkCompletion(messageUUID,"JUDGE");
+		checkCompletion(messageUUID, "JUDGE");
 	}
 
 	/**
@@ -98,20 +98,25 @@ public class MessageEventHandler {
 		String messageUUID = event.getMessageUUID();
 
 		// 0. 사용자 메시지 업데이트
-		MessageDocument userMessage = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER)
+		MessageDocument userMessage = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
+				MessageSender.USER)
 			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
 
-		if(userMessage.getStatus() == MessageStatus.ERROR){
-			checkCompletion(messageUUID,"LLM");
+		if (userMessage.getStatus() == MessageStatus.ERROR) {
+			checkCompletion(messageUUID, "LLM");
 			return;
 		}
 
 		String llmAnswer = event.getLlmAnswer();
+		String trainingAnswer = event.getTrainingAnswer();
 
 		// 1. AI 답변을 MongoDB에 저장
-		updateMongoMessage(messageUUID, MessageSender.AI,llmAnswer, null, MessageStatus.COMPLETED);
+		updateMongoMessage(messageUUID, MessageSender.AI, llmAnswer, null, MessageStatus.COMPLETED);
+		// 1-2. 학습에 도움이 되는 답변을 MongoDB에 저장
+		saveTraningMessage(messageUUID, trainingAnswer, userMessage.getChattingId());
+
 		// 2. AI 답변 완료 상태 저장
-		checkCompletion(messageUUID,"LLM");
+		checkCompletion(messageUUID, "LLM");
 	}
 
 	/**
@@ -127,21 +132,20 @@ public class MessageEventHandler {
 		MessageSender messageSender = event.getMessageSender();
 
 		MessageDocument message = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, messageSender)
-				.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다"));
+			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다"));
 
 		message.updateMessageStatus(MessageStatus.CANCELLED);
 		// Judge Model 중지
-		if(content != null){
+		if (content != null) {
 			message.updateContent(content);
 		}
 
 		messageMongoRepository.save(message);
 
-		if(message.getSenderType() == MessageSender.AI){
-			checkCompletion(message.getMessageUUID(),"LLM");
-		}
-		else{
-			checkCompletion(message.getMessageUUID(),"JUDGE");
+		if (message.getSenderType() == MessageSender.AI) {
+			checkCompletion(message.getMessageUUID(), "LLM");
+		} else {
+			checkCompletion(message.getMessageUUID(), "JUDGE");
 		}
 	}
 
@@ -155,29 +159,29 @@ public class MessageEventHandler {
 
 		String messageUUID = event.getMessageUUID();
 
-		sseService.markAsCancelled(messageUUID);
 		sseService.complete(messageUUID);
-		
-		try{
-			MessageDocument userDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER)
+
+		try {
+			MessageDocument userDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
+					MessageSender.USER)
 				.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
-			MessageDocument aiDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.AI)
+			MessageDocument aiDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
+					MessageSender.AI)
 				.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
-			
-			if(userDocument.getStatus() != MessageStatus.ERROR){
+
+			if (userDocument.getStatus() != MessageStatus.ERROR) {
 				userDocument.updateMessageStatus(MessageStatus.ERROR);
 				messageMongoRepository.save(userDocument);
 			}
-			if(aiDocument.getStatus() != MessageStatus.ERROR){
+			if (aiDocument.getStatus() != MessageStatus.ERROR) {
 				aiDocument.updateMessageStatus(MessageStatus.ERROR);
 				messageMongoRepository.save(aiDocument);
 			}
-		}catch (BusinessException e){
+		} catch (BusinessException e) {
 			AppLogger.warn("메시지 에러 처리 실패");
 		}
-
-		checkCompletion(messageUUID,"LLM");
-		checkCompletion(messageUUID,"JUDGE");
+		checkCompletion(messageUUID, "JUDGE");
+		checkCompletion(messageUUID, "LLM");
 	}
 
 	/**
@@ -206,23 +210,39 @@ public class MessageEventHandler {
 	/**
 	 * MongoDB의 MESSAGE 값 변경 함수
 	 * */
-	private MessageDocument updateMongoMessage(String messageUUID, MessageSender messageSender, String content, ScoreInfo scoreInfo, MessageStatus messageStatus) {
+	private MessageDocument updateMongoMessage(String messageUUID, MessageSender messageSender, String content,
+		ScoreInfo scoreInfo, MessageStatus messageStatus) {
 
-		MessageDocument messageToUpdate = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, messageSender)
+		MessageDocument messageToUpdate = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
+				messageSender)
 			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
 
-		if(content != null){
+		if (content != null) {
 			messageToUpdate.updateContent(content);
 		}
-		if(scoreInfo != null){
+		if (scoreInfo != null) {
 			messageToUpdate.updateScoreInfo(scoreInfo);
 		}
-		if(messageStatus != null){
+		if (messageStatus != null) {
 			messageToUpdate.updateMessageStatus(messageStatus);
 		}
 
 		messageMongoRepository.save(messageToUpdate);
 
 		return messageToUpdate;
+	}
+
+	private void saveTraningMessage(String messageUUID, String content, Long chattingId) {
+
+		MessageDocument message = MessageDocument.builder()
+			.messageUUID(messageUUID)
+			.content(content)
+			.chattingId(chattingId)
+			.senderType(MessageSender.TRAINING)
+			.status(MessageStatus.COMPLETED)
+			.scoreInfo(null)
+			.build();
+
+		messageMongoRepository.save(message);
 	}
 }
