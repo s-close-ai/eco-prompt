@@ -16,6 +16,7 @@ import org.springframework.data.repository.query.Param;
 public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 
 	Optional<Message> findByMessageUUIDAndSenderType(String messageUUID, MessageSender senderType);
+
 	Optional<Message> findTopByChatting_IdOrderByCreatedAtDesc(Long chattingId);
 
 	@Query(value = """
@@ -91,4 +92,6 @@ public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 			@Param("endUtc") String endUtc
 	);
 
+	@Query("SELECT m.messageUUID FROM Message m WHERE m.userId = :userId AND m.isDeleted = 'N'")
+	List<String> findMessageUUIDByUserId(@Param("userId") Integer userId);
 }
