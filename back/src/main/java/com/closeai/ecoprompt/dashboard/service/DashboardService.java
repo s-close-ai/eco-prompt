@@ -16,6 +16,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
@@ -51,7 +56,14 @@ public class DashboardService {
     public List<EcoPickResponse> getEcoPick() {
         AppLogger.start("에코픽 조회 시작");
 
-        return messageJpaRepository.findDailyEcoPicksTop3().stream()
+        ZonedDateTime kstStart = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(1).atStartOfDay(ZoneId.of("Asia/Seoul"));
+        ZonedDateTime kstEnd   = kstStart.plusDays(1).minusSeconds(1);
+
+        DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss").withZone(ZoneOffset.UTC);
+        String startUtc = FMT.format(kstStart.toInstant());
+        String endUtc   = FMT.format(kstEnd.toInstant());
+
+        return messageJpaRepository.findDailyEcoPicksTop3(startUtc, endUtc).stream()
                 .map(p -> {
                     // 1) Mongo에서 messageUUID로 프롬프트 본문 조회
                     String prompt = messageMongoRepository.findByMessageUUIDAndSenderType(p.getMessageUUID(), MessageSender.USER)

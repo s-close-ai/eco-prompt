@@ -80,15 +80,15 @@ public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 		JOIN score      sc  ON sc.message_id = m.message_id
 		JOIN `user`     u   ON u.user_id = m.user_id
 		JOIN user_info  ui  ON ui.user_id = u.user_id
-		WHERE m.is_deleted = 'N'
-		  AND m.sender_type = 'USER'
-		  AND ui.sharing_prompt = 'Y'
-		  AND STR_TO_DATE(m.created_at, '%Y.%m.%d.%H.%i.%s')
-				BETWEEN TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '00:00:00')
-					AND TIMESTAMP(DATE_SUB(CURDATE(), INTERVAL 1 DAY), '23:59:59')
+		WHERE STR_TO_DATE(m.created_at, '%Y.%m.%d.%H.%i.%s')
+			  BETWEEN STR_TO_DATE(:startUtc, '%Y.%m.%d.%H.%i.%s')
+				  AND STR_TO_DATE(:endUtc, '%Y.%m.%d.%H.%i.%s')
 		ORDER BY sc.total_score DESC
 		LIMIT 3
-    """, nativeQuery = true)
-	List<EcoPickFlatProjection> findDailyEcoPicksTop3();
+	""", nativeQuery = true)
+	List<EcoPickFlatProjection> findDailyEcoPicksTop3(
+			@Param("startUtc") String startUtc,
+			@Param("endUtc") String endUtc
+	);
 
 }
