@@ -40,6 +40,67 @@
   color: #000000;
 }
 
+.project-page-title-edit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  max-width: 600px;
+}
+
+.project-page-title-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid #16a34a;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #000000;
+  background: white;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.project-page-title-input:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+.project-page-title-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.project-page-save-btn,
+.project-page-cancel-btn {
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.project-page-save-btn {
+  background: #16a34a;
+  color: white;
+}
+
+.project-page-save-btn:hover {
+  background: #15803d;
+}
+
+.project-page-cancel-btn {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.project-page-cancel-btn:hover {
+  background: #e5e7eb;
+}
+
 .project-page-subtitle {
   margin: 0;
   font-size: 14px;
@@ -414,6 +475,31 @@
   -webkit-box-orient: vertical;
 }
 
+/* 채팅 카드 편집 모드 */
+.project-chat-card-edit {
+  width: 100%;
+  padding: 0;
+  margin-bottom: 8px;
+}
+
+.project-chat-card-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #16a34a;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #202123;
+  background: white;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.project-chat-card-input:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
 /* Mobile */
 @media (max-width: 767px) {
   .project-page-hero {
@@ -432,6 +518,27 @@
   .project-page-title img {
     width: 18px;
     height: 18px;
+  }
+
+  .project-page-title-edit {
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .project-page-title-input {
+    font-size: 15px;
+    padding: 6px 10px;
+  }
+
+  .project-page-title-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .project-page-save-btn,
+  .project-page-cancel-btn {
+    padding: 6px 12px;
+    font-size: 13px;
   }
 
   .project-page-subtitle {
@@ -453,6 +560,11 @@
 
   .project-chat-card:last-child {
     padding-bottom: 16px;
+  }
+
+  .project-chat-card-input {
+    font-size: 13px;
+    padding: 6px 10px;
   }
 
   .project-page-input-inner {

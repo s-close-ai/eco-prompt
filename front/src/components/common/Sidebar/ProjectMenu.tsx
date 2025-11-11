@@ -23,9 +23,12 @@ export function ProjectMenu({ projectId, position, menuProps }: ProjectMenuProps
   const { removeProject, setEditingProjectId } = useProjectStore();
 
   const handleRename = useCallback(() => {
-    menuProps.onClose?.();
-    // 인라인 편집 모드 활성화
+    // 인라인 편집 모드 활성화 (메뉴 닫기 전에 먼저 실행)
     setEditingProjectId(projectId);
+    // 약간의 지연 후 메뉴 닫기 (상태 업데이트가 먼저 적용되도록)
+    setTimeout(() => {
+      menuProps.onClose?.();
+    }, 0);
   }, [projectId, menuProps, setEditingProjectId]);
 
   const handleDelete = useCallback(() => {

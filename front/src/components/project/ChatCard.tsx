@@ -1,5 +1,6 @@
-import { memo, useState, useRef, useEffect } from 'react';
+import { memo, useState, useRef, useEffect, useCallback } from 'react';
 import { ICON_SIZE } from '@/constants/ui';
+import { useClickOutside } from '@/hooks/useClickOutside';
 import '@/styles/pages/project.css';
 import { useProjectStore } from '@/store/projectStore';
 import { updateChattingTitle } from '@/services/api/chatting';
@@ -38,12 +39,13 @@ function ChatCard({
   onProjectMoveToggle,
   menuRef,
 }: ChatCardProps) {
+  const [isEditing, setIsEditing] = useState(false); // 로컬 편집 상태
   const [editedTitle, setEditedTitle] = useState(title);
-  const { editingChatId, setEditingChatId, updateChatTitle } = useProjectStore();
+  const { updateChatTitle } = useProjectStore();
   const inputRef = useRef<HTMLInputElement>(null);
+  const editContainerRef = useRef<HTMLDivElement>(null);
 
-  const isEditing = editingChatId === id;
-
+  // 편집 모드로 전환 시 input에 포커스
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
@@ -51,27 +53,63 @@ function ChatCard({
     }
   }, [isEditing]);
 
+  // props가 변경되면 editedTitle 업데이트
   useEffect(() => {
     setEditedTitle(title);
   }, [title]);
 
-  const handleSaveTitle = async () => {
+  // 제목 저장 (낙관적 업데이트)
+  const handleSaveTitle = useCallback(async () => {
     if (!editedTitle.trim() || editedTitle === title) {
-      setEditingChatId(null);
+      setIsEditing(false);
       setEditedTitle(title);
       return;
     }
+
+    // 로컬 상태 즉시 업데이트 (제목 변경 + 맨 위로 이동)
     updateChatTitle(id, editedTitle);
-    setEditingChatId(null);
+    setIsEditing(false);
+
+    // 백그라운드에서 API 호출
     updateChattingTitle(id, { title: editedTitle }).catch((error) => {
       console.error('채팅 이름 변경 API 실패:', error);
     });
-  };
+  }, [editedTitle, title, id, updateChatTitle]);
 
+  // 외부 클릭 감지하여 편집 모드 종료
+  useClickOutside<HTMLDivElement>([editContainerRef as React.RefObject<HTMLDivElement>], () => {
+    if (isEditing) {
+      handleSaveTitle();
+    }
+  }, isEditing);
+
+  // 제목 편집 취소
   const handleCancelEdit = () => {
     setEditedTitle(title);
-    setEditingChatId(null);
+    setIsEditing(false);
   };
+
+  // 편집 모드 시작
+  const startEditing = () => {
+    setIsEditing(true);
+  };
+
+  // 서브메뉴 위치 조정
+  const submenuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (showProjectMoveMenu && submenuRef.current) {
+      const submenu = submenuRef.current;
+      const rect = submenu.getBoundingClientRect();
+      
+      // 화면 오른쪽 끝을 넘어가면 왼쪽에 표시
+      if (rect.right > window.innerWidth) {
+        submenu.style.left = 'auto';
+        submenu.style.right = '100%';
+        submenu.style.marginLeft = '0';
+        submenu.style.marginRight = '4px';
+      }
+    }
+  }, [showProjectMoveMenu]);
 
   const handleClick = (e: React.MouseEvent) => {
     if (isEditing) return;
@@ -117,18 +155,23 @@ function ChatCard({
         aria-label={`${title} 채팅 열기`}
       >
         {isEditing ? (
-          <div className="sidebar-list-item-edit">
+          <div className="project-chat-card-edit" ref={editContainerRef}>
             <input
               ref={inputRef}
               type="text"
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSaveTitle();
-                if (e.key === 'Escape') handleCancelEdit();
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSaveTitle();
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  handleCancelEdit();
+                }
               }}
-              onBlur={handleSaveTitle}
-              className="sidebar-list-item-input"
+              className="project-chat-card-input"
             />
           </div>
         ) : (
@@ -165,6 +208,7 @@ function ChatCard({
                     e.preventDefault();
                     e.stopPropagation();
                     onMenuAction?.(id, 'rename');
+                    startEditing();
                   }}
                 >
                   <img
@@ -199,7 +243,7 @@ function ChatCard({
                     />
                   </button>
                   {showProjectMoveMenu && (
-                    <div className="project-chat-card-menu-submenu">
+                    <div className="project-chat-card-menu-submenu" ref={submenuRef}>
                       {allProjects
                         .filter((p) => p.projectId !== projectId)
                         .map((targetProject) => (
