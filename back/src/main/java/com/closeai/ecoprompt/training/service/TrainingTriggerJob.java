@@ -19,6 +19,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -30,34 +32,43 @@ public class TrainingTriggerJob {
 
     private final MongoTemplate mongoTemplate;
     private final MessageMongoRepository messageMongoRepository;
-    private final WebClient webClientTrainingJudge; // Bean으로 주입 (아래 4) 참고)
+    private final WebClient webClientTrainingJudge;
 
-    private static final DateTimeFormatter CREATED_FMT = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss");
+    // 커스텀 포맷(문자 비교 가능) + UTC 고정
+    private static final DateTimeFormatter CREATED_FMT_UTC =
+            DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss").withZone(ZoneOffset.UTC);
+    private static final ZoneId Z_KST = ZoneId.of("Asia/Seoul");
 
     /**
      * 매일 04:00 (KST) 실행.
-     * 대상: "하루 동안 생산된 메시지의 점수를 조회하여 75점이 넘는 경우만 {messageUUID, sender_type, content} 배열로 전달"
+     * 대상: "하루 동안 생산된 메시지의 점수" 중 75점 초과만 {messageUUID, sender_type, content} 배열로 전달
      */
     @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
     @Transactional(readOnly = true)
     public void triggerModelTraining() {
-        LocalDate today = LocalDate.now(ZoneId.of("Asia/Seoul"));
-        LocalDate targetDay = today.minusDays(0);
+        // KST 기준 '오늘'의 하루 범위를 대상(= 오늘 00:00~23:59:59 KST)
+        LocalDate todayKst   = LocalDate.now(Z_KST);
+        LocalDate targetDay  = todayKst; // 필요 시 .minusDays(1)로 조정
 
-        // 00:00:00 ~ 23:59:59 (문자 비교가 가능한 포맷 사용 중)
-        String startStr = targetDay.atStartOfDay().format(CREATED_FMT);
-        String endStr = targetDay.atTime(23, 59, 59).format(CREATED_FMT);
+        // KST 경계를 UTC Instant로 변환
+        ZonedDateTime kstStart = targetDay.atStartOfDay(Z_KST);
+        ZonedDateTime kstEnd   = targetDay.atTime(23, 59, 59).atZone(Z_KST);
+
+        String startStrUtc = CREATED_FMT_UTC.format(kstStart.toInstant());
+        String endStrUtc   = CREATED_FMT_UTC.format(kstEnd.toInstant());
+
+        log.info("[TrainingScheduler] KST[{} ~ {}] -> UTC[{} ~ {}]",
+                kstStart, kstEnd, startStrUtc, endStrUtc);
 
         // 1) 조건에 맞는 messageUUID "중복 제거(distinct)" 조회
-        List<String> highScoreUuids = findHighScoreMessageUUIDs(startStr, endStr, 75.0);
+        List<String> highScoreUuids = findHighScoreMessageUUIDs(startStrUtc, endStrUtc, 75.0);
 
         if (highScoreUuids.isEmpty()) {
-            log.info("[TrainingScheduler] {} ~ {} 고득점(UUID) 없음 -> 종료", startStr, endStr);
+            log.info("[TrainingScheduler] {} ~ {} 고득점(UUID) 없음 -> 종료", startStrUtc, endStrUtc);
             return;
         }
 
-        // 2) 해당 UUID들의 메시지 중, 학습에 사용할 sender_type만 추출 (필요 시 조정)
-        //    예) USER + TRAINING 만 사용 (AI는 제외)
+        // 2) 학습에 사용할 sender_type만 필터 (예: USER + TRAINING)
         List<MessageSender> sendersForTraining = List.of(MessageSender.USER, MessageSender.TRAINING);
 
         List<MessageDocument> docs = messageMongoRepository
@@ -68,18 +79,14 @@ public class TrainingTriggerJob {
             return;
         }
 
-        // 3) {messageUUID, sender_type, content} 로 매핑
+        // 3) {messageUUID, sender_type, content} 매핑
         List<TrainingItem> items = docs.stream()
-                .map(d -> new TrainingItem(
-                        d.getMessageUUID(),
-                        d.getSenderType(),
-                        d.getContent())
-                )
+                .map(d -> new TrainingItem(d.getMessageUUID(), d.getSenderType(), d.getContent()))
                 .toList();
 
         TrainingRequest requestBody = new TrainingRequest(items);
 
-        // 4) judge_llm에 전송
+        // 4) judge_llm에 비동기 전송
         webClientTrainingJudge.post()
                 .uri("/api/v1/ai/training")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -89,28 +96,25 @@ public class TrainingTriggerJob {
                 .doOnSuccess(resp -> log.info("[TrainingScheduler] judge_llm 전송 완료. items={}, status={}",
                         items.size(), resp.getStatusCode()))
                 .doOnError(err -> log.error("[TrainingScheduler] judge_llm 전송 실패: {}", err.getMessage(), err))
-                .subscribe(); // 비동기 요청 시작 (스레드 반환됨)
+                .subscribe(); // 비동기 시작
     }
 
     /**
-     * score_info.totalScore >= minScore && status="RECEIVED"
-     * && created_at in [startStr, endStr] 조건으로 messageUUID를 distinct 조회
-     * <p>
-     * created_at이 String으로 저장되었으므로 Criteria를 문자열 비교로 처리.
+     * score_info.totalScore >= minScore
+     * && status="RECEIVED" (※ ERROR 등은 자연히 제외)
+     * && created_at in [startStrUtc, endStrUtc]  // created_at은 문자열(UTC 포맷)
      */
-    private List<String> findHighScoreMessageUUIDs(String startStr, String endStr, double minScore) {
-        Criteria criteria = new Criteria()
-                .andOperator(
-                        Criteria.where("status").is(MessageStatus.RECEIVED.name()),
-                        Criteria.where("created_at").gte(startStr).lte(endStr),
-                        Criteria.where("score_info.totalScore").gte(minScore)
-                );
+    private List<String> findHighScoreMessageUUIDs(String startStrUtc, String endStrUtc, double minScore) {
+        Criteria criteria = new Criteria().andOperator(
+                Criteria.where("status").is(MessageStatus.RECEIVED.name()),
+                Criteria.where("created_at").gte(startStrUtc).lte(endStrUtc),
+                Criteria.where("score_info.totalScore").gte(minScore)
+        );
 
         Query query = new Query(criteria);
-        // projection: messageUUID만 필요
         query.fields().include("messageUUID");
 
-        // distinct로 messageUUID만 추출
+        // 컬렉션 이름이 "message" 라는 전제
         return mongoTemplate.findDistinct(query, "messageUUID", "message", String.class);
     }
 }
