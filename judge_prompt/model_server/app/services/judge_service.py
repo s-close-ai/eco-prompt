@@ -145,7 +145,7 @@ SYSTEM_PROMPT = """\
 
 async def run_judge_model(prompt):
     logger.debug("[run_judge_model] start")
-
+    logger.info(f"[user]{prompt}")
     llm = await get_llama_model()
     
     # llm 호출
@@ -177,6 +177,7 @@ async def run_judge_model(prompt):
     try:
         content = result["choices"][0]["message"]["content"]
         data = json.loads(content)
+        logger.info(f"[data] {data}")
     except Exception as e :
         logger.error(f"[run_judge_model] JSON parsing error: {e}")
         raise ValueError("Model did not return valid JSON")
