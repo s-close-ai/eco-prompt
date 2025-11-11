@@ -55,27 +55,36 @@ export default function SettingsForm({
       const bodyElement = formElement.querySelector('.settings-form__body');
       if (!bodyElement) return;
 
-      const bodyHeight = bodyElement.getBoundingClientRect().height;
+      try {
+        const bodyHeight = bodyElement.getBoundingClientRect().height;
 
-      // 다른 섹션들의 높이 계산
-      const otherSections = bodyElement.querySelectorAll('.settings-form__section');
-      let otherSectionHeight = 0;
-      otherSections.forEach((section) => {
-        if (section !== sectionRef.current) {
-          otherSectionHeight += section.getBoundingClientRect().height + 16; // gap 포함
-        }
-      });
+        // 다른 섹션들의 높이 계산
+        const otherSections = bodyElement.querySelectorAll('.settings-form__section');
+        let otherSectionHeight = 0;
+        otherSections.forEach((section) => {
+          if (section !== sectionRef.current) {
+            try {
+              otherSectionHeight += section.getBoundingClientRect().height + 16; // gap 포함
+            } catch (error) {
+              console.warn('Failed to get section height:', error);
+            }
+          }
+        });
 
-      const labelHeight = 24; // 라벨 높이
-      const charCountHeight = 20; // 문자 카운트 높이
-      const padding = 20; // 추가 여유 공간
-      const lineHeight = 22.5; // line-height 1.5 * font-size 15px
+        const labelHeight = 24; // 라벨 높이
+        const charCountHeight = 20; // 문자 카운트 높이
+        const padding = 20; // 추가 여유 공간
+        const lineHeight = 22.5; // line-height 1.5 * font-size 15px
 
-      const availableHeight =
-        bodyHeight - otherSectionHeight - labelHeight - charCountHeight - padding;
-      const maxRows = Math.max(3, Math.floor(availableHeight / lineHeight));
+        const availableHeight =
+          bodyHeight - otherSectionHeight - labelHeight - charCountHeight - padding;
+        const maxRows = Math.max(3, Math.floor(availableHeight / lineHeight));
 
-      setTextareaRows(Math.min(maxRows, 6));
+        setTextareaRows(Math.min(maxRows, 6));
+      } catch (error) {
+        console.warn('Failed to calculate textarea rows:', error);
+        setTextareaRows(6); // 기본값 사용
+      }
     };
 
     // 초기 계산은 약간의 지연 후 실행 (DOM 렌더링 완료 후)

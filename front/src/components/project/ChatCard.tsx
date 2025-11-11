@@ -99,14 +99,19 @@ function ChatCard({
   useEffect(() => {
     if (showProjectMoveMenu && submenuRef.current) {
       const submenu = submenuRef.current;
-      const rect = submenu.getBoundingClientRect();
-      
-      // 화면 오른쪽 끝을 넘어가면 왼쪽에 표시
-      if (rect.right > window.innerWidth) {
-        submenu.style.left = 'auto';
-        submenu.style.right = '100%';
-        submenu.style.marginLeft = '0';
-        submenu.style.marginRight = '4px';
+      try {
+        const rect = submenu.getBoundingClientRect();
+
+        // 화면 오른쪽 끝을 넘어가면 왼쪽에 표시
+        if (rect.right > window.innerWidth) {
+          submenu.style.left = 'auto';
+          submenu.style.right = '100%';
+          submenu.style.marginLeft = '0';
+          submenu.style.marginRight = '4px';
+        }
+      } catch (error) {
+        // getBoundingClientRect 호출 실패 시 무시
+        console.warn('Failed to get bounding rect:', error);
       }
     }
   }, [showProjectMoveMenu]);

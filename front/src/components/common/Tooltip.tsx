@@ -18,11 +18,12 @@ export default function Tooltip({ content }: TooltipProps) {
   const updatePosition = () => {
     if (!triggerRef.current || !tooltipRef.current) return;
 
-    const triggerRect = triggerRef.current.getBoundingClientRect();
-    const tooltipRect = tooltipRef.current.getBoundingClientRect();
-    const { innerWidth: screenWidth } = window;
-    const padding = 10;
-    const tooltipHeight = tooltipRect.height;
+    try {
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const tooltipRect = tooltipRef.current.getBoundingClientRect();
+      const { innerWidth: screenWidth } = window;
+      const padding = 10;
+      const tooltipHeight = tooltipRect.height;
 
     let newPlacement: 'top' | 'bottom' = 'top';
     if (triggerRect.top - tooltipHeight - padding < 0) {
@@ -45,11 +46,14 @@ export default function Tooltip({ content }: TooltipProps) {
       left = screenWidth - tooltipRect.width / 2 - padding;
     }
 
-    arrowLeft = arrowLeft - left + tooltipRect.width / 2;
+      arrowLeft = arrowLeft - left + tooltipRect.width / 2;
 
-    setPosition({ top, left });
-    setPlacement(newPlacement);
-    setArrowPosition(arrowLeft);
+      setPosition({ top, left });
+      setPlacement(newPlacement);
+      setArrowPosition(arrowLeft);
+    } catch (error) {
+      console.warn('Failed to update tooltip position:', error);
+    }
   };
 
   useEffect(() => {
