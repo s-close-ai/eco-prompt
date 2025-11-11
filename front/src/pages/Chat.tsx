@@ -776,11 +776,12 @@ export default function Chat() {
     try {
       // updateMessage API 사용 (PATCH)
       const { updateMessage } = await import('@/services/api/message');
+      const actualMessageUUID = userMessageToRetry.messageUUID || userMessageToRetry.id;
       const response = await updateMessage({
         projectId: projectId ?? defaultProjectId!,
         chattingId: Number(chattingId),
         content: userMessageToRetry.message,
-        messageUUID: userMessageToRetry.id,
+        messageUUID: actualMessageUUID,
       });
 
       const { messageUUID } = response.data;
