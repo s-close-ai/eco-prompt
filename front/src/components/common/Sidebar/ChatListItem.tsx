@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import { useLongPress } from '@/hooks/useLongPress';
+import { useClickOutside } from '@/hooks/useClickOutside';
 import { ICON_SIZE } from '@/constants/ui';
 import type { SidebarChatItem } from '@/types/sidebar.types';
 import { useProjectStore } from '@/store/projectStore';
@@ -20,12 +21,18 @@ interface ChatListItemProps {
 export function ChatListItem({ chat, isNested, onMenuToggle }: ChatListItemProps) {
   const [editedTitle, setEditedTitle] = useState(chat.title);
   const navigate = useNavigate();
+  const location = useLocation();
   const mode = useDeviceMode();
   const { closeSidebar } = useAppShell();
   const { editingChatId, setEditingChatId, updateChatTitle } = useProjectStore();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isEditing = editingChatId === chat.chattingId;
+  const editContainerRef = useRef<HTMLDivElement>(null);
+
+  // 현재 페이지가 이 채팅 페이지인지 확인
+  const locationState = location.state as { chatId?: number } | undefined;
+  const isActive = location.pathname === '/chat' && locationState?.chatId === chat.chattingId;
 
   // 편집 모드로 전환 시 input에 포커스
   useEffect(() => {
@@ -34,6 +41,13 @@ export function ChatListItem({ chat, isNested, onMenuToggle }: ChatListItemProps
       inputRef.current.select();
     }
   }, [isEditing]);
+
+  // 외부 클릭 감지하여 편집 모드 종료
+  useClickOutside<HTMLDivElement>([editContainerRef as React.RefObject<HTMLDivElement>], () => {
+    if (isEditing) {
+      handleSaveTitle();
+    }
+  }, isEditing);
 
   // props가 변경되면 editedTitle 업데이트
   useEffect(() => {
@@ -50,7 +64,7 @@ export function ChatListItem({ chat, isNested, onMenuToggle }: ChatListItemProps
   };
 
   // 제목 저장 (낙관적 업데이트)
-  const handleSaveTitle = async () => {
+  const handleSaveTitle = useCallback(async () => {
     if (!editedTitle.trim() || editedTitle === chat.title) {
       setEditingChatId(null);
       setEditedTitle(chat.title);
@@ -65,7 +79,7 @@ export function ChatListItem({ chat, isNested, onMenuToggle }: ChatListItemProps
     updateChattingTitle(chat.chattingId, { title: editedTitle }).catch((error) => {
       console.error('채팅 이름 변경 API 실패:', error);
     });
-  };
+  }, [editedTitle, chat.title, chat.chattingId, setEditingChatId, updateChatTitle]);
 
   // 제목 편집 취소
   const handleCancelEdit = () => {
@@ -86,23 +100,28 @@ export function ChatListItem({ chat, isNested, onMenuToggle }: ChatListItemProps
     onMenuToggle(e);
   };
 
-  const itemClass = `sidebar-list-item sidebar-list-item-chat ${isNested ? 'sidebar-nested-item' : ''}`;
+  const itemClass = `sidebar-list-item sidebar-list-item-chat ${isNested ? 'sidebar-nested-item' : ''} ${isActive ? 'active' : ''}`;
 
   return (
     <li>
       <div className={itemClass}>
         {isEditing ? (
-          <div className="sidebar-list-item-edit">
+          <div className="sidebar-list-item-edit" ref={editContainerRef}>
             <input
               ref={inputRef}
               type="text"
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSaveTitle();
-                if (e.key === 'Escape') handleCancelEdit();
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSaveTitle();
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  handleCancelEdit();
+                }
               }}
-              onBlur={handleSaveTitle}
               className="sidebar-list-item-input"
             />
           </div>
@@ -112,6 +131,7 @@ export function ChatListItem({ chat, isNested, onMenuToggle }: ChatListItemProps
             onClick={handleClick}
             onContextMenu={handleContextMenu}
             {...(mode !== 'desktop' ? longPressEvents : {})}
+            title={mode === 'desktop' ? chat.title : undefined}
           >
             <span className="sidebar-list-item-text">{chat.title}</span>
           </button>

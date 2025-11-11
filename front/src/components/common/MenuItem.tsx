@@ -17,13 +17,7 @@ export function MenuItem({ icon, label, onClick, className = '', role }: MenuIte
 
   return (
     <button className={baseClass} onClick={onClick} role={role}>
-      <img
-        src={icon}
-        alt=""
-        width={ICON_SIZE.SM}
-        height={ICON_SIZE.SM}
-        aria-hidden="true"
-      />
+      <img src={icon} alt="" width={ICON_SIZE.SM} height={ICON_SIZE.SM} aria-hidden="true" />
       <span>{label}</span>
     </button>
   );

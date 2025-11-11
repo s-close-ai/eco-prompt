@@ -19,7 +19,6 @@ export default function Project() {
     updateProjectTitle,
     removeChat,
     moveChatToProject,
-    setEditingChatId,
   } = useProjectStore();
 
   const locationState = location.state as ProjectLocationState | undefined;
@@ -52,48 +51,39 @@ export default function Project() {
 
   // projectStore 상태를 기반으로 로컬 project state 동기화
   useEffect(() => {
-    if (isNaN(projectId) || !project) return;
+    if (isNaN(projectId)) return;
 
     const storeProject = projects.find((p) => p.projectId === projectId);
     if (storeProject) {
-      // projectStore의 채팅 목록을 기반으로 로컬 project state 업데이트
-      const updatedChats = storeProject.chats.map((chat) => {
-        // 기존 채팅 정보 유지 (lastMessage 등)
-        const existingChat = project.chattingResponses.find(
-          (c) => c.chattingId === chat.chattingId,
-        );
-        return existingChat
-          ? { ...existingChat, title: chat.title }
-          : {
-              chattingId: chat.chattingId,
-              projectId: chat.projectId,
-              title: chat.title,
-              lastMessage: '',
-            };
-      });
+      setProject((prev) => {
+        if (!prev) return null;
 
-      // 실제 변경사항이 있을 때만 업데이트 (무한 루프 방지)
-      const hasChanges =
-        project.title !== storeProject.title ||
-        project.chattingResponses.length !== updatedChats.length ||
-        project.chattingResponses.some(
-          (chat) => !updatedChats.find((c) => c.chattingId === chat.chattingId),
-        ) ||
-        updatedChats.some((chat) => {
-          const existing = project.chattingResponses.find((c) => c.chattingId === chat.chattingId);
-          return !existing || existing.title !== chat.title;
+        // 기존 채팅 목록을 유지하면서, storeProject에 있는 채팅의 제목만 업데이트
+        const updatedChats = prev.chattingResponses.map((chat) => {
+          const storeChat = storeProject.chats.find((c) => c.chattingId === chat.chattingId);
+          if (storeChat && chat.title !== storeChat.title) {
+            // storeProject에 있는 채팅은 제목 업데이트
+            return { ...chat, title: storeChat.title };
+          }
+          return chat;
         });
 
-      if (hasChanges) {
-        setProject((prev) => {
-          if (!prev) return null;
+        // 실제 변경사항이 있을 때만 업데이트 (무한 루프 방지)
+        const titleChanged = prev.title !== storeProject.title;
+        const chatsChanged = updatedChats.some((chat, index) => {
+          return chat.title !== prev.chattingResponses[index].title;
+        });
+
+        if (titleChanged || chatsChanged) {
           return {
             ...prev,
             title: storeProject.title,
             chattingResponses: updatedChats,
           };
-        });
-      }
+        }
+
+        return prev;
+      });
     }
   }, [projects, projectId]);
 
@@ -240,7 +230,8 @@ export default function Project() {
       setShowProjectMoveMenu(null);
 
       if (action === 'rename') {
-        setEditingChatId(chatId);
+        // 프로젝트 페이지에서는 각 ChatCard가 자체적으로 편집 모드 관리
+        // onMenuAction prop으로 전달되어 ChatCard 내부에서 처리됨
       } else if (action === 'delete') {
         if (confirm('채팅을 삭제하시겠습니까?')) {
           // 로컬 상태 즉시 업데이트
@@ -269,9 +260,7 @@ export default function Project() {
           if (!prev) return null;
           return {
             ...prev,
-            chattingResponses: prev.chattingResponses.filter(
-              (chat) => chat.chattingId !== chatId,
-            ),
+            chattingResponses: prev.chattingResponses.filter((chat) => chat.chattingId !== chatId),
           };
         });
         // 백그라운드에서 API 호출
@@ -281,7 +270,7 @@ export default function Project() {
         });
       }
     },
-    [removeChat, moveChatToProject, setEditingChatId],
+    [removeChat, moveChatToProject],
   );
 
   // 프로젝트 화면에서 새 채팅 시작

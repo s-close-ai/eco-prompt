@@ -111,10 +111,7 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const [recordData, detailScoreData] = await Promise.all([
-          getRecord(),
-          getDetailScore(),
-        ]);
+        const [recordData, detailScoreData] = await Promise.all([getRecord(), getDetailScore()]);
 
         setStats(recordData.data);
 
@@ -162,19 +159,19 @@ export default function Dashboard() {
         <div className="stats-list">
           <div className="stat-item">
             <span className="stat-label">최고기록</span>
-            <span className="stat-value">{stats.highScore}점</span>
+            <span className="stat-value">{stats.highScore}{' '}점</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">평균 점수</span>
-            <span className="stat-value">{stats.averageScore}점</span>
+            <span className="stat-value">{stats.averageScore}{' '}점</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">내 마일리지</span>
-            <span className="stat-value">{stats.totalMileage.toLocaleString()}마일</span>
+            <span className="stat-value">{stats.totalMileage.toLocaleString()}{' '}마일</span>
           </div>
           <div className="stat-item">
             <span className="stat-label">입력한 프롬프트 개수</span>
-            <span className="stat-value">{stats.promptCount}개</span>
+            <span className="stat-value">{stats.promptCount}{' '}개</span>
           </div>
         </div>
       </div>
@@ -270,19 +267,19 @@ export function DashboardStats() {
       <div className="stats-list">
         <div className="stat-item">
           <span className="stat-label">최고기록</span>
-          <span className="stat-value">{stats.highScore}점</span>
+          <span className="stat-value">{stats.highScore}{' '}점</span>
         </div>
         <div className="stat-item">
           <span className="stat-label">평균 점수</span>
-          <span className="stat-value">{stats.averageScore}점</span>
+          <span className="stat-value">{stats.averageScore}{' '}점</span>
         </div>
         <div className="stat-item">
           <span className="stat-label">내 마일리지</span>
-          <span className="stat-value">{stats.totalMileage.toLocaleString()}마일</span>
+          <span className="stat-value">{stats.totalMileage.toLocaleString()}{' '}마일</span>
         </div>
         <div className="stat-item">
           <span className="stat-label">입력한 프롬프트 개수</span>
-          <span className="stat-value">{stats.promptCount}개</span>
+          <span className="stat-value">{stats.promptCount}{' '}개</span>
         </div>
       </div>
     </div>
