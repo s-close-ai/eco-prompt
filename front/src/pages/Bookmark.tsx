@@ -17,25 +17,14 @@ import Button from '@/components/common/Button';
 import { getFaviconUrl, normalizeUrl } from '@/utils/bookmark';
 import type { MockBookmark } from '@/types/api/bookmark.types';
 import type { BookmarkFormData } from '@/components/bookmark/BookmarkCreateForm';
+import {
+  getBookmarks,
+  createBookmark,
+  updateBookmark,
+  deleteBookmark,
+  updateBookmarkSequence,
+} from '@/services/api/bookmark';
 import '@/styles/pages/bookmark.css';
-
-// TODO: 실제 API에서 데이터를 가져오도록 수정
-const mockBookmarks: MockBookmark[] = [
-  {
-    id: 1,
-    title: '에듀 싸피',
-    url: 'https://edu.ssafy.com/edu/main/index.do',
-    description: '싸피 출결 관리',
-    icon: getFaviconUrl('https://edu.ssafy.com/edu/main/index.do'),
-  },
-  {
-    id: 2,
-    title: '싸피 출결 소명기',
-    url: 'https://ssafy-attendance.vercel.app/?tab=confirm',
-    description: '싸피 출결 소명기 웹',
-    icon: getFaviconUrl('https://ssafy-attendance.vercel.app/?tab=confirm'),
-  },
-];
 
 const MAX_BOOKMARKS = 12;
 
@@ -43,13 +32,41 @@ type FormMode = 'create' | 'edit';
 
 export default function Bookmark() {
   const mode = useDeviceMode();
-  const [bookmarks, setBookmarks] = useState<MockBookmark[]>(mockBookmarks);
+  const [bookmarks, setBookmarks] = useState<MockBookmark[]>([]);
   const [formMode, setFormMode] = useState<FormMode | null>(null);
   const [editingBookmark, setEditingBookmark] = useState<MockBookmark | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== 'undefined' ? window.innerWidth : 1024,
   );
+  const [originalBookmarkOrder, setOriginalBookmarkOrder] = useState<number[]>([]);
+
+  // 북마크 데이터 로드
+  useEffect(() => {
+    const fetchBookmarks = async () => {
+      try {
+        setIsLoading(true);
+        const response = await getBookmarks();
+        const bookmarksWithIcons = response.data.bookmarks.map((bookmark) => ({
+          id: bookmark.bookmarkId,
+          title: bookmark.title,
+          url: bookmark.url,
+          description: bookmark.description,
+          icon: getFaviconUrl(bookmark.url),
+        }));
+        setBookmarks(bookmarksWithIcons);
+        setOriginalBookmarkOrder(bookmarksWithIcons.map((b) => b.id));
+      } catch (error) {
+        console.error('북마크 조회 실패:', error);
+        alert('북마크를 불러오는데 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchBookmarks();
+  }, []);
 
   // 화면 크기 추적 (북마크 페이지에서만)
   useEffect(() => {
@@ -96,26 +113,37 @@ export default function Bookmark() {
   }, []);
 
   const handleUpdate = useCallback(
-    (data: BookmarkFormData) => {
+    async (data: BookmarkFormData) => {
       if (!editingBookmark) return;
 
       const normalizedUrl = normalizeUrl(data.url);
 
-      setBookmarks((prev: MockBookmark[]) =>
-        prev.map((b: MockBookmark) =>
-          b.id === editingBookmark.id
-            ? {
-                ...b,
-                title: data.title,
-                url: normalizedUrl,
-                description: data.description || undefined,
-                icon: getFaviconUrl(normalizedUrl),
-              }
-            : b,
-        ),
-      );
-      setFormMode(null);
-      setEditingBookmark(null);
+      try {
+        await updateBookmark(editingBookmark.id, {
+          title: data.title,
+          url: normalizedUrl,
+          description: data.description || undefined,
+        });
+
+        setBookmarks((prev: MockBookmark[]) =>
+          prev.map((b: MockBookmark) =>
+            b.id === editingBookmark.id
+              ? {
+                  ...b,
+                  title: data.title,
+                  url: normalizedUrl,
+                  description: data.description || undefined,
+                  icon: getFaviconUrl(normalizedUrl),
+                }
+              : b,
+          ),
+        );
+        setFormMode(null);
+        setEditingBookmark(null);
+      } catch (error) {
+        console.error('북마크 수정 실패:', error);
+        alert('북마크 수정에 실패했습니다.');
+      }
     },
     [editingBookmark],
   );
@@ -125,16 +153,22 @@ export default function Bookmark() {
     setEditingBookmark(null);
   }, []);
 
-  const handleDelete = useCallback((bookmark: MockBookmark) => {
+  const handleDelete = useCallback(async (bookmark: MockBookmark) => {
     if (confirm(`"${bookmark.title}" 북마크를 삭제하시겠습니까?`)) {
-      setBookmarks((prev: MockBookmark[]) =>
-        prev.filter((b: MockBookmark) => b.id !== bookmark.id),
-      );
+      try {
+        await deleteBookmark({ bookmarkId: bookmark.id });
+        setBookmarks((prev: MockBookmark[]) =>
+          prev.filter((b: MockBookmark) => b.id !== bookmark.id),
+        );
+      } catch (error) {
+        console.error('북마크 삭제 실패:', error);
+        alert('북마크 삭제에 실패했습니다.');
+      }
     }
   }, []);
 
   const handleCreate = useCallback(
-    (data: BookmarkFormData) => {
+    async (data: BookmarkFormData) => {
       if (bookmarks.length >= MAX_BOOKMARKS) {
         alert(`최대 ${MAX_BOOKMARKS}개까지 추가할 수 있습니다.`);
         return;
@@ -142,16 +176,27 @@ export default function Bookmark() {
 
       const normalizedUrl = normalizeUrl(data.url);
 
-      const newBookmark: MockBookmark = {
-        id: Date.now() + Math.random(), // 더 안전한 ID 생성
-        title: data.title,
-        url: normalizedUrl,
-        description: data.description || undefined,
-        icon: getFaviconUrl(normalizedUrl),
-      };
+      try {
+        const response = await createBookmark({
+          title: data.title,
+          url: normalizedUrl,
+          description: data.description || undefined,
+        });
 
-      setBookmarks((prev: MockBookmark[]) => [...prev, newBookmark]);
-      setFormMode(null);
+        const newBookmark: MockBookmark = {
+          id: response.data.bookmarkId,
+          title: data.title,
+          url: normalizedUrl,
+          description: data.description || undefined,
+          icon: getFaviconUrl(normalizedUrl),
+        };
+
+        setBookmarks((prev: MockBookmark[]) => [...prev, newBookmark]);
+        setFormMode(null);
+      } catch (error) {
+        console.error('북마크 생성 실패:', error);
+        alert('북마크 생성에 실패했습니다.');
+      }
     },
     [bookmarks.length],
   );
@@ -196,7 +241,7 @@ export default function Bookmark() {
   );
 
   const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
+    async (event: DragEndEvent) => {
       const { active, over } = event;
 
       // over가 없거나 같은 아이템이면 드래그 취소 (스크롤로 간주)
@@ -221,14 +266,27 @@ export default function Bookmark() {
       }
 
       if (over && active.id !== over.id) {
+        let newBookmarks: MockBookmark[] = [];
         setBookmarks((items: MockBookmark[]) => {
           const oldIndex = items.findIndex((item: MockBookmark) => item.id === active.id);
           const newIndex = items.findIndex((item: MockBookmark) => item.id === over.id);
-
-          return arrayMove(items, oldIndex, newIndex);
+          newBookmarks = arrayMove(items, oldIndex, newIndex);
+          return newBookmarks;
         });
 
-        // TODO: 백엔드에 순서 변경 API 호출
+        // 모바일/태블릿: 드래그 완료 시 즉시 순서 변경 API 호출
+        if (mode === 'mobile' || mode === 'tablet') {
+          try {
+            await updateBookmarkSequence({
+              bookmarkIds: newBookmarks.map((b) => b.id),
+            });
+          } catch (error) {
+            console.error('북마크 순서 변경 실패:', error);
+            alert('북마크 순서 변경에 실패했습니다.');
+            // 실패 시 원래 순서로 되돌리기
+            setBookmarks(bookmarks);
+          }
+        }
       }
 
       // 드래그가 끝났으므로 모바일/태블릿에서는 편집 모드 자동 종료
@@ -238,6 +296,35 @@ export default function Bookmark() {
     },
     [mode, bookmarks],
   );
+
+  // 데스크탑에서 편집 모드 토글 및 순서 저장
+  const handleEditModeToggle = useCallback(async () => {
+    // 편집 모드를 끄는 경우 (완료 버튼 클릭)
+    if (isEditMode) {
+      // 순서가 변경되었는지 확인
+      const currentOrder = bookmarks.map((b) => b.id);
+      const hasOrderChanged =
+        JSON.stringify(currentOrder) !== JSON.stringify(originalBookmarkOrder);
+
+      if (hasOrderChanged) {
+        try {
+          await updateBookmarkSequence({
+            bookmarkIds: currentOrder,
+          });
+          setOriginalBookmarkOrder(currentOrder);
+        } catch (error) {
+          console.error('북마크 순서 변경 실패:', error);
+          alert('북마크 순서 변경에 실패했습니다.');
+          // 실패 시 원래 순서로 되돌리기
+          const originalBookmarks = [...bookmarks].sort((a, b) => {
+            return originalBookmarkOrder.indexOf(a.id) - originalBookmarkOrder.indexOf(b.id);
+          });
+          setBookmarks(originalBookmarks);
+        }
+      }
+    }
+    setIsEditMode(!isEditMode);
+  }, [isEditMode, bookmarks, originalBookmarkOrder]);
 
   const canAddMore = bookmarks.length < MAX_BOOKMARKS;
   const isDraggable = isEditMode;
@@ -342,6 +429,21 @@ export default function Bookmark() {
     gridColumns,
   ]);
 
+  // 로딩 중일 때
+  if (isLoading) {
+    return (
+      <div className="bookmark-page">
+        <div className="bookmark-page__header">
+          <div className="bookmark-page__title">
+            <img src="/icons/bookmark.svg" alt="" aria-hidden width={24} height={24} />
+            <h2>북마크</h2>
+          </div>
+        </div>
+        <div style={{ textAlign: 'center', padding: '40px' }}>로딩 중...</div>
+      </div>
+    );
+  }
+
   // 모바일/태블릿: 페이지 형식
   if (mode === 'mobile' || mode === 'tablet') {
     if (isFormOpen) {
@@ -373,7 +475,7 @@ export default function Bookmark() {
           <Button
             variant={isEditMode ? 'secondary' : 'primary'}
             size="sm"
-            onClick={() => setIsEditMode(!isEditMode)}
+            onClick={handleEditModeToggle}
             ariaLabel={isEditMode ? '완료' : '순서 편집'}
           >
             {isEditMode ? '완료' : '순서 편집'}
