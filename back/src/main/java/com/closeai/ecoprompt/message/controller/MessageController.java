@@ -1,6 +1,7 @@
 package com.closeai.ecoprompt.message.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,6 +37,7 @@ public class MessageController implements MessageControllerDocs{
 		return ApiResponse.success(responseDto);
 	}
 
+	@PreAuthorize("isAuthenticated()")
 	@GetMapping(value = "/subscribe/{messageUUID}", produces = "text/event-stream")
 	public SseEmitter subscribeSse(@PathVariable String messageUUID) {
 
