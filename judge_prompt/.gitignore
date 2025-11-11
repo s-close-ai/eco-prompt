@@ -25,5 +25,6 @@ __pycache__/
 .pytest_cache/
 conversations.json
 model_server/logs/
+qwen2.5-7b-instruct/
 *.jsonl
 # End of https://www.toptal.com/developers/gitignore/api/venv
