@@ -14,7 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,37 +31,45 @@ public class RankingSnapshotJob {
     private final MessageJpaRepository messageJpaRepository;
     private final RankingRepository rankingRepository;
 
-    private static final DateTimeFormatter CREATED_FMT = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss");
+    private static final ZoneId Z_KST = ZoneId.of("Asia/Seoul");
+    private static final DateTimeFormatter CREATED_FMT_UTC =
+            DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss").withZone(ZoneOffset.UTC);
     private static final DateTimeFormatter BATCH_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @PersistenceContext
-    private EntityManager em; // User 참조를 지연 로딩/프록시로 안전하게 잡기 위함
+    private EntityManager em;
 
-    /**
-     * 매일 00:05 (KST) 실행.
-     * 대상: "어제 00:00:00 ~ 23:59:59" 구간 Top10 → 스냅샷 저장.
-     */
     @Scheduled(cron = "0 5 0 * * *", zone = "Asia/Seoul")
     @Transactional
-    public void snapshotYesterday() {
-        LocalDate today = LocalDate.now();
-        LocalDate targetDay = today.minusDays(1);          // 스냅샷 대상 일자
-        LocalDate prevDay = targetDay.minusDays(1);      // 변동 비교용 전일
+    public Void snapshotYesterday() {
+        // 반드시 KST 기준으로 '오늘/어제' 계산
+        LocalDate todayKst = LocalDate.now(Z_KST);
+        LocalDate targetDayKst = todayKst.minusDays(1);
+        LocalDate prevDayKst = targetDayKst.minusDays(1);
 
-        // 쿼리 문자열: 00:00:00 ~ 23:59:59
-        String startStr = targetDay.atStartOfDay().format(CREATED_FMT);
-        String endStr = targetDay.atTime(23, 59, 59).format(CREATED_FMT);
+        // KST의 하루 경계를 UTC Instant로 변환
+        ZonedDateTime kstStart = targetDayKst.atStartOfDay(Z_KST);
+        ZonedDateTime kstEnd   = targetDayKst.atTime(23, 59, 59).atZone(Z_KST);
 
-        // 스냅샷 키(yyyy-MM-dd)
-        String batchKey = targetDay.format(BATCH_FMT);
-        String prevBatchKey = prevDay.format(BATCH_FMT);
+        Instant startUtc = kstStart.toInstant(); // 어제 00:00:00 KST -> UTC
+        Instant endUtc   = kstEnd.toInstant();   // 어제 23:59:59 KST -> UTC
 
-        log.info("[RankingSnapshotJob] targetDay={}, start={}, end={}, batchKey={}",
-                targetDay, startStr, endStr, batchKey);
+        // 기존 레포지토리 포맷(String)으로 변환하되, 반드시 UTC로 포맷
+        String startStrUtc = CREATED_FMT_UTC.format(startUtc);
+        String endStrUtc   = CREATED_FMT_UTC.format(endUtc);
 
-        // 1) 대상 일자 Top10 조회
+        String batchKey = targetDayKst.format(BATCH_FMT);
+        String prevBatchKey = prevDayKst.format(BATCH_FMT);
+
+        log.info("[RankingSnapshotJob] KST targetDay={}, KST[{} ~ {}], UTC[{} ~ {}], batchKey={}",
+                targetDayKst,
+                kstStart, kstEnd,
+                startStrUtc, endStrUtc,
+                batchKey);
+
+        // 1) 대상 일자 Top10 조회 (UTC 문자열 범위)
         List<DailyRankingProjection> top10 =
-                messageJpaRepository.findTodayTop10WithName(startStr, endStr);
+                messageJpaRepository.findTodayTop10WithName(startStrUtc, endStrUtc);
 
         // 2) 전일 스냅샷으로 순위 변동 계산
         Map<Integer, Integer> prevRankMap = rankingRepository.findSnapshotByBatchSchedule(prevBatchKey)
@@ -82,15 +90,10 @@ public class RankingSnapshotJob {
 
             RankingChange change;
             Integer prevRank = prevRankMap.get(userId);
-            if (prevRank == null) {
-                change = RankingChange.NEW;
-            } else if (prevRank > rank) {
-                change = RankingChange.UP;
-            } else if (prevRank < rank) {
-                change = RankingChange.DOWN;
-            } else {
-                change = RankingChange.KEEP;
-            }
+            if (prevRank == null)       change = RankingChange.NEW;
+            else if (prevRank > rank)   change = RankingChange.UP;
+            else if (prevRank < rank)   change = RankingChange.DOWN;
+            else                        change = RankingChange.KEEP;
 
             User userRef = em.getReference(User.class, userId);
 
@@ -107,5 +110,7 @@ public class RankingSnapshotJob {
 
         rankingRepository.saveAll(toSave);
         log.info("[RankingSnapshotJob] snapshot saved. size={}, batchKey={}", toSave.size(), batchKey);
+
+        return null;
     }
 }
