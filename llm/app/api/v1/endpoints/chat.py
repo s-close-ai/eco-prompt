@@ -45,7 +45,11 @@ async def chat_vllm(request: ChatRequest, llm_engine_1=Depends(get_llm_engine_1)
     router_response = await router_chain.ainvoke(router_payload)
     print(f"[ROUTER]\n{router_response}")
 
-    question_type = router_response.replace("Classification:", "").strip()
+    if "분류" in router_response:
+        question_type = router_response.replace("분류:", "").strip()
+    
+    if "Classification" in router_response:
+        question_type = router_response.replace("Classification:", "").strip()
 
     # 답변 생성 체인
     chosen_chain = stream_response_vllm(llm_engine_1=llm_engine_1, llm_engine_2=llm_engine_2, tokenizer_1=tokenizer_1, tokenizer_2=tokenizer_2, prompt_type="chosen", question_type=question_type)
