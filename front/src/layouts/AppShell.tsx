@@ -9,16 +9,8 @@ import ProjectCreateOverlay from '@/components/project_create/ProjectCreateOverl
 import SettingsOverlay from '@/components/settings/SettingsOverlay';
 import SearchModal from '@/components/search/SearchModal';
 import type { SettingsFormData } from '@/components/settings/SettingsForm';
-
-// TODO: 실제 API에서 데이터를 가져오도록 수정
-const mockSettingsData: SettingsFormData = {
-  privacyConsent: {
-    agreed: true,
-    date: '2025.10.18',
-  },
-  promptPublic: false,
-  personalizedPrompt: '',
-};
+import { getSharingInformation } from '@/services/api/auth';
+import { getSettings } from '@/services/api/user-info';
 
 function ShellBody() {
   const location = useLocation();
@@ -32,7 +24,8 @@ function ShellBody() {
     isChat || isProjectRoute || isHome ? 'chat' : mode === 'mobile' ? 'menu' : null;
 
   const [isProjectCreateOpen, setProjectCreateOpen] = useState(false);
-  const [settingsData, setSettingsData] = useState<SettingsFormData>(mockSettingsData);
+  const [settingsData, setSettingsData] = useState<SettingsFormData | null>(null);
+  const [isLoadingSettings, setIsLoadingSettings] = useState(false);
 
   const handleSendMessage = (message: string) => {
     // Chat 페이지일 때는 전역 이벤트 발생 (MainChat에서 리스닝)
@@ -74,15 +67,54 @@ function ShellBody() {
     closeSearch();
   }, [location.pathname, closeSettings, closeSearch]);
 
+  // 설정 모달이 열릴 때 데이터 로드
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (isSettingsOpen && !settingsData && !isLoadingSettings) {
+        try {
+          setIsLoadingSettings(true);
+          
+          const [sharingInfoResponse, settingsResponse] = await Promise.all([
+            getSharingInformation(),
+            getSettings(),
+          ]);
+
+          const formattedData: SettingsFormData = {
+            privacyConsent: {
+              agreed: sharingInfoResponse.data.sharingInformation === 'Y',
+              date: sharingInfoResponse.data.sharingInformationUpdatedAt
+                ? sharingInfoResponse.data.sharingInformationUpdatedAt.split('.').slice(0, 3).join('.')
+                : undefined,
+            },
+            promptPublic: settingsResponse.data.sharingPrompt === 'Y',
+            personalizedPrompt: settingsResponse.data.personalPrompt || '',
+          };
+
+          setSettingsData(formattedData);
+        } catch (error) {
+          setSettingsData({
+            privacyConsent: {
+              agreed: false,
+            },
+            promptPublic: false,
+            personalizedPrompt: '',
+          });
+        } finally {
+          setIsLoadingSettings(false);
+        }
+      }
+    };
+
+    loadSettings();
+  }, [isSettingsOpen, settingsData, isLoadingSettings]);
+
   const handleSettingsAutoSave = (data: SettingsFormData) => {
-    // TODO: 실제 API에 자동 저장
-    console.log('Settings auto-saved:', data);
+    // 자동 저장 시 데이터 업데이트 (API 호출은 SettingsForm에서 처리)
     setSettingsData(data);
   };
 
   const handleSettingsSubmit = (data: SettingsFormData) => {
-    // TODO: 실제 API에 저장
-    console.log('Settings saved:', data);
+    // 저장 시 데이터 업데이트 (API 호출은 SettingsForm에서 처리)
     setSettingsData(data);
     closeSettings();
   };
@@ -114,7 +146,7 @@ function ShellBody() {
         onClose={() => setProjectCreateOpen(false)}
         variant={projectCreateVariant}
       />
-      {mode === 'desktop' && (
+      {mode === 'desktop' && settingsData && (
         <SettingsOverlay
           open={isSettingsOpen}
           onClose={closeSettings}
@@ -123,7 +155,7 @@ function ShellBody() {
           onSubmit={handleSettingsSubmit}
           onAutoSave={handleSettingsAutoSave}
         />
-      )}{' '}
+      )}
       <SearchModal />
     </div>
   );
