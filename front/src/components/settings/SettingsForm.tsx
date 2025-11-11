@@ -3,6 +3,7 @@ import Button from '@/components/common/Button';
 import TextArea from '@/components/common/TextArea';
 import Toggle from '@/components/common/Toggle';
 import Tooltip from '@/components/common/Tooltip';
+import { toggleSharingPrompt, setPersonalPrompt } from '@/services/api/user-info';
 import '@/styles/components/settings/settings-form.css';
 
 export type SettingsFormData = {
@@ -99,22 +100,35 @@ export default function SettingsForm({
     };
   }, [isPrivacyConsented]);
 
-  const handleToggleChange = (value: boolean) => {
-    setPromptPublic(value);
-    // 토글 변경 시 자동 저장 (페이지 닫지 않음)
-    onAutoSave?.({
-      privacyConsent,
-      promptPublic: value,
-      personalizedPrompt: personalizedPrompt.trim(),
-    });
+  const handleToggleChange = async (value: boolean) => {
+    try {
+      // API 호출하여 프롬프트 공개 여부 변경
+      await toggleSharingPrompt();
+      setPromptPublic(value);
+      // 토글 변경 시 자동 저장 (페이지 닫지 않음)
+      onAutoSave?.({
+        privacyConsent,
+        promptPublic: value,
+        personalizedPrompt: personalizedPrompt.trim(),
+      });
+    } catch (error) {
+      // 오류 발생 시 원래 상태로 되돌리기
+      alert('프롬프트 공개 여부 변경에 실패했습니다.');
+    }
   };
 
-  const handleSubmit = () => {
-    onSubmit?.({
-      privacyConsent,
-      promptPublic,
-      personalizedPrompt: personalizedPrompt.trim(),
-    });
+  const handleSubmit = async () => {
+    try {
+      // API 호출하여 개인화 프롬프트 저장
+      await setPersonalPrompt({ personalPrompt: personalizedPrompt.trim() });
+      onSubmit?.({
+        privacyConsent,
+        promptPublic,
+        personalizedPrompt: personalizedPrompt.trim(),
+      });
+    } catch (error) {
+      alert('개인화 프롬프트 저장에 실패했습니다.');
+    }
   };
 
   const hasChanges = personalizedPrompt.trim() !== (initialData?.personalizedPrompt ?? '');
