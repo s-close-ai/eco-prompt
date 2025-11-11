@@ -1,6 +1,7 @@
 package com.closeai.ecoprompt.message.service;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Service;
@@ -14,8 +15,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SseService {
 
-	private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();
-	private final Map<String, Boolean> cancelledTasks = new ConcurrentHashMap<>();
+	private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();        // SSE 연결 저장 Map
+	private final Map<String, Boolean> cancelledTasks = new ConcurrentHashMap<>();    // 답변 중단 SSE 저장
+	private final Map<String, CompletableFuture<SseEmitter>> waitTasks = new ConcurrentHashMap<>();
 
 	/**
 	 * 메시지 UUID를 키로 가진 SSE 연결
@@ -31,6 +33,7 @@ public class SseService {
 		if (isCancelled(messageUUID)) {
 			AppLogger.warn("사용자 답변 중지된 작업. UUID :  {}" + messageUUID);
 			emitter.complete();
+			getWaitStatue(messageUUID).complete(emitter);    // 연결 중지된 작업일 때 emitter 삭제
 			return emitter;
 		}
 
@@ -38,18 +41,23 @@ public class SseService {
 			AppLogger.debug("Emitter 완료. UUID :  {}" + messageUUID);
 			emitters.remove(messageUUID);
 			cancelledTasks.remove(messageUUID);    // 작업 완료 시 제거
+			waitTasks.remove(messageUUID);
 		});
 		emitter.onTimeout(() -> {
 			AppLogger.warn("Emitter 시간 초과. UUID :  {}" + messageUUID);
 			emitters.remove(messageUUID);
 			cancelledTasks.remove(messageUUID);    // 작업 완료 시 제거
+			waitTasks.remove(messageUUID);
 		});
 		emitter.onError((e) -> {
 			AppLogger.error(e.getMessage());
 			emitters.remove(messageUUID);
 			cancelledTasks.remove(messageUUID);    // 작업 완료 시 제거
+			waitTasks.remove(messageUUID);
 		});
 
+		// emitter가 준비되었음을 신호로 전송
+		getWaitStatue(messageUUID).complete(emitter);
 		return emitter;
 	}
 
@@ -79,7 +87,6 @@ public class SseService {
 	public void complete(String messageUUID) {
 
 		SseEmitter emitter = emitters.get(messageUUID);
-		cancelledTasks.remove(messageUUID);
 		if (emitter != null) {
 			try {
 				sendEventToClient(messageUUID, "SSE_COMPLETE", "DONE");
@@ -103,5 +110,13 @@ public class SseService {
 	public boolean isCancelled(String messageUUID) {
 		Boolean cancelled = cancelledTasks.get(messageUUID);
 		return cancelled != null && cancelled;
+	}
+
+	/**
+	 * Emitter가 준비될 때까지 기다리거나
+	 * 이미 준비되었다면 즉시 반환하는 함수
+	 * */
+	public CompletableFuture<SseEmitter> getWaitStatue(String messageUUID) {
+		return waitTasks.computeIfAbsent(messageUUID, k -> new CompletableFuture<>());
 	}
 }
