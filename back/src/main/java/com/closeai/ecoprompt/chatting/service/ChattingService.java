@@ -150,7 +150,7 @@ public class ChattingService {
 		Integer userId = CustomUtil.getCurrentUserId();
 
 		if (!chatting.isPresent() || !chatting.get().getProject().getOwner().getId().equals(userId)) {
-			throw new BusinessException("채팅방이 없습니다.");
+			throw new BusinessException("사용자가 생성한 채팅방이 아닙니다.");
 		}
 
 		return chatting.get();
