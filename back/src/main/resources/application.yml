@@ -53,10 +53,6 @@ springdoc:
 
 server:
     forward-headers-strategy: framework
-    error:
-        include-message: always
-        include-binding-errors: always
-        include-stacktrace: ALWAYS  # 로컬/개발에서만
 
 ssh:
     remote-jump-host: ${REMOTE_JUMP_HOST} # ssh 연결할 중간 서버 주소
@@ -81,13 +77,3 @@ ai:
 
 jwt:
     secret: ${JWT_SECRET}
-
-
-logging:
-    level:
-        org.hibernate.orm.jdbc.bind: trace
-        root: INFO
-        org.springframework.web: DEBUG
-        org.springframework.cache: DEBUG
-        org.springframework.data.redis: DEBUG
-        com.closeai: DEBUG
