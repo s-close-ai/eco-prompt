@@ -35,7 +35,7 @@ export function SidebarHeader() {
   return (
     <div className="sidebar-header">
       <div className="sidebar-header-top">
-        <div className="sidebar-logo" onClick={() => navigate('/')}>
+        <div className="sidebar-logo" onClick={() => navigate('/chat')}>
           <img
             src="/logo/header_img.png"
             alt="Eco Prompt"

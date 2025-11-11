@@ -68,9 +68,7 @@ export const useProjectStore = create<ProjectStore>((set) => ({
   // 프로젝트 제목 변경
   updateProjectTitle: (projectId, title) =>
     set((state) => ({
-      projects: state.projects.map((p) =>
-        p.projectId === projectId ? { ...p, title } : p,
-      ),
+      projects: state.projects.map((p) => (p.projectId === projectId ? { ...p, title } : p)),
     })),
   // 채팅 제목 변경 (변경된 채팅을 맨 위로 이동)
   updateChatTitle: (chattingId, title) =>

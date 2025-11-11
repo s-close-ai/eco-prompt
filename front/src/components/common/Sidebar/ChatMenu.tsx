@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import { ContextMenu } from './ContextMenu';
 import { updateChattingProject, deleteChatting } from '@/services/api/chatting';
 import { useProjectStore } from '@/store/projectStore';
@@ -29,14 +29,45 @@ export function ChatMenu({
   menuProps,
   onDelete,
 }: ChatMenuProps) {
-  const { projects, generalChats, defaultProjectId, setEditingChatId, removeChat, moveChatToProject } =
-    useProjectStore();
+  const {
+    projects,
+    generalChats,
+    defaultProjectId,
+    setEditingChatId,
+    removeChat,
+    moveChatToProject,
+  } = useProjectStore();
   const [showProjectMoveMenu, setShowProjectMoveMenu] = useState(false);
+  const submenuRef = useRef<HTMLDivElement>(null);
+
+  // 서브메뉴 위치 조정
+  useEffect(() => {
+    if (showProjectMoveMenu && submenuRef.current) {
+      const submenu = submenuRef.current;
+      try {
+        const rect = submenu.getBoundingClientRect();
+
+        // 화면 오른쪽 끝을 넘어가면 왼쪽에 표시
+        if (rect.right > window.innerWidth) {
+          submenu.style.left = 'auto';
+          submenu.style.right = '100%';
+          submenu.style.marginLeft = '0';
+          submenu.style.marginRight = '4px';
+        }
+      } catch (error) {
+        // getBoundingClientRect 호출 실패 시 무시
+        console.warn('Failed to get bounding rect:', error);
+      }
+    }
+  }, [showProjectMoveMenu]);
 
   const handleRename = useCallback(() => {
-    menuProps.onClose?.();
-    // 인라인 편집 모드 활성화
+    // 인라인 편집 모드 활성화 (메뉴 닫기 전에 먼저 실행)
     setEditingChatId(chattingId);
+    // 약간의 지연 후 메뉴 닫기 (상태 업데이트가 먼저 적용되도록)
+    setTimeout(() => {
+      menuProps.onClose?.();
+    }, 0);
   }, [chattingId, menuProps, setEditingChatId]);
 
   const handleMoveToProject = useCallback(
@@ -88,9 +119,10 @@ export function ChatMenu({
   const availableProjects =
     currentProjectId === defaultProjectId
       ? projects // 기본 프로젝트에서는 다른 프로젝트들만
-      : [{ projectId: defaultProjectId, title: '일반 채팅', chats: generalChats } as any, ...projects].filter(
-          (p) => p.projectId !== currentProjectId,
-        );
+      : [
+          { projectId: defaultProjectId, title: '일반 채팅', chats: generalChats } as any,
+          ...projects,
+        ].filter((p) => p.projectId !== currentProjectId);
 
   return (
     <ContextMenu position={position} menuProps={menuProps}>
@@ -133,7 +165,7 @@ export function ChatMenu({
           />
         </button>
         {showProjectMoveMenu && (
-          <div className="project-chat-card-menu-submenu">
+          <div className="project-chat-card-menu-submenu" ref={submenuRef}>
             {availableProjects.map((project) => (
               <button
                 key={project.projectId}
