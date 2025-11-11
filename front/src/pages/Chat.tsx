@@ -663,17 +663,19 @@ export default function Chat() {
         shouldScrollToBottomRef.current = true; // 초기 로드 시 맨 아래로 스크롤
         isUserAtBottomRef.current = true; // 초기 로드 시 맨 아래로
 
-        // 메시지 로드 후 부드럽게 맨 아래로 이동
-        setTimeout(() => {
-          if (messagesEndRef.current) {
-            isAutoScrollingRef.current = true;
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            setTimeout(() => {
-              isAutoScrollingRef.current = false;
+        // 메시지 로드 후 즉시 맨 아래로 이동
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (scrollContainerRef.current) {
+              const container = scrollContainerRef.current;
+              container.scrollTop = container.scrollHeight;
               isInitialPositionedRef.current = true;
-            }, 500); // smooth 애니메이션 시간 고려
-          }
-        }, 100);
+            } else if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+              isInitialPositionedRef.current = true;
+            }
+          });
+        });
 
         console.log('Initial load:', {
           messagesCount: loadedMessages.length,
@@ -709,16 +711,18 @@ export default function Chat() {
       // 채팅방이 변경되었을 때
       const isNewChat = previousMessagesLengthRef.current === 0;
       if (isNewChat && shouldScrollToBottomRef.current) {
-        setTimeout(() => {
-          if (messagesEndRef.current) {
-            isAutoScrollingRef.current = true;
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            setTimeout(() => {
-              isAutoScrollingRef.current = false;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (scrollContainerRef.current) {
+              const container = scrollContainerRef.current;
+              container.scrollTop = container.scrollHeight;
               isInitialPositionedRef.current = true;
-            }, 500);
-          }
-        }, 150);
+            } else if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+              isInitialPositionedRef.current = true;
+            }
+          });
+        });
       }
     }
   }, [messages.length, chattingId, isLoadingMore]);
