@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-import asyncio
 
 from app.schemas.chat import ChatRequest, ChatResponse
-from app.services.chat import stream_response_vllm
-from app.models.llm_loader import get_llm_engine, get_tokenizer
+from app.services.chat import stream_response_vllm, find_question_type
+from app.models.llm_loader import get_llm_engine_1, get_llm_engine_2, get_tokenizer_1, get_tokenizer_2
 # from app.models.vectordb_loader import get_vector_store
 from app.models.mongodb_loader import get_mongodb
 from app.services.use_mongodb import find_chatting_id, get_chat_history
@@ -12,9 +11,8 @@ from app.models.prompt_template import chosen_prompt, rejected_prompt
 
 router = APIRouter()
 
-
 @router.post("")
-async def chat_vllm(request: ChatRequest, llm_engine=Depends(get_llm_engine), tokenizer=Depends(get_tokenizer), mongo_client=Depends(get_mongodb)):
+async def chat_vllm(request: ChatRequest, llm_engine_1=Depends(get_llm_engine_1), llm_engine_2=Depends(get_llm_engine_2), tokenizer_1=Depends(get_tokenizer_1), tokenizer_2=Depends(get_tokenizer_2), mongo_client=Depends(get_mongodb)):
     """
     스트림 답변 제공
     """
@@ -36,8 +34,21 @@ async def chat_vllm(request: ChatRequest, llm_engine=Depends(get_llm_engine), to
         print(f"[채팅 번호] {chatting_id}\n=> 채팅 기록이 없습니다.")
         chat_history = ""
 
+    # 질문 라우팅
+    router_chain = await find_question_type(llm_engine_2=llm_engine_2, tokenizer_2=tokenizer_2)
+    router_payload = {
+        "message_uuid": message_uuid,
+        "question": user_input,
+    }
+    # print(router_payload)
+
+    router_response = await router_chain.ainvoke(router_payload)
+    print(f"[ROUTER]\n{router_response}")
+
+    question_type = router_response.replace("Classification:", "").strip()
+
     # 답변 생성 체인
-    chosen_chain = stream_response_vllm(llm_engine=llm_engine, tokenizer=tokenizer, prompt_type="chosen")
+    chosen_chain = stream_response_vllm(llm_engine_1=llm_engine_1, llm_engine_2=llm_engine_2, tokenizer_1=tokenizer_1, tokenizer_2=tokenizer_2, prompt_type="chosen", question_type=question_type)
     chosen_payload = {
         "message_uuid": message_uuid,
         "service_prompt": chosen_prompt,
@@ -47,7 +58,7 @@ async def chat_vllm(request: ChatRequest, llm_engine=Depends(get_llm_engine), to
         "context": ""    # 벡터 DB 연결해봐야 함.
     }
 
-    rejected_chain = stream_response_vllm(llm_engine=llm_engine, tokenizer=tokenizer, prompt_type="rejected")
+    rejected_chain = stream_response_vllm(llm_engine_1=llm_engine_1, llm_engine_2=llm_engine_2, tokenizer_1=tokenizer_1, tokenizer_2=tokenizer_2, prompt_type="rejected", question_type=question_type)
     rejected_payload = {
         "message_uuid": message_uuid,
         "service_prompt": rejected_prompt,
@@ -67,7 +78,7 @@ async def chat_vllm(request: ChatRequest, llm_engine=Depends(get_llm_engine), to
             yield f"data: {ChatResponse(sequence_id=sequence_id, token='START').model_dump_json()}\n\n"
             
             async for chunk in chosen_chain.astream(chosen_payload):
-                # print(chunk)
+
                 if not chunk:
                     continue
                 
@@ -88,7 +99,7 @@ async def chat_vllm(request: ChatRequest, llm_engine=Depends(get_llm_engine), to
             print(f"[REJECTED]\n{rejected_response}")
 
         except Exception as e:
-            # print(chunk)
+
             # 오류 시 스트림 종료
             yield f"data: [ERROR] {type(e).__name__}: {e}\n\n"
 

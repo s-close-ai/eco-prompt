@@ -1,15 +1,15 @@
 import os
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
-from typing import Optional
+
 
 load_dotenv()
 
 SEED = 42
 
 class TotalSettings(BaseSettings):
-    # DPO 파인튜닝한 모델 저장 폴더
-    base_model: str = "./local-models/Llama-SSAFY-8B/qwen"
+    # 모델 저장 폴더
+    base_model: str = "./local-models/Llama-SSAFY-8B"
     # MongoDB 관련
     mongo_url: str = os.getenv("MONGO_URL")
 
@@ -20,21 +20,21 @@ class WandbSettings(BaseSettings):
     entity: str = "surinseong-ai"
     
 
-# 학습 관련
-class TrainSettings(BaseSettings):
-    # training arguments
-    per_device_train_batch_size: int = 1
-    gradient_accumulation_steps: int = 16
+# 재학습 관련
+class PostTrainSettings(BaseSettings):
+    # dpo training arguments
+    output_dir: str = "./local-models/dpo_train"
+    num_train_epochs: int = 1
+    per_device_train_batch_size: int = 2
+    gradient_accumulation_steps: int = 1
     gradient_checkpointing: bool = True
-    learning_rate: float = 5e-6
+    learning_rate: float = 1e-5
     optimizer: str = "adamw_torch"
     warmup_ratio: float = 0.05
     lr_scheduler_type: str = "cosine"
-
-    # DPO
-    dpo_beta: float = 0.1
-    max_prompt_length: int = 512
-    max_length: int = 2048
+    max_grad_norm: float = 0.3
+    loss_type: str = "sigmoid"
+    beta: float = 0.1
     
 
 # 평가 관련
@@ -49,7 +49,8 @@ class EvaluateSettings(BaseSettings):
     eval_log_samples: bool = True
     eval_auto_after_train: bool = True
 
+
 base_settings = TotalSettings()
 wandb_settings = WandbSettings()
-train_settings = TrainSettings()
+train_settings = PostTrainSettings()
 evaluate_settings = EvaluateSettings()

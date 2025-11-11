@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 import torch
 import os
 
 from app.core.config import base_settings
+for app.models.llm_loader import get_tokenizer_2
 from app.schemas.train import TrainRequest, TrainResponse
 from app.services.dpo_train import train_model
 from app.services.load_dpo_datasets import process_training_data
@@ -11,43 +12,45 @@ from app.services.evaluate import evaluate_model
 router = APIRouter()
 
 @router.post("", response_model=TrainResponse, status_code=200)
-async def train(request: TrainRequest):
+async def train(request: TrainRequest, tokenizer=Depends(get_tokenizer_2)):
     """모델 학습하기"""
 
     if request.start_training:
         # 학습할 모델 가져오기
-        target_model_path = base_settings.base_model + f"/v_latest"
+        target_model_path = base_settings.base_model + "/midm"
 
         print(f"학습할 모델: {target_model_path}")
     
         # 마스킹 처리한 데이터 받기
         training_dataset = request.training_data
 
-    try:
+    if training_dataset:
+
         print("[START] 데이터 처리 시작")
         # 데이터 처리
-        final_dataset = process_training_data(training_dataset)
+        final_dataset = process_training_data(tokenizer, training_dataset)
 
         print("[COMPLETED] 데이터 처리 완료")
 
         try:
             print("[START] 모델 학습 시작")
             
-            train_model(target_model_path, final_dataset)
+            train_model(target_model_path, final_dataset, target_model_path)
             
             print("[COMPLETED] 모델 학습 완료")
             
             try:
                 # 모델 성능평가 => HAERAE Benchmark 사용하기 + RAG 성능평가
-                result = evaluate_model(base_settings.base_model)
-
-                # v_latest 모델명 변경하기
-                total_version_number = len([name for name in os.listdir(base_settings.base_model) if name.startswith("v_")])
+                print("[START] 성능 평가")
+                result = evaluate_model(base_settings.base_model + "/midm")
+                print("[COMPLETED] 성능 평가 완료")
                 
-                os.rename(base_settings.base_model + "/v_latest", base_settings.base_model + f"/v_{total_version_number:03d}")
-                # 새로운 모델을 v_latest로 변경하기
-                os.rename(base_settings.base_model + "/dpo_model", base_settings.base_model + "/v_latest")
+                os.rename(base_settings.base_model + "/midm", base_settings.base_model + "/midm_pre")
+                print("기존 모델 /midm을 /midm_pre로 변경 완료")
 
+                # 새로운 모델을 v_latest로 변경하기
+                os.rename(base_settings.base_model + "/dpo_model", base_settings.base_model + "/midm")
+                print("새로운 모델 /dpo_model을 /midm으로 변경")
                 return {"is_completed": result}
             
             except Exception as e:
@@ -79,6 +82,3 @@ async def train(request: TrainRequest):
             print(f"🚨 Unexpected error: {type(e).__name__}: {e}")
             return {"is_completed": False}
     
-    except Exception as e:
-        print(f"🚨 데이터 처리 로직 없음: {type(e).__name__}: {e}")
-        return {"is_completed": False}

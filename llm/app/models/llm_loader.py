@@ -7,75 +7,133 @@ from transformers import AutoTokenizer
 from app.core.config import base_settings
 
 # 전역 변수 정의
-MODEL_NAME = base_settings.base_model
+MODEL_NAME_1 = base_settings.base_model + "/qwen"
+MODEL_NAME_2 = base_settings.base_model + "/midm"
+
+llm_tokenizer_1: Optional[AutoTokenizer] = None
+llm_tokenizer_2: Optional[AutoTokenizer] = None
+llm_engine_1: Optional[AsyncLLM] = None
+llm_engine_2: Optional[AsyncLLM] = None
 
 
-llm_tokenizer: Optional[AutoTokenizer] = None
-llm_engine: Optional[AsyncLLM] = None
-
-
-def load_tokenizer():
-    """토크나이저 로드하기"""
-    global llm_tokenizer
+def load_tokenizers():
+    """
+    토크나이저 로드하기
+    1: qwen, 2: llama
+    """
+    global llm_tokenizer_1, llm_tokenizer_2
     
-    # 이미 있다면
-    if llm_tokenizer is not None:
-        print("Tokenizer already loaded.")
-        return
+    # 1. Qwen2.5-Coder 토크나이저 로드
+    if llm_tokenizer_1 is None:
+        try:
+            llm_tokenizer_1 = AutoTokenizer.from_pretrained(
+                pretrained_model_name_or_path=MODEL_NAME_1,
+            )
+            print(f"✅ Tokenizer 1 {MODEL_NAME_1} loaded successfully.")
 
-    # 없다면
-    print("⏳ Starting Tokenizer Load from loader...")
-    try:
-        llm_tokenizer = AutoTokenizer.from_pretrained(
-            MODEL_NAME
-        )
-        print("✅ Tokenizer loaded successfully.")
+        except Exception as e:
+            print(f"❌ Failed to load Tokenizer 1: {e}")
+        
+    # 2. Llama-Korean-3.1-8B-Instruct 토크나이저 로드
+    if llm_tokenizer_2 is None:
+        try:
+            llm_tokenizer_2 = AutoTokenizer.from_pretrained(
+                pretrained_model_name_or_path=MODEL_NAME_2
+            )
+            print(f"✅ Tokenizer 2 {MODEL_NAME_2} loaded successfully.")
 
-    except Exception as e:
-        print(f"❌ Failed to load Tokenizer: {e}")
+        except Exception as e:
+            print(f"❌ Failed to load Tokenizer 2: {e}")
 
 
-def get_tokenizer() -> AutoTokenizer:
+def get_tokenizer_1() -> AutoTokenizer:
     """초기화된 토크나이저 객체를 반환"""
-    global llm_tokenizer
+    global llm_tokenizer_1
 
-    if llm_tokenizer is None:
-        raise RuntimeError("Tokenizer is not initialized.")
-    return llm_tokenizer
+    if llm_tokenizer_1 is None:
+        raise RuntimeError("Tokenizer 1 is not initialized.")
+    
+    return llm_tokenizer_1
 
-async def load_llm_engine():
+
+def get_tokenizer_2() -> AutoTokenizer:
+    """초기화된 토크나이저 객체를 반환"""
+    global llm_tokenizer_2
+    
+    if llm_tokenizer_2 is None:
+        raise RuntimeError("Tokenizer 2 is not initialized.")
+    
+    llm_tokenizer_2.pos_token = llm_tokenizer_2.eos_token
+    llm_tokenizer_2.padding_side = "right"
+    
+    return llm_tokenizer_2
+
+
+async def load_llm_engines():
     """vllm으로 llm 엔진 초기화 하기"""
-    global llm_engine
+    global llm_engine_1, llm_engine_2
 
     # 이미 있다면
-    if llm_engine is not None:
-        print("LLM Engine already loaded.")
+    if llm_engine_1 is not None and llm_engine_2 is not None:
+        print("Both LLM Engines already loaded.")
         return
-
-    # 없다면
-    print("⏳ Starting LLM Engine Load from loader...")
     
-    try:
-        engine_args = AsyncEngineArgs(
-            model=MODEL_NAME,
-            enforce_eager=True,
-            gpu_memory_utilization=0.8,
-            quantization="bitsandbytes",
-            max_model_len=8192
-        )
+    # 1. Qwen2.5-Coder 엔진 설정
+    if llm_engine_1 is None:
+        print(f"⏳ Starting LLM Engine 1 Load ({MODEL_NAME_1})...")
 
-        llm_engine = AsyncLLM.from_engine_args(engine_args)
+        try:
+            engine_args_1 = AsyncEngineArgs(
+                model=MODEL_NAME_1,
+                enforce_eager=True,
+                gpu_memory_utilization=0.35,
+                quantization="bitsandbytes",
+                max_model_len=8192,
+                tensor_parallel_size=1
+            )
 
-        print("✅ LLM Engine loaded successfully.")
+            llm_engine_1 = AsyncLLM.from_engine_args(engine_args_1)
 
-    except Exception as e:
-        print(f"❌ Failed to load LLM Engine: {e}")
+            print("✅ LLM Engine 1 loaded successfully.")
+
+        except Exception as e:
+            print(f"❌ Failed to load LLM Engine 1: {e}")
+
+    # 2. Llama-Korean-3.1-8B-Instruct
+    if llm_engine_2 is None:
+        print(f"⏳ Starting LLM Engine 2 Load ({MODEL_NAME_2})...")
+
+        try:
+            engine_args_2 = AsyncEngineArgs(
+                model=MODEL_NAME_2,
+                enforce_eager=True,
+                gpu_memory_utilization=0.5,
+                quantization="bitsandbytes",
+                max_model_len=8192,
+                tensor_parallel_size=1
+            )
+
+            llm_engine_2 = AsyncLLM.from_engine_args(engine_args_2)
+
+            print("✅ LLM Engine 2 loaded successfully.")
+
+        except Exception as e:
+            print(f"❌ Failed to load LLM Engine 2: {e}")
 
     
-def get_llm_engine() -> AsyncLLM:
+def get_llm_engine_1() -> AsyncLLM:
     """초기화된 LLM 엔진 객체를 반환"""
-    global llm_engine
+    global llm_engine_1
 
-    if llm_engine is None:
-        raise RuntimeError("LLM Engine is not initialized.")
-    return llm_engine
+    if llm_engine_1 is None:
+        raise RuntimeError("LLM Engine 1 is not initialized.")
+    return llm_engine_1
+
+
+def get_llm_engine_2() -> AsyncLLM:
+    """초기화된 LLM 엔진 객체를 반환"""
+    global llm_engine_2
+
+    if llm_engine_2 is None:
+        raise RuntimeError("LLM Engine 2 is not initialized.")
+    return llm_engine_2
