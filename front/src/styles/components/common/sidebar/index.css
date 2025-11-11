@@ -442,12 +442,12 @@
 }
 
 .sidebar-list-item-project.active {
-  background: #e8f5e9;
+  background: transparent;
 }
 
 .sidebar-list-item-project.active .sidebar-list-item-text {
   font-weight: 700;
-  color: #16a34a;
+  color: inherit;
 }
 
 .sidebar-list-item-menu-wrapper {
