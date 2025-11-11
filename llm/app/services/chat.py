@@ -1,9 +1,10 @@
+from datetime import datetime
 from dotenv import load_dotenv
 from langchain_core.runnables import RunnableLambda, RunnableParallel
 from vllm.sampling_params import RequestOutputKind
 from vllm import SamplingParams
 
-from app.models.prompt_template import routing_prompt
+from app.models.prompt_template import routing_prompt, basic_prompt
 
 
 load_dotenv()
@@ -125,6 +126,7 @@ def stream_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokenizer_2, p
         personal_prompt = str(user_info.get("personal_prompt", ""))
 
         system_prompt = (
+            basic_prompt.format(today_date=datetime.now().strftime("%Y년 %m월 %d일 %A")) +
             service_prompt + 
             "\n---\n[사용자 지침]\n" + personal_prompt + 
             "\n\n[History]\n" + history + 
@@ -162,6 +164,7 @@ def stream_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokenizer_2, p
         personal_prompt = str(user_info.get("personal_prompt", ""))
 
         system_prompt = (
+            basic_prompt.format(today_date=datetime.now().strftime("%Y년 %m월 %d일 %A")) +
             service_prompt + 
             "\n---\n[사용자 지침]\n" + personal_prompt + 
             "\n\n[History]\n" + history + 
