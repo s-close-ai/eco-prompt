@@ -40,28 +40,33 @@ export function useContextMenu() {
           newMenus.delete(id);
           triggerRefs.current.delete(id);
         } else {
-          const rect = anchorEl.getBoundingClientRect();
-          const top = rect.bottom + topOffset;
+          try {
+            const rect = anchorEl.getBoundingClientRect();
+            const top = rect.bottom + topOffset;
 
-          let left: number;
-          if (direction === 'right') {
-            // 메뉴를 트리거 요소의 중간에 위치시키기 위해
-            // 트리거 요소의 오른쪽에서 메뉴 너비의 절반을 뺀 위치에 배치
-            left = rect.right - menuWidth / 2 + leftOffset;
-          } else {
-            left = rect.right - menuWidth + leftOffset;
-          }
+            let left: number;
+            if (direction === 'right') {
+              // 메뉴를 트리거 요소의 중간에 위치시키기 위해
+              // 트리거 요소의 오른쪽에서 메뉴 너비의 절반을 뺀 위치에 배치
+              left = rect.right - menuWidth / 2 + leftOffset;
+            } else {
+              left = rect.right - menuWidth + leftOffset;
+            }
 
-          // Viewport collision detection
-          if (left + menuWidth > window.innerWidth) {
-            left = window.innerWidth - menuWidth - 8; // 8px padding from edge
-          }
-          if (left < 8) {
-            left = 8; // 8px padding from edge
-          }
+            // Viewport collision detection
+            if (left + menuWidth > window.innerWidth) {
+              left = window.innerWidth - menuWidth - 8; // 8px padding from edge
+            }
+            if (left < 8) {
+              left = 8; // 8px padding from edge
+            }
 
-          newMenus.set(id, { top, left });
-          triggerRefs.current.set(id, anchorEl);
+            newMenus.set(id, { top, left });
+            triggerRefs.current.set(id, anchorEl);
+          } catch (error) {
+            // getBoundingClientRect 호출 실패 시 메뉴를 열지 않음
+            console.warn('Failed to get bounding rect for menu:', error);
+          }
         }
         return newMenus;
       });

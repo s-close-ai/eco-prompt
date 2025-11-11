@@ -13,16 +13,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.closeai.ecoprompt.ai.model.dto.request.InputJudgeRequest;
-import com.closeai.ecoprompt.ai.model.dto.response.InputJudgeResponse;
 import com.closeai.ecoprompt.ai.model.dto.request.LlmRequest;
+import com.closeai.ecoprompt.ai.model.dto.response.InputJudgeResponse;
 import com.closeai.ecoprompt.ai.model.dto.response.LlmResponse;
 import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.ModelCancelledEvent;
 import com.closeai.ecoprompt.ai.model.event.ModelErrorEvent;
-import com.closeai.ecoprompt.common.logging.AppLogger;
-import com.closeai.ecoprompt.message.model.entity.MessageDocument;
 import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
+import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.model.entity.MessageSender;
 import com.closeai.ecoprompt.sse.service.SseService;
 import com.closeai.ecoprompt.userinfo.service.UserInfoService;
@@ -50,7 +49,7 @@ public class AiService {
 		@Qualifier("judgeLlm") WebClient judgeLlmClient,
 		UserInfoService userInfoService,
 		SseService sseService
-	){
+	) {
 		this.eventPublisher = eventPublisher;
 		this.judgePromptClient = judgePromptClient;
 		this.llmClient = llmClient;
@@ -63,15 +62,15 @@ public class AiService {
 	 * JudgePrompt Model 과 LLM 모델 호출 함수
 	 * */
 	@Async
-	public void callAiModel(String messageUUID, String content, Integer userId, boolean isFirstChatting){
+	public void callAiModel(String messageUUID, String content, Integer userId, boolean isFirstChatting) {
 
-		if(sseService.isCancelled(messageUUID)){
+		if (sseService.isCancelled(messageUUID)) {
 			AppLogger.info("AI 모델 호출 시작 이전에 이미 취소 되었습니다. UUID : " + messageUUID);
 
 			// 취소 이벤트를 발생하기
 			eventPublisher.publishEvent(
-				List.of(new ModelCancelledEvent(this, messageUUID,null, MessageSender.USER),
-					new ModelCancelledEvent(this, messageUUID, null , MessageSender.AI))
+				List.of(new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER),
+					new ModelCancelledEvent(this, messageUUID, null, MessageSender.AI))
 			);
 			return;
 		}
@@ -91,14 +90,14 @@ public class AiService {
 	 * SSE : 연결 해제
 	 * */
 	@Async
-	public void callInputJudgeModel(String messageUUID, String content, Integer userId, boolean isFirstChatting){
+	public void callInputJudgeModel(String messageUUID, String content, Integer userId, boolean isFirstChatting) {
 
 		InputJudgeRequest request = new InputJudgeRequest(messageUUID, content);
 
 		runInputJudgeModel(request)
 			.doOnSuccess(judgeResponse -> {
 
-				if(sseService.isCancelled(messageUUID)){
+				if (sseService.isCancelled(messageUUID)) {
 					AppLogger.info("Judge 모델 완료 하였으나, 작업이 취소 되어 이벤트를 발행하지 않습니다.");
 					eventPublisher.publishEvent(
 						new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER)
@@ -112,7 +111,7 @@ public class AiService {
 				String summary = null;
 
 				sseService.sendEventToClient(messageUUID, "JUDGE_PROMPT", scoreInfo);
-				if(isFirstChatting){
+				if (isFirstChatting) {
 					summary = judgeResponse.summary();
 					sseService.sendEventToClient(messageUUID, "CHATTING_TITLE", summary);
 				}
@@ -121,7 +120,7 @@ public class AiService {
 				);
 			})
 			.doOnError(error -> {
-				AppLogger.error("답변 Judge 모델 호출 실패. UUID :  " +  messageUUID);
+				AppLogger.error("답변 Judge 모델 호출 실패. UUID :  " + messageUUID);
 				sseService.sendEventToClient(messageUUID, "JUDGE_ERROR", "ERROR");
 				eventPublisher.publishEvent(
 					new ModelErrorEvent(this, messageUUID)
@@ -142,29 +141,34 @@ public class AiService {
 	 * SSE : 연결 해제
 	 * */
 	@Async
-	public void callLlmModel(String messageUUID, String userInput, Integer userId){
+	public void callLlmModel(String messageUUID, String userInput, Integer userId) {
 
 		String personalPrompt = userInfoService.getPersonalPrompt(userId);
 		LlmRequest request = new LlmRequest(personalPrompt, userInput, messageUUID);
+
 		StringBuilder answer = new StringBuilder();
-		ConcurrentSkipListMap<Integer, String> buffer = new ConcurrentSkipListMap<>();	// seqId를 기준으로 정렬
+		StringBuilder trainingAnswer = new StringBuilder();
+
+		ConcurrentSkipListMap<Integer, String> buffer = new ConcurrentSkipListMap<>();    // seqId를 기준으로 정렬
 		final AtomicInteger nextExpectedSeqId = new AtomicInteger(0);   // 시작 seqId는 0
 
 		runLlmModel(request)
 			.takeUntil(llmResponse -> sseService.isCancelled(messageUUID))
 			.doOnNext(llmResponse -> {
-				sseService.sendEventToClient(messageUUID, "LLM_TOKEN", llmResponse);
-
 				// SeqId 순선에 따라 StringBuilder에 Input
-				if(llmResponse != null){
+				if (llmResponse != null) {
 					buffer.put(llmResponse.sequenceId(), llmResponse.token());
 
-					while(buffer.containsKey(nextExpectedSeqId.get())){
+					while (buffer.containsKey(nextExpectedSeqId.get())) {
 						int currentSeqId = nextExpectedSeqId.get();
 						String token = buffer.remove(currentSeqId);
 
-						if(currentSeqId != 0 &&
-							!token.equals("START") && !token.equals("DONE")){
+						if (currentSeqId == 0 && token.equals("START")) {
+							sseService.sendEventToClient(messageUUID, "LLM_START", llmResponse);
+						} else if (token.equals("DONE")) {
+
+						} else if (currentSeqId > 0) {
+							sseService.sendEventToClient(messageUUID, "LLM_TOKEN", llmResponse);
 							answer.append(token);
 						}
 
@@ -173,30 +177,35 @@ public class AiService {
 				}
 			})
 			.doOnError(error -> {
-				AppLogger.error("llm 모델 스트리밍 오류. UUID : {}" +  messageUUID);
+				AppLogger.error("llm 모델 스트리밍 오류. UUID : " + messageUUID);
 				sseService.sendEventToClient(messageUUID, "LLM_ERROR", "ERROR");
 				eventPublisher.publishEvent(
 					new ModelErrorEvent(this, messageUUID)
 				);
 			})
 			.doOnComplete(() -> {
+
+				if (buffer.containsKey(-1)) {
+					String trainingToken = buffer.remove(-1);
+					trainingAnswer.append(trainingToken);
+				}
+
 				String finalAnswer = answer.toString();
+				String finalTrainingAnswer = trainingAnswer.toString();
 
 				// SSE 연결이 끊기지 않고 완료된 경우에만 완료 메시지 전달
-				if (!sseService.isCancelled(messageUUID)){
+				if (!sseService.isCancelled(messageUUID)) {
 					AppLogger.info("LLM 모델 답변 완료. UUID : " + messageUUID);
-					sseService.sendEventToClient(messageUUID, "END_LLM", "END");
 
-					if(!buffer.isEmpty()){
+					if (!buffer.isEmpty()) {
 						AppLogger.warn("LLM 완료 답변 완료. 하지만 버퍼에 값 있음");
 					}
 					eventPublisher.publishEvent(
-						new LlmModelCompleteEvent(this, messageUUID, finalAnswer)
+						new LlmModelCompleteEvent(this, messageUUID, finalAnswer, finalTrainingAnswer)
 					);
-				}
-				else{
+				} else {
 					AppLogger.info("사용자에 의해서 답변이 중지되었습니다. UUID : " + messageUUID);
-					if(!finalAnswer.isEmpty()){
+					if (!finalAnswer.isEmpty()) {
 						eventPublisher.publishEvent(
 							new ModelCancelledEvent(this, messageUUID, finalAnswer, MessageSender.AI)
 						);
@@ -209,7 +218,7 @@ public class AiService {
 	/**
 	 * JudgeModel 실행 함수
 	 * */
-	private Mono<InputJudgeResponse> runInputJudgeModel(InputJudgeRequest request){
+	private Mono<InputJudgeResponse> runInputJudgeModel(InputJudgeRequest request) {
 
 		return judgePromptClient.post()
 			.uri("/prompt-judge")
@@ -221,7 +230,7 @@ public class AiService {
 	/**
 	 * LLM 실행 함수
 	 * */
-	private Flux<LlmResponse> runLlmModel(LlmRequest request){
+	private Flux<LlmResponse> runLlmModel(LlmRequest request) {
 		return llmClient.post()
 			.uri("/api/v1/ai/prompt-response")
 			.accept(MediaType.TEXT_EVENT_STREAM)
@@ -233,7 +242,7 @@ public class AiService {
 	/**
 	 * trainingJudge 모델 health check 함수
 	 * */
-	public Mono<String> runTrainingJudgeModel(){
+	public Mono<String> runTrainingJudgeModel() {
 		return judgeLlmClient.get()
 			.uri("/health")
 			.retrieve()

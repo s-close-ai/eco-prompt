@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import { useLongPress } from '@/hooks/useLongPress';
+import { useClickOutside } from '@/hooks/useClickOutside';
 import { ChatListItem } from './ChatListItem';
 import { ICON_SIZE } from '@/constants/ui';
 import type { SidebarProjectItem } from '@/types/sidebar.types';
@@ -40,6 +41,7 @@ export function ProjectListItem({
     updateProjectTitle: updateStoreTitle,
   } = useProjectStore();
   const inputRef = useRef<HTMLInputElement>(null);
+  const editContainerRef = useRef<HTMLDivElement>(null);
 
   const isEditing = editingProjectId === project.projectId;
 
@@ -67,12 +69,21 @@ export function ProjectListItem({
     setEditedTitle(project.title);
   }, [project.title]);
 
-  // 프로젝트 내 채팅이 활성화되면 자동으로 확장
+  // 프로젝트 내 채팅이 활성화되면 자동으로 확장 (최초 1회만)
+  const autoExpandDoneRef = useRef(false);
   useEffect(() => {
-    if (isProjectChatActive && !isExpanded) {
-      setIsExpanded(true);
+    const shouldAutoExpand = isProjectChatActive || isActiveProject;
+
+    if (shouldAutoExpand) {
+      if (!autoExpandDoneRef.current && !isExpanded) {
+        setIsExpanded(true);
+      }
+      autoExpandDoneRef.current = true;
+    } else {
+      // 활성 상태 해제 시 초기화하여 다음에 다시 한 번 자동 확장 가능
+      autoExpandDoneRef.current = false;
     }
-  }, [isProjectChatActive, isExpanded]);
+  }, [isProjectChatActive, isActiveProject, isExpanded]);
 
   // 프로젝트 타이틀 클릭 시 프로젝트 상세 페이지로 이동
   const handleProjectClick = () => {
@@ -84,7 +95,7 @@ export function ProjectListItem({
   };
 
   // 제목 저장
-  const handleSaveTitle = async () => {
+  const handleSaveTitle = useCallback(async () => {
     if (!editedTitle.trim() || editedTitle === project.title) {
       setEditingProjectId(null);
       setEditedTitle(project.title);
@@ -99,7 +110,14 @@ export function ProjectListItem({
     updateProject(project.projectId, { title: editedTitle }).catch((error) => {
       console.error('프로젝트 이름 변경 API 실패:', error);
     });
-  };
+  }, [editedTitle, project.title, project.projectId, setEditingProjectId, updateStoreTitle]);
+
+  // 외부 클릭 감지하여 편집 모드 종료
+  useClickOutside<HTMLDivElement>([editContainerRef as React.RefObject<HTMLDivElement>], () => {
+    if (isEditing) {
+      handleSaveTitle();
+    }
+  }, isEditing);
 
   // 제목 편집 취소
   const handleCancelEdit = () => {
@@ -183,17 +201,22 @@ export function ProjectListItem({
           />
         </button>
         {isEditing ? (
-          <div className="sidebar-list-item-edit">
+          <div className="sidebar-list-item-edit" ref={editContainerRef}>
             <input
               ref={inputRef}
               type="text"
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSaveTitle();
-                if (e.key === 'Escape') handleCancelEdit();
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSaveTitle();
+                }
+                if (e.key === 'Escape') {
+                  e.preventDefault();
+                  handleCancelEdit();
+                }
               }}
-              onBlur={handleSaveTitle}
               className="sidebar-list-item-input"
             />
           </div>

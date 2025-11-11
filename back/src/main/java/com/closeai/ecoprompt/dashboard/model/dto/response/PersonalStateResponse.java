@@ -6,14 +6,14 @@ public record PersonalStateResponse(
         Double highScore,
         Double averageScore,
         int totalMileage,
-        int promptCount
+        Long promptCount
 ) {
     public static PersonalStateResponse from(UserInfo userInfo) {
         return new PersonalStateResponse(
                 userInfo.getHighScore(),
-                userInfo.getTotalScore() / userInfo.getPromptCount(),
+                userInfo.getTotalPromptCount() != 0 ? Math.round(userInfo.getTotalScore() / userInfo.getTotalPromptCount() * 100) / 100.0: 0,
                 userInfo.getTotalMileage(),
-                userInfo.getPromptCount()
+                userInfo.getTotalPromptCount()
         );
     }
 }

@@ -442,12 +442,12 @@
 }
 
 .sidebar-list-item-project.active {
-  background: #e8f5e9;
+  background: transparent;
 }
 
 .sidebar-list-item-project.active .sidebar-list-item-text {
   font-weight: 700;
-  color: #16a34a;
+  color: inherit;
 }
 
 .sidebar-list-item-menu-wrapper {
@@ -743,6 +743,48 @@
 
 .sidebar-nested-item {
   padding-left: 24px;
+}
+
+/* 편집 모드 */
+.sidebar-list-item-edit {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  min-height: 38px;
+  z-index: 10;
+  position: relative;
+}
+
+.sidebar-list-item-input {
+  flex: 1;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #16a34a;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  background: white;
+  outline: none;
+  transition: border-color 0.2s;
+  pointer-events: auto;
+}
+
+.sidebar-list-item-input:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.1);
+}
+
+/* active 상태에서도 편집 모드 표시 */
+.sidebar-list-item-project.active .sidebar-list-item-edit,
+.sidebar-list-item-chat.active .sidebar-list-item-edit {
+  display: flex;
+}
+
+/* 편집 모드일 때 메뉴 버튼 숨기기 */
+.sidebar-list-item-chat:has(.sidebar-list-item-edit) .sidebar-list-item-menu-wrapper {
+  display: none;
 }
 
 /* 하단 고정 영역 */

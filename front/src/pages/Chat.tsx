@@ -44,6 +44,8 @@ export default function Chat() {
   const shouldScrollToBottomRef = useRef<boolean>(false);
   const isCreatingNewChatRef = useRef<boolean>(false);
   const isUserAtBottomRef = useRef<boolean>(true); // 사용자가 맨 아래에 있는지 추적
+  const isAutoScrollingRef = useRef<boolean>(false); // 자동 스크롤 중인지 추적
+  const isInitialPositionedRef = useRef<boolean>(false); // 초기 하단 위치 지정 완료 여부
 
   const handleStopGeneration = useCallback(async () => {
     const lastStreamingMessageId = [...messages].reverse().find((m) => m.isStreaming)?.id;
@@ -79,23 +81,56 @@ export default function Chat() {
     setOnStopGeneration(() => handleStopGeneration);
   }, [handleStopGeneration, setOnStopGeneration]);
 
-  const scrollToBottom = () => {
-    // 사용자가 맨 아래에 있을 때만 자동 스크롤
-    if (isUserAtBottomRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
+  // 브라우저 기본 스크롤 복원 방지 (내부 스크롤 컨테이너를 직접 제어)
+  useEffect(() => {
+    const prev = window.history.scrollRestoration;
+    try {
+      window.history.scrollRestoration = 'manual';
+    } catch {}
+    return () => {
+      try {
+        window.history.scrollRestoration = prev as typeof window.history.scrollRestoration;
+      } catch {}
+    };
+  }, []);
+
+  // 자동 스크롤: 사용자가 아래에 있을 때만 동작
+  const autoScrollIfNeeded = (smooth = false) => {
+    if (!isUserAtBottomRef.current) return;
+    isAutoScrollingRef.current = true;
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: smooth ? 'smooth' : 'auto',
+        block: 'end',
+      });
+      setTimeout(() => {
+        isAutoScrollingRef.current = false;
+      }, smooth ? 250 : 0);
+    });
   };
+
 
   // 사용자가 맨 아래에 있는지 체크하는 함수
   const checkIfUserAtBottom = useCallback(() => {
+    // 자동 스크롤 중이면 체크하지 않음 (자동 스크롤이 사용자 스크롤로 감지되지 않도록)
+    if (isAutoScrollingRef.current) {
+      return;
+    }
+
     const container = scrollContainerRef.current;
     if (!container) return;
 
     const { scrollTop, scrollHeight, clientHeight } = container;
-    const threshold = 100; // 100px 이내면 맨 아래로 간주
+    const threshold = 50; // 50px 이내면 맨 아래로 간주 (더 민감하게)
     const isAtBottom = scrollHeight - scrollTop - clientHeight < threshold;
 
+    const wasAtBottom = isUserAtBottomRef.current;
     isUserAtBottomRef.current = isAtBottom;
+
+    // 사용자가 스크롤을 위로 올렸을 때 로그 (디버깅용)
+    if (wasAtBottom && !isAtBottom) {
+      console.log('사용자가 스크롤을 올림 - 자동 스크롤 중지');
+    }
   }, []);
 
   const handleSendMessage = useCallback(
@@ -154,8 +189,12 @@ export default function Chat() {
 
         const { chattingId: returnedChattingId, messageUUID } = response.data;
 
-        // messageUUID 매핑 저장
-        messageUUIDsRef.current.set(aiMessageId, messageUUID);
+        // 사용자 메시지에 서버의 messageUUID 저장
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === userMessageId ? { ...m, messageUUID } : m,
+          ),
+        );
 
         // 새 채팅인 경우 URL 변경 (메시지 로드를 방지하기 위해 ref 사용)
         if (!currentChatId && returnedChattingId) {
@@ -182,6 +221,9 @@ export default function Chat() {
         // LLM_START 이벤트
         eventSource.addEventListener('LLM_START', () => {
           // LLM 시작 시 로딩 메시지를 AI 메시지로 교체
+          shouldScrollToBottomRef.current = true; // 스트리밍 시작 - 자동 스크롤 활성화
+          isUserAtBottomRef.current = true; // 스트리밍 시작 시 자동으로 맨 아래로
+          autoScrollIfNeeded(true);
           setMessages((prev) =>
             prev.map((m) =>
               m.id === loadingMessageId
@@ -206,7 +248,9 @@ export default function Chat() {
             if (isFirstChunk) {
               // 첫 번째 토큰: 로딩 메시지를 AI 메시지로 교체 (LLM_START가 안 온 경우 대비)
               isFirstChunk = false;
-              shouldScrollToBottomRef.current = true; // 스트리밍 중에는 맨 아래로 스크롤
+              shouldScrollToBottomRef.current = true; // 스트리밍 시작 - 자동 스크롤 활성화
+              isUserAtBottomRef.current = true; // 스트리밍 시작 시 자동으로 맨 아래로
+              autoScrollIfNeeded(false);
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === loadingMessageId
@@ -223,8 +267,9 @@ export default function Chat() {
                 ),
               );
             } else {
-              // 이후 토큰: 메시지에 추가
-              shouldScrollToBottomRef.current = true; // 스트리밍 중에는 맨 아래로 스크롤
+              // 이후 토큰: 메시지에 추가하고 스크롤 유지
+              shouldScrollToBottomRef.current = true; // 매 토큰마다 스크롤 플래그 유지
+              autoScrollIfNeeded(false);
               setMessages((prev) =>
                 prev.map((m) => (m.id === aiMessageId ? { ...m, message: m.message + token } : m)),
               );
@@ -394,15 +439,14 @@ export default function Chat() {
           type: 'user',
           message: msg.userMessage.content,
           timestamp: new Date(),
-          score: msg.scoreMessage?.scoreInfo
-            ? {
-                clarityScore: msg.scoreMessage.scoreInfo.clarityScore,
-                specificityScore: msg.scoreMessage.scoreInfo.specificityScore,
-                formatScore: msg.scoreMessage.scoreInfo.formatScore,
-                safetyScore: msg.scoreMessage.scoreInfo.safetyScore,
-                totalScore: msg.scoreMessage.scoreInfo.totalScore,
-              }
-            : undefined,
+          messageUUID: msg.userMessage.messageUUID, // 서버의 messageUUID 저장
+          score: msg.scoreMessage?.scoreInfo ? {
+            clarityScore: msg.scoreMessage.scoreInfo.clarityScore,
+            specificityScore: msg.scoreMessage.scoreInfo.specificityScore,
+            formatScore: msg.scoreMessage.scoreInfo.formatScore,
+            safetyScore: msg.scoreMessage.scoreInfo.safetyScore,
+            totalScore: msg.scoreMessage.scoreInfo.totalScore,
+          } : undefined,
         });
       }
 
@@ -496,16 +540,49 @@ export default function Chat() {
       }
     }
     // 새 메시지가 맨 아래에 추가된 경우 (메시지 수가 증가하고, 로딩 중이 아닐 때)
-    else if (
-      !isLoadingMore &&
-      currentMessagesLength > previousMessagesLength &&
-      shouldScrollToBottomRef.current
-    ) {
-      // 약간의 지연을 두어 DOM 업데이트가 완료된 후 스크롤
-      setTimeout(() => {
-        scrollToBottom();
+    else if (!isLoadingMore && currentMessagesLength > previousMessagesLength) {
+      const isStreaming = messages.some((m) => m.isStreaming);
+      
+      // 스트리밍 중이면 사용자가 강제로 올리지 않은 이상 항상 자동 스크롤
+      if (isStreaming && shouldScrollToBottomRef.current) {
+        // 사용자가 스크롤을 올렸는지 확인
+        if (isUserAtBottomRef.current) {
+          // 스크롤 애니메이션 시작
+          isAutoScrollingRef.current = true;
+          
+          requestAnimationFrame(() => {
+            if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+            
+            // 애니메이션 완료 후 플래그 리셋 (하지만 스트리밍 중이면 계속 유지)
+            setTimeout(() => {
+              // 스트리밍이 계속되면 플래그 유지, 아니면 리셋
+              const stillStreaming = messages.some((m) => m.isStreaming);
+              if (!stillStreaming) {
+                isAutoScrollingRef.current = false;
+              }
+            }, 200);
+          });
+        }
+      }
+      // 스트리밍이 아닐 때는 사용자가 맨 아래에 있을 때만 스크롤
+      else if (!isStreaming && shouldScrollToBottomRef.current && isUserAtBottomRef.current) {
+        isAutoScrollingRef.current = true;
+        requestAnimationFrame(() => {
+          if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          }
+          setTimeout(() => {
+            isAutoScrollingRef.current = false;
+          }, 300);
+        });
+      }
+      
+      // 스트리밍이 끝나면 플래그 리셋
+      if (!isStreaming) {
         shouldScrollToBottomRef.current = false;
-      }, 0);
+      }
     }
 
     previousMessagesLengthRef.current = currentMessagesLength;
@@ -517,9 +594,11 @@ export default function Chat() {
     if (!container) return;
 
     const handleScroll = () => {
+      // 초기 하단 위치 지정 전에는 무한 스크롤 로딩 금지 (초기 로드시 위 페이지로 당겨오는 현상 방지)
+      if (!isInitialPositionedRef.current) return;
       const { scrollTop } = container;
 
-      // 사용자가 맨 아래에 있는지 체크
+      // 사용자가 맨 아래에 있는지 체크 (스크롤할 때마다)
       checkIfUserAtBottom();
 
       // 맨 위에서 100px 이내일 때 추가 로드
@@ -528,8 +607,21 @@ export default function Chat() {
       }
     };
 
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
+    // 스크롤 이벤트에 쓰로틀링 적용 (성능 최적화)
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const throttledHandleScroll = () => {
+      if (timeoutId) return;
+      timeoutId = setTimeout(() => {
+        handleScroll();
+        timeoutId = null;
+      }, 50);
+    };
+
+    container.addEventListener('scroll', throttledHandleScroll);
+    return () => {
+      container.removeEventListener('scroll', throttledHandleScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [hasMoreMessages, isLoadingMore, loadMoreMessages, checkIfUserAtBottom]);
 
   // 채팅방 메시지 로드
@@ -571,6 +663,20 @@ export default function Chat() {
         shouldScrollToBottomRef.current = true; // 초기 로드 시 맨 아래로 스크롤
         isUserAtBottomRef.current = true; // 초기 로드 시 맨 아래로
 
+        // 메시지 로드 후 즉시 맨 아래로 이동
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (scrollContainerRef.current) {
+              const container = scrollContainerRef.current;
+              container.scrollTop = container.scrollHeight;
+              isInitialPositionedRef.current = true;
+            } else if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+              isInitialPositionedRef.current = true;
+            }
+          });
+        });
+
         console.log('Initial load:', {
           messagesCount: loadedMessages.length,
           hasMore: !response.data.last,
@@ -599,14 +705,27 @@ export default function Chat() {
     }
   }, [locationState?.message, chattingId, handleSendMessage]);
 
-  // 초기 메시지 로드 시 맨 아래로 스크롤
+  // 초기 메시지 로드 시 맨 아래로 스크롤 (백업 로직)
   useEffect(() => {
-    if (messages.length > 0 && !isLoadingMore && previousMessagesLengthRef.current === 0) {
-      setTimeout(() => {
-        scrollToBottom();
-      }, 0);
+    if (messages.length > 0 && !isLoadingMore) {
+      // 채팅방이 변경되었을 때
+      const isNewChat = previousMessagesLengthRef.current === 0;
+      if (isNewChat && shouldScrollToBottomRef.current) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (scrollContainerRef.current) {
+              const container = scrollContainerRef.current;
+              container.scrollTop = container.scrollHeight;
+              isInitialPositionedRef.current = true;
+            } else if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
+              isInitialPositionedRef.current = true;
+            }
+          });
+        });
+      }
     }
-  }, [chattingId]);
+  }, [messages.length, chattingId, isLoadingMore]);
 
   // Bottombar의 ChatInput에서 오는 메시지 처리
   useEffect(() => {
@@ -661,11 +780,12 @@ export default function Chat() {
     try {
       // updateMessage API 사용 (PATCH)
       const { updateMessage } = await import('@/services/api/message');
+      const actualMessageUUID = userMessageToRetry.messageUUID || userMessageToRetry.id;
       const response = await updateMessage({
         projectId: projectId ?? defaultProjectId!,
         chattingId: Number(chattingId),
         content: userMessageToRetry.message,
-        messageUUID: userMessageToRetry.id,
+        messageUUID: actualMessageUUID,
       });
 
       const { messageUUID } = response.data;
@@ -679,7 +799,10 @@ export default function Chat() {
 
       // LLM_START 이벤트
       eventSource.addEventListener('LLM_START', () => {
-        // 이미 AI 메시지가 있으므로 아무 작업 안 함
+        // 이미 AI 메시지가 있으므로 아무 작업 안 함, 단 스크롤은 하단 고정
+        shouldScrollToBottomRef.current = true;
+        isUserAtBottomRef.current = true;
+        autoScrollIfNeeded(true);
       });
 
       // LLM_TOKEN 이벤트 - 실시간으로 토큰 하나씩 받기
@@ -688,7 +811,8 @@ export default function Chat() {
           const data = JSON.parse(event.data);
           const token = data.token || '';
 
-          shouldScrollToBottomRef.current = true; // 스트리밍 중에는 맨 아래로 스크롤
+          shouldScrollToBottomRef.current = true; // 매 토큰마다 스크롤 플래그 유지
+          autoScrollIfNeeded(false);
           setMessages((prev) =>
             prev.map((m) => (m.id === aiMessageId ? { ...m, message: m.message + token } : m)),
           );
@@ -772,6 +896,8 @@ export default function Chat() {
     if (userMessageIndex === -1) return;
 
     const userMessage = messages[userMessageIndex];
+    // 서버의 실제 messageUUID 사용 (없으면 id 사용 - 로드된 메시지의 경우 id가 messageUUID임)
+    const actualMessageUUID = userMessage.messageUUID || userMessage.id;
     const aiMessageId = crypto.randomUUID();
 
     // 로딩 상태 시작
@@ -800,7 +926,7 @@ export default function Chat() {
         projectId: projectId ?? defaultProjectId!,
         chattingId: Number(chattingId),
         content: newMessage,
-        messageUUID: messageId,
+        messageUUID: actualMessageUUID,
       });
 
       const { messageUUID } = response.data;
@@ -814,7 +940,10 @@ export default function Chat() {
 
       // LLM_START 이벤트
       eventSource.addEventListener('LLM_START', () => {
-        // 이미 AI 메시지가 있으므로 아무 작업 안 함
+        // 이미 AI 메시지가 있으므로 아무 작업 안 함, 단 하단 고정
+        shouldScrollToBottomRef.current = true;
+        isUserAtBottomRef.current = true;
+        autoScrollIfNeeded(true);
       });
 
       // LLM_TOKEN 이벤트 - 실시간으로 토큰 하나씩 받기
@@ -823,6 +952,8 @@ export default function Chat() {
           const data = JSON.parse(event.data);
           const token = data.token || '';
 
+          shouldScrollToBottomRef.current = true; // 매 토큰마다 스크롤 플래그 유지
+          autoScrollIfNeeded(false);
           setMessages((prev) =>
             prev.map((m) => (m.id === aiMessageId ? { ...m, message: m.message + token } : m)),
           );

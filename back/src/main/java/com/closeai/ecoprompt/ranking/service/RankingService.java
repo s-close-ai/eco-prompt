@@ -1,10 +1,12 @@
 package com.closeai.ecoprompt.ranking.service;
 
+import com.closeai.ecoprompt.common.CustomUtil;
 import com.closeai.ecoprompt.common.config.RedisCacheConfig;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.model.dto.response.DailyRankingProjection;
 import com.closeai.ecoprompt.ranking.model.dto.response.RankingResponse;
+import com.closeai.ecoprompt.ranking.model.dto.response.TodayRankingResponse;
 import com.closeai.ecoprompt.ranking.model.entity.Ranking;
 import com.closeai.ecoprompt.ranking.model.entity.RankingChange;
 import com.closeai.ecoprompt.ranking.repository.RankingRepository;
@@ -31,7 +33,7 @@ public class RankingService {
     private final MessageJpaRepository messageJpaRepository;
 
     private static final DateTimeFormatter CREATED_FMT = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss");
-    private static final DateTimeFormatter SNAPSHOT_FMT = DateTimeFormatter.ofPattern("yyyy.MM.dd.HH.mm.ss");
+    private static final DateTimeFormatter SNAPSHOT_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     /**
      * 오늘 Top10을 집계하고, 어제(00:00:00) 스냅샷과 비교하여 RankingChange를 계산.
@@ -43,7 +45,7 @@ public class RankingService {
             key   = "'today'",
             unless = "#result == null || #result.isEmpty()"
     )
-    public List<RankingResponse> getTodayTop10WithChange() {
+    public TodayRankingResponse getTodayTop10WithChange() {
         AppLogger.start("오늘의 실시간 랭킹 조회");
         // 1) 오늘 범위 문자열
         LocalDateTime now = LocalDateTime.now();
@@ -63,7 +65,7 @@ public class RankingService {
         // 4) 어제 순위 맵(userId -> rank)
         Map<Integer, Integer> prevRankMap = new HashMap<>();
         for (Ranking r : ySnapshot) {
-            prevRankMap.put(r.getUser().getId(), r.getRanking_number());
+            prevRankMap.put(r.getUser().getId(), r.getRankingNumber());
         }
 
         // 5) 오늘 순위 + 변동 계산
@@ -93,7 +95,7 @@ public class RankingService {
                     change
             ));
         }
-        return result;
+        return new TodayRankingResponse(result, CustomUtil.dateConverter(LocalDateTime.now()));
     }
 
     /**
@@ -107,7 +109,7 @@ public class RankingService {
     public List<RankingResponse> getSnapshotByDate(LocalDate date) {
         AppLogger.start(date + " 의 랭킹 스냅샷 조회");
         // 1) 날짜 파싱 및 00:00:00 세팅
-        String batchSchedule = LocalDateTime.of(date, LocalTime.MIDNIGHT).format(SNAPSHOT_FMT); // yyyy.MM.dd.00.00.00
+        String batchSchedule = LocalDateTime.of(date, LocalTime.MIDNIGHT).format(SNAPSHOT_FMT); // yyyy-MM-dd
 
         // 2) 스냅샷 조회
         List<Ranking> rows = rankingRepository.findSnapshotByBatchSchedule(batchSchedule);
@@ -116,7 +118,7 @@ public class RankingService {
         List<RankingResponse> result = new ArrayList<>();
         for (Ranking r : rows) {
             result.add(new RankingResponse(
-                    r.getRanking_number(),
+                    r.getRankingNumber(),
                     r.getUser().getName(),
                     r.getScore(),
                     r.getMileage(),

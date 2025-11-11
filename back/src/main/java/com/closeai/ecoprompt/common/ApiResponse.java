@@ -1,6 +1,7 @@
 package com.closeai.ecoprompt.common;
 
 import org.apache.coyote.Response;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -32,6 +33,12 @@ public class ApiResponse<T> {
 
 	public static <T> ResponseEntity<ApiResponse<T>> BusinessException(HttpStatus httpStatus, T data) {
 		return ResponseEntity.status(httpStatus).body(new ApiResponse<>("FAIL",data));
+	}
+
+	public static <T> ResponseEntity<ApiResponse<T>> success(T data, HttpHeaders headers) {
+		return ResponseEntity.ok()
+				.headers(headers)
+				.body(new ApiResponse<>("SUCCESS", data));
 	}
 
 }

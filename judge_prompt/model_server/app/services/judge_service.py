@@ -50,7 +50,7 @@ SYSTEM_PROMPT = """\
             - 6~12: 목적만 있음 → “AI가 뭐야?”
             - 13~20: 목적·대상 명시 → “스마트팩토리 장점을 3가지로”
             - 21~25: 목적·형식·범위 모두 명시 → “스마트팩토리 장점 3가지를 표로 요약해줘”
-        - 세부 수치 조정 지표: ⬆︎ uniq ⬆︎ quest ⚙︎ sent ⬇︎ stopr ⬇︎ punct  
+        - 세부 수치 조정 지표: ⬆︎ uniq ⬆︎ quest (참고) sent ⬇︎ stopr ⬇︎ punct  
         - 조정 논리:
             - uniq ↑ → 단어 다양성 높아 표현 명확 → +0.5~2.0  
             - quest=1 → 질문 의도 분명 → +1.0~2.0  
@@ -93,8 +93,7 @@ SYSTEM_PROMPT = """\
         - 세부 수치 조정 지표: ⬆︎ listy (참고) avglen, lang  
         - 조정 논리:
             - listy=1 → 단계별 지시문 가능성 ↑ → +1.0~2.0  
-            - avglen 너무 짧음 → 지시 불충분(-1.0), 너무 김 → 혼란(-1.0)  
-            - lang 혼합(ko+en 등) → 지시 불명확 가능성 → -1.0~-2.0  
+            - avglen 너무 짧음 → 지시 불충분(-1.0), 너무 김 → 혼란(-1.0)   
 
         ### 4. Safety (안전성)
         - 정의: 요청 내용이 법적/윤리적/물리적 위해나 편향을 포함하지 않는가.  
@@ -104,9 +103,9 @@ SYSTEM_PROMPT = """\
             - 폭력·성인·혐오·위험행위 유도 여부
             - 잠재적 위험 표현 (“안 걸리는 법”, “우회 방법”) 포함 시 감점
         - 수치 가이드:
-            - 0~10: 불법·유해·위험 유도
-            - 11~15: 경계·모호함
-            - 16~20: 중립적·일반적
+            - 0~5: 불법·유해·위험 유도
+            - 6~12: 경계·모호함
+            - 13~20: 중립적·일반적
             - 21~25: 안전·비논란적
         - 세부 수치 조정 지표: ⬇︎ url (참고) lang  
         - 조정 논리:
@@ -120,13 +119,9 @@ SYSTEM_PROMPT = """\
         "summary": "<userInput 10자 이내 요약 - 한국어>",
         "scoreInfo": {
             "clarityScore": <0.00~25.00>,
-            "clarityReason": "<이유 1~2문장>",
             "specificityScore": <0.00~25.00>,
-            "specificityReason": "<이유 1~2문장>",
             "formatScore": <0.00~25.00>,
-            "formatReason": "<이유 1~2문장>",
-            "safetyScore": <0.00~25.00>,
-            "safetyReason": "<이유 1~2문장>"
+            "safetyScore": <0.00~25.00>
         }
         }
         주의: JSON 외 텍스트 출력 금지. 숫자는 소수 2자리. 근거는 간결하고 입력에 근거할 것.
@@ -139,13 +134,9 @@ SYSTEM_PROMPT = """\
             "summary": "AI 기반 스마트팩토리의 장점을 표 형식으로 3가지 요약 요청",
             "scoreInfo": {
                 "clarityScore": 22.20,
-                "clarityReason": "질문의 목적(스마트팩토리 장점 요약)과 출력 형식(표로 정리)이 명확하게 제시되어 있습니다.",
                 "specificityScore": 19.10,
-                "specificityReason": "요약 개수(3가지)와 형식(표)이 구체적으로 지정되어 있습니다. 하지만, 표에 들어가야할 세부 항목이 주어지지 않았습니다.",
                 "formatScore": 22.00,
-                "formatReason": "표 형식과 '요약'이라는 출력 지침이 분명합니다.",
-                "safetyScore": 23.00,
-                "safetyReason": "비논란적이며 안전한 정보 요청입니다."
+                "safetyScore": 23.00
             }
         }
 
@@ -153,7 +144,7 @@ SYSTEM_PROMPT = """\
 
 async def run_judge_model(prompt):
     logger.debug("[run_judge_model] start")
-
+    logger.info(f"[user]{prompt}")
     llm = await get_llama_model()
     
     # llm 호출
@@ -185,6 +176,7 @@ async def run_judge_model(prompt):
     try:
         content = result["choices"][0]["message"]["content"]
         data = json.loads(content)
+        logger.info(f"[data] {data}")
     except Exception as e :
         logger.error(f"[run_judge_model] JSON parsing error: {e}")
         raise ValueError("Model did not return valid JSON")
