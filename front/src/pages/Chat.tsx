@@ -29,6 +29,7 @@ export default function Chat() {
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [error, setError] = useState<Error | null>(null);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesStartRef = useRef<HTMLDivElement>(null);
   const eventSourcesRef = useRef<Map<string, EventSource>>(new Map());
@@ -41,41 +42,28 @@ export default function Chat() {
   const previousScrollHeightRef = useRef<number>(0);
   const previousScrollTopRef = useRef<number>(0);
   const previousMessagesLengthRef = useRef<number>(0);
-  const shouldScrollToBottomRef = useRef<boolean>(false);
   const isCreatingNewChatRef = useRef<boolean>(false);
   const isUserAtBottomRef = useRef<boolean>(true); // 사용자가 맨 아래에 있는지 추적
-  const isAutoScrollingRef = useRef<boolean>(false); // 자동 스크롤 중인지 추적
   const isInitialPositionedRef = useRef<boolean>(false); // 초기 하단 위치 지정 완료 여부
+  const autoScrollEnabledRef = useRef<boolean>(false); // 자동 스크롤 활성화 여부
 
   const handleStopGeneration = useCallback(async () => {
     const lastStreamingMessageId = [...messages].reverse().find((m) => m.isStreaming)?.id;
     if (lastStreamingMessageId) {
-      const eventSource = eventSourcesRef.current.get(lastStreamingMessageId);
       const messageUUID = messageUUIDsRef.current.get(lastStreamingMessageId);
       
-      // SSE 연결 종료
-      eventSource?.close();
-      eventSourcesRef.current.delete(lastStreamingMessageId);
-      messageUUIDsRef.current.delete(lastStreamingMessageId);
-      
-      // API 호출로 서버에 중지 요청
+      // API 호출로 서버에 중지 요청 (SSE 연결은 유지 - SSE_COMPLETE를 기다림)
       if (messageUUID) {
         try {
           await stopMessage(messageUUID);
+          // SSE 연결은 백엔드가 SSE_COMPLETE를 보낼 때까지 유지
+          // SSE_COMPLETE 이벤트에서 정리됨
         } catch (error) {
           console.error('메시지 중지 API 실패:', error);
         }
       }
-      
-      // 메시지 상태 업데이트
-      setMessages((prev) =>
-        prev.map((m) => (m.id === lastStreamingMessageId ? { ...m, isStreaming: false } : m)),
-      );
-      
-      // 로딩 상태 해제
-      setIsLoading(false);
     }
-  }, [messages, setIsLoading]);
+  }, [messages]);
 
   useEffect(() => {
     setOnStopGeneration(() => handleStopGeneration);
@@ -94,44 +82,45 @@ export default function Chat() {
     };
   }, []);
 
-  // 자동 스크롤: 사용자가 아래에 있을 때만 동작
-  const autoScrollIfNeeded = (smooth = false) => {
-    if (!isUserAtBottomRef.current) return;
-    isAutoScrollingRef.current = true;
+  // 맨 아래로 스크롤
+  const scrollToBottom = useCallback((smooth = true) => {
     requestAnimationFrame(() => {
-      messagesEndRef.current?.scrollIntoView({
+      if (scrollContainerRef.current) {
+        const container = scrollContainerRef.current;
+        container.scrollTo({
+          top: container.scrollHeight,
         behavior: smooth ? 'smooth' : 'auto',
-        block: 'end',
-      });
-      setTimeout(() => {
-        isAutoScrollingRef.current = false;
-      }, smooth ? 250 : 0);
+        });
+      }
     });
-  };
+  }, []);
+
+  // 맨 위로 스크롤 (질문 제출 시)
+  const scrollToTop = useCallback(() => {
+    requestAnimationFrame(() => {
+      if (scrollContainerRef.current) {
+        const container = scrollContainerRef.current;
+        container.scrollTo({
+          top: 0,
+          behavior: 'auto',
+        });
+      }
+    });
+  }, []);
 
 
-  // 사용자가 맨 아래에 있는지 체크하는 함수
-  const checkIfUserAtBottom = useCallback(() => {
-    // 자동 스크롤 중이면 체크하지 않음 (자동 스크롤이 사용자 스크롤로 감지되지 않도록)
-    if (isAutoScrollingRef.current) {
-      return;
-    }
-
+  // 스크롤 위치 감지
+  const checkScrollPosition = useCallback(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    const { scrollTop, scrollHeight, clientHeight } = container;
-    const threshold = 50; // 50px 이내면 맨 아래로 간주 (더 민감하게)
+    const { scrollHeight, scrollTop, clientHeight } = container;
+    const threshold = 100; // 100px 이내면 맨 아래로 간주
     const isAtBottom = scrollHeight - scrollTop - clientHeight < threshold;
 
-    const wasAtBottom = isUserAtBottomRef.current;
     isUserAtBottomRef.current = isAtBottom;
-
-    // 사용자가 스크롤을 위로 올렸을 때 로그 (디버깅용)
-    if (wasAtBottom && !isAtBottom) {
-      console.log('사용자가 스크롤을 올림 - 자동 스크롤 중지');
-    }
-  }, []);
+    setShowScrollToBottom(!isAtBottom && messages.length > 0);
+  }, [messages.length]);
 
   // SSE 이벤트 리스너 설정 공통 함수
   const setupSSEListeners = useCallback(
@@ -141,17 +130,33 @@ export default function Chat() {
       userMessageId: string,
       messageUUID: string,
       loadingMessageId?: string,
+      returnedChattingId?: number,
+      actualProjectId?: number,
     ) => {
       // messageUUID 매핑 저장
       messageUUIDsRef.current.set(aiMessageId, messageUUID);
 
       let isFirstChunk = true;
+      let llmEnded = false;
+      let judgeEnded = false;
+
+      // 두 이벤트가 모두 완료되면 SSE 연결 끊기
+      const checkAndCloseSSE = () => {
+        if (llmEnded && judgeEnded) {
+          eventSource.close();
+          eventSourcesRef.current.delete(aiMessageId);
+          messageUUIDsRef.current.delete(aiMessageId);
+          autoScrollEnabledRef.current = false;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
+          );
+          setIsLoading(false);
+        }
+      };
 
       // LLM_START 이벤트
       eventSource.addEventListener('LLM_START', () => {
-        shouldScrollToBottomRef.current = true;
-        isUserAtBottomRef.current = true;
-        autoScrollIfNeeded(true);
+        autoScrollEnabledRef.current = true;
 
         if (loadingMessageId) {
           // 로딩 메시지를 AI 메시지로 교체 (새 메시지 전송 시)
@@ -180,9 +185,7 @@ export default function Chat() {
           if (isFirstChunk && loadingMessageId) {
             // 첫 번째 토큰: 로딩 메시지를 AI 메시지로 교체 (LLM_START가 안 온 경우 대비)
             isFirstChunk = false;
-            shouldScrollToBottomRef.current = true;
-            isUserAtBottomRef.current = true;
-            autoScrollIfNeeded(false);
+            autoScrollEnabledRef.current = true;
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === loadingMessageId
@@ -200,8 +203,6 @@ export default function Chat() {
             );
           } else {
             // 이후 토큰: 메시지에 추가
-            shouldScrollToBottomRef.current = true;
-            autoScrollIfNeeded(false);
             setMessages((prev) =>
               prev.map((m) => (m.id === aiMessageId ? { ...m, message: m.message + token } : m)),
             );
@@ -211,7 +212,7 @@ export default function Chat() {
         }
       });
 
-      // JUDGE_PROMPT 이벤트
+      // JUDGE_PROMPT 이벤트 - 점수 정보 수신 (정상)
       eventSource.addEventListener('JUDGE_PROMPT', (event) => {
         try {
           const scoreData = JSON.parse(event.data) as PromptScoreType;
@@ -223,12 +224,102 @@ export default function Chat() {
         }
       });
 
+      // LLM_END 이벤트 - LLM 스트리밍 완료
+      eventSource.addEventListener('LLM_END', () => {
+        llmEnded = true;
+        checkAndCloseSSE();
+      });
+
+      // JUDGE_END 이벤트 - 점수 평가 완료
+      eventSource.addEventListener('JUDGE_END', () => {
+        judgeEnded = true;
+        checkAndCloseSSE();
+      });
+
+      // LLM_ERROR 이벤트 - LLM 응답 생성 실패
+      // 결과: LLM 응답 X, 점수 X, 에러 메시지 O
+      eventSource.addEventListener('LLM_ERROR', () => {
+        llmEnded = true; // LLM이 에러로 종료됨
+        judgeEnded = true; // LLM 에러 시 점수도 없으므로 judge도 종료로 간주
+        
+        eventSource.close();
+        eventSourcesRef.current.delete(aiMessageId);
+        messageUUIDsRef.current.delete(aiMessageId);
+        autoScrollEnabledRef.current = false;
+        
+        // LLM 응답이 없으므로 AI 메시지와 로딩 메시지 제거
+        setMessages((prev) => {
+          const filtered = prev.filter((m) => m.id !== loadingMessageId && m.id !== aiMessageId);
+          // 에러 메시지 추가
+          return [
+            ...filtered,
+            {
+              id: crypto.randomUUID(),
+              type: 'error',
+              message: 'AI 응답을 생성하는 중 오류가 발생했습니다.',
+              timestamp: new Date(),
+            },
+          ];
+        });
+        setIsLoading(false);
+      });
+
+      // JUDGE_ERROR 이벤트 - 점수 생성 실패
+      // 결과: LLM 응답 O (계속 받음), 점수 X, 에러 메시지 X
+      eventSource.addEventListener('JUDGE_ERROR', () => {
+        // 점수만 생성 실패, LLM 응답은 계속 받음
+        // 새 채팅인 경우 "NEW CHAT" 제목으로 사이드바 업데이트
+        if (returnedChattingId && actualProjectId) {
+          const newTitle = 'NEW CHAT';
+          updateCurrentTitle(newTitle);
+
+          if (actualProjectId !== defaultProjectId) {
+            // 프로젝트 채팅인 경우
+            const existingChat = useProjectStore
+              .getState()
+              .projects.find((p) => p.projectId === actualProjectId)
+              ?.chats.find((c) => c.chattingId === returnedChattingId);
+
+            if (!existingChat) {
+              addChatToProject(actualProjectId, {
+                chattingId: returnedChattingId,
+                title: newTitle,
+                projectId: actualProjectId,
+              });
+            } else {
+              updateChatTitle(returnedChattingId, newTitle);
+            }
+          } else {
+            // 일반 채팅인 경우
+            const existingChat = useProjectStore
+              .getState()
+              .generalChats.find((c) => c.chattingId === returnedChattingId);
+
+            if (!existingChat) {
+              const { generalChats } = useProjectStore.getState();
+              const newChats = [
+                { chattingId: returnedChattingId, title: newTitle, projectId: defaultProjectId! },
+                ...generalChats,
+              ];
+              useProjectStore
+                .getState()
+                .setGeneralChats(newChats.length > 5 ? newChats.slice(0, 5) : newChats);
+            } else {
+              updateChatTitle(returnedChattingId, newTitle);
+            }
+          }
+        }
+        // LLM 응답은 계속 받으므로 SSE 연결 유지
+        // 에러 메시지 표시하지 않음
+        judgeEnded = true; // 점수 평가 실패로 judge 종료
+      });
+
       // SSE_COMPLETE 이벤트
       eventSource.addEventListener('SSE_COMPLETE', () => {
         eventSource.close();
         eventSourcesRef.current.delete(aiMessageId);
         messageUUIDsRef.current.delete(aiMessageId);
-        shouldScrollToBottomRef.current = true;
+        autoScrollEnabledRef.current = false;
         setMessages((prev) =>
           prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
         );
@@ -257,7 +348,7 @@ export default function Chat() {
         setIsLoading(false);
       };
     },
-    [setIsLoading],
+    [setIsLoading, updateCurrentTitle, addChatToProject, updateChatTitle, defaultProjectId],
   );
 
   const handleSendMessage = useCallback(
@@ -301,10 +392,13 @@ export default function Chat() {
       };
 
       setMessages((prev) => {
-        shouldScrollToBottomRef.current = true; // 새 메시지 추가 시 스크롤 필요
-        isUserAtBottomRef.current = true; // 사용자가 메시지를 보내면 무조건 맨 아래로
         return [...prev, newUserMessage, loadingMessage];
       });
+
+      // 질문을 맨 위로 올리고 자동 스크롤 비활성화
+      scrollToTop();
+      autoScrollEnabledRef.current = false;
+      isUserAtBottomRef.current = false;
 
       try {
         // submitMessage API 사용 (chattingId는 optional)
@@ -344,7 +438,15 @@ export default function Chat() {
         eventSourcesRef.current.set(aiMessageId, eventSource);
 
         // SSE 이벤트 리스너 설정
-        setupSSEListeners(eventSource, aiMessageId, userMessageId, messageUUID, loadingMessageId);
+        setupSSEListeners(
+          eventSource,
+          aiMessageId,
+          userMessageId,
+          messageUUID,
+          loadingMessageId,
+          returnedChattingId,
+          actualProjectId,
+        );
 
         // CHATTING_TITLE 이벤트 - 채팅 제목
         eventSource.addEventListener('CHATTING_TITLE', (event) => {
@@ -521,7 +623,6 @@ export default function Chat() {
           previousScrollTopRef.current = scrollContainerRef.current.scrollTop;
         }
 
-        shouldScrollToBottomRef.current = false; // 이전 메시지 로드 시 스크롤하지 않음
         setMessages((prev) => [...newMessages, ...prev]);
         setCurrentPage(nextPage);
         setHasMoreMessages(!response.data.last);
@@ -560,45 +661,17 @@ export default function Chat() {
     else if (!isLoadingMore && currentMessagesLength > previousMessagesLength) {
       const isStreaming = messages.some((m) => m.isStreaming);
       
-      // 스트리밍 중이면 사용자가 강제로 올리지 않은 이상 항상 자동 스크롤
-      if (isStreaming && shouldScrollToBottomRef.current) {
-        // 사용자가 스크롤을 올렸는지 확인
-        if (isUserAtBottomRef.current) {
-          // 스크롤 애니메이션 시작
-          isAutoScrollingRef.current = true;
-          
-          requestAnimationFrame(() => {
-            if (messagesEndRef.current) {
-              messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
-            }
-            
-            // 애니메이션 완료 후 플래그 리셋 (하지만 스트리밍 중이면 계속 유지)
-            setTimeout(() => {
-              // 스트리밍이 계속되면 플래그 유지, 아니면 리셋
-              const stillStreaming = messages.some((m) => m.isStreaming);
-              if (!stillStreaming) {
-                isAutoScrollingRef.current = false;
-              }
-            }, 200);
-          });
-        }
-      }
-      // 스트리밍이 아닐 때는 사용자가 맨 아래에 있을 때만 스크롤
-      else if (!isStreaming && shouldScrollToBottomRef.current && isUserAtBottomRef.current) {
-        isAutoScrollingRef.current = true;
+      // 자동 스크롤이 활성화되고 스트리밍 중이며 사용자가 맨 아래에 있을 때만 자동 스크롤
+      if (autoScrollEnabledRef.current && isStreaming && isUserAtBottomRef.current) {
         requestAnimationFrame(() => {
-          if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          if (scrollContainerRef.current) {
+            const container = scrollContainerRef.current;
+            container.scrollTo({
+              top: container.scrollHeight,
+              behavior: 'smooth',
+            });
           }
-          setTimeout(() => {
-            isAutoScrollingRef.current = false;
-          }, 300);
         });
-      }
-      
-      // 스트리밍이 끝나면 플래그 리셋
-      if (!isStreaming) {
-        shouldScrollToBottomRef.current = false;
       }
     }
 
@@ -615,8 +688,8 @@ export default function Chat() {
       if (!isInitialPositionedRef.current) return;
       const { scrollTop } = container;
 
-      // 사용자가 맨 아래에 있는지 체크 (스크롤할 때마다)
-      checkIfUserAtBottom();
+      // 스크롤 위치 감지
+      checkScrollPosition();
 
       // 맨 위에서 100px 이내일 때 추가 로드
       if (scrollTop < 100 && hasMoreMessages && !isLoadingMore) {
@@ -639,7 +712,7 @@ export default function Chat() {
       container.removeEventListener('scroll', throttledHandleScroll);
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [hasMoreMessages, isLoadingMore, loadMoreMessages, checkIfUserAtBottom]);
+  }, [hasMoreMessages, isLoadingMore, loadMoreMessages, checkScrollPosition]);
 
   // 채팅방 메시지 로드
   useEffect(() => {
@@ -677,8 +750,6 @@ export default function Chat() {
         setHasMoreMessages(!response.data.last);
         initialMessageSent.current = true;
         previousMessagesLengthRef.current = loadedMessages.length;
-        shouldScrollToBottomRef.current = true; // 초기 로드 시 맨 아래로 스크롤
-        isUserAtBottomRef.current = true; // 초기 로드 시 맨 아래로
 
         // 메시지 로드 후 즉시 맨 아래로 이동
         requestAnimationFrame(() => {
@@ -727,7 +798,7 @@ export default function Chat() {
     if (messages.length > 0 && !isLoadingMore) {
       // 채팅방이 변경되었을 때
       const isNewChat = previousMessagesLengthRef.current === 0;
-      if (isNewChat && shouldScrollToBottomRef.current) {
+      if (isNewChat) {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             if (scrollContainerRef.current) {
@@ -779,9 +850,6 @@ export default function Chat() {
     // 로딩 상태 시작
     setIsLoading(true);
 
-    // 재시도 시 무조건 맨 아래로 스크롤
-    isUserAtBottomRef.current = true;
-
     // 에러 메시지를 제거하고 새 AI 응답을 추가
     setMessages((prev) => [
       ...prev.slice(0, errorIndex),
@@ -810,7 +878,15 @@ export default function Chat() {
       // subscribeMessage API 사용 및 SSE 이벤트 리스너 설정
       const eventSource = subscribeMessage(messageUUID);
       eventSourcesRef.current.set(aiMessageId, eventSource);
-      setupSSEListeners(eventSource, aiMessageId, userMessageToRetry.id, messageUUID);
+      setupSSEListeners(
+        eventSource,
+        aiMessageId,
+        userMessageToRetry.id,
+        messageUUID,
+        undefined,
+        chattingId ? Number(chattingId) : undefined,
+        (projectId ?? defaultProjectId) || undefined,
+      );
     } catch (error) {
       console.error('Failed to retry message:', error);
       setMessages((prev) => {
@@ -849,9 +925,6 @@ export default function Chat() {
     // 로딩 상태 시작
     setIsLoading(true);
 
-    // 메시지 수정 및 재전송 시 무조건 맨 아래로 스크롤
-    isUserAtBottomRef.current = true;
-
     // 기존 메시지들을 제거하고 수정된 메시지와 새 AI 응답을 추가
     setMessages((prev) => [
       ...prev.slice(0, userMessageIndex),
@@ -880,7 +953,15 @@ export default function Chat() {
       // subscribeMessage API 사용 및 SSE 이벤트 리스너 설정
       const eventSource = subscribeMessage(messageUUID);
       eventSourcesRef.current.set(aiMessageId, eventSource);
-      setupSSEListeners(eventSource, aiMessageId, messageId, messageUUID);
+      setupSSEListeners(
+        eventSource,
+        aiMessageId,
+        messageId,
+        messageUUID,
+        undefined,
+        chattingId ? Number(chattingId) : undefined,
+        (projectId ?? defaultProjectId) || undefined,
+      );
     } catch (error) {
       console.error('Failed to update message:', error);
       setMessages((prev) => {
@@ -936,14 +1017,15 @@ export default function Chat() {
       {showMainChat ? (
         <MainChat />
       ) : (
-        <div className="chat-messages" ref={scrollContainerRef}>
-          <div ref={messagesStartRef} />
-          {isLoadingMore && (
-            <div style={{ textAlign: 'center', padding: '10px', color: '#999' }}>
-              이전 메시지 불러오는 중...
-            </div>
-          )}
-          {messages.map((msg) => {
+        <>
+          <div className="chat-messages" ref={scrollContainerRef}>
+            <div ref={messagesStartRef} />
+            {isLoadingMore && (
+              <div style={{ textAlign: 'center', padding: '10px', color: '#999' }}>
+                이전 메시지 불러오는 중...
+              </div>
+            )}
+            {messages.map((msg) => {
             if (msg.type === 'user') {
               return (
                 <div key={msg.id}>
@@ -979,8 +1061,21 @@ export default function Chat() {
               );
             return null;
           })}
-          <div ref={messagesEndRef} />
-        </div>
+            <div ref={messagesEndRef} />
+          </div>
+          
+          {showScrollToBottom && (
+            <button
+              className="scroll-to-bottom-btn"
+              onClick={() => scrollToBottom(true)}
+              aria-label="맨 아래로 가기"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 5v14M19 12l-7 7-7-7" />
+              </svg>
+            </button>
+          )}
+        </>
       )}
     </div>
   );

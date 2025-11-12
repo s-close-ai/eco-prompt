@@ -36,7 +36,7 @@ export default function Topbar() {
             aria-label="채팅"
             className="icon-button"
             onClick={() => {
-              const targetPath = '/';
+              const targetPath = '/chat';
               if (location.pathname !== targetPath) {
                 navigate(targetPath);
               }

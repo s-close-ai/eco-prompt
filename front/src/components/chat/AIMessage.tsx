@@ -13,7 +13,6 @@ interface AIMessageProps {
 
 export default function AIMessage({ message, isStreaming }: AIMessageProps) {
   const [copied, setCopied] = useState(false);
-  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
 
   const handleCopy = async () => {
     try {
@@ -25,11 +24,9 @@ export default function AIMessage({ message, isStreaming }: AIMessageProps) {
     }
   };
 
-  const handleCodeCopy = async (code: string, codeId: string) => {
+  const handleCodeCopy = async (code: string) => {
     try {
       await navigator.clipboard.writeText(code);
-      setCopiedCodeId(codeId);
-      setTimeout(() => setCopiedCodeId(null), 2000);
     } catch (err) {
       console.error('Failed to copy code:', err);
     }
@@ -50,43 +47,32 @@ export default function AIMessage({ message, isStreaming }: AIMessageProps) {
               code({ className, children, ...props }) {
                 const match = /language-(\w+)/.exec(className || '');
                 const codeString = String(children).replace(/\n$/, '');
-                const codeId = `code-${Math.random().toString(36).substr(2, 9)}`;
-                const inline = !match;
-
-                if (!inline && match) {
+                
+                // ``` 로 감싼 코드 블록 판단:
+                // 1. className이 있으면 (language-xxx) → 언어 명시된 블록 코드
+                // 2. className은 없지만 여러 줄이면 → 언어 없는 블록 코드
+                const isCodeBlock = className || codeString.includes('\n');
+                
+                if (isCodeBlock) {
+                  // 언어가 명시된 경우 해당 언어 사용, 없으면 plain text
+                  const language = match ? match[1] : 'text';
+                  const displayLanguage = match ? match[1] : 'plain text';
+                  
                   return (
                     <div className="code-block-wrapper">
                       <div className="code-block-header">
-                        <span className="code-language">{match[1]}</span>
+                        <span className="code-language">{displayLanguage}</span>
                         <button
                           className="code-copy-btn"
-                          onClick={() => handleCodeCopy(codeString, codeId)}
+                          onClick={() => handleCodeCopy(codeString)}
                           aria-label="코드 복사"
                         >
-                          {copiedCodeId === codeId ? (
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <path
-                                d="M20 6L9 17L4 12"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          ) : (
-                            <img src="/icons/copy.svg" alt="복사" />
-                          )}
+                          <img src="/icons/copy.svg" alt="복사" />
                         </button>
                       </div>
                       <SyntaxHighlighter
                         style={oneLight as any}
-                        language={match[1]}
+                        language={language}
                         PreTag="div"
                         customStyle={{
                           margin: 0,
@@ -100,6 +86,7 @@ export default function AIMessage({ message, isStreaming }: AIMessageProps) {
                   );
                 }
 
+                // 인라인 코드 (`` ` `` 로 감싼 것)
                 return (
                   <code className={className} {...props}>
                     {children}
