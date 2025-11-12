@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.closeai.ecoprompt.ai.model.event.EachModelEvent;
 import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.ModelCancelledEvent;
@@ -53,22 +54,13 @@ public class MessageEventHandler {
 	public void handleJudgeModelComplete(JudgeModelCompleteEvent event) {
 
 		String messageUUID = event.getMessageUUID();
-
-		// 0. AI 메시지 상태가 ERROR 인지 확인
-		MessageDocument aiMessage = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.AI)
-			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
-
-		if (aiMessage.getStatus() == MessageStatus.ERROR) {
-			checkCompletion(messageUUID, "JUDGE");
-			return;
-		}
-
 		ScoreInfo scoreInfo = event.getScoreInfo();
 		String summary = event.getSummary();
 		Integer userId = event.getUserId();
 
 		// 1. Message의 점수 정보 Update
-		MessageDocument messageToUpdate = updateMongoMessage(messageUUID, MessageSender.USER, null, scoreInfo, null);
+		MessageDocument messageToUpdate = updateMongoMessage(messageUUID, MessageSender.USER, null, scoreInfo,
+			MessageStatus.COMPLETED);
 		Message message = messageJpaRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER)
 			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
 
@@ -95,16 +87,10 @@ public class MessageEventHandler {
 	public void LlmModelCompleteEvent(LlmModelCompleteEvent event) {
 
 		String messageUUID = event.getMessageUUID();
-
 		// 0. 사용자 메시지 업데이트
 		MessageDocument userMessage = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
 				MessageSender.USER)
 			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
-
-		if (userMessage.getStatus() == MessageStatus.ERROR) {
-			checkCompletion(messageUUID, "LLM");
-			return;
-		}
 
 		String llmAnswer = event.getLlmAnswer();
 		String trainingAnswer = event.getTrainingAnswer();
@@ -120,7 +106,7 @@ public class MessageEventHandler {
 
 	/**
 	 * 각 모델에 대해서 답이 나오기 이전에 사용자가 정지 버튼 클릭 시 발생하는 이벤트
-	 * */
+	 */
 	@Async
 	@Transactional
 	@EventListener
@@ -150,7 +136,7 @@ public class MessageEventHandler {
 
 	/**
 	 * 각 모델에 대해서 에러 발생 시 처리
-	 * */
+	 */
 	@Async
 	@Transactional
 	@EventListener
@@ -184,8 +170,48 @@ public class MessageEventHandler {
 	}
 
 	/**
+	 * 각각의 모델 타입에 대해서 error 처리하는 함수
+	 */
+	@Async
+	@Transactional
+	@EventListener
+	public void EachModelErrorEvent(EachModelEvent event) {
+
+		String messageUUID = event.getMessageUUID();
+		MessageSender sender = event.getSender();
+
+		// Judge 모델이 오류가 났을 때
+		if (sender.equals(MessageSender.USER)) {
+
+			MessageDocument userDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
+					MessageSender.USER)
+				.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
+
+			if (userDocument.getStatus() != MessageStatus.ERROR) {
+				userDocument.updateMessageStatus(MessageStatus.ERROR);
+				messageMongoRepository.save(userDocument);
+			}
+			checkCompletion(messageUUID, "JUDGE");
+		}
+		// LLM 모델이 오류가 났을 때
+		else if (sender.equals(MessageSender.AI)) {
+
+			MessageDocument aiDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
+					MessageSender.AI)
+				.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
+
+			if (aiDocument.getStatus() != MessageStatus.ERROR) {
+				aiDocument.updateMessageStatus(MessageStatus.ERROR);
+				messageMongoRepository.save(aiDocument);
+			}
+
+			checkCompletion(messageUUID, "LLM");
+		}
+	}
+
+	/**
 	 * 작업 완료 확인 함수 + 2개의 모델 호출 완료 후 SSE 연결 해제
-	 * */
+	 */
 	private void checkCompletion(String messageUUID, String modelType) {
 
 		// (스레드 안전) Set을 원자적으로 업데이트
@@ -198,8 +224,13 @@ public class MessageEventHandler {
 		// 두 모델이 모두 완료되었는지 확인
 		if (completedSet.size() == 2) {
 
-			// 1. FE와의 SSE 연결을 '정상 종료'
-			sseService.complete(messageUUID);
+			if (sseService.isCancelled(messageUUID)) {
+				AppLogger.info("취소된 작업. UUID : " + messageUUID);
+			} else {
+				AppLogger.info("정상 완료. UUID : " + messageUUID);
+				// 1. FE와의 SSE 연결을 '정상 종료'
+				sseService.complete(messageUUID);
+			}
 
 			// 2. 임시 저장소에서 제거
 			completionStatus.remove(messageUUID);
@@ -211,7 +242,7 @@ public class MessageEventHandler {
 
 	/**
 	 * MongoDB의 MESSAGE 값 변경 함수
-	 * */
+	 */
 	private MessageDocument updateMongoMessage(String messageUUID, MessageSender messageSender, String content,
 		ScoreInfo scoreInfo, MessageStatus messageStatus) {
 
