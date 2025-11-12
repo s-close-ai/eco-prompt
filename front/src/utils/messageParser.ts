@@ -55,7 +55,7 @@ export function parseMessages(apiMessages: APIMessage[]): ChatMessage[] {
       });
     }
 
-    // 에러 처리: 점수만 에러면 AI 응답 위에, LLM만 에러면 점수 아래에, 둘 다 에러면 각각 위치에
+    // 에러 처리: 점수만 에러면 AI 응답 위에, LLM만 에러면 점수 아래에, 둘 다 에러면 하나의 통합 메시지
     if (hasScoreError && hasAIContent && msg.aiMessage) {
       // 점수만 에러 (AI는 정상) → 점수 위치에 에러 (AI 메시지 위에)
       loadedMessages.push({
@@ -72,17 +72,11 @@ export function parseMessages(apiMessages: APIMessage[]): ChatMessage[] {
         timestamp: new Date(),
       });
     } else if (hasAIError && hasScoreError) {
-      // 둘 다 에러 → 점수 에러 먼저, AI 에러 아래
+      // 둘 다 에러 → 하나의 통합 에러 메시지
       loadedMessages.push({
         id: crypto.randomUUID(),
         type: 'error',
-        message: '점수 정보를 생성하는 중 오류가 발생했습니다.',
-        timestamp: new Date(),
-      });
-      loadedMessages.push({
-        id: crypto.randomUUID(),
-        type: 'error',
-        message: 'AI 응답을 생성하는 중 오류가 발생했습니다.',
+        message: '응답을 생성하는 중 오류가 발생했습니다.',
         timestamp: new Date(),
       });
     } else if (hasAIError) {

@@ -85,18 +85,41 @@ export default function Chat() {
   });
 
   const handleStopGeneration = useCallback(async () => {
-    const lastStreamingMessageId = [...messages].reverse().find((m) => m.isStreaming)?.id;
-    if (lastStreamingMessageId) {
-      const messageUUID = messageUUIDsRef.current.get(lastStreamingMessageId);
+    // 스트리밍 중이거나 로딩 중인 마지막 메시지 찾기
+    const lastStreamingOrLoadingMessage = [...messages]
+      .reverse()
+      .find((m) => m.isStreaming || m.type === 'loading');
 
-      // API 호출로 서버에 중지 요청 (SSE 연결은 유지 - SSE_COMPLETE를 기다림)
-      if (messageUUID) {
-        try {
-          await stopMessage(messageUUID);
-          // SSE 연결은 백엔드가 SSE_COMPLETE를 보낼 때까지 유지
-          // SSE_COMPLETE 이벤트에서 정리됨
-        } catch (error) {
-          console.error('메시지 중지 API 실패:', error);
+    if (lastStreamingOrLoadingMessage) {
+      // 스트리밍 중인 경우
+      if (lastStreamingOrLoadingMessage.isStreaming) {
+        const messageUUID = messageUUIDsRef.current.get(lastStreamingOrLoadingMessage.id);
+        if (messageUUID) {
+          try {
+            await stopMessage(messageUUID);
+            // SSE 연결은 백엔드가 SSE_COMPLETE를 보낼 때까지 유지
+            // SSE_COMPLETE 이벤트에서 정리됨
+          } catch (error) {
+            console.error('메시지 중지 API 실패:', error);
+          }
+        }
+      }
+      // 로딩 중인 경우 - 아직 messageUUID가 없을 수 있음
+      else if (lastStreamingOrLoadingMessage.type === 'loading') {
+        // 로딩 메시지 바로 앞의 유저 메시지 찾기
+        const loadingIndex = messages.findIndex((m) => m.id === lastStreamingOrLoadingMessage.id);
+        if (loadingIndex > 0) {
+          // 로딩 메시지 앞에서 유저 메시지 찾기
+          for (let i = loadingIndex - 1; i >= 0; i--) {
+            if (messages[i].type === 'user' && messages[i].messageUUID) {
+              try {
+                await stopMessage(messages[i].messageUUID!);
+              } catch (error) {
+                console.error('로딩 중 메시지 중지 API 실패:', error);
+              }
+              break;
+            }
+          }
         }
       }
     }

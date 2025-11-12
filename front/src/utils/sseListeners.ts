@@ -62,6 +62,8 @@ export function setupSSEListeners({
   let isFirstChunk = true;
   let llmEnded = false;
   let judgeEnded = false;
+  let hasError = false; // 에러 메시지가 이미 추가되었는지 추적
+  let errorMessageId: string | null = null; // 추가된 에러 메시지의 ID 추적
 
   // 두 이벤트가 모두 완료되면 SSE 연결 끊기
   const checkAndCloseSSE = () => {
@@ -170,46 +172,67 @@ export function setupSSEListeners({
     messageUUIDsRef.current.delete(aiMessageId);
     autoScrollEnabledRef.current = false;
 
-    // LLM 응답이 없으므로 AI 메시지와 로딩 메시지 제거하고 에러 메시지 추가
+    // AI 메시지와 로딩 메시지 제거
     setMessages((prev) => {
       const filtered = prev.filter((m) => m.id !== loadingMessageId && m.id !== aiMessageId);
 
-      // 점수 아래에 에러 메시지 추가
+      // 이미 JUDGE_ERROR로 에러 메시지가 추가된 경우
+      if (hasError && errorMessageId) {
+        // 기존 에러 메시지를 통합 메시지로 업데이트
+        return filtered.map((m) =>
+          m.id === errorMessageId
+            ? { ...m, message: '응답을 생성하는 중 오류가 발생했습니다.' }
+            : m,
+        );
+      }
+
+      // 아직 에러 메시지가 없는 경우 새로 추가
+      hasError = true;
+      const newErrorId = crypto.randomUUID();
+      errorMessageId = newErrorId;
+
       return [
         ...filtered,
         {
-          id: crypto.randomUUID(),
+          id: newErrorId,
           type: 'error',
           message: 'AI 응답을 생성하는 중 오류가 발생했습니다.',
           timestamp: new Date(),
         },
       ];
     });
+
     setIsLoading(false);
   });
 
   // JUDGE_ERROR 이벤트 - 점수 생성 실패
   // 결과: LLM 응답 O (계속 받음), 점수 X, 에러 메시지 O (AI 메시지 위에)
   eventSource.addEventListener('JUDGE_ERROR', () => {
-    // 점수만 생성 실패, LLM 응답은 계속 받음
-    // AI 메시지 바로 앞에 에러 메시지 추가
-    const scoreErrorMessageId = crypto.randomUUID();
-    setMessages((prev) => {
-      const newMessages: ChatMessage[] = [];
-      for (const msg of prev) {
-        // AI 메시지 바로 앞에 에러 메시지 삽입
-        if (msg.id === aiMessageId) {
-          newMessages.push({
-            id: scoreErrorMessageId,
-            type: 'error' as const,
-            message: '점수 정보를 생성하는 중 오류가 발생했습니다.',
-            timestamp: new Date(),
-          });
+    // 이미 에러 메시지가 추가되었으면 중복으로 추가하지 않음
+    if (!hasError) {
+      hasError = true;
+      // 점수만 생성 실패, LLM 응답은 계속 받음
+      // AI 메시지 바로 앞에 에러 메시지 추가
+      const scoreErrorMessageId = crypto.randomUUID();
+      errorMessageId = scoreErrorMessageId; // 에러 메시지 ID 저장
+
+      setMessages((prev) => {
+        const newMessages: ChatMessage[] = [];
+        for (const msg of prev) {
+          // AI 메시지 바로 앞에 에러 메시지 삽입
+          if (msg.id === aiMessageId) {
+            newMessages.push({
+              id: scoreErrorMessageId,
+              type: 'error' as const,
+              message: '점수 정보를 생성하는 중 오류가 발생했습니다.',
+              timestamp: new Date(),
+            });
+          }
+          newMessages.push(msg);
         }
-        newMessages.push(msg);
-      }
-      return newMessages;
-    });
+        return newMessages;
+      });
+    }
 
     // 새 채팅인 경우 "NEW CHAT" 제목으로 사이드바 업데이트
     if (returnedChattingId && actualProjectId) {

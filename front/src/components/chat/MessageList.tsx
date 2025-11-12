@@ -21,7 +21,6 @@ interface MessageListProps {
 export function MessageList({
   messages,
   lastUserMessageId,
-  lastMessageId,
   onEditAndResendMessage,
   onRetry,
 }: MessageListProps) {
@@ -80,12 +79,14 @@ export function MessageList({
       isCurrentGroupStreaming = true;
       currentGroup.push(<ChatLoading key={`loading-${msg.id}`} />);
     } else if (msg.type === 'error') {
+      // 현재 그룹의 유저 메시지가 마지막 유저 메시지인지 확인
+      const isLastUserGroup = currentUserMsgId === lastUserMessageId;
       currentGroup.push(
         <ErrorMessage
           key={`error-${msg.id}`}
           message={msg.message}
           onRetry={() => onRetry(msg.id)}
-          isLastError={msg.id === lastMessageId}
+          isLastError={isLastUserGroup}
         />,
       );
     }
