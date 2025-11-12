@@ -13,7 +13,7 @@ interface PromptScoreProps {
 
 export default function PromptScore({ scores, totalScore }: PromptScoreProps) {
   // scores가 없거나 totalScore가 없으면 렌더링하지 않음
-  if (!scores || !totalScore) {
+  if (!scores || totalScore === undefined || totalScore === null) {
     return null;
   }
 

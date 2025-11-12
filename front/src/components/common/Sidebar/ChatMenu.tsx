@@ -120,7 +120,14 @@ export function ChatMenu({
     currentProjectId === defaultProjectId
       ? projects // 기본 프로젝트에서는 다른 프로젝트들만
       : [
-          { projectId: defaultProjectId, title: '일반 채팅', chats: generalChats } as any,
+          {
+            projectId: defaultProjectId!,
+            title: '일반 채팅',
+            chats: generalChats,
+            totalPages: 0,
+            currentPage: 0,
+            hasMore: false,
+          },
           ...projects,
         ].filter((p) => p.projectId !== currentProjectId);
 

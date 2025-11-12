@@ -3,6 +3,7 @@ import { getEcoPick } from '@/services/api/dashboard';
 import type { EcoPickItem } from '@/types/api/dashboard.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import '@/styles/components/dashboard/eco-pick.css';
+import copyIcon from '/icons/copy.svg';
 
 interface EcoPickProps {
   onSwipeLeft?: () => void;
@@ -15,6 +16,7 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [prompts, setPrompts] = useState<EcoPickItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef<number>(0);
@@ -119,13 +121,34 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
     }
   };
 
+  const handleCopy = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+    }
+  };
+
   const renderPromptCard = (prompt: EcoPickItem, index: number) => (
     <div key={index} className="eco-pick-card">
       <div className="eco-pick-header">
         <div className="eco-pick-name-wrapper">
           <h3 className="eco-pick-name">{prompt.name}</h3>
         </div>
-        <div className="eco-pick-score">{prompt.sumOfScore}</div>
+        <div className="eco-pick-score-wrapper">
+          <button
+            className="copy-button"
+            onClick={() => handleCopy(prompt.prompt)}
+            aria-label="프롬프트 복사"
+          >
+            <img src={copyIcon} alt="복사" />
+          </button>
+          <div className="eco-pick-score">{prompt.sumOfScore}</div>
+        </div>
       </div>
 
       <div className={`eco-pick-content ${expandedIndex === index ? 'expanded' : ''}`}>
@@ -150,6 +173,8 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
           <span className="metric-value">{prompt.detailScore.safetyScore}점</span>
         </div>
       </div>
+      
+      {copied && <span className="eco-pick-copied">복사됨!</span>}
     </div>
   );
 
