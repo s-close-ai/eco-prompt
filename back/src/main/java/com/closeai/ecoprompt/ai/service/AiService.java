@@ -81,6 +81,7 @@ public class AiService {
 		// SSE 연결 이후에 사용자가 취소를 한 경우 취소 상태를 저장
 		if (sseService.isCancelled(messageUUID)) {
 			AppLogger.info("AI 모델 호출 시작 이전에 이미 취소 되었습니다. UUID : " + messageUUID);
+			sseService.sendEventToClient(messageUUID, "SSE_COMPLETE", "DONE");
 			eventPublisher.publishEvent(
 				new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER)
 			);
@@ -130,6 +131,9 @@ public class AiService {
 					summary = judgeResponse.summary();
 					sseService.sendEventToClient(messageUUID, "CHATTING_TITLE", summary);
 				}
+
+				sseService.sendEventToClient(messageUUID, "JUDGE_END", "DONE");
+
 				eventPublisher.publishEvent(
 					new JudgeModelCompleteEvent(this, messageUUID, userId, summary, scoreInfo)
 				);
@@ -215,6 +219,9 @@ public class AiService {
 					if (!buffer.isEmpty()) {
 						AppLogger.warn("LLM 완료 답변 완료. 하지만 버퍼에 값 있음");
 					}
+
+					sseService.sendEventToClient(messageUUID, "LLM_END", "DONE");
+
 					eventPublisher.publishEvent(
 						new LlmModelCompleteEvent(this, messageUUID, finalAnswer, finalTrainingAnswer)
 					);

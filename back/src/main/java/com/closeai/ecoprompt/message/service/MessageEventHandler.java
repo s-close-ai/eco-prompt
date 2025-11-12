@@ -224,8 +224,13 @@ public class MessageEventHandler {
 		// 두 모델이 모두 완료되었는지 확인
 		if (completedSet.size() == 2) {
 
-			// 1. FE와의 SSE 연결을 '정상 종료'
-			sseService.complete(messageUUID);
+			if (sseService.isCancelled(messageUUID)) {
+				AppLogger.info("취소된 작업. UUID : " + messageUUID);
+			} else {
+				AppLogger.info("정상 완료. UUID : " + messageUUID);
+				// 1. FE와의 SSE 연결을 '정상 종료'
+				sseService.complete(messageUUID);
+			}
 
 			// 2. 임시 저장소에서 제거
 			completionStatus.remove(messageUUID);
