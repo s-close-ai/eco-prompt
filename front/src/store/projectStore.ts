@@ -27,16 +27,16 @@ interface ProjectStore {
   setEditingChatId: (chatId: number | null) => void;
 }
 
-export const useProjectStore = create<ProjectStore>((set) => ({
+export const useProjectStore = create<ProjectStore>((set): ProjectStore => ({
   projects: [],
   generalChats: [],
   defaultProjectId: null,
-  setProjects: (projects) => set({ projects }),
-  setGeneralChats: (chats) => set({ generalChats: chats }),
-  setDefaultProjectId: (projectId) => set({ defaultProjectId: projectId }),
+  setProjects: (projects: SidebarProjectItem[]) => set({ projects }),
+  setGeneralChats: (chats: SidebarChatItem[]) => set({ generalChats: chats }),
+  setDefaultProjectId: (projectId: number) => set({ defaultProjectId: projectId }),
   // 새 프로젝트를 맨 위에 추가
-  addProject: (project) =>
-    set((state) => ({
+  addProject: (project: Project) =>
+    set((state: ProjectStore) => ({
       projects: [
         {
           ...project,
@@ -49,9 +49,9 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       ],
     })),
   // 프로젝트에 채팅 추가 (맨 위에 추가하고 5개 초과 시 맨 아래 제거)
-  addChatToProject: (projectId, chat) =>
-    set((state) => ({
-      projects: state.projects.map((p) => {
+  addChatToProject: (projectId: number, chat: SidebarChatItem) =>
+    set((state: ProjectStore) => ({
+      projects: state.projects.map((p: SidebarProjectItem) => {
         if (p.projectId === projectId) {
           const newChats = [chat, ...p.chats];
           // 백엔드가 5개만 보내주므로, 6개 이상이면 맨 아래 제거
@@ -61,32 +61,32 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       }),
     })),
   // 프로젝트 삭제
-  removeProject: (projectId) =>
-    set((state) => ({
-      projects: state.projects.filter((p) => p.projectId !== projectId),
+  removeProject: (projectId: number) =>
+    set((state: ProjectStore) => ({
+      projects: state.projects.filter((p: SidebarProjectItem) => p.projectId !== projectId),
     })),
   // 프로젝트 제목 변경
-  updateProjectTitle: (projectId, title) =>
-    set((state) => ({
-      projects: state.projects.map((p) => (p.projectId === projectId ? { ...p, title } : p)),
+  updateProjectTitle: (projectId: number, title: string) =>
+    set((state: ProjectStore) => ({
+      projects: state.projects.map((p: SidebarProjectItem) => (p.projectId === projectId ? { ...p, title } : p)),
     })),
   // 채팅 제목 변경 (변경된 채팅을 맨 위로 이동)
-  updateChatTitle: (chattingId, title) =>
-    set((state) => {
+  updateChatTitle: (chattingId: number, title: string) =>
+    set((state: ProjectStore) => {
       // 일반 채팅에서 찾기
-      const generalChat = state.generalChats.find((c) => c.chattingId === chattingId);
+      const generalChat = state.generalChats.find((c: SidebarChatItem) => c.chattingId === chattingId);
       if (generalChat) {
-        const otherChats = state.generalChats.filter((c) => c.chattingId !== chattingId);
+        const otherChats = state.generalChats.filter((c: SidebarChatItem) => c.chattingId !== chattingId);
         return {
           generalChats: [{ ...generalChat, title }, ...otherChats],
         };
       }
 
       // 프로젝트 내부 채팅에서 찾기
-      const updatedProjects = state.projects.map((project) => {
-        const chat = project.chats.find((c) => c.chattingId === chattingId);
+      const updatedProjects = state.projects.map((project: SidebarProjectItem) => {
+        const chat = project.chats.find((c: SidebarChatItem) => c.chattingId === chattingId);
         if (chat) {
-          const otherChats = project.chats.filter((c) => c.chattingId !== chattingId);
+          const otherChats = project.chats.filter((c: SidebarChatItem) => c.chattingId !== chattingId);
           const newChats = [{ ...chat, title }, ...otherChats];
           return {
             ...project,
@@ -99,22 +99,22 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       return { projects: updatedProjects };
     }),
   // 채팅을 맨 위로 이동 (제목 변경 없이)
-  moveChatToTop: (chattingId) =>
-    set((state) => {
+  moveChatToTop: (chattingId: number) =>
+    set((state: ProjectStore) => {
       // 일반 채팅에서 찾기
-      const generalChat = state.generalChats.find((c) => c.chattingId === chattingId);
+      const generalChat = state.generalChats.find((c: SidebarChatItem) => c.chattingId === chattingId);
       if (generalChat) {
-        const otherChats = state.generalChats.filter((c) => c.chattingId !== chattingId);
+        const otherChats = state.generalChats.filter((c: SidebarChatItem) => c.chattingId !== chattingId);
         return {
           generalChats: [generalChat, ...otherChats],
         };
       }
 
       // 프로젝트 내부 채팅에서 찾기
-      const updatedProjects = state.projects.map((project) => {
-        const chat = project.chats.find((c) => c.chattingId === chattingId);
+      const updatedProjects = state.projects.map((project: SidebarProjectItem) => {
+        const chat = project.chats.find((c: SidebarChatItem) => c.chattingId === chattingId);
         if (chat) {
-          const otherChats = project.chats.filter((c) => c.chattingId !== chattingId);
+          const otherChats = project.chats.filter((c: SidebarChatItem) => c.chattingId !== chattingId);
           const newChats = [chat, ...otherChats];
           return {
             ...project,
@@ -127,30 +127,30 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       return { projects: updatedProjects };
     }),
   // 채팅 삭제 (모든 프로젝트 + 일반 채팅에서)
-  removeChat: (chattingId) =>
-    set((state) => ({
-      projects: state.projects.map((p) => ({
+  removeChat: (chattingId: number) =>
+    set((state: ProjectStore) => ({
+      projects: state.projects.map((p: SidebarProjectItem) => ({
         ...p,
-        chats: p.chats.filter((c) => c.chattingId !== chattingId),
+        chats: p.chats.filter((c: SidebarChatItem) => c.chattingId !== chattingId),
       })),
-      generalChats: state.generalChats.filter((c) => c.chattingId !== chattingId),
+      generalChats: state.generalChats.filter((c: SidebarChatItem) => c.chattingId !== chattingId),
     })),
   // 채팅을 다른 프로젝트로 이동
-  moveChatToProject: (chattingId, targetProjectId) =>
-    set((state) => {
+  moveChatToProject: (chattingId: number, targetProjectId: number) =>
+    set((state: ProjectStore) => {
       // 이동할 채팅 찾기 (프로젝트 내부 또는 일반 채팅)
-      let chatToMove = null;
+      let chatToMove: SidebarChatItem | null = null;
       let fromGeneralChats = false;
 
       // 일반 채팅에서 찾기
-      const generalChat = state.generalChats.find((c) => c.chattingId === chattingId);
+      const generalChat = state.generalChats.find((c: SidebarChatItem) => c.chattingId === chattingId);
       if (generalChat) {
         chatToMove = { ...generalChat, projectId: targetProjectId };
         fromGeneralChats = true;
       } else {
         // 프로젝트 내부에서 찾기
         for (const project of state.projects) {
-          const chat = project.chats.find((c) => c.chattingId === chattingId);
+          const chat = project.chats.find((c: SidebarChatItem) => c.chattingId === chattingId);
           if (chat) {
             chatToMove = { ...chat, projectId: targetProjectId };
             break;
@@ -163,9 +163,9 @@ export const useProjectStore = create<ProjectStore>((set) => ({
       // 기본 프로젝트(일반 채팅)로 이동하는 경우
       if (targetProjectId === state.defaultProjectId) {
         return {
-          projects: state.projects.map((p) => ({
+          projects: state.projects.map((p: SidebarProjectItem) => ({
             ...p,
-            chats: p.chats.filter((c) => c.chattingId !== chattingId),
+            chats: p.chats.filter((c: SidebarChatItem) => c.chattingId !== chattingId),
           })),
           // 일반 채팅에 추가 (맨 위에, 제한 없음)
           generalChats: fromGeneralChats
@@ -176,10 +176,10 @@ export const useProjectStore = create<ProjectStore>((set) => ({
 
       // 다른 프로젝트로 이동하는 경우
       return {
-        projects: state.projects.map((p) => {
+        projects: state.projects.map((p: SidebarProjectItem) => {
           if (p.projectId === targetProjectId) {
             // 대상 프로젝트에 채팅 추가 (5개 제한)
-            const newChats = [chatToMove, ...p.chats];
+            const newChats = [chatToMove!, ...p.chats];
             return {
               ...p,
               chats: newChats.length > 5 ? newChats.slice(0, 5) : newChats,
@@ -188,19 +188,19 @@ export const useProjectStore = create<ProjectStore>((set) => ({
             // 기존 프로젝트에서 채팅 제거
             return {
               ...p,
-              chats: p.chats.filter((c) => c.chattingId !== chattingId),
+              chats: p.chats.filter((c: SidebarChatItem) => c.chattingId !== chattingId),
             };
           }
         }),
         // 일반 채팅에서 제거
         generalChats: fromGeneralChats
-          ? state.generalChats.filter((c) => c.chattingId !== chattingId)
+          ? state.generalChats.filter((c: SidebarChatItem) => c.chattingId !== chattingId)
           : state.generalChats,
       };
     }),
   // 편집 상태 관리
   editingProjectId: null,
-  setEditingProjectId: (projectId) => set({ editingProjectId: projectId }),
+  setEditingProjectId: (projectId: number | null) => set({ editingProjectId: projectId }),
   editingChatId: null,
-  setEditingChatId: (chatId) => set({ editingChatId: chatId }),
+  setEditingChatId: (chatId: number | null) => set({ editingChatId: chatId }),
 }));

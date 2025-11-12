@@ -7,10 +7,10 @@ interface ChatStore {
   updateCurrentTitle: (title: string) => void;
 }
 
-export const useChatStore = create<ChatStore>((set) => ({
+export const useChatStore = create<ChatStore>((set): ChatStore => ({
   currentChattingId: null,
   currentChattingTitle: null,
-  setCurrentChatting: (chattingId, title = null) =>
+  setCurrentChatting: (chattingId: number | null, title: string | null = null) =>
     set({ currentChattingId: chattingId, currentChattingTitle: title }),
-  updateCurrentTitle: (title) => set({ currentChattingTitle: title }),
+  updateCurrentTitle: (title: string) => set({ currentChattingTitle: title }),
 }));
