@@ -99,6 +99,6 @@ async def chat_vllm(request: ChatRequest, llm_engine_1=Depends(get_llm_engine_1)
         except Exception as e:
 
             # 오류 시 스트림 종료 - 에러 메시리 처리 변경
-            yield f"data: {ChatResponse(sequence_id=-1, token=f'ERROR: {type(e).__name__}: {str(e)}')}\n\n"
+            yield f"data: {ChatResponse(sequence_id=-999, token=f'ERROR: {type(e).__name__}: {str(e)}')}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
