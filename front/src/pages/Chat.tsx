@@ -95,19 +95,6 @@ export default function Chat() {
     });
   }, []);
 
-  // 맨 위로 스크롤 (질문 제출 시)
-  const scrollToTop = useCallback(() => {
-    requestAnimationFrame(() => {
-      if (scrollContainerRef.current) {
-        const container = scrollContainerRef.current;
-        container.scrollTo({
-          top: 0,
-          behavior: 'auto',
-        });
-      }
-    });
-  }, []);
-
 
   // 스크롤 위치 감지
   const checkScrollPosition = useCallback(() => {
@@ -115,7 +102,7 @@ export default function Chat() {
     if (!container) return;
 
     const { scrollHeight, scrollTop, clientHeight } = container;
-    const threshold = 100; // 100px 이내면 맨 아래로 간주
+    const threshold = 200; // 200px 이상 올라가면 버튼 표시
     const isAtBottom = scrollHeight - scrollTop - clientHeight < threshold;
 
     isUserAtBottomRef.current = isAtBottom;
@@ -395,8 +382,20 @@ export default function Chat() {
         return [...prev, newUserMessage, loadingMessage];
       });
 
-      // 질문을 맨 위로 올리고 자동 스크롤 비활성화
-      scrollToTop();
+      // 전송 직후: 사용자 메시지가 화면 최상단에 오도록 스크롤
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const container = scrollContainerRef.current;
+          if (!container) return;
+          const userEl = container.querySelector(`[data-message-id="${userMessageId}"]`) as HTMLElement | null;
+          if (userEl) {
+            // 사용자 메시지를 화면 최상단에 배치 (padding 24px 고려)
+            container.scrollTo({ top: userEl.offsetTop - 24, behavior: 'auto' });
+          }
+        });
+      });
+
+      // 스트리밍 동안은 자동 스크롤 비활성화 (공간이 자연스럽게 생기도록)
       autoScrollEnabledRef.current = false;
       isUserAtBottomRef.current = false;
 
@@ -1025,42 +1024,84 @@ export default function Chat() {
                 이전 메시지 불러오는 중...
               </div>
             )}
-            {messages.map((msg) => {
-            if (msg.type === 'user') {
-              return (
-                <div key={msg.id}>
-                  <UserMessage
-                    message={msg.message}
-                    onUpdate={(newMessage) => handleEditAndResendMessage(msg.id, newMessage)}
-                    isLastUserMessage={msg.id === lastUserMessageId}
-                  />
-                  {msg.score && (
-                    <PromptScore scores={msg.score} totalScore={msg.score?.totalScore} />
-                  )}
-                </div>
-              );
-            }
-            if (msg.type === 'error')
-              return (
-                <ErrorMessage
-                  key={msg.id}
-                  message={msg.message}
-                  onRetry={() => handleRetry(msg.id)}
-                  isLastError={msg.id === lastMessageId}
-                />
-              );
-            if (msg.type === 'loading') return <ChatLoading key={msg.id} />;
-            if (msg.type === 'ai')
-              return (
-                <AIMessage
-                  key={msg.id}
-                  message={msg.message}
-                  timestamp={msg.timestamp}
-                  isStreaming={msg.isStreaming}
-                />
-              );
-            return null;
-          })}
+            {(() => {
+              const grouped: React.JSX.Element[] = [];
+              let currentGroup: React.JSX.Element[] = [];
+              let currentUserMsgId = '';
+              let isCurrentGroupStreaming = false;
+
+              messages.forEach((msg) => {
+                if (msg.type === 'user') {
+                  // 이전 그룹이 있으면 저장
+                  if (currentGroup.length > 0) {
+                    grouped.push(
+                      <div
+                        key={currentUserMsgId}
+                        className={`chat-message-group ${isCurrentGroupStreaming ? 'streaming' : 'completed'}`}
+                        data-message-id={currentUserMsgId}
+                      >
+                        {currentGroup}
+                      </div>
+                    );
+                  }
+                  // 새 그룹 시작
+                  currentUserMsgId = msg.id;
+                  isCurrentGroupStreaming = false;
+                  currentGroup = [
+                    <UserMessage
+                      key={`user-${msg.id}`}
+                      message={msg.message}
+                      onUpdate={(newMessage) => handleEditAndResendMessage(msg.id, newMessage)}
+                      isLastUserMessage={msg.id === lastUserMessageId}
+                    />
+                  ];
+                  if (msg.score) {
+                    currentGroup.push(
+                      <PromptScore key={`score-${msg.id}`} scores={msg.score} totalScore={msg.score?.totalScore} />
+                    );
+                  }
+                } else if (msg.type === 'ai') {
+                  if (msg.isStreaming) {
+                    isCurrentGroupStreaming = true;
+                  }
+                  currentGroup.push(
+                    <AIMessage
+                      key={`ai-${msg.id}`}
+                      message={msg.message}
+                      timestamp={msg.timestamp}
+                      isStreaming={msg.isStreaming}
+                    />
+                  );
+                } else if (msg.type === 'loading') {
+                  isCurrentGroupStreaming = true;
+                  currentGroup.push(<ChatLoading key={`loading-${msg.id}`} />);
+                } else if (msg.type === 'error') {
+                  currentGroup.push(
+                    <ErrorMessage
+                      key={`error-${msg.id}`}
+                      message={msg.message}
+                      onRetry={() => handleRetry(msg.id)}
+                      isLastError={msg.id === lastMessageId}
+                    />
+                  );
+                }
+              });
+
+              // 마지막 그룹 추가
+              if (currentGroup.length > 0) {
+                grouped.push(
+                  <div
+                    key={currentUserMsgId}
+                    className={`chat-message-group ${isCurrentGroupStreaming ? 'streaming' : 'completed'}`}
+                    data-message-id={currentUserMsgId}
+                  >
+                    {currentGroup}
+                  </div>
+                );
+              }
+
+              return grouped;
+            })()}
             <div ref={messagesEndRef} />
           </div>
           
@@ -1070,8 +1111,9 @@ export default function Chat() {
               onClick={() => scrollToBottom(true)}
               aria-label="맨 아래로 가기"
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M12 5v14M19 12l-7 7-7-7" />
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14" />
+                <path d="M19 12l-7 7-7-7" />
               </svg>
             </button>
           )}

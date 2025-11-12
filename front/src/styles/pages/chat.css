@@ -8,9 +8,24 @@
 .chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 12px;
+  padding: 0;
   display: flex;
   flex-direction: column;
+}
+
+.chat-message-group {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 12px;
+}
+
+.chat-message-group.streaming {
+  min-height: 100%;
+}
+
+.chat-message-group.completed {
+  min-height: auto;
+  padding: 0 12px;
 }
 
 .chat-error-page {
@@ -65,14 +80,15 @@
 /* 맨 아래로 가기 버튼 */
 .scroll-to-bottom-btn {
   position: fixed;
-  bottom: 100px;
-  right: 32px;
-  width: 48px;
-  height: 48px;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background-color: white;
-  border: 1px solid #e0e0e0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: #fff;
+  border: 1px solid #d1d1d1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -80,23 +96,36 @@
   color: #666;
   transition: all 0.2s ease;
   z-index: 100;
+  opacity: 0;
+  animation: fadeIn 0.2s ease-out forwards;
 }
 
 .scroll-to-bottom-btn:hover {
-  background-color: #f5f5f5;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  background-color: #f7f7f7;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .scroll-to-bottom-btn:active {
-  transform: translateY(0);
+  transform: translateX(-50%) scale(0.95);
 }
 
-@media (max-width: 1023px) {
+.scroll-to-bottom-btn svg {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
   .scroll-to-bottom-btn {
-    bottom: 88px;
-    right: 16px;
-    width: 44px;
-    height: 44px;
+    bottom: 10px;
+    width: 34px;
+    height: 34px;
   }
 }

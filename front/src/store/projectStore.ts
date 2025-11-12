@@ -160,6 +160,21 @@ export const useProjectStore = create<ProjectStore>((set) => ({
 
       if (!chatToMove) return state;
 
+      // 기본 프로젝트(일반 채팅)로 이동하는 경우
+      if (targetProjectId === state.defaultProjectId) {
+        return {
+          projects: state.projects.map((p) => ({
+            ...p,
+            chats: p.chats.filter((c) => c.chattingId !== chattingId),
+          })),
+          // 일반 채팅에 추가 (맨 위에, 제한 없음)
+          generalChats: fromGeneralChats
+            ? state.generalChats // 이미 일반 채팅에 있으면 그대로
+            : [chatToMove, ...state.generalChats],
+        };
+      }
+
+      // 다른 프로젝트로 이동하는 경우
       return {
         projects: state.projects.map((p) => {
           if (p.projectId === targetProjectId) {
