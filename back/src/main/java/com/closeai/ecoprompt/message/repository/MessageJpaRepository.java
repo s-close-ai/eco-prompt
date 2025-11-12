@@ -84,6 +84,7 @@ public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 		WHERE STR_TO_DATE(m.created_at, '%Y.%m.%d.%H.%i.%s')
 			  BETWEEN STR_TO_DATE(:startUtc, '%Y.%m.%d.%H.%i.%s')
 				  AND STR_TO_DATE(:endUtc, '%Y.%m.%d.%H.%i.%s')
+			AND ui.sharing_prompt = 'Y'
 		ORDER BY sc.total_score DESC
 		LIMIT 3
 	""", nativeQuery = true)
