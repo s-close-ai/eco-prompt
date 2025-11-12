@@ -9,6 +9,7 @@ import com.closeai.ecoprompt.training.model.dto.request.TrainingRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.MediaType;
@@ -61,21 +62,29 @@ public class TrainingTriggerJob {
                 kstStart, kstEnd, startStrUtc, endStrUtc);
 
         // 1) 조건에 맞는 messageUUID "중복 제거(distinct)" 조회
-        List<String> highScoreUuids = findHighScoreMessageUUIDs(startStrUtc, endStrUtc, 75.0);
+        List<String> highScoreUuids = findHighScoreMessageUUIDs(startStrUtc, endStrUtc, 50.0);
 
         if (highScoreUuids.isEmpty()) {
             log.info("[TrainingScheduler] {} ~ {} 고득점(UUID) 없음 -> 종료", startStrUtc, endStrUtc);
             return;
         }
 
-        // 2) 학습에 사용할 sender_type만 필터 (예: USER + TRAINING)
-        List<MessageSender> sendersForTraining = List.of(MessageSender.USER, MessageSender.TRAINING);
+        // 1-1) 필수 발신자 타입(USER, AI, TRAINING)이 모두 존재하는 UUID만 남기기
+        List<MessageSender> requiredSenders = List.of(MessageSender.USER, MessageSender.AI, MessageSender.TRAINING);
+        List<String> qualifiedUuids = filterUuidsHavingAllSenderTypes(highScoreUuids, requiredSenders);
+        if (qualifiedUuids.isEmpty()) {
+            log.info("[TrainingScheduler] 필수 발신자(USER/AI/TRAINING) 구성 충족 UUID 없음 -> 종료");
+            return;
+        }
+
+        // 2) 학습에 사용할 sender_type만 필터 (예: USER + AI + TRAINING)
+        List<MessageSender> sendersForTraining = requiredSenders;
 
         List<MessageDocument> docs = messageMongoRepository
-                .findByMessageUUIDInAndSenderTypeIn(highScoreUuids, sendersForTraining);
+                .findByMessageUUIDInAndSenderTypeIn(qualifiedUuids, sendersForTraining);
 
         if (docs.isEmpty()) {
-            log.info("[TrainingScheduler] 대상 UUID({})에 해당하는 메시지 없음 -> 종료", highScoreUuids.size());
+            log.info("[TrainingScheduler] 대상 UUID({})에 해당하는 메시지 없음 -> 종료", qualifiedUuids.size());
             return;
         }
 
@@ -116,5 +125,39 @@ public class TrainingTriggerJob {
 
         // 컬렉션 이름이 "message" 라는 전제
         return mongoTemplate.findDistinct(query, "messageUUID", "message", String.class);
+    }
+
+    /**
+     * 1-1 구현:
+     * 입력된 UUID들 중에서 sender_type이 USER/AI/TRAINING 모두 존재하는 UUID만 반환.
+     * (상태 필터가 필요하면 match 단계에 추가 가능)
+     */
+    private List<String> filterUuidsHavingAllSenderTypes(Collection<String> uuids,
+                                                         Collection<MessageSender> requiredSenders) {
+        if (uuids == null || uuids.isEmpty()) return List.of();
+
+        Aggregation agg = Aggregation.newAggregation(
+                // 필요한 UUID + 필요한 sender_type만 우선 매치
+                Aggregation.match(
+                        Criteria.where("messageUUID").in(uuids)
+                                .and("sender_type").in(requiredSenders) // Enum이 문자열로 저장되어 있다면 그대로 매칭됨
+                ),
+                // UUID별로 등장한 sender_type 집합 생성
+                Aggregation.group("messageUUID")
+                        .addToSet("sender_type").as("senders"),
+                // senders 배열이 requiredSenders 전부를 포함하는 경우만
+                Aggregation.match(
+                        Criteria.where("senders").all(requiredSenders)
+                ),
+                // 결과를 { messageUUID: <_id> } 형태로 변환
+                Aggregation.project().and("_id").as("messageUUID")
+        );
+
+        // 컬렉션 이름: "message"
+        var results = mongoTemplate.aggregate(agg, "message", org.bson.Document.class);
+
+        return results.getMappedResults().stream()
+                .map(doc -> doc.getString("messageUUID"))
+                .toList();
     }
 }
