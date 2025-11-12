@@ -32,7 +32,7 @@ export default function Bottombar({ variant, onSendMessage }: BottombarProps) {
           aria-label="chat"
           className="icon-button"
           onClick={() => {
-            const targetPath = '/';
+            const targetPath = '/chat';
             if (location.pathname !== targetPath) {
               navigate(targetPath);
             }
