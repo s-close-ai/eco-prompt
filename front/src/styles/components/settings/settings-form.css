@@ -117,8 +117,9 @@
 
 .settings-form__badge {
   padding: 6px 12px;
-  background: var(--color-primary-600);
-  color: #ffffff;
+  background: white;
+  color: var(--color-primary-600);
+  border: 1px solid var(--color-primary-600);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;

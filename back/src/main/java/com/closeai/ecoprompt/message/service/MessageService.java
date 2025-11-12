@@ -1,8 +1,10 @@
 package com.closeai.ecoprompt.message.service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.closeai.ecoprompt.ai.service.AiService;
 import com.closeai.ecoprompt.chatting.model.entity.Chatting;
+import com.closeai.ecoprompt.chatting.repository.ChattingRepository;
 import com.closeai.ecoprompt.chatting.service.ChattingService;
 import com.closeai.ecoprompt.common.CustomUtil;
 import com.closeai.ecoprompt.common.exception.BusinessException;
@@ -20,6 +23,8 @@ import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.model.dto.request.SubmitMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.request.UpdateMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.response.GetMessageResponse;
+import com.closeai.ecoprompt.message.model.dto.response.MessageKeywordDto;
+import com.closeai.ecoprompt.message.model.dto.response.SearchMessageResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SubmitMessageResponse;
 import com.closeai.ecoprompt.message.model.entity.Message;
 import com.closeai.ecoprompt.message.model.entity.MessageDocument;
@@ -44,6 +49,8 @@ public class MessageService {
 	private final MessageMongoRepository messageMongoRepository;
 
 	private static final int MESSAGE_PAGE_SIZE = 10;
+	private static final int MESSAGE_SNIPPET_SIZE = 50;
+	private final ChattingRepository chattingRepository;
 
 	/**
 	 * 사용자 입력에 대한 API 처리 함수
@@ -147,6 +154,40 @@ public class MessageService {
 	}
 
 	/**
+	 * 메시지 키워드 검색 API 함수
+	 * */
+	public List<SearchMessageResponse> searchMessage(String keyword) {
+
+		Integer userId = CustomUtil.getCurrentUserId();
+		String lowerKeywoard = keyword.toLowerCase();
+
+		// 1. message에서 userId 값을 기준으로 messageUUID 값을 가져오기
+		List<String> messageUUIDs = messageJpaRepository.findMessageUUIDByUserId(userId);
+
+		// 2. 해당 chattingId를 포함하면서 KEYWORD가 포함된 메시지들을 모두 조회함 / error는 조회하지 않음
+		List<MessageKeywordDto> mongoDBSearch = messageMongoRepository.findRecentChattingIdsByKeyword(
+			messageUUIDs, List.of(MessageSender.AI, MessageSender.USER), MessageStatus.ERROR, keyword);
+
+		// 3. 조회 시 각 CHATTING ID를 기준으로 제목과 updatedAt의 값을 가져옴
+		// 3-1. 메시지 내용을 Map<chattingId, 내용> 으로 관리
+		Map<Long, String> messageContentMap = mongoDBSearch.stream()
+			.collect(Collectors.toMap(
+				MessageKeywordDto::id,
+				dto -> createSnippet(dto.content(), keyword)
+			));
+
+		// 3-2. 사용자가 작성한 chattingID 값을 가져오기
+		List<Chatting> allUserChattings = chattingRepository.findByUserIdOrderByUpdatedAtDesc(userId);
+
+		return allUserChattings.stream()
+			.flatMap(chatting ->
+				processAndWrapChatting(chatting, lowerKeywoard, messageContentMap))
+			.sorted(Comparator.comparing(SearchResultWrapper::priority))
+			.map(SearchResultWrapper::response)
+			.toList();
+	}
+
+	/**
 	 * MYSQL과 MONGODB에 메시지 저장 함수
 	 * */
 	private void saveMessage(String messageUUID, Chatting chatting, MessageSender messageSender, String content,
@@ -193,6 +234,83 @@ public class MessageService {
 		List<MessageDocument> messageDocuments = List.of(userDocument, aiDocument);
 
 		messageMongoRepository.saveAll(messageDocuments);
+	}
+
+	/**
+	 * Message Content에서 내용을 자르는 함수
+	 * */
+	private String createSnippet(String content, String keyword) {
+
+		if (content == null || keyword == null) {
+			return "";
+		}
+
+		// 대소문자 구분 없이 키워드 일치 찾기
+		int keywordIdx = content.toLowerCase().indexOf(keyword.toLowerCase());
+		// 키워드가 없는 경우
+		if (keywordIdx == -1) {
+			return content.substring(0, Math.min(content.length(), MESSAGE_SNIPPET_SIZE)) +
+				(content.length() > MESSAGE_SNIPPET_SIZE ? "..." : "");
+		}
+
+		// 키워드 앞뒤로 몇 글자를 가져올지 계산
+		int padding = (MESSAGE_SNIPPET_SIZE - keyword.length()) / 2;
+		if (padding < 0)
+			padding = 5;
+
+		// 1. 시작 위치 계산
+		int startIdx = Math.max(0, keywordIdx - padding);
+
+		// 2. 끝 위치 게산
+		int endIdx = Math.min(keywordIdx + keyword.length() + padding, content.length());
+
+		// 3. 스니팻 추출
+		if (startIdx == 0) {
+			endIdx = Math.min((endIdx + padding), content.length());
+		}
+		String snippet = content.substring(startIdx, endIdx);
+		String prefix = (startIdx > 0) ? "..." : "";
+		String suffix = (endIdx < content.length()) ? "..." : "";
+
+		return prefix + snippet + suffix;
+	}
+
+	/**
+	 * 메시지 검색 우선순위 계산하는 함수
+	 * */
+	private Stream<SearchResultWrapper> processAndWrapChatting(
+		Chatting chatting, String lowerKeyword, Map<Long, String> messageContentMap
+	) {
+		// 1. 제목 및 메시지가 일치하는지 확인
+		boolean titleMatches = chatting.getTitle().toLowerCase().contains(lowerKeyword);
+		boolean messageMatches = messageContentMap.containsKey(chatting.getId());
+
+		int priority;
+		String snippet = null;
+
+		if (titleMatches) {
+			priority = 1;
+			if (messageMatches) {
+				snippet = messageContentMap.get(chatting.getId());
+			}
+		} else if (!titleMatches && messageMatches) {
+			priority = 2;
+			snippet = messageContentMap.get(chatting.getId());
+		} else {
+			return Stream.empty();
+		}
+
+		SearchMessageResponse response = new SearchMessageResponse(
+			chatting.getId(),
+			chatting.getTitle(),
+			snippet,
+			chatting.getUpdatedAt()
+		);
+
+		return Stream.of(new SearchResultWrapper(response, priority));
+	}
+
+	private record SearchResultWrapper(SearchMessageResponse response, int priority) {
 	}
 
 }

@@ -3,7 +3,7 @@ import torch
 import os
 
 from app.core.config import base_settings
-for app.models.llm_loader import get_tokenizer_2
+from app.models.llm_loader import get_tokenizer_2
 from app.schemas.train import TrainRequest, TrainResponse
 from app.services.dpo_train import train_model
 from app.services.load_dpo_datasets import process_training_data

@@ -16,6 +16,7 @@ import org.springframework.data.repository.query.Param;
 public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 
 	Optional<Message> findByMessageUUIDAndSenderType(String messageUUID, MessageSender senderType);
+
 	Optional<Message> findTopByChatting_IdOrderByCreatedAtDesc(Long chattingId);
 
 	@Query(value = """
@@ -83,6 +84,7 @@ public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 		WHERE STR_TO_DATE(m.created_at, '%Y.%m.%d.%H.%i.%s')
 			  BETWEEN STR_TO_DATE(:startUtc, '%Y.%m.%d.%H.%i.%s')
 				  AND STR_TO_DATE(:endUtc, '%Y.%m.%d.%H.%i.%s')
+			AND ui.sharing_prompt = 'Y'
 		ORDER BY sc.total_score DESC
 		LIMIT 3
 	""", nativeQuery = true)
@@ -91,4 +93,6 @@ public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 			@Param("endUtc") String endUtc
 	);
 
+	@Query("SELECT m.messageUUID FROM Message m WHERE m.userId = :userId AND m.isDeleted = 'N'")
+	List<String> findMessageUUIDByUserId(@Param("userId") Integer userId);
 }

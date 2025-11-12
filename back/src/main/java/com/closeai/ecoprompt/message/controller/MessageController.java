@@ -1,5 +1,7 @@
 package com.closeai.ecoprompt.message.controller;
 
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,12 +10,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.closeai.ecoprompt.common.ApiResponse;
 import com.closeai.ecoprompt.message.model.dto.request.SubmitMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.request.UpdateMessageRequest;
+import com.closeai.ecoprompt.message.model.dto.response.SearchMessageResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SubmitMessageResponse;
 import com.closeai.ecoprompt.message.service.MessageService;
 import com.closeai.ecoprompt.sse.service.SseService;
@@ -24,13 +28,14 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/messages")
-public class MessageController implements MessageControllerDocs{
+public class MessageController implements MessageControllerDocs {
 
 	private final MessageService messageService;
 	private final SseService sseService;
 
 	@PostMapping("/input")
-	public ResponseEntity<ApiResponse<SubmitMessageResponse>> submitMessage(@RequestBody @Valid SubmitMessageRequest request) {
+	public ResponseEntity<ApiResponse<SubmitMessageResponse>> submitMessage(
+		@RequestBody @Valid SubmitMessageRequest request) {
 
 		SubmitMessageResponse responseDto = messageService.submitMessage(request);
 
@@ -45,7 +50,7 @@ public class MessageController implements MessageControllerDocs{
 	}
 
 	@PostMapping(value = "/stop/{messageUUID}")
-	public ResponseEntity<ApiResponse<Void>> stopMessage(@PathVariable String messageUUID){
+	public ResponseEntity<ApiResponse<Void>> stopMessage(@PathVariable String messageUUID) {
 
 		sseService.markAsCancelled(messageUUID);
 
@@ -55,10 +60,18 @@ public class MessageController implements MessageControllerDocs{
 	}
 
 	@PatchMapping
-	public ResponseEntity<ApiResponse<SubmitMessageResponse>> updateMessage(@RequestBody @Valid UpdateMessageRequest request) {
+	public ResponseEntity<ApiResponse<SubmitMessageResponse>> updateMessage(
+		@RequestBody @Valid UpdateMessageRequest request) {
 
 		SubmitMessageResponse response = messageService.updateMessage(request);
 
+		return ApiResponse.success(response);
+	}
+
+	@GetMapping("/search")
+	public ResponseEntity<ApiResponse<List<SearchMessageResponse>>> searchMessage(@RequestParam String keyword) {
+
+		List<SearchMessageResponse> response = messageService.searchMessage(keyword);
 		return ApiResponse.success(response);
 	}
 }

@@ -133,6 +133,133 @@ export default function Chat() {
     }
   }, []);
 
+  // SSE 이벤트 리스너 설정 공통 함수
+  const setupSSEListeners = useCallback(
+    (
+      eventSource: EventSource,
+      aiMessageId: string,
+      userMessageId: string,
+      messageUUID: string,
+      loadingMessageId?: string,
+    ) => {
+      // messageUUID 매핑 저장
+      messageUUIDsRef.current.set(aiMessageId, messageUUID);
+
+      let isFirstChunk = true;
+
+      // LLM_START 이벤트
+      eventSource.addEventListener('LLM_START', () => {
+        shouldScrollToBottomRef.current = true;
+        isUserAtBottomRef.current = true;
+        autoScrollIfNeeded(true);
+
+        if (loadingMessageId) {
+          // 로딩 메시지를 AI 메시지로 교체 (새 메시지 전송 시)
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === loadingMessageId
+                ? {
+                    id: aiMessageId,
+                    type: 'ai',
+                    message: '',
+                    timestamp: new Date(),
+                    isStreaming: true,
+                  }
+                : m,
+            ),
+          );
+        }
+      });
+
+      // LLM_TOKEN 이벤트
+      eventSource.addEventListener('LLM_TOKEN', (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          const token = data.token || '';
+
+          if (isFirstChunk && loadingMessageId) {
+            // 첫 번째 토큰: 로딩 메시지를 AI 메시지로 교체 (LLM_START가 안 온 경우 대비)
+            isFirstChunk = false;
+            shouldScrollToBottomRef.current = true;
+            isUserAtBottomRef.current = true;
+            autoScrollIfNeeded(false);
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === loadingMessageId
+                  ? {
+                      id: aiMessageId,
+                      type: 'ai',
+                      message: token,
+                      timestamp: new Date(),
+                      isStreaming: true,
+                    }
+                  : m.id === aiMessageId
+                    ? { ...m, message: m.message + token }
+                    : m,
+              ),
+            );
+          } else {
+            // 이후 토큰: 메시지에 추가
+            shouldScrollToBottomRef.current = true;
+            autoScrollIfNeeded(false);
+            setMessages((prev) =>
+              prev.map((m) => (m.id === aiMessageId ? { ...m, message: m.message + token } : m)),
+            );
+          }
+        } catch (error) {
+          console.error('Failed to parse LLM_TOKEN:', error);
+        }
+      });
+
+      // JUDGE_PROMPT 이벤트
+      eventSource.addEventListener('JUDGE_PROMPT', (event) => {
+        try {
+          const scoreData = JSON.parse(event.data) as PromptScoreType;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === userMessageId ? { ...m, score: scoreData } : m)),
+          );
+        } catch (error) {
+          console.error('Failed to parse JUDGE_PROMPT:', error);
+        }
+      });
+
+      // SSE_COMPLETE 이벤트
+      eventSource.addEventListener('SSE_COMPLETE', () => {
+        eventSource.close();
+        eventSourcesRef.current.delete(aiMessageId);
+        messageUUIDsRef.current.delete(aiMessageId);
+        shouldScrollToBottomRef.current = true;
+        setMessages((prev) =>
+          prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
+        );
+        setIsLoading(false);
+      });
+
+      // 에러 처리
+      eventSource.onerror = () => {
+        eventSource.close();
+        eventSourcesRef.current.delete(aiMessageId);
+        messageUUIDsRef.current.delete(aiMessageId);
+        setMessages((prev) => {
+          const filtered = prev
+            .filter((m) => m.id !== loadingMessageId && m.id !== aiMessageId)
+            .map((m) => (m.id === userMessageId ? { ...m, score: undefined } : m));
+          return [
+            ...filtered,
+            {
+              id: crypto.randomUUID(),
+              type: 'error',
+              message: '스트리밍 중 오류가 발생했습니다.',
+              timestamp: new Date(),
+            },
+          ];
+        });
+        setIsLoading(false);
+      };
+    },
+    [setIsLoading],
+  );
+
   const handleSendMessage = useCallback(
     async (message: string) => {
       // 스트리밍 중이면 새로운 메시지 전송 방지
@@ -216,80 +343,8 @@ export default function Chat() {
         const eventSource = subscribeMessage(messageUUID);
         eventSourcesRef.current.set(aiMessageId, eventSource);
 
-        let isFirstChunk = true;
-
-        // LLM_START 이벤트
-        eventSource.addEventListener('LLM_START', () => {
-          // LLM 시작 시 로딩 메시지를 AI 메시지로 교체
-          shouldScrollToBottomRef.current = true; // 스트리밍 시작 - 자동 스크롤 활성화
-          isUserAtBottomRef.current = true; // 스트리밍 시작 시 자동으로 맨 아래로
-          autoScrollIfNeeded(true);
-          setMessages((prev) =>
-            prev.map((m) =>
-              m.id === loadingMessageId
-                ? {
-                    id: aiMessageId,
-                    type: 'ai',
-                    message: '',
-                    timestamp: new Date(),
-                    isStreaming: true,
-                  }
-                : m,
-            ),
-          );
-        });
-
-        // LLM_TOKEN 이벤트 - 실시간으로 토큰 하나씩 받기
-        eventSource.addEventListener('LLM_TOKEN', (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            const token = data.token || '';
-
-            if (isFirstChunk) {
-              // 첫 번째 토큰: 로딩 메시지를 AI 메시지로 교체 (LLM_START가 안 온 경우 대비)
-              isFirstChunk = false;
-              shouldScrollToBottomRef.current = true; // 스트리밍 시작 - 자동 스크롤 활성화
-              isUserAtBottomRef.current = true; // 스트리밍 시작 시 자동으로 맨 아래로
-              autoScrollIfNeeded(false);
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === loadingMessageId
-                    ? {
-                        id: aiMessageId,
-                        type: 'ai',
-                        message: token,
-                        timestamp: new Date(),
-                        isStreaming: true,
-                      }
-                    : m.id === aiMessageId
-                      ? { ...m, message: m.message + token }
-                      : m,
-                ),
-              );
-            } else {
-              // 이후 토큰: 메시지에 추가하고 스크롤 유지
-              shouldScrollToBottomRef.current = true; // 매 토큰마다 스크롤 플래그 유지
-              autoScrollIfNeeded(false);
-              setMessages((prev) =>
-                prev.map((m) => (m.id === aiMessageId ? { ...m, message: m.message + token } : m)),
-              );
-            }
-          } catch (error) {
-            console.error('Failed to parse LLM_TOKEN:', error);
-          }
-        });
-
-        // JUDGE_PROMPT 이벤트 - 점수 정보
-        eventSource.addEventListener('JUDGE_PROMPT', (event) => {
-          try {
-            const scoreData = JSON.parse(event.data) as PromptScoreType;
-            setMessages((prev) =>
-              prev.map((m) => (m.id === userMessageId ? { ...m, score: scoreData } : m)),
-            );
-          } catch (error) {
-            console.error('Failed to parse JUDGE_PROMPT:', error);
-          }
-        });
+        // SSE 이벤트 리스너 설정
+        setupSSEListeners(eventSource, aiMessageId, userMessageId, messageUUID, loadingMessageId);
 
         // CHATTING_TITLE 이벤트 - 채팅 제목
         eventSource.addEventListener('CHATTING_TITLE', (event) => {
@@ -342,45 +397,6 @@ export default function Chat() {
             }
           }
         });
-
-        // SSE_COMPLETE 이벤트 - 스트리밍 완료
-        eventSource.addEventListener('SSE_COMPLETE', () => {
-          eventSource.close();
-          eventSourcesRef.current.delete(aiMessageId);
-          messageUUIDsRef.current.delete(aiMessageId);
-          shouldScrollToBottomRef.current = true; // 스트리밍 완료 시 맨 아래로 스크롤
-          setMessages((prev) =>
-            prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
-          );
-          setIsLoading(false);
-        });
-
-        eventSource.onerror = () => {
-          eventSource.close();
-          eventSourcesRef.current.delete(aiMessageId);
-          messageUUIDsRef.current.delete(aiMessageId);
-          // 로딩/AI 메시지와 점수 제거하고 에러 표시
-          setMessages((prev) => {
-            const filtered = prev
-              .filter((m) => m.id !== loadingMessageId && m.id !== aiMessageId) // 로딩/AI 메시지 제거
-              .map((m) =>
-                m.id === userMessageId
-                  ? { ...m, score: undefined } // 점수 제거
-                  : m,
-              );
-            // 에러 메시지 추가
-            return [
-              ...filtered,
-              {
-                id: crypto.randomUUID(),
-                type: 'error',
-                message: '스트리밍 중 오류가 발생했습니다.',
-                timestamp: new Date(),
-              },
-            ];
-          });
-          setIsLoading(false);
-        };
       } catch (error) {
         // API 호출 실패 시 로딩/AI 메시지와 점수 제거하고 에러 표시
         setMessages((prev) => {
@@ -417,6 +433,7 @@ export default function Chat() {
       moveChatToTop,
       setIsLoading,
       messages,
+      setupSSEListeners,
     ],
   );
 
@@ -790,81 +807,10 @@ export default function Chat() {
 
       const { messageUUID } = response.data;
 
-      // messageUUID 매핑 저장
-      messageUUIDsRef.current.set(aiMessageId, messageUUID);
-
-      // subscribeMessage API 사용
+      // subscribeMessage API 사용 및 SSE 이벤트 리스너 설정
       const eventSource = subscribeMessage(messageUUID);
       eventSourcesRef.current.set(aiMessageId, eventSource);
-
-      // LLM_START 이벤트
-      eventSource.addEventListener('LLM_START', () => {
-        // 이미 AI 메시지가 있으므로 아무 작업 안 함, 단 스크롤은 하단 고정
-        shouldScrollToBottomRef.current = true;
-        isUserAtBottomRef.current = true;
-        autoScrollIfNeeded(true);
-      });
-
-      // LLM_TOKEN 이벤트 - 실시간으로 토큰 하나씩 받기
-      eventSource.addEventListener('LLM_TOKEN', (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          const token = data.token || '';
-
-          shouldScrollToBottomRef.current = true; // 매 토큰마다 스크롤 플래그 유지
-          autoScrollIfNeeded(false);
-          setMessages((prev) =>
-            prev.map((m) => (m.id === aiMessageId ? { ...m, message: m.message + token } : m)),
-          );
-        } catch (error) {
-          console.error('Failed to parse LLM_TOKEN:', error);
-        }
-      });
-
-      // JUDGE_PROMPT 이벤트 - 점수 정보
-      eventSource.addEventListener('JUDGE_PROMPT', (event) => {
-        try {
-          const scoreData = JSON.parse(event.data) as PromptScoreType;
-          setMessages((prev) =>
-            prev.map((m) => (m.id === userMessageToRetry.id ? { ...m, score: scoreData } : m)),
-          );
-        } catch (error) {
-          console.error('Failed to parse JUDGE_PROMPT:', error);
-        }
-      });
-
-      // SSE_COMPLETE 이벤트 - 스트리밍 완료
-      eventSource.addEventListener('SSE_COMPLETE', () => {
-        eventSource.close();
-        eventSourcesRef.current.delete(aiMessageId);
-        messageUUIDsRef.current.delete(aiMessageId);
-        shouldScrollToBottomRef.current = true; // 스트리밍 완료 시 맨 아래로 스크롤
-        setMessages((prev) =>
-          prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
-        );
-        setIsLoading(false);
-      });
-
-      eventSource.onerror = () => {
-        eventSource.close();
-        eventSourcesRef.current.delete(aiMessageId);
-        messageUUIDsRef.current.delete(aiMessageId);
-        setMessages((prev) => {
-          const filtered = prev
-            .filter((m) => m.id !== aiMessageId)
-            .map((m) => (m.id === userMessageToRetry.id ? { ...m, score: undefined } : m));
-          return [
-            ...filtered,
-            {
-              id: crypto.randomUUID(),
-              type: 'error',
-              message: '스트리밍 중 오류가 발생했습니다.',
-              timestamp: new Date(),
-            },
-          ];
-        });
-        setIsLoading(false);
-      };
+      setupSSEListeners(eventSource, aiMessageId, userMessageToRetry.id, messageUUID);
     } catch (error) {
       console.error('Failed to retry message:', error);
       setMessages((prev) => {
@@ -931,80 +877,10 @@ export default function Chat() {
 
       const { messageUUID } = response.data;
 
-      // messageUUID 매핑 저장
-      messageUUIDsRef.current.set(aiMessageId, messageUUID);
-
-      // subscribeMessage API 사용
+      // subscribeMessage API 사용 및 SSE 이벤트 리스너 설정
       const eventSource = subscribeMessage(messageUUID);
       eventSourcesRef.current.set(aiMessageId, eventSource);
-
-      // LLM_START 이벤트
-      eventSource.addEventListener('LLM_START', () => {
-        // 이미 AI 메시지가 있으므로 아무 작업 안 함, 단 하단 고정
-        shouldScrollToBottomRef.current = true;
-        isUserAtBottomRef.current = true;
-        autoScrollIfNeeded(true);
-      });
-
-      // LLM_TOKEN 이벤트 - 실시간으로 토큰 하나씩 받기
-      eventSource.addEventListener('LLM_TOKEN', (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          const token = data.token || '';
-
-          shouldScrollToBottomRef.current = true; // 매 토큰마다 스크롤 플래그 유지
-          autoScrollIfNeeded(false);
-          setMessages((prev) =>
-            prev.map((m) => (m.id === aiMessageId ? { ...m, message: m.message + token } : m)),
-          );
-        } catch (error) {
-          console.error('Failed to parse LLM_TOKEN:', error);
-        }
-      });
-
-      // JUDGE_PROMPT 이벤트 - 점수 정보
-      eventSource.addEventListener('JUDGE_PROMPT', (event) => {
-        try {
-          const scoreData = JSON.parse(event.data) as PromptScoreType;
-          setMessages((prev) =>
-            prev.map((m) => (m.id === messageId ? { ...m, score: scoreData } : m)),
-          );
-        } catch (error) {
-          console.error('Failed to parse JUDGE_PROMPT:', error);
-        }
-      });
-
-      // SSE_COMPLETE 이벤트 - 스트리밍 완료
-      eventSource.addEventListener('SSE_COMPLETE', () => {
-        eventSource.close();
-        eventSourcesRef.current.delete(aiMessageId);
-        messageUUIDsRef.current.delete(aiMessageId);
-        setMessages((prev) =>
-          prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
-        );
-        setIsLoading(false);
-      });
-
-      eventSource.onerror = () => {
-        eventSource.close();
-        eventSourcesRef.current.delete(aiMessageId);
-        messageUUIDsRef.current.delete(aiMessageId);
-        setMessages((prev) => {
-          const filtered = prev
-            .filter((m) => m.id !== aiMessageId)
-            .map((m) => (m.id === messageId ? { ...m, score: undefined } : m));
-          return [
-            ...filtered,
-            {
-              id: crypto.randomUUID(),
-              type: 'error',
-              message: '스트리밍 중 오류가 발생했습니다.',
-              timestamp: new Date(),
-            },
-          ];
-        });
-        setIsLoading(false);
-      };
+      setupSSEListeners(eventSource, aiMessageId, messageId, messageUUID);
     } catch (error) {
       console.error('Failed to update message:', error);
       setMessages((prev) => {
@@ -1031,6 +907,9 @@ export default function Chat() {
     }
     return lastId;
   }, '');
+
+  // 마지막 메시지 ID 찾기
+  const lastMessageId = messages.length > 0 ? messages[messages.length - 1].id : '';
 
   // chattingId가 없고 메시지도 없을 때 MainChat 표시
   const showMainChat = !chattingId && messages.length === 0;
@@ -1085,6 +964,7 @@ export default function Chat() {
                   key={msg.id}
                   message={msg.message}
                   onRetry={() => handleRetry(msg.id)}
+                  isLastError={msg.id === lastMessageId}
                 />
               );
             if (msg.type === 'loading') return <ChatLoading key={msg.id} />;
