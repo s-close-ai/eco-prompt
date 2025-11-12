@@ -62,7 +62,7 @@ public class TrainingTriggerJob {
                 kstStart, kstEnd, startStrUtc, endStrUtc);
 
         // 1) 조건에 맞는 messageUUID "중복 제거(distinct)" 조회
-        List<String> highScoreUuids = findHighScoreMessageUUIDs(startStrUtc, endStrUtc, 50.0);
+        List<String> highScoreUuids = findHighScoreMessageUUIDs(startStrUtc, endStrUtc, 70.0);
 
         if (highScoreUuids.isEmpty()) {
             log.info("[TrainingScheduler] {} ~ {} 고득점(UUID) 없음 -> 종료", startStrUtc, endStrUtc);
