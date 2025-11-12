@@ -1,7 +1,7 @@
 package com.closeai.ecoprompt.ai.service;
 
-import java.util.List;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ import com.closeai.ecoprompt.ai.model.event.ModelErrorEvent;
 import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.model.entity.MessageSender;
-import com.closeai.ecoprompt.sse.service.SseService;
+import com.closeai.ecoprompt.message.service.SseService;
 import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 
 import reactor.core.publisher.Flux;
@@ -66,11 +66,26 @@ public class AiService {
 
 		if (sseService.isCancelled(messageUUID)) {
 			AppLogger.info("AI 모델 호출 시작 이전에 이미 취소 되었습니다. UUID : " + messageUUID);
+			return;
+		}
 
-			// 취소 이벤트를 발생하기
+		// AI 모델 호출 이전에 SSE 연결이 완료되었는지 확인
+		try {
+			sseService.getWaitStatue(messageUUID).get();
+		} catch (InterruptedException | ExecutionException e) {
+			AppLogger.error("SSE 연결 대기 중에 에러 발생. UUID : " + messageUUID);
+			eventPublisher.publishEvent(new ModelErrorEvent(this, messageUUID));
+			return;
+		}
+
+		// SSE 연결 이후에 사용자가 취소를 한 경우 취소 상태를 저장
+		if (sseService.isCancelled(messageUUID)) {
+			AppLogger.info("AI 모델 호출 시작 이전에 이미 취소 되었습니다. UUID : " + messageUUID);
 			eventPublisher.publishEvent(
-				List.of(new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER),
-					new ModelCancelledEvent(this, messageUUID, null, MessageSender.AI))
+				new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER)
+			);
+			eventPublisher.publishEvent(
+				new ModelCancelledEvent(this, messageUUID, null, MessageSender.AI)
 			);
 			return;
 		}
@@ -205,6 +220,8 @@ public class AiService {
 					);
 				} else {
 					AppLogger.info("사용자에 의해서 답변이 중지되었습니다. UUID : " + messageUUID);
+
+					sseService.sendEventToClient(messageUUID, "SSE_COMPLETE", "DONE");
 					if (!finalAnswer.isEmpty()) {
 						eventPublisher.publishEvent(
 							new ModelCancelledEvent(this, messageUUID, finalAnswer, MessageSender.AI)

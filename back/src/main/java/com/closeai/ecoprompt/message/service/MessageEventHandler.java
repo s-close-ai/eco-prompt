@@ -26,7 +26,6 @@ import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
 import com.closeai.ecoprompt.mileage.service.MileageService;
 import com.closeai.ecoprompt.score.service.ScoreService;
-import com.closeai.ecoprompt.sse.service.SseService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -204,6 +203,9 @@ public class MessageEventHandler {
 
 			// 2. 임시 저장소에서 제거
 			completionStatus.remove(messageUUID);
+
+			// 3. 취소 상태 정리
+			sseService.cleanupCancelledTask(messageUUID);
 		}
 	}
 
