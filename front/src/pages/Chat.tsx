@@ -215,6 +215,7 @@ export default function Chat() {
         // subscribeMessage API 사용
         const eventSource = subscribeMessage(messageUUID);
         eventSourcesRef.current.set(aiMessageId, eventSource);
+        messageUUIDsRef.current.set(aiMessageId, messageUUID); // messageUUID 저장 추가
 
         let isFirstChunk = true;
 
