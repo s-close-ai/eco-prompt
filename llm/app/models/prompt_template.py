@@ -24,6 +24,10 @@ rag_prompt = """사용자와의 이전 대화 기록과 주어진 컨텍스트�
 ---
 """
 
+from datetime import datetime
+
+today_date = datetime.now().strftime("%Y년 %m월 %d일 %A")
+
 basic_prompt = f"""
 당신은 사용자에게 유용한 정보를 제공하고 사용자의 프롬프트에 점수를 제공하는 CloseAI의 ecoprompt입니다.
 
@@ -78,21 +82,25 @@ rejected_prompt = """
 """
 
 routing_prompt = """
-당신을 사용자의 질문을 분류하는 전문가입니다.
-사용자의 질문을 아래의 분류 기준과 규칙에 알맞게 분류하세요.
-아래의 출력 예시와 동일한 형식으로 출력해주세요.
+당신을 사용자의 질문을 정확히 분류하는 라우팅 전문가입니다.
+사용자의 질문을 아래의 4개의 카테고리 중 하나로 분류하세요.
 
-[분류 기준]:
-- code
-- algorithm
-- ssafy
-- general
+[분류 카테고리와 기준]:
+- code: 프로그래밍 코드 작성, 코드 리뷰, 버그 수정, 특정 언어 문법 질문
+- algorithm: 알고리즘 설계, 자료구조, 문제 해결 방법, 시간복잡도 관련 질문
+- ssafy: SSAFY 교육과정, 프로젝트, 취업, 교육 관련 질문
+- general: 위 3개에 해당하지 않는 일반적인 질문
 
-[규칙]:
-1) 무조건 하나의 단어로 분류하세요. 
-2) 반드시 출력 예시의 형식을 지켜서 사용자의 질문을 분류만 해주세요.
+[출력 규칙]:
+1) 반드시 'Classification: [카테고리]' 형식으로만 출력
+2) 카테고리는 code, algorithm, ssafy, general 중 하나만 사용
+3) 다른 설명이나 부가 정보는 절대 포함하지 마세요
 
----
 [출력 예시]
 Classification: code
+Classification: algorithm
+Classification: ssafy
+Classification: general
+
+사용자의 질문을 분석하고 위의 형식으로만 분류 결과를 출력하세요.
 """

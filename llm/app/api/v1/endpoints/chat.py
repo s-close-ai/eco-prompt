@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.services.chat import stream_response_vllm, find_question_type
+from app.services.routing import parse_router_response
 from app.models.llm_loader import get_llm_engine_1, get_llm_engine_2, get_tokenizer_1, get_tokenizer_2
 # from app.models.vectordb_loader import get_vector_store
 from app.models.mongodb_loader import get_mongodb
@@ -45,7 +46,7 @@ async def chat_vllm(request: ChatRequest, llm_engine_1=Depends(get_llm_engine_1)
     router_response = await router_chain.ainvoke(router_payload)
     print(f"[ROUTER]\n{router_response}")
 
-    question_type = router_response.replace("Classification:", "").strip()
+    question_type = parse_router_response(router_response)
 
     # 답변 생성 체인
     chosen_chain = stream_response_vllm(llm_engine_1=llm_engine_1, llm_engine_2=llm_engine_2, tokenizer_1=tokenizer_1, tokenizer_2=tokenizer_2, prompt_type="chosen", question_type=question_type)
@@ -100,7 +101,7 @@ async def chat_vllm(request: ChatRequest, llm_engine_1=Depends(get_llm_engine_1)
 
         except Exception as e:
 
-            # 오류 시 스트림 종료
-            yield f"data: [ERROR] {type(e).__name__}: {e}\n\n"
+            # 오류 시 스트림 종료 - 에러 메시리 처리 변경
+            yield f"data: {ChatResponse(sequence_id=-1, token=f'ERROR: {type(e).__name__}: {str(e)}')}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
