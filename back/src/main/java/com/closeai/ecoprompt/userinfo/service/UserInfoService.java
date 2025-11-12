@@ -31,7 +31,7 @@ public class UserInfoService {
 		AppLogger.start("정보 제공 동의 상태 변경");
 
 		int userId = CustomUtil.getCurrentUserId();
-		UserInfo userInfo = userInfoRepository.findById(userId)
+		UserInfo userInfo = userInfoRepository.findByUser_Id(userId)
 			.orElseThrow(() -> new BusinessException("해당하는 사용자가 없습니다."));
 
 		if (userInfo.getSharingInformation().equals("Y")) {
