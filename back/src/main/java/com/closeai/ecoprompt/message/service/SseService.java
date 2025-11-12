@@ -3,6 +3,7 @@ package com.closeai.ecoprompt.message.service;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -16,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 public class SseService {
 
 	private final Map<String, SseEmitter> emitters = new ConcurrentHashMap<>();        // SSE 연결 저장 Map
-	private final Map<String, Boolean> cancelledTasks = new ConcurrentHashMap<>();    // 답변 중단 SSE 저장
+	private final Map<String, AtomicBoolean> cancelledTasks = new ConcurrentHashMap<>();    // 답변 중단 SSE 저장
 	private final Map<String, CompletableFuture<SseEmitter>> waitTasks = new ConcurrentHashMap<>();
 
 	/**
@@ -27,7 +28,7 @@ public class SseService {
 		SseEmitter emitter = new SseEmitter(5 * 60 * 1000L);    // SSE 연결 5분
 
 		emitters.put(messageUUID, emitter);
-		cancelledTasks.putIfAbsent(messageUUID, false);    // 해당 sse 연결 중으로 설정
+		cancelledTasks.putIfAbsent(messageUUID, new AtomicBoolean(false));    // 해당 sse 연결 중으로 설정
 
 		// SSE 연결하기 이전 사용자 답변 중지된 경우 SSE 연결 해지
 		if (isCancelled(messageUUID)) {
@@ -40,19 +41,19 @@ public class SseService {
 		emitter.onCompletion(() -> {
 			AppLogger.debug("Emitter 완료. UUID :  {}" + messageUUID);
 			emitters.remove(messageUUID);
-			cancelledTasks.remove(messageUUID);    // 작업 완료 시 제거
+			//cancelledTasks.remove(messageUUID);    // 작업 완료 시 제거
 			waitTasks.remove(messageUUID);
 		});
 		emitter.onTimeout(() -> {
 			AppLogger.warn("Emitter 시간 초과. UUID :  {}" + messageUUID);
 			emitters.remove(messageUUID);
-			cancelledTasks.remove(messageUUID);    // 작업 완료 시 제거
+			//cancelledTasks.remove(messageUUID);    // 작업 완료 시 제거
 			waitTasks.remove(messageUUID);
 		});
 		emitter.onError((e) -> {
 			AppLogger.error(e.getMessage());
 			emitters.remove(messageUUID);
-			cancelledTasks.remove(messageUUID);    // 작업 완료 시 제거
+			//cancelledTasks.remove(messageUUID);    // 작업 완료 시 제거
 			waitTasks.remove(messageUUID);
 		});
 
@@ -101,15 +102,29 @@ public class SseService {
 	 * UUID 기준 해당 작업 중지 기록하는 함수
 	 * */
 	public void markAsCancelled(String messageUUID) {
-		cancelledTasks.put(messageUUID, true);    // 작업 취소 되었다고 masking
+		AtomicBoolean cancelled = cancelledTasks.computeIfAbsent(
+			messageUUID, k -> new AtomicBoolean(false));
+		cancelled.set(true);    // 작업 취소 되었다고 masking
+
+		AppLogger.info("취소 플래그 설정됨. UUID: {}, 현재 상태: {}", messageUUID, cancelled.get());
 	}
 
 	/**
 	 * UUID 기준 SSE가 연결 중지 되었는지 확인하는 함수
 	 * */
 	public boolean isCancelled(String messageUUID) {
-		Boolean cancelled = cancelledTasks.get(messageUUID);
-		return cancelled != null && cancelled;
+		AtomicBoolean cancelled = cancelledTasks.get(messageUUID);
+
+		boolean result = cancelled != null && cancelled.get();
+
+		AppLogger.debug("취소 상태 확인. UUID : " + messageUUID + " , 결과 : " + result);
+
+		return result;
+	}
+
+	public void cleanupCancelledTask(String messageUUID) {
+		cancelledTasks.remove(messageUUID);
+		AppLogger.debug("취소 상태 정리 완료. UUID : " + messageUUID);
 	}
 
 	/**

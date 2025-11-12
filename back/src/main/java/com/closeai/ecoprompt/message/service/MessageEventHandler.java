@@ -203,6 +203,9 @@ public class MessageEventHandler {
 
 			// 2. 임시 저장소에서 제거
 			completionStatus.remove(messageUUID);
+
+			// 3. 취소 상태 정리
+			sseService.cleanupCancelledTask(messageUUID);
 		}
 	}
 

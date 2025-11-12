@@ -220,6 +220,8 @@ public class AiService {
 					);
 				} else {
 					AppLogger.info("사용자에 의해서 답변이 중지되었습니다. UUID : " + messageUUID);
+
+					sseService.sendEventToClient(messageUUID, "SSE_COMPLETE", "DONE");
 					if (!finalAnswer.isEmpty()) {
 						eventPublisher.publishEvent(
 							new ModelCancelledEvent(this, messageUUID, finalAnswer, MessageSender.AI)

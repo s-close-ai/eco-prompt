@@ -53,9 +53,7 @@ public class MessageController implements MessageControllerDocs {
 	public ResponseEntity<ApiResponse<Void>> stopMessage(@PathVariable String messageUUID) {
 
 		sseService.markAsCancelled(messageUUID);
-
-		sseService.complete(messageUUID);
-
+		
 		return ApiResponse.success(null);
 	}
 
