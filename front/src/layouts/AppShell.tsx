@@ -19,7 +19,7 @@ function ShellBody() {
     useAppShell();
   const isChat = location.pathname.startsWith('/chat');
   const isProjectRoute = location.pathname.startsWith('/project');
-  const isHome = location.pathname === '/';
+  const isHome = location.pathname === '/chat';
   const bottomVariant: 'chat' | 'menu' | null =
     isChat || isProjectRoute || isHome ? 'chat' : mode === 'mobile' ? 'menu' : null;
 

@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { getPersonalProjects, getChattingsWithPaging } from '@/services/api/project';
 import type { SidebarProjectItem, SidebarChatItem } from '@/types/sidebar.types';
+import type { ChattingRoomsItem } from '@/types/api/project.types';
 import { useProjectStore } from '@/store/projectStore';
 
 export function useSidebarData() {
@@ -208,12 +209,12 @@ export function useSidebarData() {
 
       // 응답 구조 확인 - 실제 응답 구조에 맞게 수정
       // 응답이 data.chattingResponses 형태일 수도 있고, data가 직접 ChattingRoomsItem일 수도 있음
-      let chattingData;
+      let chattingData: ChattingRoomsItem | undefined;
       if (response.data?.chattingResponses) {
         chattingData = response.data.chattingResponses;
-      } else if ((response.data as any)?.content) {
+      } else if (response.data && 'content' in response.data && 'last' in response.data) {
         // 직접 content가 있는 경우 (실제 API 응답 구조)
-        chattingData = response.data as any;
+        chattingData = response.data as unknown as ChattingRoomsItem;
       } else {
         console.error('Invalid response structure:', response);
         // 응답 구조가 잘못되었으면 더 이상 로드하지 않도록 설정
@@ -233,7 +234,7 @@ export function useSidebarData() {
         return;
       }
 
-      const newChats = chattingData.content.map((chat: any) => ({
+      const newChats: SidebarChatItem[] = chattingData.content.map((chat) => ({
         chattingId: chat.chattingId,
         title: chat.title,
         projectId: chat.projectId,

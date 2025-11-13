@@ -93,7 +93,10 @@ export default function DashboardPage() {
               <Ranking />
             </div>
             <div className="grid-section metrics-section">
+            <div className="section-title-wrapper">
               <h2 className="section-title">마이 데이터</h2>
+              <Tooltip content="상단 점수는 내 점수, 하단 점수는 전체 사용자의 각 항목 평균 점수입니다." />
+              </div>
               <DashboardMetrics />
               <DashboardStats />
             </div>
