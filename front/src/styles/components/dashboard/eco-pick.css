@@ -24,6 +24,7 @@
 }
 
 .eco-pick-card {
+  position: relative;
   background: white;
   border-radius: 12px;
   padding: 12px;
@@ -32,7 +33,7 @@
   flex-direction: column;
   gap: 12px;
   height: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .eco-pick-header {
@@ -57,6 +58,13 @@
   margin: 0;
 }
 
+.eco-pick-score-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
 .eco-pick-score {
   background: #006400;
   color: white;
@@ -68,11 +76,10 @@
 }
 
 .eco-pick-content {
-  flex: 1;
+  height: 500px;
   overflow-y: auto;
   transition: all 0.3s ease;
-  min-height: 0;
-  padding-bottom: 80px;
+  flex-shrink: 0;
 }
 
 .eco-pick-content.expanded {
@@ -412,4 +419,61 @@
 
 :root[data-mode='tablet'] .indicator-dot.active:hover {
   background: #004d00;
+}
+
+/* 복사 버튼 스타일 */
+.copy-button {
+  position: relative;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  transition: all 0.2s ease;
+}
+
+.copy-button:hover {
+  opacity: 0.7;
+}
+
+.copy-button:active {
+  transform: scale(0.95);
+}
+
+.copy-button img {
+  width: 18px;
+  height: 18px;
+}
+
+/* 복사됨 토스트 */
+.eco-pick-copied {
+  position: absolute;
+  top: -12px;
+  right: 40px;
+  background-color: #5c8a5f;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  animation: fadeInOut 2s;
+  z-index: 9999;
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }

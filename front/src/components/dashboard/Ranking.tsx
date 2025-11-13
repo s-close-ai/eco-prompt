@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { getTodayRankings, getSpecificDateRankings } from '@/services/api/ranking';
 import type { RankingItem } from '@/types/api/ranking.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
@@ -71,22 +71,34 @@ export default function Ranking() {
     }
 
     // updatedAt 파싱: "2025.11.10.13.38.51" 형식
-    // 형식: YYYY.MM.DD.HH.mm.ss
+    // 형식: YYYY.MM.DD.HH.mm.ss (UTC)
     const parts = updatedAt.split('.');
     if (parts.length !== 6) {
       return null; // 형식이 맞지 않으면 null 반환
     }
 
-    const hours = parseInt(parts[3], 10);
+    // UTC 시간을 KST(UTC+9)로 변환
+    const utcHours = parseInt(parts[3], 10);
     const minutes = parseInt(parts[4], 10);
-    const period = hours < 12 ? '오전' : '오후';
-    const displayHours = hours % 12 || 12;
+    const kstHours = (utcHours + 9) % 24; // 9시간 더하고 24시간 초과시 0부터 시작
+    
+    const period = kstHours < 12 ? '오전' : '오후';
+    const displayHours = kstHours % 12 || 12;
     return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')} 업데이트`;
   };
 
   // 오늘 날짜인지 확인
   const isToday = isSameDate(selectedDate, new Date());
   const updateTimeText = getUpdateTimeText();
+
+  // 항상 10개 항목을 표시하기 위한 배열 생성
+  const displayRankings = useMemo(() => {
+    const filledRankings: (RankingItem | null)[] = [...currentRankings];
+    while (filledRankings.length < 10) {
+      filledRankings.push(null);
+    }
+    return filledRankings;
+  }, [currentRankings]);
 
   const getRankIcon = (rank: number) => {
     if (rank <= 3) {
@@ -110,7 +122,7 @@ export default function Ranking() {
         <div className="ranking-header-left">
           <div className="ranking-title-wrapper">
             <h2 className="ranking-title">Top 10 Rankings</h2>
-            <Tooltip content="오늘 최고 점수 기준으로 랭킹이 결정됩니다. 동점일 경우 마일리지가 높은 순으로, 그래도 동점이면 프롬프트 수가 적은 순으로 정렬됩니다." />
+            <Tooltip content="오늘 최고 점수 기준으로 랭킹이 결정됩니다. 동점일 경우 마일리지가 높은 순으로, 그래도 동점이면 프롬프트 수가 적은 순으로 정렬됩니다. 순위는 5분에 한 번 반영됩니다." />
           </div>
           <div className="date-selector">
             {dateList.map((date) => {
@@ -135,55 +147,116 @@ export default function Ranking() {
         )}
       </div>
 
-      {currentRankings.length > 0 && (
+      {mode === 'mobile' && (
         <div className="ranking-table-wrapper">
+          <div className="ranking-table-header">
+            <span>이름</span>
+            <span>최고 점수</span>
+            <span>마일리지</span>
+            <span></span>
+          </div>
           <table className="ranking-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>High Score</th>
-                <th>mileage</th>
-                <th></th>
-              </tr>
-            </thead>
             <tbody>
-              {currentRankings.map((entry: RankingItem) => (
-                <tr key={entry.ranking}>
-                  <td className="rank-cell">
-                    {getRankIcon(entry.ranking) ? (
-                      <img
-                        src={getRankIcon(entry.ranking)!}
-                        alt={`${entry.ranking}등`}
-                        className="rank-icon"
-                      />
-                    ) : (
-                      <span className="rank-number">{entry.ranking}</span>
-                    )}
-                    <span className="rank-name">{entry.name}</span>
-                  </td>
-                  <td className="score-cell">{entry.score}</td>
-                  <td className="mileage-cell">{entry.mileage.toLocaleString()}</td>
-                  <td className="change-cell">
-                    {entry.change === 'NEW' ? (
-                      <img src={newIcon} alt="new" className="change-icon" />
-                    ) : (
-                      getRankChangeIcon(entry.change) && (
+              {displayRankings.map((entry: RankingItem | null, index: number) => {
+                const rank = index + 1;
+                return (
+                  <tr key={rank}>
+                    <td className="rank-cell">
+                      {getRankIcon(rank) ? (
                         <img
-                          src={getRankChangeIcon(entry.change)!}
-                          alt={entry.change}
-                          className="change-icon"
+                          src={getRankIcon(rank)!}
+                          alt={`${rank}등`}
+                          className="rank-icon"
                         />
-                      )
-                    )}
-                  </td>
-                </tr>
-              ))}
+                      ) : (
+                        <span className="rank-number">{rank}</span>
+                      )}
+                      <span className="rank-name">{entry?.name || '-'}</span>
+                    </td>
+                    <td className="score-cell">{entry?.score ?? '-'}</td>
+                    <td className="mileage-cell">
+                      {entry ? entry.mileage.toLocaleString() : '-'}
+                    </td>
+                    <td className="change-cell">
+                      {entry?.change === 'NEW' ? (
+                        <img src={newIcon} alt="new" className="change-icon" />
+                      ) : (
+                        entry?.change &&
+                        getRankChangeIcon(entry.change) && (
+                          <img
+                            src={getRankChangeIcon(entry.change)!}
+                            alt={entry.change}
+                            className="change-icon"
+                          />
+                        )
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       )}
-      {currentRankings.length === 0 && !loading && (
-        <div className="ranking-empty">랭킹 데이터가 없습니다.</div>
+
+      {mode !== 'mobile' && (
+        <div className="ranking-table-wrapper">
+          <div className="ranking-table-headers-desktop">
+            <div className="ranking-table-header">
+              <span>이름</span>
+              <span>최고 점수</span>
+              <span>마일리지</span>
+              <span></span>
+            </div>
+            <div className="ranking-table-header">
+              <span>이름</span>
+              <span>최고 점수</span>
+              <span>마일리지</span>
+              <span></span>
+            </div>
+          </div>
+          <table className="ranking-table">
+            <tbody>
+              {displayRankings.map((entry: RankingItem | null, index: number) => {
+                const rank = index + 1;
+                return (
+                  <tr key={rank}>
+                    <td className="rank-cell">
+                      {getRankIcon(rank) ? (
+                        <img
+                          src={getRankIcon(rank)!}
+                          alt={`${rank}등`}
+                          className="rank-icon"
+                        />
+                      ) : (
+                        <span className="rank-number">{rank}</span>
+                      )}
+                      <span className="rank-name">{entry?.name || '-'}</span>
+                    </td>
+                    <td className="score-cell">{entry?.score ?? '-'}</td>
+                    <td className="mileage-cell">
+                      {entry ? entry.mileage.toLocaleString() : '-'}
+                    </td>
+                    <td className="change-cell">
+                      {entry?.change === 'NEW' ? (
+                        <img src={newIcon} alt="new" className="change-icon" />
+                      ) : (
+                        entry?.change &&
+                        getRankChangeIcon(entry.change) && (
+                          <img
+                            src={getRankChangeIcon(entry.change)!}
+                            alt={entry.change}
+                            className="change-icon"
+                          />
+                        )
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

@@ -30,10 +30,11 @@ export interface DetailScoreResponse {
 }
 
 export interface DetailScoreItem {
-  clarityScore: number;
-  specificityScore: number;
-  formatScore: number;
-  safetyScore: number;
+  sc_ec_0: number;
+  sc_ec_1: number;
+  sc_ec_2: number;
+  sc_ec_3: number;
+  sc_ec_4: number;
 }
 
 // UI/Mock용 타입

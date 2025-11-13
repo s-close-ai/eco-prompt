@@ -38,8 +38,8 @@ public interface MessageJpaRepository extends JpaRepository<Message, Long> {
         LIMIT 10
         """, nativeQuery = true)
 	List<DailyRankingProjection> findTodayTop10WithName(
-			@Param("startOfDay") String startOfDay,
-			@Param("nowStr")     String nowStr
+		@Param("startOfDay") String startOfDay,
+		@Param("nowStr") String nowStr
 	);
 
 	// 전체 사용자 평균 (전체 기간)

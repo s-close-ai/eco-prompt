@@ -3,10 +3,44 @@ import { getEcoPick } from '@/services/api/dashboard';
 import type { EcoPickItem } from '@/types/api/dashboard.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import '@/styles/components/dashboard/eco-pick.css';
+import copyIcon from '/icons/copy.svg';
 
 interface EcoPickProps {
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
+}
+
+// 이스케이프 문자를 처리하는 함수
+function parseEscapeCharacters(text: string): React.ReactNode[] {
+  if (!text) return [];
+  
+  // 이스케이프 문자 처리: \n을 실제 줄바꿈으로
+  const parts = text.split('\\n');
+  
+  return parts.flatMap((part, index) => {
+    const elements: React.ReactNode[] = [];
+    
+    if (index > 0) {
+      elements.push(<br key={`br-${index}`} />);
+    }
+    
+    // \t를 탭으로 처리
+    if (part.includes('\\t')) {
+      const tabParts = part.split('\\t');
+      tabParts.forEach((tabPart, tabIndex) => {
+        if (tabIndex > 0) {
+          elements.push(<span key={`tab-${index}-${tabIndex}`} style={{ marginLeft: '2em' }} />);
+        }
+        if (tabPart) {
+          elements.push(tabPart);
+        }
+      });
+    } else if (part) {
+      elements.push(part);
+    }
+    
+    return elements;
+  });
 }
 
 export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
@@ -15,6 +49,7 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [prompts, setPrompts] = useState<EcoPickItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef<number>(0);
@@ -119,37 +154,66 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
     }
   };
 
+  const handleCopy = async (text: string) => {
+    try {
+      // 이스케이프 문자를 실제 문자로 변환
+      const processedText = text
+        .replace(/\\n/g, '\n')
+        .replace(/\\t/g, '\t')
+        .replace(/\\r/g, '\r');
+      
+      await navigator.clipboard.writeText(processedText);
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+    }
+  };
+
   const renderPromptCard = (prompt: EcoPickItem, index: number) => (
     <div key={index} className="eco-pick-card">
       <div className="eco-pick-header">
         <div className="eco-pick-name-wrapper">
           <h3 className="eco-pick-name">{prompt.name}</h3>
         </div>
-        <div className="eco-pick-score">{prompt.sumOfScore}</div>
+        <div className="eco-pick-score-wrapper">
+          <button
+            className="copy-button"
+            onClick={() => handleCopy(prompt.prompt)}
+            aria-label="프롬프트 복사"
+          >
+            <img src={copyIcon} alt="복사" />
+          </button>
+          <div className="eco-pick-score">{prompt.sumOfScore}</div>
+        </div>
       </div>
 
       <div className={`eco-pick-content ${expandedIndex === index ? 'expanded' : ''}`}>
-        <p className="eco-pick-description">{prompt.prompt}</p>
+        <p className="eco-pick-description">{parseEscapeCharacters(prompt.prompt)}</p>
       </div>
 
       <div className="eco-pick-metrics">
         <div className="metric-item">
           <span className="metric-label">명확성</span>
-          <span className="metric-value">{prompt.detailScore.clarityScore}점</span>
+          <span className="metric-value">{prompt.detailScore.sc_ec_1}점</span>
         </div>
         <div className="metric-item">
           <span className="metric-label">구체성</span>
-          <span className="metric-value">{prompt.detailScore.specificityScore}점</span>
+          <span className="metric-value">{prompt.detailScore.sc_ec_2}점</span>
         </div>
         <div className="metric-item">
           <span className="metric-label">형식 준수</span>
-          <span className="metric-value">{prompt.detailScore.formatScore}점</span>
+          <span className="metric-value">{prompt.detailScore.sc_ec_3}점</span>
         </div>
         <div className="metric-item">
-          <span className="metric-label">안정성</span>
-          <span className="metric-value">{prompt.detailScore.safetyScore}점</span>
+          <span className="metric-label">안전성</span>
+          <span className="metric-value">{prompt.detailScore.sc_ec_4}점</span>
         </div>
       </div>
+      
+      {copied && <span className="eco-pick-copied">복사됨!</span>}
     </div>
   );
 

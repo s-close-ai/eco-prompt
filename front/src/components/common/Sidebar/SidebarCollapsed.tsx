@@ -50,7 +50,7 @@ export function SidebarCollapsed() {
         <button
           className="sidebar-icon-btn"
           aria-label="새 채팅"
-          onClick={() => handleNavigate('/')}
+          onClick={() => handleNavigate('/chat')}
         >
           <img src="/icons/add_chat.svg" alt="add chat" width={20} height={20} />
         </button>

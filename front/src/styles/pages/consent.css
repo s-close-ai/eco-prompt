@@ -9,7 +9,7 @@
 
 .consent-container {
   width: 100%;
-  max-width: 600px;
+  max-width: 640px;
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
@@ -22,45 +22,184 @@
   gap: 1.5rem;
 }
 
-.consent-icon {
-  display: flex;
-  justify-content: center;
-  color: var(--color-primary-500);
-}
-
 .consent-title {
   font-size: 1.75rem;
   font-weight: 700;
-  text-align: center;
   color: #1f2937;
   margin: 0;
 }
 
-.consent-description {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  color: #4b5563;
-  font-size: 1rem;
-  line-height: 1.6;
+.consent-subtitle {
+  font-size: 0.9375rem;
+  color: #6b7280;
+  margin: -0.5rem 0 0 0;
+  line-height: 1.5;
 }
 
-.consent-description p {
-  margin: 0;
+/* 동의 항목 */
+.consent-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+  background: #fafafa;
+  transition: all 0.2s ease;
 }
 
-.consent-description ul {
-  margin: 0;
-  padding-left: 1.5rem;
+.consent-item:hover {
+  background: #f5f5f5;
+}
+
+.consent-item.consent-all {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.consent-item.consent-all:hover {
+  background: #dcfce7;
+}
+
+.consent-item-header {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
 }
 
-.consent-description li {
-  color: #374151;
+/* 체크박스 */
+.consent-checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  flex: 1;
 }
 
+.consent-checkbox-wrapper input[type="checkbox"] {
+  display: none;
+}
+
+.consent-checkbox-custom {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.consent-checkbox-wrapper input[type="checkbox"]:checked + .consent-checkbox-custom {
+  background-color: #10b981;
+  border-color: #10b981;
+}
+
+.consent-checkbox-wrapper input[type="checkbox"]:checked + .consent-checkbox-custom::after {
+  content: '✓';
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.consent-checkbox-wrapper input[type="checkbox"]:disabled + .consent-checkbox-custom {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.consent-item-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* 필수/선택 뱃지 */
+.consent-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.consent-badge.required {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.consent-badge.optional {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+/* 상세보기 버튼 */
+.consent-detail-btn {
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  transition: color 0.2s ease;
+}
+
+.consent-detail-btn:hover {
+  color: #1f2937;
+}
+
+/* 상세 내용 */
+.consent-detail {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.consent-detail-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 1rem 0 0.5rem 0;
+}
+
+.consent-detail-title:first-child {
+  margin-top: 0;
+}
+
+.consent-detail ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.consent-detail li {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.consent-detail-note {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  margin: 0.75rem 0 0 0;
+  line-height: 1.5;
+}
+
+/* 구분선 */
+.consent-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0.5rem 0;
+}
+
+/* 액션 버튼 */
 .consent-actions {
   display: flex;
   flex-direction: column;
@@ -70,15 +209,16 @@
 
 .consent-note {
   text-align: center;
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: 0.8125rem;
+  color: #9ca3af;
   margin: 0;
+  line-height: 1.5;
 }
 
 /* 태블릿 (768px ~ 1023px) */
 @media (min-width: 768px) and (max-width: 1023px) {
   .consent-container {
-    max-width: 640px;
+    max-width: 680px;
     padding: 2.5rem;
   }
 
@@ -86,7 +226,11 @@
     font-size: 2rem;
   }
 
-  .consent-description {
+  .consent-subtitle {
+    font-size: 1rem;
+  }
+
+  .consent-item-title {
     font-size: 1.0625rem;
   }
 }
@@ -94,7 +238,7 @@
 /* 데스크탑 (1024px 이상) */
 @media (min-width: 1024px) {
   .consent-container {
-    max-width: 680px;
+    max-width: 720px;
     padding: 3rem;
   }
 
@@ -102,7 +246,11 @@
     font-size: 2.25rem;
   }
 
-  .consent-description {
+  .consent-subtitle {
+    font-size: 1rem;
+  }
+
+  .consent-item-title {
     font-size: 1.0625rem;
   }
 
@@ -126,12 +274,15 @@
     font-size: 1.5rem;
   }
 
-  .consent-description {
-    font-size: 0.9375rem;
+  .consent-subtitle {
+    font-size: 0.875rem;
   }
 
-  .consent-icon svg {
-    width: 48px;
-    height: 48px;
+  .consent-item {
+    padding: 0.875rem;
+  }
+
+  .consent-item-title {
+    font-size: 0.9375rem;
   }
 }

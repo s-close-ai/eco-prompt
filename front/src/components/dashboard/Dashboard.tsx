@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { getRecord, getDetailScore } from '@/services/api/dashboard';
-import type { DetailScoreItem } from '@/types/api/dashboard.types';
 import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/dashboard.css';
 
@@ -9,13 +8,6 @@ const metricDescriptions: Record<string, string> = {
   specificityScore: '필요한 정보와 제한조건이 구체적으로 제시된 정도를 나타냅니다.',
   formatScore: '출력 형식, 언어, 길이 등이 명확히 지시된 정도를 나타냅니다.',
   safetyScore: '안전하고 윤리적으로 문제 없는 정도를 나타냅니다.',
-};
-
-const metricDisplayNames: Record<string, string> = {
-  clarityScore: '명확성',
-  specificityScore: '구체성',
-  formatScore: '형식 준수',
-  safetyScore: '안정성',
 };
 
 interface MetricData {
@@ -39,8 +31,8 @@ function CircularProgress({
   const circumference = 2 * Math.PI * radius;
   // 각 점수는 최대 25점이므로, 25를 기준으로 계산
   const maxScore = 25;
-  const myPercentage = Math.min((metric.myScore / maxScore) * 100, 100);
-  const averagePercentage = Math.min((metric.averageScore / maxScore) * 100, 100);
+  const myPercentage = Math.min(((metric.myScore || 0) / maxScore) * 100, 100);
+  const averagePercentage = Math.min(((metric.averageScore || 0) / maxScore) * 100, 100);
   const myOffset = circumference - (myPercentage / 100) * circumference;
   const averageOffset = circumference - (averagePercentage / 100) * circumference;
 
@@ -90,8 +82,8 @@ function CircularProgress({
         />
       </svg>
       <div className="circular-progress-text">
-        <div className="score-value my-score">{metric.myScore.toFixed(2)}</div>
-        <div className="score-value average-score">{metric.averageScore.toFixed(2)}</div>
+        <div className="score-value my-score">{(metric.myScore || 0).toFixed(2)}</div>
+        <div className="score-value average-score">{(metric.averageScore || 0).toFixed(2)}</div>
       </div>
     </div>
   );
@@ -115,15 +107,33 @@ export default function Dashboard() {
 
         setStats(recordData.data);
 
-        // API 타입의 DetailScoreItem을 MetricData로 변환
-        const metricsData: MetricData[] = Object.keys(detailScoreData.data.myScoreResponse).map(
-          (key) => ({
-            name: key,
-            displayName: metricDisplayNames[key] || key,
-            myScore: detailScoreData.data.myScoreResponse[key as keyof DetailScoreItem],
-            averageScore: detailScoreData.data.allScoreResponse[key as keyof DetailScoreItem],
-          }),
-        );
+        // API 응답을 내부 표시용으로 변환
+        const metricsData: MetricData[] = [
+          {
+            name: 'clarityScore',
+            displayName: '명확성',
+            myScore: detailScoreData.data.myScoreResponse.sc_ec_1 || 0,
+            averageScore: detailScoreData.data.allScoreResponse.sc_ec_1 || 0,
+          },
+          {
+            name: 'specificityScore',
+            displayName: '구체성',
+            myScore: detailScoreData.data.myScoreResponse.sc_ec_2 || 0,
+            averageScore: detailScoreData.data.allScoreResponse.sc_ec_2 || 0,
+          },
+          {
+            name: 'formatScore',
+            displayName: '형식 준수',
+            myScore: detailScoreData.data.myScoreResponse.sc_ec_3 || 0,
+            averageScore: detailScoreData.data.allScoreResponse.sc_ec_3 || 0,
+          },
+          {
+            name: 'safetyScore',
+            displayName: '안전성',
+            myScore: detailScoreData.data.myScoreResponse.sc_ec_4 || 0,
+            averageScore: detailScoreData.data.allScoreResponse.sc_ec_4 || 0,
+          },
+        ];
 
         setMetrics(metricsData);
       } catch (error) {
@@ -190,14 +200,33 @@ export function DashboardMetrics() {
         setLoading(true);
         const detailScoreData = await getDetailScore();
 
-        const metricsData: MetricData[] = Object.keys(detailScoreData.data.myScoreResponse).map(
-          (key) => ({
-            name: key,
-            displayName: metricDisplayNames[key] || key,
-            myScore: detailScoreData.data.myScoreResponse[key as keyof DetailScoreItem],
-            averageScore: detailScoreData.data.allScoreResponse[key as keyof DetailScoreItem],
-          }),
-        );
+        // API 응답을 내부 표시용으로 변환
+        const metricsData: MetricData[] = [
+          {
+            name: 'clarityScore',
+            displayName: '명확성',
+            myScore: detailScoreData.data.myScoreResponse.sc_ec_1 || 0,
+            averageScore: detailScoreData.data.allScoreResponse.sc_ec_1 || 0,
+          },
+          {
+            name: 'specificityScore',
+            displayName: '구체성',
+            myScore: detailScoreData.data.myScoreResponse.sc_ec_2 || 0,
+            averageScore: detailScoreData.data.allScoreResponse.sc_ec_2 || 0,
+          },
+          {
+            name: 'formatScore',
+            displayName: '형식 준수',
+            myScore: detailScoreData.data.myScoreResponse.sc_ec_3 || 0,
+            averageScore: detailScoreData.data.allScoreResponse.sc_ec_3 || 0,
+          },
+          {
+            name: 'safetyScore',
+            displayName: '안전성',
+            myScore: detailScoreData.data.myScoreResponse.sc_ec_4 || 0,
+            averageScore: detailScoreData.data.allScoreResponse.sc_ec_4 || 0,
+          },
+        ];
 
         setMetrics(metricsData);
       } catch (error) {

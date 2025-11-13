@@ -54,7 +54,10 @@ export function ProjectListItem({
   const isProjectChatActive =
     location.pathname === '/chat' &&
     locationState?.projectId === project.projectId &&
-    project.chats.some((chat) => chat.chattingId === (locationState as any)?.chatId);
+    project.chats.some(
+      (chat) =>
+        chat.chattingId === (locationState as { projectId?: number; chatId?: number })?.chatId,
+    );
 
   // 편집 모드로 전환 시 input에 포커스
   useEffect(() => {
