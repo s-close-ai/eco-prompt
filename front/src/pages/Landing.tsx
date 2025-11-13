@@ -11,15 +11,6 @@ export default function Landing() {
     // 로그인 상태 확인
     const checkAuthStatus = async () => {
       try {
-        console.log('🔍 [Landing] Checking authentication status...');
-
-        // sharing-information API 호출하여 인증 상태 확인
-        const response = await getSharingInformation();
-
-        console.log('✅ [Landing] User is authenticated (200 OK):', response);
-
-        // 200 OK 응답이면 이미 로그인된 상태이므로 /chat으로 이동
-        console.log('🚀 [Landing] Redirecting to /chat');
 
         // 로그인 후 첫 접속인 경우 뒤로가기 방지
         const isFirstVisit = sessionStorage.getItem('first_visit_after_login');
@@ -31,8 +22,6 @@ export default function Landing() {
 
         navigate('/chat', { replace: true });
       } catch (error: any) {
-        // 인증되지 않은 상태이면 랜딩 페이지 그대로 표시
-        console.log('❌ [Landing] Not authenticated:', error?.response?.status || error?.message);
         setIsChecking(false);
       }
     };

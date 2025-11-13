@@ -484,11 +484,6 @@ export default function Chat() {
           });
         });
 
-        console.log('Initial load:', {
-          messagesCount: loadedMessages.length,
-          hasMore: !response.data.last,
-          currentPage: 0,
-        });
       } catch (error) {
         console.error('Failed to load messages:', error);
         setError(error as Error);

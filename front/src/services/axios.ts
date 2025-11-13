@@ -16,15 +16,11 @@ apiClient.interceptors.response.use(
     // 401 Unauthorized 에러 발생 시
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname;
-      console.log('🔐 [Axios Interceptor] 401 Unauthorized detected at:', currentPath);
       
       // 현재 페이지가 루트(/) 또는 /consent가 아닌 경우에만 리다이렉트
       // 랜딩 페이지와 동의 페이지에서는 리다이렉트하지 않음
       if (currentPath !== '/' && currentPath !== '/consent') {
-        console.log('🚀 [Axios Interceptor] Redirecting to landing page');
         window.location.href = '/';
-      } else {
-        console.log('⚠️ [Axios Interceptor] Already at landing/consent page, not redirecting');
       }
     }
     return Promise.reject(error);

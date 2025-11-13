@@ -57,7 +57,6 @@ export const subscribeMessage = (messageUUID: string): EventSource => {
     : `${window.location.origin}${baseURL}`;
   
   const sseURL = `${absoluteURL}/messages/subscribe/${messageUUID}`;
-  console.log('SSE 연결 URL:', sseURL); // 디버깅용
   
   return new EventSource(sseURL, {
     withCredentials: true,
