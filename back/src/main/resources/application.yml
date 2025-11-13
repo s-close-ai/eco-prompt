@@ -46,7 +46,12 @@ spring:
                     token-uri: https://project.ssafy.com/ssafy/oauth2/token
                     user-info-uri: https://project.ssafy.com/ssafy/resources/userInfo
 
-
+    session:
+        store-type: redis
+        redis:
+            namespace: ecoprompt:session
+            flush-mode: on_save
+            cleanup-cron: "0 * * * * *"   # 선택, 세션 정리 주기
 
 springdoc:
     override-with-generic-response: false
