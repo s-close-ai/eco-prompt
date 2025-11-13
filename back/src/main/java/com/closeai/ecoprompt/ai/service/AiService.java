@@ -21,6 +21,7 @@ import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.ModelCancelledEvent;
 import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
 import com.closeai.ecoprompt.common.logging.AppLogger;
+import com.closeai.ecoprompt.message.model.dto.response.GetScoreInfo;
 import com.closeai.ecoprompt.message.model.entity.MessageSender;
 import com.closeai.ecoprompt.message.service.SseService;
 import com.closeai.ecoprompt.userinfo.service.UserInfoService;
@@ -126,7 +127,7 @@ public class AiService {
 					judgeResponse.formatScore(), judgeResponse.safetyScore());
 				String summary = null;
 
-				sseService.sendEventToClient(messageUUID, "JUDGE_PROMPT", scoreInfo);
+				sseService.sendEventToClient(messageUUID, "JUDGE_PROMPT", GetScoreInfo.from(scoreInfo));
 				if (isFirstChatting) {
 					summary = judgeResponse.summary();
 					sseService.sendEventToClient(messageUUID, "CHATTING_TITLE", summary);
@@ -142,7 +143,7 @@ public class AiService {
 				AppLogger.error("답변 Judge 모델 호출 실패. UUID :  " + messageUUID);
 				sseService.sendEventToClient(messageUUID, "JUDGE_ERROR", "ERROR");
 				eventPublisher.publishEvent(
-					new EachModelEvent(this, messageUUID, MessageSender.USER)
+					new EachModelEvent(this, messageUUID, MessageSender.USER, userId)
 				);
 			})
 			.subscribe();
@@ -199,7 +200,7 @@ public class AiService {
 				AppLogger.error("llm 모델 스트리밍 오류. UUID : " + messageUUID);
 				sseService.sendEventToClient(messageUUID, "LLM_ERROR", "ERROR");
 				eventPublisher.publishEvent(
-					new EachModelEvent(this, messageUUID, MessageSender.AI)
+					new EachModelEvent(this, messageUUID, MessageSender.AI, userId)
 				);
 			})
 			.doOnComplete(() -> {
