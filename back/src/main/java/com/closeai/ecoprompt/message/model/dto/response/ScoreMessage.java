@@ -11,6 +11,8 @@ public record ScoreMessage(
 	public static ScoreMessage from(MessageDocument message) {
 		return new ScoreMessage(
 			message.getStatus(),
-			GetScoreInfo.from(message.getScoreInfo()));
+			message.getScoreInfo() != null
+				? GetScoreInfo.from(message.getScoreInfo())
+				: null);
 	}
 }
