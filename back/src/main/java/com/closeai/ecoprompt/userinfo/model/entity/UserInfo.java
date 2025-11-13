@@ -59,6 +59,9 @@ public class UserInfo extends BaseEntity {
 	@Column(name = "total_score", nullable = false)
 	private Double totalScore = 0.0;
 
+	@Column(name = "total_fail_count", nullable = false)
+	private Long totalFailCount = 0L;
+
 	// FK: user_info.user_id -> user.user_id (1:1 가정)
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
@@ -106,6 +109,10 @@ public class UserInfo extends BaseEntity {
 
 	public void updatePersonalPrompt(String personalPrompt) {
 		this.personalPrompt = personalPrompt;
+	}
+
+	public void updateTotalFailCount(Integer value) {
+		this.totalFailCount = this.totalFailCount + value;
 	}
 
 }

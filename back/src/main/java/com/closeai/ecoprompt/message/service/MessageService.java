@@ -225,13 +225,19 @@ public class MessageService {
 				MessageSender.AI)
 			.orElseThrow(() -> new BusinessException("저장된 메시지가 없습니다."));
 
+		MessageDocument trainingDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
+			MessageSender.TRAINING).orElseThrow();
+
 		userDocument.updateContent(content);
 		userDocument.updateScoreInfo(null);
 
 		aiDocument.updateContent(null);
 		aiDocument.updateMessageStatus(MessageStatus.PROCESSING);
 
-		List<MessageDocument> messageDocuments = List.of(userDocument, aiDocument);
+		trainingDocument.updateContent(null);
+		trainingDocument.updateMessageStatus(MessageStatus.PROCESSING);
+
+		List<MessageDocument> messageDocuments = List.of(userDocument, aiDocument, trainingDocument);
 
 		messageMongoRepository.saveAll(messageDocuments);
 	}

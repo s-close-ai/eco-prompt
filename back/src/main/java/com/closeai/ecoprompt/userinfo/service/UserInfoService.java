@@ -161,6 +161,15 @@ public class UserInfoService {
 		userInfo.updateTotalMileage(gapValue);
 	}
 
+	/**
+	 * 점수 평균 계산을 위해 점수 출력 실패 PROMPT CNT 증가
+	 * */
+	@Transactional
+	public void updateFailCnt(Integer userId, int cnt) {
+		UserInfo userInfo = getUserInfo(userId);
+		userInfo.updateTotalFailCount(cnt);
+	}
+
 	private UserInfo getUserInfo(Integer userId) {
 		return userInfoRepository.findByUser_Id(userId)
 			.orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."));
