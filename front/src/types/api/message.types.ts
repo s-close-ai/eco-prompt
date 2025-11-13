@@ -35,8 +35,8 @@ export interface MessageSearchResponse {
   status: string;
   data: {
     chattingId: number;
-    chattingTitle: string;
-    content: string;
+    chattingTitle: string | null;
+    content: string | null;
     chattingUpdatedAt: string;
   }[];
 }

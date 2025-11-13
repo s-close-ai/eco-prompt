@@ -93,19 +93,19 @@ export default function SearchModal() {
             </div>
           ) : searchResults.length > 0 ? (
             <div className="search-results-list">
-              {searchResults.map((result) => (
+              {searchResults.map((result, index) => (
                 <button
-                  key={`${result.chattingId}-${result.content.substring(0, 20)}`}
+                  key={`${result.chattingId}-${index}-${result.content?.substring(0, 20) || ''}`}
                   className="search-result-item"
                   onClick={() => handleResultClick(result.chattingId)}
                 >
                   <div className="search-result-header">
-                    <h3 className="search-result-title">{result.chattingTitle}</h3>
+                    <h3 className="search-result-title">{result.chattingTitle || '제목 없음'}</h3>
                     <span className="search-result-date">
                       {formatMonthDay(result.chattingUpdatedAt)}
                     </span>
                   </div>
-                  <p className="search-result-content">{result.content}</p>
+                  <p className="search-result-content">{result.content || '내용 없음'}</p>
                 </button>
               ))}
             </div>

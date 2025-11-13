@@ -53,6 +53,54 @@ export default function ChatInput({
     }
   }, [message]);
 
+  // 모바일 키보드가 올라올 때 스크롤을 맨 아래로 이동
+  const handleFocus = () => {
+    // 키보드가 완전히 올라온 후 스크롤 처리
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        const chatMessages = document.querySelector('.chat-messages');
+        if (chatMessages) {
+          chatMessages.scrollTo({
+            top: chatMessages.scrollHeight,
+            behavior: 'smooth',
+          });
+        }
+      }, 300);
+    });
+  };
+
+  // 키보드가 올라올 때 viewport 변화 감지 및 스크롤 처리
+  useEffect(() => {
+    let initialHeight = window.visualViewport?.height || window.innerHeight;
+    
+    const handleViewportChange = () => {
+      const currentHeight = window.visualViewport?.height || window.innerHeight;
+      
+      // 키보드가 올라왔을 때 (높이가 줄어들었을 때)
+      if (currentHeight < initialHeight) {
+        requestAnimationFrame(() => {
+          const chatMessages = document.querySelector('.chat-messages');
+          if (chatMessages && textareaRef.current === document.activeElement) {
+            chatMessages.scrollTo({
+              top: chatMessages.scrollHeight,
+              behavior: 'smooth',
+            });
+          }
+        });
+      }
+      
+      initialHeight = currentHeight;
+    };
+
+    // visualViewport API 지원하는 브라우저에서 사용
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      return () => {
+        window.visualViewport?.removeEventListener('resize', handleViewportChange);
+      };
+    }
+  }, []);
+
   return (
     <div className="chat-input-container">
       <div className="chat-input-wrapper">
@@ -61,6 +109,7 @@ export default function ChatInput({
           value={message}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
           placeholder={placeholder}
           disabled={disabled || isLoading}
           className="chat-input-textarea"
