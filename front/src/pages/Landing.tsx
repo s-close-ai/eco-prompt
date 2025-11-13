@@ -1,7 +1,56 @@
-import { signIn } from '@/services/api/auth';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { signIn, getSharingInformation } from '@/services/api/auth';
 import '@/styles/pages/landing.css';
 
 export default function Landing() {
+  const navigate = useNavigate();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    // 로그인 상태 확인
+    const checkAuthStatus = async () => {
+      try {
+        console.log('🔍 [Landing] Checking authentication status...');
+
+        // sharing-information API 호출하여 인증 상태 확인
+        const response = await getSharingInformation();
+
+        console.log('✅ [Landing] User is authenticated (200 OK):', response);
+
+        // 200 OK 응답이면 이미 로그인된 상태이므로 /chat으로 이동
+        console.log('🚀 [Landing] Redirecting to /chat');
+
+        // 로그인 후 첫 접속인 경우 뒤로가기 방지
+        const isFirstVisit = sessionStorage.getItem('first_visit_after_login');
+        if (isFirstVisit === 'true') {
+          // history state를 조작하여 뒤로가기 시 랜딩 페이지로 가지 않도록
+          window.history.pushState(null, '', window.location.href);
+          sessionStorage.removeItem('first_visit_after_login');
+        }
+
+        navigate('/chat', { replace: true });
+      } catch (error: any) {
+        // 인증되지 않은 상태이면 랜딩 페이지 그대로 표시
+        console.log('❌ [Landing] Not authenticated:', error?.response?.status || error?.message);
+        setIsChecking(false);
+      }
+    };
+
+    checkAuthStatus();
+  }, [navigate]);
+
+  // 인증 확인 중에는 로딩 표시
+  if (isChecking) {
+    return (
+      <div className="landing-page">
+        <div className="landing-loading">
+          <div className="loading-spinner"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="landing-page">
       {/* Hero Section */}

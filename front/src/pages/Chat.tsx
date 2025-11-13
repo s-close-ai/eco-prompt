@@ -147,6 +147,29 @@ export default function Chat() {
     };
   }, []);
 
+  // 로그인 후 첫 접속 시 뒤로가기 방지
+  useEffect(() => {
+    const isFirstVisit = sessionStorage.getItem('first_visit_after_login');
+    if (isFirstVisit === 'true') {
+      // 뒤로가기 방지를 위한 이벤트 핸들러
+      const preventBackNavigation = (e: PopStateEvent) => {
+        e.preventDefault();
+        window.history.pushState(null, '', window.location.href);
+      };
+
+      // history state 설정
+      window.history.pushState(null, '', window.location.href);
+      window.addEventListener('popstate', preventBackNavigation);
+
+      // 플래그 제거 (한 번만 실행)
+      sessionStorage.removeItem('first_visit_after_login');
+
+      return () => {
+        window.removeEventListener('popstate', preventBackNavigation);
+      };
+    }
+  }, []);
+
   const handleSendMessage = useCallback(
     async (message: string) => {
       // 스트리밍 중이면 새로운 메시지 전송 방지

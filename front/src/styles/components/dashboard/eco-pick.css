@@ -91,6 +91,8 @@
   line-height: 1.6;
   color: #333;
   margin-bottom: 12px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .eco-pick-tasks,
@@ -286,6 +288,8 @@
   font-size: 14px;
   line-height: 1.7;
   margin-bottom: 14px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 :root[data-mode='tablet'] .eco-pick-tasks,

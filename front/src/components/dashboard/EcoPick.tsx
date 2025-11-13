@@ -10,37 +10,15 @@ interface EcoPickProps {
   onSwipeRight?: () => void;
 }
 
-// 이스케이프 문자를 처리하는 함수
-function parseEscapeCharacters(text: string): React.ReactNode[] {
-  if (!text) return [];
-  
-  // 이스케이프 문자 처리: \n을 실제 줄바꿈으로
-  const parts = text.split('\\n');
-  
-  return parts.flatMap((part, index) => {
-    const elements: React.ReactNode[] = [];
-    
-    if (index > 0) {
-      elements.push(<br key={`br-${index}`} />);
-    }
-    
-    // \t를 탭으로 처리
-    if (part.includes('\\t')) {
-      const tabParts = part.split('\\t');
-      tabParts.forEach((tabPart, tabIndex) => {
-        if (tabIndex > 0) {
-          elements.push(<span key={`tab-${index}-${tabIndex}`} style={{ marginLeft: '2em' }} />);
-        }
-        if (tabPart) {
-          elements.push(tabPart);
-        }
-      });
-    } else if (part) {
-      elements.push(part);
-    }
-    
-    return elements;
-  });
+// 이스케이프 문자를 실제 문자로 변환하는 함수
+function parseEscapeCharacters(text: string): string {
+  if (!text) return '';
+
+  // 이스케이프 문자를 실제 문자로 변환
+  return text
+    .replace(/\\n/g, '\n')
+    .replace(/\\t/g, '\t')
+    .replace(/\\r/g, '\r');
 }
 
 export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
