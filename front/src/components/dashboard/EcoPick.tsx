@@ -164,7 +164,7 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
           >
             <img src={copyIcon} alt="복사" />
           </button>
-          <div className="eco-pick-score">{prompt.sumOfScore}</div>
+          <div className="eco-pick-score">{prompt.sc_ec_0}</div>
         </div>
       </div>
 
