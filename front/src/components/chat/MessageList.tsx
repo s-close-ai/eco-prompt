@@ -145,7 +145,7 @@ export function MessageList({
   }
 
   // 절대적인 마지막 그룹 인덱스
-  const lastGroupIndex = grouped.length - 1;
+  // const lastGroupIndex = grouped.length - 1;
 
   // 마지막 그룹과 마지막 completed 그룹에 클래스 추가
   const finalGrouped = grouped.map((item, index) => {
