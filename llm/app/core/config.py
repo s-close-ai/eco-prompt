@@ -12,6 +12,10 @@ class TotalSettings(BaseSettings):
     base_model: str = "./local-models/Llama-SSAFY-8B"
     # MongoDB 관련
     mongo_url: str = os.getenv("MONGO_URL")
+    # 동시성 제어
+    max_concurrent_requests: int = int(os.getenv("MAX_CONCURRENT_REQUESTS", "5"))
+    request_timeout: int = int(os.getenv("REQUEST_TIMEOUT", "300"))    # 초
+
 
 
 # wandb 관련
