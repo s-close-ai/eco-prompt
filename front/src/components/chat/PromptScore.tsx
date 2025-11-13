@@ -6,14 +6,13 @@ interface PromptScoreProps {
     sc_ec_2: number; // 구체성
     sc_ec_3: number; // 형식 준수
     sc_ec_4: number; // 안전성
-    sc_ec_0: number; // 총점
   };
-  totalScore?: number;
+  sc_ec_0?: number;
 }
 
-export default function PromptScore({ scores, totalScore }: PromptScoreProps) {
+export default function PromptScore({ scores, sc_ec_0 }: PromptScoreProps) {
   // scores가 없거나 totalScore가 없으면 렌더링하지 않음
-  if (!scores || totalScore === undefined || totalScore === null) {
+  if (!scores || sc_ec_0 === undefined || sc_ec_0 === null) {
     return null;
   }
 
@@ -44,7 +43,7 @@ export default function PromptScore({ scores, totalScore }: PromptScoreProps) {
       <div className="prompt-score-container">
         <div className="prompt-score-header">
           <span className="prompt-score-title">프롬프트 점수</span>
-          <span className="prompt-score-total">{totalScore.toFixed(2)}</span>
+          <span className="prompt-score-total">{sc_ec_0.toFixed(2)}</span>
         </div>
 
         <div className="prompt-score-legend">
