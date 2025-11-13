@@ -110,12 +110,12 @@ public class TrainingTriggerJob {
 
     /**
      * score_info.totalScore >= minScore
-     * && status="RECEIVED" (※ ERROR 등은 자연히 제외)
+     * && status="COMPLETED" (※ ERROR 등은 자연히 제외)
      * && created_at in [startStrUtc, endStrUtc]  // created_at은 문자열(UTC 포맷)
      */
     private List<String> findHighScoreMessageUUIDs(String startStrUtc, String endStrUtc, double minScore) {
         Criteria criteria = new Criteria().andOperator(
-                Criteria.where("status").is(MessageStatus.RECEIVED.name()),
+                Criteria.where("status").is(MessageStatus.COMPLETED.name()),
                 Criteria.where("created_at").gte(startStrUtc).lte(endStrUtc),
                 Criteria.where("score_info.totalScore").gte(minScore)
         );
