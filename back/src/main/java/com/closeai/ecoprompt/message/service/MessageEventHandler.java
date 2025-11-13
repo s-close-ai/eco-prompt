@@ -27,6 +27,7 @@ import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
 import com.closeai.ecoprompt.mileage.service.MileageService;
 import com.closeai.ecoprompt.score.service.ScoreService;
+import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -41,6 +42,7 @@ public class MessageEventHandler {
 	private final ChattingService chattingService;
 	private final MileageService mileageService;
 	private final SseService sseService;
+	private final UserInfoService userInfoService;
 
 	private final MessageJpaRepository messageJpaRepository;
 	private final MessageMongoRepository messageMongoRepository;
@@ -179,6 +181,7 @@ public class MessageEventHandler {
 
 		String messageUUID = event.getMessageUUID();
 		MessageSender sender = event.getSender();
+		Integer userId = event.getUserId();
 
 		// Judge 모델이 오류가 났을 때
 		if (sender.equals(MessageSender.USER)) {
@@ -189,6 +192,7 @@ public class MessageEventHandler {
 
 			if (userDocument.getStatus() != MessageStatus.ERROR) {
 				userDocument.updateMessageStatus(MessageStatus.ERROR);
+				userInfoService.updateFailCnt(userId, -1);
 				messageMongoRepository.save(userDocument);
 			}
 			checkCompletion(messageUUID, "JUDGE");
