@@ -132,7 +132,7 @@ export default function ChatInput({
       </div>
       <div className="chat-input-footer">
         <p className="chat-input-disclaimer">
-          Eco Prompt는 실수를 할 수 있습니다. 중요한 정보는 확인하세요.
+          Eco Prompt는 실수를 할 수 있고, 공유될 수 있습니다. 중요한 정보는 확인하세요.
         </p>
       </div>
       {showAlert ? null : null}
