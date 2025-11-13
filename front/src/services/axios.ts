@@ -13,13 +13,13 @@ export const apiClient = axios.create({
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // 401 Unauthorized 에러 발생 시
+    // 401 Unauthorized 에러 발생 시 / 로 리다이렉트 (단, 이미 / 페이지에 있으면 리다이렉트하지 않음)
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname;
-      
-      // 현재 페이지가 루트(/) 또는 /consent가 아닌 경우에만 리다이렉트
-      // 랜딩 페이지와 동의 페이지에서는 리다이렉트하지 않음
-      if (currentPath !== '/' && currentPath !== '/consent') {
+
+      // 랜딩 페이지가 아닌 경우에만 리다이렉트 (무한 루프 방지)
+      if (currentPath !== '/') {
+        console.log('🔒 [401 Error] Redirecting to landing page from:', currentPath);
         window.location.href = '/';
       }
     }

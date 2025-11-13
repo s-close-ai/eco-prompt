@@ -27,7 +27,7 @@ export default function Ranking() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [currentRankings, setCurrentRankings] = useState<RankingItem[]>([]);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // 날짜 목록 생성 (오늘부터 6일 전까지)
@@ -41,7 +41,6 @@ export default function Ranking() {
   useEffect(() => {
     const fetchRankings = async () => {
       try {
-        setLoading(true);
         const today = new Date();
         if (isSameDate(selectedDate, today)) {
           const response = await getTodayRankings();
@@ -57,12 +56,14 @@ export default function Ranking() {
         setCurrentRankings([]);
         setUpdatedAt(null);
       } finally {
-        setLoading(false);
+        if (initialLoading) {
+          setInitialLoading(false);
+        }
       }
     };
 
     fetchRankings();
-  }, [selectedDate]);
+  }, [selectedDate, initialLoading]);
 
   // 업데이트 시간 포맷 함수
   const getUpdateTimeText = () => {
@@ -112,7 +113,7 @@ export default function Ranking() {
     return `/icons/${change.toLowerCase()}.svg`;
   };
 
-  if (loading) {
+  if (initialLoading) {
     return <div className="ranking-container">Loading...</div>;
   }
 
@@ -160,7 +161,7 @@ export default function Ranking() {
               {displayRankings.map((entry: RankingItem | null, index: number) => {
                 const rank = index + 1;
                 return (
-                  <tr key={rank}>
+                  <tr key={`mobile-rank-${index}`}>
                     <td className="rank-cell">
                       {getRankIcon(rank) ? (
                         <img
@@ -220,7 +221,7 @@ export default function Ranking() {
               {displayRankings.map((entry: RankingItem | null, index: number) => {
                 const rank = index + 1;
                 return (
-                  <tr key={rank}>
+                  <tr key={`desktop-rank-${index}`}>
                     <td className="rank-cell">
                       {getRankIcon(rank) ? (
                         <img
