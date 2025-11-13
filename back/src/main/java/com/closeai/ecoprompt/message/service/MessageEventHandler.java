@@ -2,6 +2,7 @@ package com.closeai.ecoprompt.message.service;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -61,6 +62,11 @@ public class MessageEventHandler {
 		Integer userId = event.getUserId();
 
 		// 1. Message의 점수 정보 Update
+		MessageDocument userMessage = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
+				MessageSender.USER)
+			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
+		MessageStatus preStatus = userMessage.getStatus();
+
 		MessageDocument messageToUpdate = updateMongoMessage(messageUUID, MessageSender.USER, null, scoreInfo,
 			MessageStatus.COMPLETED);
 		Message message = messageJpaRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER)
@@ -70,6 +76,10 @@ public class MessageEventHandler {
 		scoreService.saveOrUpdateScore(message, userId, scoreInfo);
 		// 2-1. Mileage 테이블에 이미 있는지 없는지에 따라 save || update
 		mileageService.saveOrUpdateMileage(message, userId, scoreInfo.totalScore());
+		// 2-2. 이전 메시지의 상태가 ERROR | CANCELED 이면 이전에 증가한 FAILCNT를 줄여야함
+		if (preStatus.equals(MessageStatus.CANCELLED) || preStatus.equals(MessageStatus.ERROR)) {
+			userInfoService.updateFailCnt(userId, -1);
+		}
 
 		// 3. 새로 생성된 채팅방인 경우 채팅방의 이름을 첫 입력에 대한 요약 값으로 변경
 		if (summary != null) {
@@ -100,7 +110,7 @@ public class MessageEventHandler {
 		// 1. AI 답변을 MongoDB에 저장
 		updateMongoMessage(messageUUID, MessageSender.AI, llmAnswer, null, MessageStatus.COMPLETED);
 		// 1-2. 학습에 도움이 되는 답변을 MongoDB에 저장
-		saveTraningMessage(messageUUID, trainingAnswer, userMessage.getChattingId());
+		saveTrainingMessage(messageUUID, trainingAnswer, userMessage.getChattingId());
 
 		// 2. AI 답변 완료 상태 저장
 		checkCompletion(messageUUID, "LLM");
@@ -116,20 +126,30 @@ public class MessageEventHandler {
 
 		String messageUUID = event.getMessageUUID();
 		String content = event.getContent();
+		Integer userId = event.getUserId();
 		MessageSender messageSender = event.getMessageSender();
 
 		MessageDocument message = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, messageSender)
 			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다"));
 
+		MessageStatus preStatus = message.getStatus();
+
 		message.updateMessageStatus(MessageStatus.CANCELLED);
-		// Judge Model 중지
+		// Judge Model 중지 시 답변이 오던 것까지 저장하기
 		if (content != null) {
 			message.updateContent(content);
 		}
-
 		messageMongoRepository.save(message);
 
+		// 이전에 User의 점수가 ERROR, CANCELLED가 아닌경우 취소 PROMPT CNT 저장
+		if (messageSender.equals(MessageSender.USER)
+			&& !preStatus.equals(MessageStatus.ERROR)
+			&& !preStatus.equals(MessageStatus.CANCELLED)) {
+			userInfoService.updateFailCnt(userId, 1);
+		}
+
 		if (message.getSenderType() == MessageSender.AI) {
+			updateMongoMessage(messageUUID, MessageSender.TRAINING, null, null, MessageStatus.CANCELLED);
 			checkCompletion(message.getMessageUUID(), "LLM");
 		} else {
 			checkCompletion(message.getMessageUUID(), "JUDGE");
@@ -183,33 +203,31 @@ public class MessageEventHandler {
 		MessageSender sender = event.getSender();
 		Integer userId = event.getUserId();
 
+		MessageDocument message = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, sender)
+			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
+
+		MessageStatus preStatus = message.getStatus();
+
 		// Judge 모델이 오류가 났을 때
 		if (sender.equals(MessageSender.USER)) {
 
-			MessageDocument userDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
-					MessageSender.USER)
-				.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
+			message.updateMessageStatus(MessageStatus.ERROR);
 
-			if (userDocument.getStatus() != MessageStatus.ERROR) {
-				userDocument.updateMessageStatus(MessageStatus.ERROR);
-				userInfoService.updateFailCnt(userId, -1);
-				messageMongoRepository.save(userDocument);
+			if (!preStatus.equals(MessageStatus.ERROR) && !preStatus.equals(MessageStatus.CANCELLED)) {
+				userInfoService.updateFailCnt(userId, 1);
 			}
-			checkCompletion(messageUUID, "JUDGE");
+
+			messageMongoRepository.save(message);
+			checkCompletion(message.getMessageUUID(), "JUDGE");
 		}
-		// LLM 모델이 오류가 났을 때
+
+		// LLM 모델이 오류가 났을 때 : 이전에 저장된 TRAINING 데이터를 NULL로 SETTING
 		else if (sender.equals(MessageSender.AI)) {
+			message.updateMessageStatus(MessageStatus.ERROR);
+			messageMongoRepository.save(message);
 
-			MessageDocument aiDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
-					MessageSender.AI)
-				.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
-
-			if (aiDocument.getStatus() != MessageStatus.ERROR) {
-				aiDocument.updateMessageStatus(MessageStatus.ERROR);
-				messageMongoRepository.save(aiDocument);
-			}
-
-			checkCompletion(messageUUID, "LLM");
+			updateMongoMessage(messageUUID, MessageSender.TRAINING, null, null, MessageStatus.ERROR);
+			checkCompletion(message.getMessageUUID(), "LLM");
 		}
 	}
 
@@ -250,9 +268,18 @@ public class MessageEventHandler {
 	private MessageDocument updateMongoMessage(String messageUUID, MessageSender messageSender, String content,
 		ScoreInfo scoreInfo, MessageStatus messageStatus) {
 
-		MessageDocument messageToUpdate = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
-				messageSender)
-			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
+		Optional<MessageDocument> messageToUpdateOpt = messageMongoRepository.findByMessageUUIDAndSenderType(
+			messageUUID,
+			messageSender);
+
+		if (messageToUpdateOpt.isEmpty()) {
+			if (messageSender.equals(MessageSender.USER) || messageSender.equals(MessageSender.AI)) {
+				throw new BusinessException("메시지를 찾을 수 없습니다.");
+			}
+			return null;
+		}
+
+		MessageDocument messageToUpdate = messageToUpdateOpt.get();
 
 		if (content != null) {
 			messageToUpdate.updateContent(content);
@@ -269,17 +296,39 @@ public class MessageEventHandler {
 		return messageToUpdate;
 	}
 
-	private void saveTraningMessage(String messageUUID, String content, Long chattingId) {
+	/**
+	 * 학습 데이터 저장하는 함수
+	 * */
+	private void saveTrainingMessage(String messageUUID, String content, Long chattingId) {
 
-		MessageDocument message = MessageDocument.builder()
-			.messageUUID(messageUUID)
-			.content(content)
-			.chattingId(chattingId)
-			.senderType(MessageSender.TRAINING)
-			.status(MessageStatus.COMPLETED)
-			.scoreInfo(null)
-			.build();
+		Optional<MessageDocument> existingMessageOpt = messageMongoRepository.findByMessageUUIDAndSenderType(
+			messageUUID, MessageSender.TRAINING);
 
-		messageMongoRepository.save(message);
+		// 2. ifPresentOrElse를 사용하여 분기 처리
+		existingMessageOpt.ifPresentOrElse(
+			// 2-1. [Update] 기존 메시지가 있는 경우
+			existingMessage -> {
+				// 요청한 대로 content와 status를 업데이트합니다.
+				existingMessage.updateContent(content);
+				existingMessage.updateMessageStatus(MessageStatus.COMPLETED);
+				// (기존 로직처럼 scoreInfo는 null로 초기화)
+				existingMessage.updateScoreInfo(null);
+
+				messageMongoRepository.save(existingMessage);
+			},
+			// 2-2. [Insert] 기존 메시지가 없는 경우 (원래 로직)
+			() -> {
+				MessageDocument newMessage = MessageDocument.builder()
+					.messageUUID(messageUUID)
+					.content(content)
+					.chattingId(chattingId)
+					.senderType(MessageSender.TRAINING)
+					.status(MessageStatus.COMPLETED)
+					.scoreInfo(null)
+					.build();
+
+				messageMongoRepository.save(newMessage);
+			}
+		);
 	}
 }
