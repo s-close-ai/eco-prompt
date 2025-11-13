@@ -17,7 +17,7 @@ public record PersonalStateResponse(
                         ? Math.round(userInfo.getTotalScore() / validPromptCount * 100) / 100.0
                         : 0,
                 userInfo.getTotalMileage(),
-                validPromptCount
+                userInfo.getTotalPromptCount()
         );
     }
 }
