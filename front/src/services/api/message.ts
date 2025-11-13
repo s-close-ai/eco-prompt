@@ -48,7 +48,16 @@ export const stopMessage = async (messageUUID: string): Promise<void> => {
  * @returns EventSource 객체
  */
 export const subscribeMessage = (messageUUID: string): EventSource => {
-  return new EventSource(`${apiClient.defaults.baseURL}/messages/subscribe/${messageUUID}`, {
+  const baseURL = apiClient.defaults.baseURL || '';
+  // baseURL이 상대 경로인 경우 절대 URL로 변환
+  const absoluteURL = baseURL.startsWith('http') 
+    ? baseURL 
+    : `${window.location.origin}${baseURL}`;
+  
+  const sseURL = `${absoluteURL}/messages/subscribe/${messageUUID}`;
+  console.log('SSE 연결 URL:', sseURL); // 디버깅용
+  
+  return new EventSource(sseURL, {
     withCredentials: true,
   });
 };
