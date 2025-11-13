@@ -178,7 +178,7 @@ export function Sidebar() {
                   ) : (
                     <ul className="sidebar-list">
                       {searchResults.map((result) => (
-                        <li key={`${result.chattingId}-${result.content.substring(0, 20)}`}>
+                        <li key={`${result.chattingId}-${result.content?.substring(0, 20) || ''}`}>
                           <button
                             className="sidebar-search-result-item"
                             onClick={() => {
