@@ -88,7 +88,7 @@ public class RankingService {
 
             result.add(new RankingResponse(
                     rank++,
-                    row.getName(),
+                    row.getEmployeeNumber() + " " + row.getName(),
                     row.getMaxScore(),
                     row.getMileageSum(),
                     row.getPromptCount(),
@@ -119,7 +119,7 @@ public class RankingService {
         for (Ranking r : rows) {
             result.add(new RankingResponse(
                     r.getRankingNumber(),
-                    r.getUser().getName(),
+                    r.getUser().getEmployeeNumber() + " " + r.getUser().getName(),
                     r.getScore(),
                     r.getMileage(),
                     r.getPromptCount(),

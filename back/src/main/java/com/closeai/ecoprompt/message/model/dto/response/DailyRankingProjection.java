@@ -3,6 +3,7 @@ package com.closeai.ecoprompt.message.model.dto.response;
 public interface DailyRankingProjection {
 
     Integer getUserId();
+    String getEmployeeNumber(); // 기수 ex) 13기
     String getName();        // user.name
     Double getMaxScore();    // (4개 점수 합)의 "최고값"
     Integer getMileageSum();  // 마일리지 합
