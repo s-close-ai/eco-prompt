@@ -167,7 +167,15 @@ public class UserInfoService {
 	@Transactional
 	public void updateFailCnt(Integer userId, int cnt) {
 		UserInfo userInfo = getUserInfo(userId);
-		userInfo.updateTotalFailCount(cnt);
+		long newFailCnt = userInfo.getTotalFailCount() + cnt;
+
+		if (newFailCnt < 0 || newFailCnt > userInfo.getTotalPromptCount()) {
+			AppLogger.warn("failCnt의 숫자가 이상합니다.");
+			newFailCnt = 0L;
+		}
+
+		userInfo.updateTotalFailCount(newFailCnt);
+		userInfoRepository.save(userInfo);
 	}
 
 	private UserInfo getUserInfo(Integer userId) {
