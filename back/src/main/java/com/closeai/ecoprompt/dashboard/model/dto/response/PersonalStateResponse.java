@@ -9,11 +9,15 @@ public record PersonalStateResponse(
         Long promptCount
 ) {
     public static PersonalStateResponse from(UserInfo userInfo) {
+        Long validPromptCount = userInfo.getTotalPromptCount() - userInfo.getTotalFailCount();
+
         return new PersonalStateResponse(
                 userInfo.getHighScore(),
-                userInfo.getTotalPromptCount() != 0 ? Math.round(userInfo.getTotalScore() / userInfo.getTotalPromptCount() * 100) / 100.0: 0,
+                validPromptCount != 0
+                        ? Math.round(userInfo.getTotalScore() / validPromptCount * 100) / 100.0
+                        : 0,
                 userInfo.getTotalMileage(),
-                userInfo.getTotalPromptCount()
+                validPromptCount
         );
     }
 }
