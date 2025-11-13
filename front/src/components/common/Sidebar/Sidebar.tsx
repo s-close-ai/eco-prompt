@@ -1,10 +1,13 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '@/styles/components/common/sidebar/index.css';
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import { useSidebarData } from '@/hooks/useSidebarData';
 import { useContextMenu } from '@/hooks/useContextMenu';
 import { useProjectStore } from '@/store/projectStore';
+import { searchMessages } from '@/services/api/message';
+import type { MessageSearchResponse } from '@/types/api/message.types';
 
 // 분리된 자식 컴포넌트들 임포트
 import { SidebarHeader } from './SidebarHeader';
@@ -27,8 +30,14 @@ const NESTED_CHAT_MENU_PREFIX = 'nested-chat-';
 export function Sidebar() {
   const { isSidebarOpen, closeSidebar, isSidebarCollapsed } = useAppShell();
   const mode = useDeviceMode();
+  const navigate = useNavigate();
   const { projects, generalChats, defaultProjectId } = useProjectStore();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // 검색 관련 상태 (모바일/태블릿용)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<MessageSearchResponse['data']>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   // 사이드바 데이터 로딩 훅
   const {
@@ -49,8 +58,34 @@ export function Sidebar() {
     loadInitialData();
   }, [loadInitialData]);
 
+  // 검색 실행 (모바일/태블릿용)
+  useEffect(() => {
+    if (mode === 'desktop') return; // 데스크탑에서는 모달 사용
+
+    const timer = setTimeout(async () => {
+      if (!searchQuery.trim()) {
+        setSearchResults([]);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const response = await searchMessages({ string: searchQuery });
+        setSearchResults(response.data || []);
+      } catch (error) {
+        console.error('검색 실패:', error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, mode]);
+
   const isOpen = mode === 'desktop' || isSidebarOpen;
   const isCollapsed = mode === 'desktop' && isSidebarCollapsed;
+  const isShowingSearchResults = mode !== 'desktop' && searchQuery.trim().length > 0;
 
   // --- 메뉴 렌더링 로직 ---
   const renderProjectMenu = (id: number, position: { top: number; left: number }) => {
@@ -128,41 +163,73 @@ export function Sidebar() {
           <SidebarCollapsed />
         ) : (
           <div className="sidebar-content">
-            <SidebarHeader />
+            <SidebarHeader searchQuery={searchQuery} onSearchQueryChange={setSearchQuery} />
             <div className="sidebar-scroll" ref={scrollContainerRef}>
-              <ProjectList
-                projects={projects}
-                scrollContainer={scrollContainerRef.current}
-                hasMore={projectsHasMore}
-                isLoading={isDataLoading}
-                onLoadMore={loadMoreProjects}
-                onLoadMoreChats={loadMoreProjectChats}
-                onMenuToggle={(projectId, e) =>
-                  toggleMenu(`${PROJECT_MENU_PREFIX}${projectId}`, e.currentTarget as HTMLElement, {
-                    direction: 'right',
-                  })
-                }
-                onNestedMenuToggle={(chatId, e) =>
-                  toggleMenu(
-                    `${NESTED_CHAT_MENU_PREFIX}${chatId}`,
-                    e.currentTarget as HTMLElement,
-                    { direction: 'right' },
-                  )
-                }
-              />
-              <ChatList
-                title="채팅"
-                chats={generalChats}
-                scrollContainer={scrollContainerRef.current}
-                hasMore={sidebarData.generalChatsHasMore}
-                isLoading={isDataLoading}
-                onLoadMore={loadMoreGeneralChats}
-                onMenuToggle={(chatId, e) =>
-                  toggleMenu(`${CHAT_MENU_PREFIX}${chatId}`, e.currentTarget as HTMLElement, {
-                    direction: 'right',
-                  })
-                }
-              />
+              {isShowingSearchResults ? (
+                <div className="sidebar-search-results">
+                  {isSearching ? (
+                    <div className="sidebar-search-empty">
+                      <p>검색 중...</p>
+                    </div>
+                  ) : searchResults.length === 0 ? (
+                    <div className="sidebar-search-empty">
+                      <p>검색 결과가 없습니다.</p>
+                    </div>
+                  ) : (
+                    <ul className="sidebar-list">
+                      {searchResults.map((result) => (
+                        <li key={`${result.chattingId}-${result.content?.substring(0, 20) || ''}`}>
+                          <button
+                            className="sidebar-search-result-item"
+                            onClick={() => {
+                              if (mode === 'mobile') closeSidebar();
+                              navigate('/chat', { state: { chatId: result.chattingId } });
+                            }}
+                          >
+                            <div className="sidebar-search-result-title">{result.chattingTitle}</div>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <ProjectList
+                    projects={projects}
+                    scrollContainer={scrollContainerRef.current}
+                    hasMore={projectsHasMore}
+                    isLoading={isDataLoading}
+                    onLoadMore={loadMoreProjects}
+                    onLoadMoreChats={loadMoreProjectChats}
+                    onMenuToggle={(projectId, e) =>
+                      toggleMenu(`${PROJECT_MENU_PREFIX}${projectId}`, e.currentTarget as HTMLElement, {
+                        direction: 'right',
+                      })
+                    }
+                    onNestedMenuToggle={(chatId, e) =>
+                      toggleMenu(
+                        `${NESTED_CHAT_MENU_PREFIX}${chatId}`,
+                        e.currentTarget as HTMLElement,
+                        { direction: 'right' },
+                      )
+                    }
+                  />
+                  <ChatList
+                    title="채팅"
+                    chats={generalChats}
+                    scrollContainer={scrollContainerRef.current}
+                    hasMore={sidebarData.generalChatsHasMore}
+                    isLoading={isDataLoading}
+                    onLoadMore={loadMoreGeneralChats}
+                    onMenuToggle={(chatId, e) =>
+                      toggleMenu(`${CHAT_MENU_PREFIX}${chatId}`, e.currentTarget as HTMLElement, {
+                        direction: 'right',
+                      })
+                    }
+                  />
+                </>
+              )}
             </div>
             <SidebarFooter />
           </div>

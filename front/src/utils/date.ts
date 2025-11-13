@@ -35,3 +35,39 @@ export function formatRelativeTime(date: Date): string {
   if (diffInDays < 365) return `${Math.floor(diffInDays / 30)}개월 전`;
   return `${Math.floor(diffInDays / 365)}년 전`;
 }
+
+/**
+ * Date를 "00월 00일" 형식으로 포맷팅
+ * @param dateString - 날짜 문자열 (예: "2025.11.13.13.15.10")
+ */
+export function formatMonthDay(dateString: string | Date | undefined): string {
+  if (!dateString) return '';
+
+  try {
+    let dateObj: Date;
+    
+    if (typeof dateString === 'string') {
+      // "2025.11.13.13.15.10" 형식을 파싱
+      const parts = dateString.split('.');
+      if (parts.length >= 3) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1; // 월은 0부터 시작
+        const day = parseInt(parts[2], 10);
+        dateObj = new Date(year, month, day);
+      } else {
+        dateObj = new Date(dateString);
+      }
+    } else {
+      dateObj = dateString;
+    }
+
+    if (isNaN(dateObj.getTime())) return '';
+
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    
+    return `${month}월 ${day}일`;
+  } catch {
+    return '';
+  }
+}

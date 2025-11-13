@@ -1,16 +1,19 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppShell } from '@/context/AppShellContext';
 import useDeviceMode from '@/hooks/useDeviceMode';
 
+interface SidebarHeaderProps {
+  searchQuery?: string;
+  onSearchQueryChange?: (query: string) => void;
+}
+
 /**
  * 펼쳐진 사이드바의 상단 영역을 담당하는 컴포넌트
  */
-export function SidebarHeader() {
+export function SidebarHeader({ searchQuery = '', onSearchQueryChange }: SidebarHeaderProps) {
   const navigate = useNavigate();
   const { closeSidebar, toggleSidebar, toggleSidebarCollapsed, toggleSearch } = useAppShell();
   const mode = useDeviceMode();
-  const [searchQuery, setSearchQuery] = useState('');
 
   const closeAllOverlays = () => {
     window.dispatchEvent(new CustomEvent('project-create-close'));
@@ -89,7 +92,7 @@ export function SidebarHeader() {
           type="text"
           placeholder="검색"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => onSearchQueryChange?.(e.target.value)}
           onFocus={closeAllOverlays}
         />
       </label>

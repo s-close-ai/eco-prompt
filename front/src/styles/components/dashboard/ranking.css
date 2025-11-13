@@ -351,6 +351,7 @@
   gap: 8px;
   text-align: left;
   min-width: 0;
+  padding-left: 54px;
 }
 
 :root[data-mode='tablet'] .ranking-table-header > span:nth-child(2),
@@ -378,7 +379,7 @@
 :root[data-mode='tablet'] .ranking-table,
 :root[data-mode='desktop'] .ranking-table {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-rows: repeat(5, auto);
   gap: 8px;
   border-collapse: separate;
@@ -450,7 +451,7 @@
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   min-width: 0;
 }
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getRecord, getDetailScore } from '@/services/api/dashboard';
 import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/dashboard.css';
+import '@/styles/pages/dashboard.css';
 
 const metricDescriptions: Record<string, string> = {
   clarityScore: '질문이 명확하고 오해의 여지가 없는 정도를 나타냅니다.',
