@@ -269,7 +269,7 @@ export function setupSSEListeners({
           ];
           useProjectStore
             .getState()
-            .setGeneralChats(newChats.length > 5 ? newChats.slice(0, 5) : newChats);
+            .setGeneralChats(newChats);
         } else {
           updateChatTitle(returnedChattingId, newTitle);
         }

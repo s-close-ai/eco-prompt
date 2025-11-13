@@ -25,7 +25,15 @@
 
 .chat-message-group.completed {
   min-height: auto;
-  padding: 0 12px;
+  padding: 0 12px 0 12px;
+}
+
+.chat-message-group.last-group {
+  min-height: 100%;
+}
+
+.chat-message-group.last-completed {
+  padding-bottom: 3rem !important;
 }
 
 .chat-error-page {

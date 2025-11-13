@@ -3,11 +3,11 @@
 export type MessageType = 'user' | 'ai' | 'loading' | 'error';
 
 export interface PromptScore {
-  clarityScore: number; // 명확성 (최대 25점)
-  specificityScore: number; // 구체성 (최대 25점)
-  formatScore: number; // 형식 준수 (최대 25점)
-  safetyScore: number; // 안정성 (최대 25점)
-  totalScore: number; // 총점 (최대 100점)
+  sc_ec_1: number; // 명확성 (최대 25점)
+  sc_ec_2: number; // 구체성 (최대 25점)
+  sc_ec_3: number; // 형식 준수 (최대 25점)
+  sc_ec_4: number; // 안전성 (최대 25점)
+  sc_ec_0: number; // 총점 (최대 100점)
 }
 
 export interface ChatMessage {

@@ -38,11 +38,11 @@ export interface UserMessage {
 export interface ScoreMessage {
   messageStatus: string;
   scoreInfo: {
-    clarityScore: number;
-    specificityScore: number;
-    formatScore: number;
-    safetyScore: number;
-    totalScore: number;
+    sc_ec_0: number;
+    sc_ec_1: number;
+    sc_ec_2: number;
+    sc_ec_3: number;
+    sc_ec_4: number;
   };
 }
 

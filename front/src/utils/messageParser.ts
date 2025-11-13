@@ -11,12 +11,12 @@ interface APIMessage {
   };
   scoreMessage?: {
     messageStatus?: string;
-    scoreInfo?: {
-      clarityScore: number;
-      specificityScore: number;
-      formatScore: number;
-      safetyScore: number;
-      totalScore: number;
+    scoreInfo: {
+      sc_ec_0: number;
+      sc_ec_1: number;
+      sc_ec_2: number;
+      sc_ec_3: number;
+      sc_ec_4: number;
     };
   };
 }
@@ -45,11 +45,11 @@ export function parseMessages(apiMessages: APIMessage[]): ChatMessage[] {
         messageUUID: msg.userMessage.messageUUID, // 서버의 messageUUID 저장
         score: msg.scoreMessage?.scoreInfo
           ? {
-              clarityScore: msg.scoreMessage.scoreInfo.clarityScore,
-              specificityScore: msg.scoreMessage.scoreInfo.specificityScore,
-              formatScore: msg.scoreMessage.scoreInfo.formatScore,
-              safetyScore: msg.scoreMessage.scoreInfo.safetyScore,
-              totalScore: msg.scoreMessage.scoreInfo.totalScore,
+              sc_ec_1: msg.scoreMessage.scoreInfo.sc_ec_1,
+              sc_ec_2: msg.scoreMessage.scoreInfo.sc_ec_2,
+              sc_ec_3: msg.scoreMessage.scoreInfo.sc_ec_3,
+              sc_ec_4: msg.scoreMessage.scoreInfo.sc_ec_4,
+              sc_ec_0: msg.scoreMessage.scoreInfo.sc_ec_0,
             }
           : undefined,
       });
