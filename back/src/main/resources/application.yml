@@ -51,19 +51,19 @@ spring:
                     token-uri: https://project.ssafy.com/ssafy/oauth2/token
                     user-info-uri: https://project.ssafy.com/ssafy/resources/userInfo
 
-    session:
-        store-type: redis
-        redis:
-            namespace: ecoprompt:session
+#    session:
+#        store-type: redis
+#        redis:
+#            namespace: ecoprompt:session
 
 springdoc:
     override-with-generic-response: false
 
 server:
     forward-headers-strategy: framework
-    servlet:
-        session:
-            timeout: 30m
+#    servlet:
+#        session:
+#            timeout: 30m
     error:
         include-message: always
         include-binding-errors: always
