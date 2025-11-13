@@ -50,9 +50,24 @@ public class MileageService {
 						.build();
 					mileageRepository.save(newMileage);
 
-					userInfoService.updateTotalMileage(userId,0, newValue);
+					userInfoService.updateTotalMileage(userId, 0, newValue);
 				}
 			);
+	}
+
+	@Transactional
+	public void rollbackMileage(Message message, Integer userId, Double score) {
+
+		Long messageId = message.getId();
+		int oldValue = calculateMileage(score);
+
+		mileageRepository.findByMessage_Id(messageId)
+			.ifPresent(mileage -> {
+				userInfoService.updateTotalMileage(userId, oldValue, 0);
+
+				mileage.resetValue();
+				mileageRepository.save(mileage);
+			});
 	}
 
 	/**
