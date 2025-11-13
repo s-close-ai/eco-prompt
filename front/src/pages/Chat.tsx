@@ -36,6 +36,7 @@ export default function Chat() {
   const [hasMoreMessages, setHasMoreMessages] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const isCreatingNewChatRef = useRef<boolean>(false);
+  const firstNewMessageIdRef = useRef<string | null>(null); // 현재 세션에서 생성된 첫 메시지 ID
 
   // 추가 메시지 로드 (무한 스크롤)
   const loadMoreMessages = useCallback(async () => {
@@ -169,6 +170,11 @@ export default function Chat() {
         return;
       }
 
+      // 현재 세션에서 첫 새 메시지 추적
+      if (firstNewMessageIdRef.current === null) {
+        firstNewMessageIdRef.current = userMessageId;
+      }
+
       // 로딩 상태 시작
       setIsLoading(true);
 
@@ -230,6 +236,30 @@ export default function Chat() {
           // 메시지가 이미 추가되었으므로 로드하지 않도록 플래그 설정
           initialMessageSent.current = true;
           isCreatingNewChatRef.current = true; // 새 채팅 생성 중 플래그
+          
+          // 즉시 사이드바에 임시 제목으로 추가 (타이틀 이벤트를 받기 전에 나가도 표시되도록)
+          const tempTitle = 'New Chat';
+          updateCurrentTitle(tempTitle);
+          
+          if (actualProjectId !== defaultProjectId) {
+            // 프로젝트 채팅인 경우
+            addChatToProject(actualProjectId, {
+              chattingId: returnedChattingId,
+              title: tempTitle,
+              projectId: actualProjectId,
+            });
+          } else {
+            // 일반 채팅인 경우
+            const { generalChats } = useProjectStore.getState();
+            const newChats = [
+              { chattingId: returnedChattingId, title: tempTitle, projectId: defaultProjectId! },
+              ...generalChats,
+            ];
+            useProjectStore
+              .getState()
+              .setGeneralChats(newChats);
+          }
+          
           // 실제 사용된 projectId를 state에 저장
           navigate('/chat', {
             replace: true,
@@ -300,7 +330,7 @@ export default function Chat() {
               .generalChats.find((c: SidebarChatItem) => c.chattingId === returnedChattingId);
 
             if (!existingChat) {
-              // 새로운 채팅이면 맨 위에 추가 (5개 제한)
+              // 새로운 채팅이면 맨 위에 추가
               const { generalChats } = useProjectStore.getState();
               const newChats = [
                 { chattingId: returnedChattingId, title: newTitle, projectId: defaultProjectId! },
@@ -308,7 +338,7 @@ export default function Chat() {
               ];
               useProjectStore
                 .getState()
-                .setGeneralChats(newChats.length > 5 ? newChats.slice(0, 5) : newChats);
+                .setGeneralChats(newChats);
             } else {
               // 기존 채팅이면 제목 업데이트 및 맨 위로 이동
               updateChatTitle(returnedChattingId, newTitle);
@@ -357,9 +387,11 @@ export default function Chat() {
 
   useEffect(() => {
     return () => {
+      // 컴포넌트 언마운트 시 모든 SSE 연결 종료 및 로딩 상태 초기화
       eventSourcesRef.current.forEach((eventSource) => eventSource.close());
+      setIsLoading(false);
     };
-  }, []);
+  }, [setIsLoading]);
 
   // 이전 스크롤 높이 저장 (무한 스크롤 로드 시)
   useEffect(() => {
@@ -372,6 +404,20 @@ export default function Chat() {
   // 채팅방 메시지 로드
   useEffect(() => {
     const loadMessages = async () => {
+      // 새 채팅 생성 중이면 메시지를 로드하지 않음 (SSE로 받고 있는 중)
+      // 중요: SSE 연결을 끊지 않기 위해 가장 먼저 체크
+      if (isCreatingNewChatRef.current) {
+        // chattingId가 설정된 후 플래그 리셋
+        isCreatingNewChatRef.current = false;
+        return;
+      }
+
+      // 채팅방 전환 시 로딩 상태 초기화 및 기존 SSE 연결 종료
+      setIsLoading(false);
+      eventSourcesRef.current.forEach((eventSource) => eventSource.close());
+      eventSourcesRef.current.clear();
+      messageUUIDsRef.current.clear();
+
       // chatId가 없으면 새 채팅
       if (!chattingId) {
         setMessages([]);
@@ -381,13 +427,7 @@ export default function Chat() {
         setCurrentPage(0);
         setHasMoreMessages(false);
         previousMessagesLengthRef.current = 0;
-        return;
-      }
-
-      // 새 채팅 생성 중이면 메시지를 로드하지 않음 (SSE로 받고 있는 중)
-      if (isCreatingNewChatRef.current) {
-        // chattingId가 설정된 후 플래그 리셋
-        isCreatingNewChatRef.current = false;
+        firstNewMessageIdRef.current = null; // 새 채팅 시작 시 리셋
         return;
       }
 
@@ -405,6 +445,7 @@ export default function Chat() {
         setHasMoreMessages(!response.data.last);
         initialMessageSent.current = true;
         previousMessagesLengthRef.current = loadedMessages.length;
+        firstNewMessageIdRef.current = null; // 기존 채팅 로드 시 리셋
 
         // 메시지 로드 후 즉시 맨 아래로 이동
         requestAnimationFrame(() => {
@@ -680,6 +721,7 @@ export default function Chat() {
               messages={messages}
               lastUserMessageId={lastUserMessageId}
               lastMessageId={lastMessageId}
+              firstNewMessageId={firstNewMessageIdRef.current}
               onEditAndResendMessage={handleEditAndResendMessage}
               onRetry={handleRetry}
             />

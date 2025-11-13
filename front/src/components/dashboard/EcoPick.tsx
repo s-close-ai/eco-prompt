@@ -10,6 +10,39 @@ interface EcoPickProps {
   onSwipeRight?: () => void;
 }
 
+// 이스케이프 문자를 처리하는 함수
+function parseEscapeCharacters(text: string): React.ReactNode[] {
+  if (!text) return [];
+  
+  // 이스케이프 문자 처리: \n을 실제 줄바꿈으로
+  const parts = text.split('\\n');
+  
+  return parts.flatMap((part, index) => {
+    const elements: React.ReactNode[] = [];
+    
+    if (index > 0) {
+      elements.push(<br key={`br-${index}`} />);
+    }
+    
+    // \t를 탭으로 처리
+    if (part.includes('\\t')) {
+      const tabParts = part.split('\\t');
+      tabParts.forEach((tabPart, tabIndex) => {
+        if (tabIndex > 0) {
+          elements.push(<span key={`tab-${index}-${tabIndex}`} style={{ marginLeft: '2em' }} />);
+        }
+        if (tabPart) {
+          elements.push(tabPart);
+        }
+      });
+    } else if (part) {
+      elements.push(part);
+    }
+    
+    return elements;
+  });
+}
+
 export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
   const mode = useDeviceMode();
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -123,7 +156,13 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
 
   const handleCopy = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(text);
+      // 이스케이프 문자를 실제 문자로 변환
+      const processedText = text
+        .replace(/\\n/g, '\n')
+        .replace(/\\t/g, '\t')
+        .replace(/\\r/g, '\r');
+      
+      await navigator.clipboard.writeText(processedText);
       setCopied(true);
       setTimeout(() => {
         setCopied(false);
@@ -152,25 +191,25 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
       </div>
 
       <div className={`eco-pick-content ${expandedIndex === index ? 'expanded' : ''}`}>
-        <p className="eco-pick-description">{prompt.prompt}</p>
+        <p className="eco-pick-description">{parseEscapeCharacters(prompt.prompt)}</p>
       </div>
 
       <div className="eco-pick-metrics">
         <div className="metric-item">
           <span className="metric-label">명확성</span>
-          <span className="metric-value">{prompt.detailScore.clarityScore}점</span>
+          <span className="metric-value">{prompt.detailScore.sc_ec_1}점</span>
         </div>
         <div className="metric-item">
           <span className="metric-label">구체성</span>
-          <span className="metric-value">{prompt.detailScore.specificityScore}점</span>
+          <span className="metric-value">{prompt.detailScore.sc_ec_2}점</span>
         </div>
         <div className="metric-item">
           <span className="metric-label">형식 준수</span>
-          <span className="metric-value">{prompt.detailScore.formatScore}점</span>
+          <span className="metric-value">{prompt.detailScore.sc_ec_3}점</span>
         </div>
         <div className="metric-item">
-          <span className="metric-label">안정성</span>
-          <span className="metric-value">{prompt.detailScore.safetyScore}점</span>
+          <span className="metric-label">안전성</span>
+          <span className="metric-value">{prompt.detailScore.sc_ec_4}점</span>
         </div>
       </div>
       
