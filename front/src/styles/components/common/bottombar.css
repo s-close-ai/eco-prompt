@@ -8,6 +8,17 @@
   z-index: 20;
 }
 
+@media (max-width: 768px) {
+  .bottombar--chat {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: transparent;
+  }
+}
+
 /* Mobile menu bottombar (non-chat) */
 .bottombar--menu {
   position: fixed;

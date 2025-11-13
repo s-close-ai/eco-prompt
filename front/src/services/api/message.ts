@@ -4,6 +4,8 @@ import type {
   MessageInputResponse,
   MessageUpdateRequest,
   MessageUpdateResponse,
+  MessageSearchRequest,
+  MessageSearchResponse,
 } from '@/types/api/message.types';
 
 /**
@@ -55,9 +57,22 @@ export const subscribeMessage = (messageUUID: string): EventSource => {
     : `${window.location.origin}${baseURL}`;
   
   const sseURL = `${absoluteURL}/messages/subscribe/${messageUUID}`;
-  console.log('SSE 연결 URL:', sseURL); // 디버깅용
   
   return new EventSource(sseURL, {
     withCredentials: true,
   });
+};
+
+/**
+ * 메세지 검색
+ * Endpoint: GET  /messages/search
+ * @param request - string
+ * @returns MessageSearchResponse
+ */
+
+export const searchMessages = async (request: MessageSearchRequest): Promise<MessageSearchResponse> => {
+  const response = await apiClient.get<MessageSearchResponse>('/messages/search', {
+    params: { keyword: request.string },
+  });
+  return response.data;
 };
