@@ -22,6 +22,7 @@ public interface MessageJpaRepository extends JpaRepository<Message, Long> {
 	@Query(value = """
         SELECT
             m.user_id AS userId,
+            u.employee_number AS employeeNumber,
             u.name    AS name,
             COALESCE(MAX(sc.clarity_score + sc.specificity_score + sc.format_score + sc.safety_score), 0) AS maxScore,
             COALESCE(SUM(mi.value), 0) AS mileageSum,
