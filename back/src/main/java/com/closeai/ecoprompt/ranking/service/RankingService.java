@@ -89,7 +89,7 @@ public class RankingService {
             result.add(new RankingResponse(
                     rank++,
                     row.getEmployeeNumber() + " " + row.getName(),
-                    row.getMaxScore(),
+                    Math.round(row.getMaxScore() * 100) / 100.0,
                     row.getMileageSum(),
                     row.getPromptCount(),
                     change
@@ -120,7 +120,7 @@ public class RankingService {
             result.add(new RankingResponse(
                     r.getRankingNumber(),
                     r.getUser().getEmployeeNumber() + " " + r.getUser().getName(),
-                    r.getScore(),
+                    Math.round(r.getScore() * 100) / 100.0,
                     r.getMileage(),
                     r.getPromptCount(),
                     r.getRankingChange()
