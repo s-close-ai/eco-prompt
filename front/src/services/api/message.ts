@@ -4,6 +4,8 @@ import type {
   MessageInputResponse,
   MessageUpdateRequest,
   MessageUpdateResponse,
+  MessageSearchRequest,
+  MessageSearchResponse,
 } from '@/types/api/message.types';
 
 /**
@@ -60,4 +62,18 @@ export const subscribeMessage = (messageUUID: string): EventSource => {
   return new EventSource(sseURL, {
     withCredentials: true,
   });
+};
+
+/**
+ * 메세지 검색
+ * Endpoint: GET  /messages/search
+ * @param request - string
+ * @returns MessageSearchResponse
+ */
+
+export const searchMessages = async (request: MessageSearchRequest): Promise<MessageSearchResponse> => {
+  const response = await apiClient.get<MessageSearchResponse>('/messages/search', {
+    params: { keyword: request.string },
+  });
+  return response.data;
 };

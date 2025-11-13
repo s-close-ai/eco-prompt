@@ -26,3 +26,17 @@ export interface MessageUpdateResponse {
     messageUUID: string;
   };
 }
+
+export interface MessageSearchRequest {
+  string: string;
+}
+
+export interface MessageSearchResponse {
+  status: string;
+  data: {
+    chattingId: number;
+    chattingTitle: string;
+    content: string;
+    chattingUpdatedAt: string;
+  }[];
+}
