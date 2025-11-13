@@ -99,7 +99,7 @@ async def load_llm_engines():
         except Exception as e:
             print(f"❌ Failed to load LLM Engine 1: {e}")
 
-    # 2. Llama-Korean-3.1-8B-Instruct
+    # 2. Midm-2.0-Base-Instruct
     if llm_engine_2 is None:
         print(f"⏳ Starting LLM Engine 2 Load ({MODEL_NAME_2})...")
 
