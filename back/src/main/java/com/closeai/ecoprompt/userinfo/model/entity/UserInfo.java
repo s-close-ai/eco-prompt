@@ -111,8 +111,8 @@ public class UserInfo extends BaseEntity {
 		this.personalPrompt = personalPrompt;
 	}
 
-	public void updateTotalFailCount(Integer value) {
-		this.totalFailCount = this.totalFailCount + value;
+	public void updateTotalFailCount(Long value) {
+		this.totalFailCount = value;
 	}
 
 }

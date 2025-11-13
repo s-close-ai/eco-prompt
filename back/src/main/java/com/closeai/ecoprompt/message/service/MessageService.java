@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
 import com.closeai.ecoprompt.ai.service.AiService;
 import com.closeai.ecoprompt.chatting.model.entity.Chatting;
 import com.closeai.ecoprompt.chatting.repository.ChattingRepository;
@@ -32,6 +33,8 @@ import com.closeai.ecoprompt.message.model.entity.MessageSender;
 import com.closeai.ecoprompt.message.model.entity.MessageStatus;
 import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
+import com.closeai.ecoprompt.mileage.service.MileageService;
+import com.closeai.ecoprompt.score.service.ScoreService;
 import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 
 import lombok.RequiredArgsConstructor;
@@ -51,6 +54,8 @@ public class MessageService {
 	private static final int MESSAGE_PAGE_SIZE = 10;
 	private static final int MESSAGE_SNIPPET_SIZE = 50;
 	private final ChattingRepository chattingRepository;
+	private final ScoreService scoreService;
+	private final MileageService mileageService;
 
 	/**
 	 * 사용자 입력에 대한 API 처리 함수
@@ -141,7 +146,26 @@ public class MessageService {
 		String messageUUID = messageCommand.messageUUID();
 		Integer userId = CustomUtil.getCurrentUserId();
 
-		// 1. 기존에 있는 message MongoDB의 값을 변경
+		// 1. 기존 메시지 정보 조회
+		MessageDocument userMessage = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
+				MessageSender.USER)
+			.orElseThrow(() -> new BusinessException("저장된 메시지가 없습니다."));
+
+		Message message = messageJpaRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER)
+			.orElseThrow(() -> new BusinessException("저장된 메시지가 없습니다."));
+
+		// 1-2. 기존 상태가 COMPLETED 인 경우 점수/ 마일리지 롤백
+		if (userMessage.getStatus().equals(MessageStatus.COMPLETED)) {
+			ScoreInfo oldScoreInfo = userMessage.getScoreInfo();
+			if (oldScoreInfo != null) {
+				// 점수 ROLLBACK
+				scoreService.rollbackScore(message, userId, oldScoreInfo);
+				// 마일리지 ROLLBACK
+				mileageService.rollbackMileage(message, userId, oldScoreInfo.totalScore());
+			}
+		}
+
+		// 1-3. 기존에 있는 message MongoDB의 값을 변경
 		updateMessageContent(messageUUID, content);
 
 		// 2. 기존에 있는 chatting의 updatedAt 변경
@@ -225,8 +249,13 @@ public class MessageService {
 				MessageSender.AI)
 			.orElseThrow(() -> new BusinessException("저장된 메시지가 없습니다."));
 
-		MessageDocument trainingDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
-			MessageSender.TRAINING).orElseThrow();
+		messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
+				MessageSender.TRAINING)
+			.ifPresent(training -> {
+				training.updateContent(null);
+				training.updateMessageStatus(MessageStatus.PROCESSING);
+				messageMongoRepository.save(training);
+			});
 
 		userDocument.updateContent(content);
 		userDocument.updateScoreInfo(null);
@@ -234,10 +263,7 @@ public class MessageService {
 		aiDocument.updateContent(null);
 		aiDocument.updateMessageStatus(MessageStatus.PROCESSING);
 
-		trainingDocument.updateContent(null);
-		trainingDocument.updateMessageStatus(MessageStatus.PROCESSING);
-
-		List<MessageDocument> messageDocuments = List.of(userDocument, aiDocument, trainingDocument);
+		List<MessageDocument> messageDocuments = List.of(userDocument, aiDocument);
 
 		messageMongoRepository.saveAll(messageDocuments);
 	}

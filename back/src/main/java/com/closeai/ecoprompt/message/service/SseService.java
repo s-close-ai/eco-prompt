@@ -105,8 +105,6 @@ public class SseService {
 		AtomicBoolean cancelled = cancelledTasks.computeIfAbsent(
 			messageUUID, k -> new AtomicBoolean(false));
 		cancelled.set(true);    // 작업 취소 되었다고 masking
-
-		AppLogger.info("취소 플래그 설정됨. UUID: {}, 현재 상태: {}", messageUUID, cancelled.get());
 	}
 
 	/**
@@ -114,12 +112,7 @@ public class SseService {
 	 * */
 	public boolean isCancelled(String messageUUID) {
 		AtomicBoolean cancelled = cancelledTasks.get(messageUUID);
-
-		boolean result = cancelled != null && cancelled.get();
-
-		AppLogger.debug("취소 상태 확인. UUID : " + messageUUID + " , 결과 : " + result);
-
-		return result;
+		return cancelled != null && cancelled.get();
 	}
 
 	public void cleanupCancelledTask(String messageUUID) {
