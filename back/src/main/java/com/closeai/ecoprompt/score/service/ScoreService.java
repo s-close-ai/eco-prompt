@@ -55,4 +55,19 @@ public class ScoreService {
 				}
 			);
 	}
+
+	@Transactional
+	public void rollbackScore(Message message, Integer userId, ScoreInfo scoreInfo) {
+
+		Long messageId = message.getId();
+		Double oldTotalScore = scoreInfo.totalScore();
+
+		scoreRepository.findByMessage_Id(messageId)
+			.ifPresent(score -> {
+				userInfoService.recalculateAndUpdateHighScore(userId, oldTotalScore, 0.0);
+
+				score.resetScore();
+				scoreRepository.save(score);
+			});
+	}
 }

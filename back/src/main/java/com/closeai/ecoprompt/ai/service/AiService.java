@@ -64,30 +64,15 @@ public class AiService {
 	@Async
 	public void callAiModel(String messageUUID, String content, Integer userId, boolean isFirstChatting) {
 
-		if (sseService.isCancelled(messageUUID)) {
-			AppLogger.info("AI 모델 호출 시작 이전에 이미 취소 되었습니다. UUID : " + messageUUID);
-			return;
-		}
-
-		// AI 모델 호출 이전에 SSE 연결이 완료되었는지 확인
-		// 만약에 호출 이전에 에러 확인 시 2개의 모델 모두 ERROR 처리하기
-		// try {
-		// 	sseService.getWaitStatue(messageUUID).get();
-		// } catch (InterruptedException | ExecutionException e) {
-		// 	AppLogger.error("SSE 연결 대기 중에 에러 발생. UUID : " + messageUUID);
-		// 	eventPublisher.publishEvent(new ModelErrorEvent(this, messageUUID));
-		// 	return;
-		// }
-
 		// SSE 연결 이후에 사용자가 취소를 한 경우 취소 상태를 저장
 		if (sseService.isCancelled(messageUUID)) {
 			AppLogger.info("AI 모델 호출 시작 이전에 이미 취소 되었습니다. UUID : " + messageUUID);
 			sseService.sendEventToClient(messageUUID, "SSE_COMPLETE", "DONE");
 			eventPublisher.publishEvent(
-				new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER)
+				new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER, userId)
 			);
 			eventPublisher.publishEvent(
-				new ModelCancelledEvent(this, messageUUID, null, MessageSender.AI)
+				new ModelCancelledEvent(this, messageUUID, null, MessageSender.AI, userId)
 			);
 			return;
 		}
@@ -117,7 +102,7 @@ public class AiService {
 				if (sseService.isCancelled(messageUUID)) {
 					AppLogger.info("Judge 모델 완료 하였으나, 작업이 취소 되어 이벤트를 발행하지 않습니다.");
 					eventPublisher.publishEvent(
-						new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER)
+						new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER, userId)
 					);
 					return;
 				}
@@ -232,7 +217,7 @@ public class AiService {
 					sseService.sendEventToClient(messageUUID, "SSE_COMPLETE", "DONE");
 					if (!finalAnswer.isEmpty()) {
 						eventPublisher.publishEvent(
-							new ModelCancelledEvent(this, messageUUID, finalAnswer, MessageSender.AI)
+							new ModelCancelledEvent(this, messageUUID, finalAnswer, MessageSender.AI, userId)
 						);
 					}
 				}
