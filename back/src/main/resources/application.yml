@@ -14,6 +14,11 @@ spring:
             host: ${REDIS_HOST}
             port: ${REDIS_PORT}
             password: ${REDIS_PASSWORD}
+            lettuce:
+                pool:
+                    max-active: 8
+                    max-idle: 8
+                    min-idle: 0
 
     jpa:
         show-sql: true
@@ -50,14 +55,15 @@ spring:
         store-type: redis
         redis:
             namespace: ecoprompt:session
-            flush-mode: on_save
-            cleanup-cron: "0 * * * * *"   # 선택, 세션 정리 주기
 
 springdoc:
     override-with-generic-response: false
 
 server:
     forward-headers-strategy: framework
+    servlet:
+        session:
+            timeout: 30m
     error:
         include-message: always
         include-binding-errors: always
