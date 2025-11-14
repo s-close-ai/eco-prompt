@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import '@/styles/components/chat/chat-input.css';
+import { MAX_MESSAGE_LENGTH } from '@/constants/ui';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -8,8 +9,6 @@ interface ChatInputProps {
   isLoading?: boolean;
   onStop?: () => void;
 }
-
-const MAX_CHARACTERS = 15000;
 
 export default function ChatInput({
   onSend,
@@ -39,11 +38,13 @@ export default function ChatInput({
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
-    if (newValue.length > MAX_CHARACTERS) {
+    if (newValue.length > MAX_MESSAGE_LENGTH) {
       setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
       return;
     }
     setMessage(newValue);
+    setShowAlert(false);
   };
 
   useEffect(() => {
@@ -135,7 +136,11 @@ export default function ChatInput({
           Eco Prompt는 실수를 할 수 있고, 공유될 수 있습니다. 중요한 정보는 확인하세요.
         </p>
       </div>
-      {showAlert ? null : null}
+      {showAlert && (
+        <div className="chat-input-alert">
+          최대 {MAX_MESSAGE_LENGTH.toLocaleString()}자까지 입력할 수 있습니다.
+        </div>
+      )}
     </div>
   );
 }

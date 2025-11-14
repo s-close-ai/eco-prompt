@@ -6,4 +6,4 @@ export const ICON_SIZE = {
   XL: 48,
 } as const;
 
-export const MAX_MESSAGE_LENGTH = 15000;
+export const MAX_MESSAGE_LENGTH = 25000;
