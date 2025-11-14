@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import '@/styles/components/chat/user-message.css';
+import { MAX_MESSAGE_LENGTH } from '@/constants/ui';
 
 interface UserMessageProps {
   message: string;
@@ -15,6 +16,8 @@ export default function UserMessage({
   const [isEditing, setIsEditing] = useState(false);
   const [editedMessage, setEditedMessage] = useState(message);
   const [copied, setCopied] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleCopy = async () => {
     try {
@@ -27,23 +30,56 @@ export default function UserMessage({
   };
 
   const handleUpdate = () => {
-    onUpdate(editedMessage);
-    setIsEditing(false);
+    if (editedMessage.trim()) {
+      onUpdate(editedMessage.trim());
+      setIsEditing(false);
+      setShowAlert(false);
+    }
   };
 
+  const handleEditInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    if (newValue.length > MAX_MESSAGE_LENGTH) {
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
+      return;
+    }
+    setEditedMessage(newValue);
+    setShowAlert(false);
+  };
+
+  // textarea 높이 자동 조절
+  useEffect(() => {
+    if (textareaRef.current && isEditing) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [editedMessage, isEditing]);
+
   if (isEditing) {
+    const isUnchanged = editedMessage.trim() === message.trim();
+
     return (
       <div className="user-message-container">
         <div className="user-message-editor">
           <textarea
+            ref={textareaRef}
             value={editedMessage}
-            onChange={(e) => setEditedMessage(e.target.value)}
+            onChange={handleEditInput}
             className="user-message-textarea"
           />
           <div className="user-message-edit-actions">
-            <button onClick={handleUpdate}>Save</button>
-            <button onClick={() => setIsEditing(false)}>Cancel</button>
+            <button onClick={handleUpdate} disabled={isUnchanged || !editedMessage.trim()}>Save</button>
+            <button onClick={() => {
+              setIsEditing(false);
+              setShowAlert(false);
+            }}>Cancel</button>
           </div>
+          {showAlert && (
+            <div className="user-message-alert">
+              최대 {MAX_MESSAGE_LENGTH.toLocaleString()}자까지 입력할 수 있습니다.
+            </div>
+          )}
         </div>
       </div>
     );

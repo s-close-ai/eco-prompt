@@ -109,12 +109,24 @@
   border: none;
   resize: none;
   min-height: 50px;
+  max-height: 300px;
+  overflow-y: auto;
   font-family: inherit;
   font-size: inherit;
+  line-height: 1.5;
 }
 
 .user-message-textarea:focus {
   outline: none;
+}
+
+.user-message-textarea::-webkit-scrollbar {
+  width: 4px;
+}
+
+.user-message-textarea::-webkit-scrollbar-thumb {
+  background-color: #c0c0c0;
+  border-radius: 2px;
 }
 
 .user-message-edit-actions {
@@ -132,8 +144,34 @@
   padding: 6px 12px;
   cursor: pointer;
   font-size: 14px;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.user-message-edit-actions button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.user-message-edit-actions button:disabled {
+  background-color: #d0d0d0;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .user-message-edit-actions button:last-child {
   background-color: #6c757d;
+}
+
+.user-message-edit-actions button:last-child:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+.user-message-alert {
+  background-color: #fff5f5;
+  border: 1px solid #ffcdd2;
+  border-radius: 8px;
+  color: #d32f2f;
+  font-size: 12px;
+  text-align: center;
+  padding: 8px;
+  margin-top: 8px;
 }
