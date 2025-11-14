@@ -18,4 +18,3 @@ async def prompt_judge(payload: InferenceRequest, request: Request, response: Re
     except Exception as e:
         logger.exception(f"[router] judge inference failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-   
