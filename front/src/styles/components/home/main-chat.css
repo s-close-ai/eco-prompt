@@ -8,18 +8,6 @@
   overflow: hidden;
 }
 
-/* 데스크탑: 사이드바를 고려한 중앙 배치 */
-:root[data-mode='desktop'] .main-chat-container {
-  /* 사이드바가 펼쳐진 경우 남은 공간(100vw - sidebar)의 중앙에 배치 */
-  width: calc(100vw - var(--sidebar-width));
-}
-
-/* 데스크탑: 사이드바가 접힌 경우 */
-:root[data-mode='desktop'][data-sidebar-collapsed='true'] .main-chat-container {
-  width: calc(100vw - var(--sidebar-collapsed-width));
-  margin-left: var(--sidebar-collapsed-width);
-}
-
 .main-chat-content {
   display: flex;
   flex-direction: column;
