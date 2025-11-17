@@ -96,11 +96,11 @@ jwt:
 logging:
     level:
         org.hibernate.orm.jdbc.bind: trace
-        root: INFO
-        org.springframework.web: DEBUG
-        org.springframework.cache: DEBUG
-        org.springframework.data.redis: DEBUG
-        com.closeai: DEBUG
+#        root: INFO
+#        org.springframework.web: DEBUG
+#        org.springframework.cache: DEBUG
+#        org.springframework.data.redis: DEBUG
+#        com.closeai: DEBUG
     file:
         name: ./logs/be/app.log
 
