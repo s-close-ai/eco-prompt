@@ -62,7 +62,7 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
     // loglens
-    implementation 'com.loglens:loglens-spring-boot-starter:1.1.4-SNAPSHOT'
+    implementation 'com.loglens:loglens-spring-boot-starter:1.1.5-SNAPSHOT'
 }
 
 tasks.named('test') {
