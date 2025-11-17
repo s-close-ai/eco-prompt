@@ -86,6 +86,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/refresh").permitAll()
                         .requestMatchers("/api/v1/auth/sign-out").permitAll()
 
+                        // log lens 관련
+                        .requestMatchers("/api/components/**", "/api/dependencies/**", "/api/logs/frontend").permitAll()
+
                         // 나머지는 인증 필요
                         .anyRequest().authenticated()
                 )
