@@ -6,6 +6,8 @@ import type {
   MessageUpdateResponse,
   MessageSearchRequest,
   MessageSearchResponse,
+  MessageJudgeResponse,
+  MessageLLMResponse,
 } from '@/types/api/message.types';
 
 /**
@@ -31,6 +33,32 @@ export const updateMessage = async (
   request: MessageUpdateRequest,
 ): Promise<MessageUpdateResponse> => {
   const response = await apiClient.patch<MessageUpdateResponse>('/messages', request);
+  return response.data;
+};
+
+/**
+ * 메시지 점수 요청 재전송
+ * Endpoint: PATCH  /messages/judge
+ * @param request - 프로젝트 ID, 채팅방 ID, 메시지 내용, 메시지 UUID
+ * @returns 점수 정보
+ */
+export const judgeMessage = async (
+  request: MessageUpdateRequest,
+): Promise<MessageJudgeResponse> => {
+  const response = await apiClient.patch<MessageJudgeResponse>('/messages/judge', request);
+  return response.data;
+};
+
+/**
+ * AI 메시지 요청 재전송
+ * Endpoint: PATCH  /messages/llm
+ * @param request - 프로젝트 ID, 채팅방 ID, 메시지 내용, 메시지 UUID
+ * @returns 빈 객체 (messageUUID는 반환하지 않음, 기존 messageUUID 사용)
+ */
+export const resendAIMessage = async (
+  request: MessageUpdateRequest,
+): Promise<MessageLLMResponse> => {
+  const response = await apiClient.patch<MessageLLMResponse>('/messages/llm', request);
   return response.data;
 };
 
