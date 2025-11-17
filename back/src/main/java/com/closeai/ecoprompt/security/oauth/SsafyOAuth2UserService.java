@@ -108,6 +108,10 @@ public class SsafyOAuth2UserService implements OAuth2UserService<OAuth2UserReque
                         }
                 );
 
+        if (user.getEmployeeNumber().equals("UNKNOWN")) {
+            user.setEmployeeNumber(edu != null ? edu : "UNKNOWN");
+        }
+
         // 4) Security Principal (FE로 내려갈 attributes에 두 응답을 합쳐 넣으면 디버그/표시에 좋음)
         Map<String, Object> merged = new LinkedHashMap<>();
         merged.putAll(loginAttrs);
