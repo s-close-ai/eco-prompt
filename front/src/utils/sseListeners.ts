@@ -1,6 +1,7 @@
 import type { ChatMessage, PromptScore as PromptScoreType } from '@/types/chat.types';
 import type { SidebarChatItem, SidebarProjectItem } from '@/types/sidebar.types';
 import { useProjectStore } from '@/store/projectStore';
+import { withLogLens } from 'soo1-loglens';
 
 interface SetupSSEListenersParams {
   eventSource: EventSource;
@@ -83,81 +84,273 @@ export function setupSSEListeners({
   };
 
   // LLM_START 이벤트
-  eventSource.addEventListener('LLM_START', () => {
-    autoScrollEnabledRef.current = true;
+  eventSource.addEventListener('LLM_START', withLogLens(
+    () => {
+      autoScrollEnabledRef.current = true;
 
-    if (loadingMessageId) {
-      // 로딩 메시지를 AI 메시지로 교체 (새 메시지 전송 시)
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === loadingMessageId
-            ? {
-                id: aiMessageId,
-                type: 'ai',
-                message: '',
-                timestamp: new Date(),
-                isStreaming: true,
-              }
-            : m,
-        ),
-      );
-    }
-  });
-
-  // LLM_TOKEN 이벤트
-  eventSource.addEventListener('LLM_TOKEN', (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      const token = data.token || '';
-
-      if (isFirstChunk && loadingMessageId) {
-        // 첫 번째 토큰: 로딩 메시지를 AI 메시지로 교체 (LLM_START가 안 온 경우 대비)
-        isFirstChunk = false;
-        autoScrollEnabledRef.current = true;
+      if (loadingMessageId) {
+        // 로딩 메시지를 AI 메시지로 교체 (새 메시지 전송 시)
         setMessages((prev) =>
           prev.map((m) =>
             m.id === loadingMessageId
               ? {
                   id: aiMessageId,
                   type: 'ai',
-                  message: token,
+                  message: '',
                   timestamp: new Date(),
                   isStreaming: true,
                 }
-              : m.id === aiMessageId
-                ? { ...m, message: m.message + token }
-                : m,
+              : m,
           ),
         );
-      } else {
-        // 이후 토큰: 메시지에 추가
-        setMessages((prev) =>
-          prev.map((m) => (m.id === aiMessageId ? { ...m, message: m.message + token } : m)),
-        );
       }
-    } catch (error) {
-      console.error('Failed to parse LLM_TOKEN:', error);
-    }
-  });
+    },
+    { logger: 'SSE.handleLLMStart', includeArgs: true }
+  ));
+
+  // LLM_TOKEN 이벤트
+  eventSource.addEventListener('LLM_TOKEN', withLogLens(
+    (event: Event) => {
+      try {
+        const data = JSON.parse((event as MessageEvent).data);
+        const token = data.token || '';
+
+        if (isFirstChunk && loadingMessageId) {
+          // 첫 번째 토큰: 로딩 메시지를 AI 메시지로 교체 (LLM_START가 안 온 경우 대비)
+          isFirstChunk = false;
+          autoScrollEnabledRef.current = true;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === loadingMessageId
+                ? {
+                    id: aiMessageId,
+                    type: 'ai',
+                    message: token,
+                    timestamp: new Date(),
+                    isStreaming: true,
+                  }
+                : m.id === aiMessageId
+                  ? { ...m, message: m.message + token }
+                  : m,
+            ),
+          );
+        } else {
+          // 이후 토큰: 메시지에 추가
+          setMessages((prev) =>
+            prev.map((m) => (m.id === aiMessageId ? { ...m, message: m.message + token } : m)),
+          );
+        }
+      } catch (error) {
+        console.error('Failed to parse LLM_TOKEN:', error);
+      }
+    },
+    { logger: 'SSE.handleLLMToken', includeArgs: false }
+  ));
 
   // JUDGE_PROMPT 이벤트 - 점수 정보 수신 (정상)
-  eventSource.addEventListener('JUDGE_PROMPT', (event) => {
-    try {
-      const scoreData = JSON.parse(event.data) as PromptScoreType;
-      setMessages((prev) =>
-        prev.map((m) => (m.id === userMessageId ? { ...m, score: scoreData } : m)),
-      );
-    } catch (error) {
-      console.error('Failed to parse JUDGE_PROMPT:', error);
-    }
-  });
+  eventSource.addEventListener('JUDGE_PROMPT', withLogLens(
+    (event: Event) => {
+      try {
+        const scoreData = JSON.parse((event as MessageEvent).data) as PromptScoreType;
+        setMessages((prev) =>
+          prev.map((m) => (m.id === userMessageId ? { ...m, score: scoreData } : m)),
+        );
+      } catch (error) {
+        console.error('Failed to parse JUDGE_PROMPT:', error);
+      }
+    },
+    { logger: 'SSE.handleJudgePrompt', includeArgs: true }
+  ));
 
   // LLM_END 이벤트 - LLM 스트리밍 완료
-  eventSource.addEventListener('LLM_END', () => {
-    llmEnded = true;
+  eventSource.addEventListener('LLM_END', withLogLens(
+    () => {
+      llmEnded = true;
 
-    // LLM 재전송인 경우 LLM_END에서 SSE 종료
-    if (isResend) {
+      // LLM 재전송인 경우 LLM_END에서 SSE 종료
+      if (isResend) {
+        eventSource.close();
+        eventSourcesRef.current.delete(aiMessageId);
+        messageUUIDsRef.current.delete(aiMessageId);
+        autoScrollEnabledRef.current = false;
+        setMessages((prev) =>
+          prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
+        );
+        setIsLoading(false);
+      } else {
+        checkAndCloseSSE();
+      }
+    },
+    { logger: 'SSE.handleLLMEnd', includeArgs: true }
+  ));
+
+  // JUDGE_END 이벤트 - 점수 평가 완료
+  eventSource.addEventListener('JUDGE_END', withLogLens(
+    () => {
+      judgeEnded = true;
+      checkAndCloseSSE();
+    },
+    { logger: 'SSE.handleJudgeEnd', includeArgs: true }
+  ));
+
+  // LLM_ERROR 이벤트 - LLM 응답 생성 실패
+  // 결과: LLM 응답 X, 점수는 JUDGE 이벤트 대기
+  eventSource.addEventListener('LLM_ERROR', withLogLens(
+    () => {
+      llmEnded = true; // LLM이 에러로 종료됨
+      autoScrollEnabledRef.current = false;
+
+      // AI 메시지와 로딩 메시지 제거
+      setMessages((prev) => {
+        const filtered = prev.filter((m) => m.id !== loadingMessageId && m.id !== aiMessageId);
+
+        // 이미 JUDGE_ERROR로 에러 메시지가 추가된 경우 - 둘 다 에러
+        if (hasError && errorMessageId) {
+          // 기존 에러 메시지를 통합 메시지로 업데이트
+          return filtered.map((m) =>
+            m.id === errorMessageId
+              ? { ...m, message: '응답을 생성하는 중 오류가 발생했습니다.', errorType: 'both' as const }
+              : m,
+          );
+        }
+
+        // 아직 에러 메시지가 없는 경우 새로 추가 (LLM만 에러, JUDGE는 대기 중)
+        hasError = true;
+        const newErrorId = crypto.randomUUID();
+        errorMessageId = newErrorId;
+
+        return [
+          ...filtered,
+          {
+            id: newErrorId,
+            type: 'error',
+            message: 'AI 응답을 생성하는 중 오류가 발생했습니다.',
+            timestamp: new Date(),
+            errorType: 'llm' as const,
+          },
+        ];
+      });
+
+      // SSE 연결은 유지 (JUDGE 이벤트 대기)
+    },
+    { logger: 'SSE.handleLLMError', includeArgs: true }
+  ));
+
+  // JUDGE_ERROR 이벤트 - 점수 생성 실패
+  eventSource.addEventListener('JUDGE_ERROR', withLogLens(
+    () => {
+      judgeEnded = true; // judge 종료
+
+      // LLM도 에러가 났는지 확인
+      if (llmEnded) {
+        // 둘 다 에러 - 기존 에러 메시지를 통합 메시지로 업데이트
+        if (hasError && errorMessageId) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === errorMessageId
+                ? { ...m, message: '응답을 생성하는 중 오류가 발생했습니다.', errorType: 'both' as const }
+                : m,
+            ),
+          );
+        } else {
+          // LLM_ERROR가 먼저 왔지만 에러 메시지가 없는 경우 (예외 상황)
+          hasError = true;
+          const newErrorId = crypto.randomUUID();
+          errorMessageId = newErrorId;
+          setMessages((prev) => [
+            ...prev.filter((m) => m.id !== loadingMessageId && m.id !== aiMessageId),
+            {
+              id: newErrorId,
+              type: 'error',
+              message: '응답을 생성하는 중 오류가 발생했습니다.',
+              timestamp: new Date(),
+              errorType: 'both' as const,
+            },
+          ]);
+        }
+
+        // 둘 다 에러이므로 SSE 종료
+        eventSource.close();
+        eventSourcesRef.current.delete(aiMessageId);
+        messageUUIDsRef.current.delete(aiMessageId);
+        setIsLoading(false);
+      } else if (!hasError) {
+        // 점수만 에러 (LLM은 정상 - 아직 스트리밍 중)
+        hasError = true;
+        const scoreErrorMessageId = crypto.randomUUID();
+        errorMessageId = scoreErrorMessageId;
+
+        setMessages((prev) => {
+          const newMessages: ChatMessage[] = [];
+          for (const msg of prev) {
+            // AI 메시지 바로 앞에 에러 메시지 삽입
+            if (msg.id === aiMessageId) {
+              newMessages.push({
+                id: scoreErrorMessageId,
+                type: 'error' as const,
+                message: '점수 정보를 생성하는 중 오류가 발생했습니다.',
+                timestamp: new Date(),
+                errorType: 'judge' as const,
+              });
+            }
+            newMessages.push(msg);
+          }
+          return newMessages;
+        });
+
+        // LLM 응답은 계속 받으므로 SSE 연결 유지
+      }
+
+      // 새 채팅인 경우 "NEW CHAT" 제목으로 사이드바 업데이트
+      if (returnedChattingId && actualProjectId) {
+        const newTitle = 'NEW CHAT';
+        updateCurrentTitle(newTitle);
+
+        if (actualProjectId !== defaultProjectId) {
+          // 프로젝트 채팅인 경우
+          const existingChat = useProjectStore
+            .getState()
+            .projects.find((p: SidebarProjectItem) => p.projectId === actualProjectId)
+            ?.chats.find((c: SidebarChatItem) => c.chattingId === returnedChattingId);
+
+          if (!existingChat) {
+            addChatToProject(actualProjectId, {
+              chattingId: returnedChattingId,
+              title: newTitle,
+              projectId: actualProjectId,
+            });
+          } else {
+            updateChatTitle(returnedChattingId, newTitle);
+          }
+        } else {
+          // 일반 채팅인 경우
+          const existingChat = useProjectStore
+            .getState()
+            .generalChats.find((c: SidebarChatItem) => c.chattingId === returnedChattingId);
+
+          if (!existingChat) {
+            const { generalChats } = useProjectStore.getState();
+            const newChats = [
+              { chattingId: returnedChattingId, title: newTitle, projectId: defaultProjectId! },
+              ...generalChats,
+            ];
+            useProjectStore
+              .getState()
+              .setGeneralChats(newChats);
+          } else {
+            updateChatTitle(returnedChattingId, newTitle);
+          }
+        }
+      }
+      // LLM 응답은 계속 받으므로 SSE 연결 유지
+      judgeEnded = true; // 점수 평가 실패로 judge 종료
+    },
+    { logger: 'SSE.handleJudgeError', includeArgs: true }
+  ));
+
+  // SSE_COMPLETE 이벤트
+  eventSource.addEventListener('SSE_COMPLETE', withLogLens(
+    () => {
       eventSource.close();
       eventSourcesRef.current.delete(aiMessageId);
       messageUUIDsRef.current.delete(aiMessageId);
@@ -166,197 +359,32 @@ export function setupSSEListeners({
         prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
       );
       setIsLoading(false);
-    } else {
-      checkAndCloseSSE();
-    }
-  });
+    },
+    { logger: 'SSE.handleSSEComplete', includeArgs: true }
+  ));
 
-  // JUDGE_END 이벤트 - 점수 평가 완료
-  eventSource.addEventListener('JUDGE_END', () => {
-    judgeEnded = true;
-    checkAndCloseSSE();
-  });
-
-  // LLM_ERROR 이벤트 - LLM 응답 생성 실패
-  // 결과: LLM 응답 X, 점수는 JUDGE 이벤트 대기
-  eventSource.addEventListener('LLM_ERROR', () => {
-    llmEnded = true; // LLM이 에러로 종료됨
-    autoScrollEnabledRef.current = false;
-
-    // AI 메시지와 로딩 메시지 제거
-    setMessages((prev) => {
-      const filtered = prev.filter((m) => m.id !== loadingMessageId && m.id !== aiMessageId);
-
-      // 이미 JUDGE_ERROR로 에러 메시지가 추가된 경우 - 둘 다 에러
-      if (hasError && errorMessageId) {
-        // 기존 에러 메시지를 통합 메시지로 업데이트
-        return filtered.map((m) =>
-          m.id === errorMessageId
-            ? { ...m, message: '응답을 생성하는 중 오류가 발생했습니다.', errorType: 'both' as const }
-            : m,
-        );
-      }
-
-      // 아직 에러 메시지가 없는 경우 새로 추가 (LLM만 에러, JUDGE는 대기 중)
-      hasError = true;
-      const newErrorId = crypto.randomUUID();
-      errorMessageId = newErrorId;
-
-      return [
-        ...filtered,
-        {
-          id: newErrorId,
-          type: 'error',
-          message: 'AI 응답을 생성하는 중 오류가 발생했습니다.',
-          timestamp: new Date(),
-          errorType: 'llm' as const,
-        },
-      ];
-    });
-
-    // SSE 연결은 유지 (JUDGE 이벤트 대기)
-  });
-
-  // JUDGE_ERROR 이벤트 - 점수 생성 실패
-  eventSource.addEventListener('JUDGE_ERROR', () => {
-    judgeEnded = true; // judge 종료
-
-    // LLM도 에러가 났는지 확인
-    if (llmEnded) {
-      // 둘 다 에러 - 기존 에러 메시지를 통합 메시지로 업데이트
-      if (hasError && errorMessageId) {
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === errorMessageId
-              ? { ...m, message: '응답을 생성하는 중 오류가 발생했습니다.', errorType: 'both' as const }
-              : m,
-          ),
-        );
-      } else {
-        // LLM_ERROR가 먼저 왔지만 에러 메시지가 없는 경우 (예외 상황)
-        hasError = true;
-        const newErrorId = crypto.randomUUID();
-        errorMessageId = newErrorId;
-        setMessages((prev) => [
-          ...prev.filter((m) => m.id !== loadingMessageId && m.id !== aiMessageId),
-          {
-            id: newErrorId,
-            type: 'error',
-            message: '응답을 생성하는 중 오류가 발생했습니다.',
-            timestamp: new Date(),
-            errorType: 'both' as const,
-          },
-        ]);
-      }
-
-      // 둘 다 에러이므로 SSE 종료
+  // 에러 처리
+  eventSource.onerror = withLogLens(
+    () => {
       eventSource.close();
       eventSourcesRef.current.delete(aiMessageId);
       messageUUIDsRef.current.delete(aiMessageId);
-      setIsLoading(false);
-    } else if (!hasError) {
-      // 점수만 에러 (LLM은 정상 - 아직 스트리밍 중)
-      hasError = true;
-      const scoreErrorMessageId = crypto.randomUUID();
-      errorMessageId = scoreErrorMessageId;
-
       setMessages((prev) => {
-        const newMessages: ChatMessage[] = [];
-        for (const msg of prev) {
-          // AI 메시지 바로 앞에 에러 메시지 삽입
-          if (msg.id === aiMessageId) {
-            newMessages.push({
-              id: scoreErrorMessageId,
-              type: 'error' as const,
-              message: '점수 정보를 생성하는 중 오류가 발생했습니다.',
-              timestamp: new Date(),
-              errorType: 'judge' as const,
-            });
-          }
-          newMessages.push(msg);
-        }
-        return newMessages;
+        const filtered = prev
+          .filter((m) => m.id !== loadingMessageId && m.id !== aiMessageId)
+          .map((m) => (m.id === userMessageId ? { ...m, score: undefined } : m));
+        return [
+          ...filtered,
+          {
+            id: crypto.randomUUID(),
+            type: 'error',
+            message: '스트리밍 중 오류가 발생했습니다.',
+            timestamp: new Date(),
+          },
+        ];
       });
-
-      // LLM 응답은 계속 받으므로 SSE 연결 유지
-    }
-
-    // 새 채팅인 경우 "NEW CHAT" 제목으로 사이드바 업데이트
-    if (returnedChattingId && actualProjectId) {
-      const newTitle = 'NEW CHAT';
-      updateCurrentTitle(newTitle);
-
-      if (actualProjectId !== defaultProjectId) {
-        // 프로젝트 채팅인 경우
-        const existingChat = useProjectStore
-          .getState()
-          .projects.find((p: SidebarProjectItem) => p.projectId === actualProjectId)
-          ?.chats.find((c: SidebarChatItem) => c.chattingId === returnedChattingId);
-
-        if (!existingChat) {
-          addChatToProject(actualProjectId, {
-            chattingId: returnedChattingId,
-            title: newTitle,
-            projectId: actualProjectId,
-          });
-        } else {
-          updateChatTitle(returnedChattingId, newTitle);
-        }
-      } else {
-        // 일반 채팅인 경우
-        const existingChat = useProjectStore
-          .getState()
-          .generalChats.find((c: SidebarChatItem) => c.chattingId === returnedChattingId);
-
-        if (!existingChat) {
-          const { generalChats } = useProjectStore.getState();
-          const newChats = [
-            { chattingId: returnedChattingId, title: newTitle, projectId: defaultProjectId! },
-            ...generalChats,
-          ];
-          useProjectStore
-            .getState()
-            .setGeneralChats(newChats);
-        } else {
-          updateChatTitle(returnedChattingId, newTitle);
-        }
-      }
-    }
-    // LLM 응답은 계속 받으므로 SSE 연결 유지
-    judgeEnded = true; // 점수 평가 실패로 judge 종료
-  });
-
-  // SSE_COMPLETE 이벤트
-  eventSource.addEventListener('SSE_COMPLETE', () => {
-    eventSource.close();
-    eventSourcesRef.current.delete(aiMessageId);
-    messageUUIDsRef.current.delete(aiMessageId);
-    autoScrollEnabledRef.current = false;
-    setMessages((prev) =>
-      prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
-    );
-    setIsLoading(false);
-  });
-
-  // 에러 처리
-  eventSource.onerror = () => {
-    eventSource.close();
-    eventSourcesRef.current.delete(aiMessageId);
-    messageUUIDsRef.current.delete(aiMessageId);
-    setMessages((prev) => {
-      const filtered = prev
-        .filter((m) => m.id !== loadingMessageId && m.id !== aiMessageId)
-        .map((m) => (m.id === userMessageId ? { ...m, score: undefined } : m));
-      return [
-        ...filtered,
-        {
-          id: crypto.randomUUID(),
-          type: 'error',
-          message: '스트리밍 중 오류가 발생했습니다.',
-          timestamp: new Date(),
-        },
-      ];
-    });
-    setIsLoading(false);
-  };
+      setIsLoading(false);
+    },
+    { logger: 'SSE.handleConnectionError', includeArgs: true }
+  );
 }
