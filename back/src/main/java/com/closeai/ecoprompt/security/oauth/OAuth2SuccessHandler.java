@@ -1,5 +1,6 @@
 package com.closeai.ecoprompt.security.oauth;
 
+import a306.dependency_logger_starter.logging.annotation.NoLogging;
 import com.closeai.ecoprompt.common.exception.BusinessException;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.security.cookie.TokenCookieManager;
@@ -31,6 +32,7 @@ import java.util.Map;
  */
 @Component
 @RequiredArgsConstructor
+@NoLogging
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final UserRepository userRepository;
