@@ -18,6 +18,7 @@ export interface ChatMessage {
   score?: PromptScore;
   isStreaming?: boolean;
   messageUUID?: string; // 서버의 실제 messageUUID (수정 시 필요)
+  errorType?: 'llm' | 'judge' | 'both'; // 에러 타입 구분
 }
 
 export interface ChatMessageRequest {

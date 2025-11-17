@@ -63,6 +63,7 @@ export function parseMessages(apiMessages: APIMessage[]): ChatMessage[] {
         type: 'error',
         message: '점수 정보를 생성하는 중 오류가 발생했습니다.',
         timestamp: new Date(),
+        errorType: 'judge' as const,
       });
       // 정상 AI 메시지 추가
       loadedMessages.push({
@@ -78,6 +79,7 @@ export function parseMessages(apiMessages: APIMessage[]): ChatMessage[] {
         type: 'error',
         message: '응답을 생성하는 중 오류가 발생했습니다.',
         timestamp: new Date(),
+        errorType: 'both' as const,
       });
     } else if (hasAIError) {
       // LLM만 에러 (점수는 정상) → 점수 아래에 에러
@@ -86,6 +88,7 @@ export function parseMessages(apiMessages: APIMessage[]): ChatMessage[] {
         type: 'error',
         message: 'AI 응답을 생성하는 중 오류가 발생했습니다.',
         timestamp: new Date(),
+        errorType: 'llm' as const,
       });
     } else if (hasAIContent && msg.aiMessage) {
       // 정상 AI 메시지 (점수도 정상)

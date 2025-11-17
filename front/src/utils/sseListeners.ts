@@ -10,6 +10,8 @@ interface SetupSSEListenersParams {
   loadingMessageId?: string;
   returnedChattingId?: number;
   actualProjectId?: number;
+  isResend?: boolean; // LLM 재전송 여부
+  skipTitleUpdate?: boolean; // 제목 업데이트 스킵 여부 (재전송 시)
   // Refs
   eventSourcesRef: React.MutableRefObject<Map<string, EventSource>>;
   messageUUIDsRef: React.MutableRefObject<Map<string, string>>;
@@ -46,6 +48,8 @@ export function setupSSEListeners({
   loadingMessageId,
   returnedChattingId,
   actualProjectId,
+  isResend = false,
+  skipTitleUpdate = false,
   eventSourcesRef,
   messageUUIDsRef,
   autoScrollEnabledRef,
@@ -152,7 +156,20 @@ export function setupSSEListeners({
   // LLM_END 이벤트 - LLM 스트리밍 완료
   eventSource.addEventListener('LLM_END', () => {
     llmEnded = true;
-    checkAndCloseSSE();
+
+    // LLM 재전송인 경우 LLM_END에서 SSE 종료
+    if (isResend) {
+      eventSource.close();
+      eventSourcesRef.current.delete(aiMessageId);
+      messageUUIDsRef.current.delete(aiMessageId);
+      autoScrollEnabledRef.current = false;
+      setMessages((prev) =>
+        prev.map((m) => (m.id === aiMessageId ? { ...m, isStreaming: false } : m)),
+      );
+      setIsLoading(false);
+    } else {
+      checkAndCloseSSE();
+    }
   });
 
   // JUDGE_END 이벤트 - 점수 평가 완료
@@ -198,6 +215,7 @@ export function setupSSEListeners({
           type: 'error',
           message: 'AI 응답을 생성하는 중 오류가 발생했습니다.',
           timestamp: new Date(),
+          errorType: 'llm' as const,
         },
       ];
     });
@@ -226,6 +244,7 @@ export function setupSSEListeners({
               type: 'error' as const,
               message: '점수 정보를 생성하는 중 오류가 발생했습니다.',
               timestamp: new Date(),
+              errorType: 'judge' as const,
             });
           }
           newMessages.push(msg);
