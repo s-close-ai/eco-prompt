@@ -148,7 +148,7 @@ export default function Dashboard() {
   }, []);
 
   if (loading) {
-    return <div className="dashboard-container">Loading...</div>;
+    return <div className="dashboard-loading">로딩 중</div>;
   }
 
   return (
@@ -241,7 +241,7 @@ export function DashboardMetrics() {
   }, []);
 
   if (loading) {
-    return <div className="dashboard-metrics-container">Loading...</div>;
+    return <div className="dashboard-loading">로딩 중</div>;
   }
 
   return (
@@ -288,7 +288,7 @@ export function DashboardStats() {
   }, []);
 
   if (loading) {
-    return <div className="dashboard-stats-container">Loading...</div>;
+    return <div className="dashboard-loading">로딩 중</div>;
   }
 
   return (
