@@ -132,32 +132,34 @@ function ShellBody() {
     .join(' ');
 
   return (
-    <div className={shellClass}>
-      <Topbar />
-      <Sidebar />
-      <main className="app-main">
-        <Outlet />
-      </main>
+    <>
+      <div className={shellClass}>
+        <Topbar />
+        <Sidebar />
+        <main className="app-main">
+          <Outlet />
+        </main>
+        <ProjectCreateOverlay
+          open={isProjectCreateOpen}
+          onClose={() => setProjectCreateOpen(false)}
+          variant={projectCreateVariant}
+        />
+        {mode === 'desktop' && settingsData && (
+          <SettingsOverlay
+            open={isSettingsOpen}
+            onClose={closeSettings}
+            variant="modal"
+            initialData={settingsData}
+            onSubmit={handleSettingsSubmit}
+            onAutoSave={handleSettingsAutoSave}
+          />
+        )}
+        <SearchModal />
+      </div>
       {bottomVariant ? (
         <Bottombar variant={bottomVariant} onSendMessage={handleSendMessage} />
       ) : null}
-      <ProjectCreateOverlay
-        open={isProjectCreateOpen}
-        onClose={() => setProjectCreateOpen(false)}
-        variant={projectCreateVariant}
-      />
-      {mode === 'desktop' && settingsData && (
-        <SettingsOverlay
-          open={isSettingsOpen}
-          onClose={closeSettings}
-          variant="modal"
-          initialData={settingsData}
-          onSubmit={handleSettingsSubmit}
-          onAutoSave={handleSettingsAutoSave}
-        />
-      )}
-      <SearchModal />
-    </div>
+    </>
   );
 }
 
