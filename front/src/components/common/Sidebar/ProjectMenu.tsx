@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ContextMenu } from './ContextMenu';
 import { MenuItem } from '@/components/common/MenuItem';
 import { deleteProject } from '@/services/api/project';
@@ -20,6 +21,8 @@ interface ProjectMenuProps {
  * - 프로젝트 삭제
  */
 export function ProjectMenu({ projectId, position, menuProps }: ProjectMenuProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { removeProject, setEditingProjectId } = useProjectStore();
 
   const handleRename = useCallback(() => {
@@ -41,11 +44,17 @@ export function ProjectMenu({ projectId, position, menuProps }: ProjectMenuProps
     // 로컬 상태 즉시 업데이트
     removeProject(projectId);
 
+    // 현재 프로젝트 페이지에 있다면 /chat으로 이동
+    const locationState = location.state as { projectId?: number } | undefined;
+    if (location.pathname === '/project' && locationState?.projectId === projectId) {
+      navigate('/chat');
+    }
+
     // 백그라운드에서 API 호출
     deleteProject(projectId).catch((error) => {
       console.error('프로젝트 삭제 API 실패:', error);
     });
-  }, [projectId, menuProps, removeProject]);
+  }, [projectId, menuProps, removeProject, navigate, location]);
 
   return (
     <ContextMenu position={position} menuProps={menuProps}>
