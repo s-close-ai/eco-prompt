@@ -27,4 +27,7 @@ conversations.json
 model_server/logs/
 qwen2.5-7b-instruct/
 *.jsonl
+.DS_Store
+*.DS_Store
+*.log
 # End of https://www.toptal.com/developers/gitignore/api/venv
