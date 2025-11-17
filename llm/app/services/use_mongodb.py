@@ -7,7 +7,7 @@ def summarize_history(chat_history, tokenizer, llm):
     
     # 저장된 내용 가져오기 - AI, USER
     for message in chat_history.messages():
-        sender_type = message["senderType"]
+        sender_type = message["sender_type"]
         content = message["content"]
         stored_messages += f"[{sender_type}] {content}\n"
 
@@ -72,8 +72,11 @@ async def get_chat_history(mongo_client, chatting_id: int):
         for ai_message in ai_messages[::-1]:
             message_uuid = ai_message.get("messageUUID", None)
             if message_uuid:
-                user_message = await collection.find_one({"chatting_id": chatting_id, "sender_type": "USER", "status": "RECEIVED", "messageUUID": str(message_uuid)})
-                chat_history += f"[USER] ({user_message["created_at"]}) {user_message["content"]}\n[AI] ({ai_message["created_at"]}) {ai_message["content"]}\n"
+                user_message = await collection.find_one({"chatting_id": chatting_id, "sender_type": "USER", "status": "COMPLETED", "messageUUID": str(message_uuid)})
+                if user_message:
+                    chat_history += f"[USER] ({user_message["created_at"]}) {user_message["content"]}\n[AI] ({ai_message["created_at"]}) {ai_message["content"]}\n"
+                else:
+                    chat_history += f"[AI] ({ai_message["created_at"]}) {ai_message["content"]}\n"
 
         return chat_history
     
