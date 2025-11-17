@@ -78,7 +78,7 @@ public class SsafyOAuth2UserService implements OAuth2UserService<OAuth2UserReque
 
         String edu = (String) openApiProfile.get("edu");
         // 3) DB upsert (당신의 User 엔티티: employeeNumber/email/name/projectId)
-        String employeeNumber = edu != null ? edu : "UNKNOWN";  // edu를 임시 사번으로 사용
+        String employeeNumber = edu != null ? edu : "##기";  // edu를 임시 사번으로 사용
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
                             User u = userRepository.save(
@@ -108,7 +108,7 @@ public class SsafyOAuth2UserService implements OAuth2UserService<OAuth2UserReque
                         }
                 );
 
-        if (user.getEmployeeNumber().equals("UNKNOWN") && edu != null) {
+        if (user.getEmployeeNumber().equals("##기") && edu != null) {
             user.setEmployeeNumber(edu);
         }
 
