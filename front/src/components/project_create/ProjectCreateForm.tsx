@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Button from '@/components/common/Button';
 import TextField from '@/components/common/TextField';
 import '@/styles/components/project/project-create.css';
@@ -11,10 +11,19 @@ type ProjectCreateFormProps = {
 
 export default function ProjectCreateForm({ onSubmit, onClose }: ProjectCreateFormProps) {
   const [name, setName] = useState('');
+  const lastClickTimeRef = useRef<number>(0);
 
   const handleCreate = () => {
     const trimmed = name.trim();
     if (!trimmed) return;
+
+    // 디바운싱: 1초 이내 중복 클릭 방지
+    const now = Date.now();
+    if (now - lastClickTimeRef.current < 1000) {
+      return;
+    }
+    lastClickTimeRef.current = now;
+
     onSubmit?.({ title: trimmed });
   };
 

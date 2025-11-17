@@ -24,7 +24,8 @@ initLogLens({
   maxLogs: 1000,                       // 최대 로그 보관 개수
   autoFlushEnabled: true,              // 자동 로그 전송 여부
   autoFlushInterval: 30000,            // 30초마다 전송
-  captureErrors: true                  // 에러 자동 수집
+  captureErrors: true,                  // 에러 자동 수집
+  isProduction: true
 });
 
 // VisualViewport 기반의 100vh 대체 단위 설정
