@@ -8,7 +8,7 @@ ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
 
 ARG LOGLENS_API_URL
-ENV LOGLENS_API_URL=${LOGLENS_API_URL}
+ENV VITE_LOGLENS_API_URL=${LOGLENS_API_URL}
 
 COPY package*.json ./
 RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
