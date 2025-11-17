@@ -95,10 +95,10 @@
   left: var(--sidebar-width);
 }
 
-:root[data-mode='desktop'][data-sidebar='collapsed'] .bottombar--chat {
+:root[data-mode='desktop'] .app-shell.is-sidebar-collapsed ~ .bottombar--chat {
   left: var(--sidebar-collapsed-width);
 }
 
-:root[data-mode='tablet'][data-sidebar='open'] .bottombar--chat {
+:root[data-mode='tablet'] .app-shell.has-tablet-sidebar-open ~ .bottombar--chat {
   left: var(--sidebar-tablet-width);
 }

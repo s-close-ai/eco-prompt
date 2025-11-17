@@ -261,7 +261,7 @@ export default function Chat() {
           isCreatingNewChatRef.current = true; // 새 채팅 생성 중 플래그
           
           // 즉시 사이드바에 임시 제목으로 추가 (타이틀 이벤트를 받기 전에 나가도 표시되도록)
-          const tempTitle = 'New Chat';
+          const tempTitle = 'NEW CHAT';
           updateCurrentTitle(tempTitle);
           
           if (actualProjectId !== defaultProjectId) {
