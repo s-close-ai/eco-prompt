@@ -49,7 +49,6 @@ export function setupSSEListeners({
   returnedChattingId,
   actualProjectId,
   isResend = false,
-  skipTitleUpdate = false,
   eventSourcesRef,
   messageUUIDsRef,
   autoScrollEnabledRef,
