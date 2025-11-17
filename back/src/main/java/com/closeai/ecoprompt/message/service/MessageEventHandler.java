@@ -38,6 +38,7 @@ public class MessageEventHandler {
 
 	// Key: messageUUID, Value: {"JUDGE", "LLM"}
 	private final ConcurrentHashMap<String, Set<String>> completionStatus = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Set<String>> expectedModels = new ConcurrentHashMap<>();
 
 	private final ScoreService scoreService;
 	private final ChattingService chattingService;
@@ -47,6 +48,11 @@ public class MessageEventHandler {
 
 	private final MessageJpaRepository messageJpaRepository;
 	private final MessageMongoRepository messageMongoRepository;
+
+	public void initializeTask(String messageUUID, Set<String> modelsToExpect) {
+		expectedModels.put(messageUUID, modelsToExpect);
+		completionStatus.put(messageUUID, Collections.synchronizedSet(new HashSet<>()));
+	}
 
 	/**
 	 * Judge 모델 완료 이벤트를 수신(구독)하는 리스너
@@ -86,8 +92,10 @@ public class MessageEventHandler {
 			chattingService.setChattingTitle(messageToUpdate.getChattingId(), summary, userId);
 		}
 
-		// 4. 상태 관리
-		checkCompletion(messageUUID, "JUDGE");
+		if (event.isSse()) {
+			// 4. 상태 관리
+			checkCompletion(messageUUID, "JUDGE");
+		}
 	}
 
 	/**
@@ -218,7 +226,6 @@ public class MessageEventHandler {
 			}
 
 			messageMongoRepository.save(message);
-			checkCompletion(message.getMessageUUID(), "JUDGE");
 		}
 
 		// LLM 모델이 오류가 났을 때 : 이전에 저장된 TRAINING 데이터를 NULL로 SETTING
@@ -227,7 +234,15 @@ public class MessageEventHandler {
 			messageMongoRepository.save(message);
 
 			updateMongoMessage(messageUUID, MessageSender.TRAINING, null, null, MessageStatus.ERROR);
-			checkCompletion(message.getMessageUUID(), "LLM");
+		}
+
+		// 기존의 로직은 동일하지만 sse 연결 했을 때만 완료 상태 확인
+		if (event.isSse()) {
+			if (event.getSender().equals(MessageSender.USER)) {
+				checkCompletion(event.getMessageUUID(), "JUDGE");
+			} else if (event.getSender().equals(MessageSender.AI)) {
+				checkCompletion(event.getMessageUUID(), "LLM");
+			}
 		}
 	}
 
@@ -237,14 +252,24 @@ public class MessageEventHandler {
 	private void checkCompletion(String messageUUID, String modelType) {
 
 		// (스레드 안전) Set을 원자적으로 업데이트
-		Set<String> completedSet = completionStatus.computeIfAbsent(messageUUID, k ->
-			Collections.synchronizedSet(new HashSet<>())
-		);
-
+		Set<String> completedSet = completionStatus.get(messageUUID);
+		if (completedSet == null) {
+			// initializeTask가 호출되기 전에 이벤트가 도착했거나, 이미 완료 처리된 작업
+			AppLogger.warn("Completion set이 존재하지 않습니다. (이미 처리되었을 수 있음) UUID: " + messageUUID);
+			return;
+		}
 		completedSet.add(modelType);
 
+		Set<String> expectedSet = expectedModels.get(messageUUID);
+		if (expectedSet == null) {
+			AppLogger.error("Expected set이 존재하지 않습니다. (initializeTask 누락) UUID: " + messageUUID);
+			// 에러 발생 시 임시 저장소에서 제거
+			completionStatus.remove(messageUUID);
+			return;
+		}
+
 		// 두 모델이 모두 완료되었는지 확인
-		if (completedSet.size() == 2) {
+		if (completedSet.containsAll(expectedSet)) {
 
 			if (sseService.isCancelled(messageUUID)) {
 				AppLogger.info("취소된 작업. UUID : " + messageUUID);
@@ -256,6 +281,7 @@ public class MessageEventHandler {
 
 			// 2. 임시 저장소에서 제거
 			completionStatus.remove(messageUUID);
+			expectedModels.remove(messageUUID);
 
 			// 3. 취소 상태 정리
 			sseService.cleanupCancelledTask(messageUUID);

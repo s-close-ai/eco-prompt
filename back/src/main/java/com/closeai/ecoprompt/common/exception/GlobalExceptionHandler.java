@@ -3,7 +3,9 @@ package com.closeai.ecoprompt.common.exception;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -11,6 +13,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.closeai.ecoprompt.common.ApiResponse;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -43,7 +47,7 @@ public class GlobalExceptionHandler {
 	 */
 	@ExceptionHandler(BusinessException.class)
 	public ResponseEntity<ApiResponse<ErrorData>> handleBusinessException(BusinessException ex) {
-		return ApiResponse.BusinessException(HttpStatus.BAD_REQUEST,  new ErrorData(ex.getMessage()));
+		return ApiResponse.BusinessException(HttpStatus.BAD_REQUEST, new ErrorData(ex.getMessage()));
 	}
 
 	/**
@@ -51,7 +55,7 @@ public class GlobalExceptionHandler {
 	 */
 	@ExceptionHandler(IllegalArgumentException.class)
 	public ResponseEntity<ApiResponse<ErrorData>> handleIllegalArgumentException(IllegalArgumentException ex) {
-		return ApiResponse.BusinessException(HttpStatus.BAD_REQUEST,  new ErrorData(ex.getMessage()));
+		return ApiResponse.BusinessException(HttpStatus.BAD_REQUEST, new ErrorData(ex.getMessage()));
 	}
 
 	/**
@@ -69,5 +73,32 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ApiResponse<ErrorData>> handleGeneralException(Exception ex) {
 		return ApiResponse.BusinessException(HttpStatus.INTERNAL_SERVER_ERROR, new ErrorData("서버 오류가 발생했습니다."));
 	}
-	
+
+	/**
+	 * SSE를 위한 이벤트 handler
+	 * */
+	@ExceptionHandler(HttpMessageNotWritableException.class)
+	public ResponseEntity<String> handleSseException(HttpMessageNotWritableException ex, HttpServletRequest request) {
+
+		if (isSseRequest(request)) {
+			return ResponseEntity
+				.status(HttpStatus.INTERNAL_SERVER_ERROR)
+				.contentType(MediaType.TEXT_PLAIN)
+				.body("Stream error: Failed to serialize response.");
+
+		}
+		return ResponseEntity
+			.status(HttpStatus.INTERNAL_SERVER_ERROR)
+			.contentType(MediaType.TEXT_PLAIN)
+			.body("Server serialization error: " + ex.getMessage());
+	}
+
+	/**
+	 * SSE 요청이 맞는지 판별하는 함수
+	 * */
+	private boolean isSseRequest(HttpServletRequest request) {
+		String accept = request.getHeader("Accept");
+		return accept != null && accept.contains(MediaType.TEXT_EVENT_STREAM_VALUE);
+	}
+
 }

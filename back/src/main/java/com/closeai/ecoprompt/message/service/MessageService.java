@@ -24,6 +24,8 @@ import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.model.dto.request.SubmitMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.request.UpdateMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.response.GetMessageResponse;
+import com.closeai.ecoprompt.message.model.dto.response.GetScoreInfo;
+import com.closeai.ecoprompt.message.model.dto.response.JudgeOnlyResponse;
 import com.closeai.ecoprompt.message.model.dto.response.MessageKeywordDto;
 import com.closeai.ecoprompt.message.model.dto.response.SearchMessageResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SubmitMessageResponse;
@@ -38,6 +40,7 @@ import com.closeai.ecoprompt.score.service.ScoreService;
 import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -147,12 +150,8 @@ public class MessageService {
 		Integer userId = CustomUtil.getCurrentUserId();
 
 		// 1. 기존 메시지 정보 조회
-		MessageDocument userMessage = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
-				MessageSender.USER)
-			.orElseThrow(() -> new BusinessException("저장된 메시지가 없습니다."));
-
-		Message message = messageJpaRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER)
-			.orElseThrow(() -> new BusinessException("저장된 메시지가 없습니다."));
+		MessageDocument userMessage = getMessageDocument(messageUUID, MessageSender.USER);
+		Message message = getMessage(messageUUID, MessageSender.USER);
 
 		// 1-2. 기존 상태가 COMPLETED 인 경우 점수/ 마일리지 롤백
 		if (userMessage.getStatus().equals(MessageStatus.COMPLETED)) {
@@ -201,14 +200,86 @@ public class MessageService {
 			));
 
 		// 3-2. 사용자가 작성한 chattingID 값을 가져오기
-		List<Chatting> allUserChattings = chattingRepository.findByUserIdOrderByUpdatedAtDesc(userId);
+		List<Chatting> allUserChatting = chattingRepository.findByUserIdOrderByUpdatedAtDesc(userId);
 
-		return allUserChattings.stream()
+		return allUserChatting.stream()
 			.flatMap(chatting ->
 				processAndWrapChatting(chatting, lowerKeywoard, messageContentMap))
 			.sorted(Comparator.comparing(SearchResultWrapper::priority))
 			.map(SearchResultWrapper::response)
 			.toList();
+	}
+
+	/**
+	 * Judge 메시지 호출 API 함수
+	 * */
+	public Mono<JudgeOnlyResponse> updateJudgeResult(UpdateMessageRequest messageCommand) {
+
+		Long chattingId = messageCommand.chattingId();
+		String content = messageCommand.content();
+		String messageUUID = messageCommand.messageUUID();
+		Integer userId = CustomUtil.getCurrentUserId();
+
+		// 1. 기존 메시지의 상태가 ERROR 인지 확인
+		validateMessageStatus(messageUUID, MessageSender.USER);
+
+		return aiService.callJudgeModelOnly(messageUUID, content, userId, false)
+			.map(judgeResponse -> {
+				// 3. InputJudgeResponse에서 ScoreInfo 생성
+				ScoreInfo scoreInfo = new ScoreInfo(
+					judgeResponse.totalScore(),
+					judgeResponse.clarityScore(),
+					judgeResponse.specificityScore(),
+					judgeResponse.formatScore(),
+					judgeResponse.safetyScore()
+				);
+
+				// 4. GetScoreInfo DTO를 따로 변수에 담지 않고 바로 생성자에 전달
+				return new JudgeOnlyResponse(
+					MessageStatus.COMPLETED.toString(),
+					GetScoreInfo.from(scoreInfo) // ⬅️ 'getScoreInfo' 변수 제거
+				);
+			});
+	}
+
+	/**
+	 * LLM 메시지 호출 API 함수
+	 * */
+	public void updateLLMResult(UpdateMessageRequest messageCommand) {
+		Long chattingId = messageCommand.chattingId();
+		String content = messageCommand.content();
+		String messageUUID = messageCommand.messageUUID();
+		Integer userId = CustomUtil.getCurrentUserId();
+
+		// 1. 기존의 메시지 상태가 ERROR 인지 확인
+		validateMessageStatus(messageUUID, MessageSender.AI);
+		aiService.callLlmModelOnly(messageUUID, content, userId);
+	}
+
+	/**
+	 * MongoDB에 저장된 메시지 조회
+	 * */
+	private MessageDocument getMessageDocument(String messageUUID, MessageSender sender) {
+		return messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, sender)
+			.orElseThrow(() -> new BusinessException("저장된 메시지가 없습니다."));
+	}
+
+	/**
+	 * JPA에서 메시지 조회
+	 * */
+	private Message getMessage(String messageUUID, MessageSender sender) {
+		return messageJpaRepository.findByMessageUUIDAndSenderType(messageUUID, sender)
+			.orElseThrow(() -> new BusinessException("저장된 메시지가 없습니다."));
+	}
+
+	/**
+	 * 오류 검사 함수
+	 * */
+	private void validateMessageStatus(String messageUUID, MessageSender sender) {
+		MessageDocument message = getMessageDocument(messageUUID, sender);
+		if (!message.getStatus().equals(MessageStatus.ERROR)) {
+			throw new BusinessException("해당 메시지는 오류가 아닙니다.");
+		}
 	}
 
 	/**

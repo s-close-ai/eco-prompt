@@ -11,13 +11,16 @@ public class JudgeModelCompleteEvent extends ApplicationEvent {
 	private final Integer userId;
 	private final String summary;
 	private final ScoreInfo scoreInfo;
+	private final boolean isSse;
 
-	public JudgeModelCompleteEvent(Object source, String messageUUID, Integer userId, String summary, ScoreInfo scoreInfo) {
+	public JudgeModelCompleteEvent(Object source, String messageUUID, Integer userId, String summary,
+		ScoreInfo scoreInfo, boolean isSse) {
 		super(source);
 		this.messageUUID = messageUUID;
 		this.userId = userId;
 		this.summary = summary;
 		this.scoreInfo = scoreInfo;
+		this.isSse = isSse;
 	}
 
 }
