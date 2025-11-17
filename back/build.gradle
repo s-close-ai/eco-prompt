@@ -48,6 +48,9 @@ dependencies {
     // redis에 세션 저장
 //    implementation 'org.springframework.session:spring-session-data-redis'
 
+    //AWS S3
+    implementation "io.awspring.cloud:spring-cloud-aws-starter-s3:3.3.1"
+
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
