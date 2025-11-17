@@ -102,3 +102,19 @@ logging:
         org.springframework.cache: DEBUG
         org.springframework.data.redis: DEBUG
         com.closeai: DEBUG
+    file:
+        name: ./logs/be/app.log
+
+dependency:
+    logger:
+        api-key: b3c5b085-0db0-385c-8984-f11099c0ccb6
+        collector:
+            url: https://api.loglens.co.kr
+        enabled: true
+
+        stacktrace:
+            max-lines: 3
+
+        frontend:
+            enabled: true
+            log-path: ./logs/fe/app.log
