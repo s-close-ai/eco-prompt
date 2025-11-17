@@ -207,19 +207,33 @@ textarea,
   contain: content;
   grid-column: 1 / -1; /* 기본은 전체 폭 */
   position: relative; /* 인라인 오버레이 기준 */
-  height: calc(100% - 120px); /* 하단바 높이만큼 제외 */
+}
+
+/* 모바일: 채팅 페이지만 하단바 높이 제외 */
+.app-main:has(.chat-page-container) {
+  height: calc(100% - 120px);
   max-height: calc(100vh - var(--header-height) - 120px);
 }
 
-/* 데스크탑: 헤더 없으므로 헤더 높이 제외하지 않음 */
+/* 데스크탑: 배경색 white */
 :root[data-mode='desktop'] .app-main {
   background: #ffffff;
+}
+
+/* 데스크탑 채팅 페이지만 하단바 높이 제외 */
+:root[data-mode='desktop'] .app-main:has(.chat-page-container) {
   max-height: calc(100vh - 120px);
 }
 
 /* 태블릿: 배경색 white */
 :root[data-mode='tablet'] .app-main {
   background: #ffffff;
+}
+
+/* 태블릿 채팅 페이지만 하단바 높이 제외 */
+:root[data-mode='tablet'] .app-main:has(.chat-page-container) {
+  height: calc(100% - 120px);
+  max-height: calc(100vh - var(--header-height) - 120px);
 }
 
 .container {
