@@ -114,6 +114,16 @@
   padding: 0;
 }
 
+/* 모바일/태블릿: 하단바 높이 제외 */
+:root[data-mode='mobile'] .project-page-content,
+:root[data-mode='tablet'] .project-page-content {
+  max-height: calc(100vh - var(--header-height) - var(--header-height) - 120px);
+}
+
+:root[data-mode='desktop'] .project-page-content {
+  max-height: calc(100vh - var(--header-height) - 120px);
+}
+
 /* Custom scrollbar */
 .project-page-content::-webkit-scrollbar {
   width: 8px;
