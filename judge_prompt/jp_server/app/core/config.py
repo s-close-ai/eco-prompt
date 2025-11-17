@@ -17,8 +17,8 @@ class Settings(BaseSettings):
 
     RETRIES: float = Field(..., description="retries")
     CONCURRENCY_LIMIT: float = Field(..., description="concurrency limit")
-    SSAFY_CURRICULUM_WEEKLY_URL: float = Field(..., description="주간안내 url")
-    SSAFY_COOKIE_JSESSIONID: float = Field(..., description="세션쿠키 id")
+    SSAFY_CURRICULUM_WEEKLY_URL: str = Field(..., description="주간안내 url")
+    SSAFY_COOKIE_JSESSIONID: str = Field(..., description="세션쿠키 id")
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
