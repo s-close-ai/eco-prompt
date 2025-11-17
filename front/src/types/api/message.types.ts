@@ -1,3 +1,5 @@
+import type { AiMessage, ScoreMessage } from "./chatting.types";
+
 export interface MessageInputRequest {
   projectId: number;
   chattingId?: number;
@@ -17,6 +19,16 @@ export interface MessageUpdateRequest {
   chattingId: number;
   content: string;
   messageUUID: string;
+}
+
+export interface MessageJudgeResponse {
+  status: string;
+  data: ScoreMessage;
+}
+
+export interface MessageLLMResponse {
+  status: string;
+  data: AiMessage;
 }
 
 export interface MessageUpdateResponse {

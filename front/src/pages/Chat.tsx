@@ -527,16 +527,135 @@ export default function Chat() {
     const errorIndex = messages.findIndex((m) => m.id === errorMessageId);
     if (errorIndex === -1) return;
 
+    const errorMessage = messages[errorIndex];
+    const errorType = errorMessage.errorType;
+
     let userMessageIndex = -1;
+    let aiMessageIndex = -1;
+
+    // 에러 타입에 따라 관련 메시지 찾기
     for (let i = errorIndex - 1; i >= 0; i--) {
-      if (messages[i].type === 'user') {
+      if (messages[i].type === 'user' && userMessageIndex === -1) {
         userMessageIndex = i;
+      }
+      if (messages[i].type === 'ai' && aiMessageIndex === -1) {
+        aiMessageIndex = i;
+      }
+      if (userMessageIndex !== -1 && (errorType === 'judge' ? aiMessageIndex !== -1 : true)) {
         break;
       }
     }
     if (userMessageIndex === -1) return;
 
     const userMessageToRetry = messages[userMessageIndex];
+    const actualMessageUUID = userMessageToRetry.messageUUID || userMessageToRetry.id;
+
+    // 점수만 에러인 경우 - judgeMessage API 호출
+    if (errorType === 'judge') {
+      try {
+        const { judgeMessage } = await import('@/services/api/message');
+        const response = await judgeMessage({
+          projectId: projectId ?? defaultProjectId!,
+          chattingId: Number(chattingId),
+          content: userMessageToRetry.message,
+          messageUUID: actualMessageUUID,
+        });
+
+        // 에러 메시지 제거하고 점수 업데이트
+        setMessages((prev) =>
+          prev
+            .filter((m) => m.id !== errorMessageId)
+            .map((m) =>
+              m.id === userMessageToRetry.id
+                ? { ...m, score: response.data.scoreInfo }
+                : m
+            ),
+        );
+      } catch (error) {
+        console.error('Failed to retry judge:', error);
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === errorMessageId
+              ? { ...m, message: '점수 재요청에 실패했습니다.' }
+              : m,
+          ),
+        );
+      }
+      return;
+    }
+
+    // LLM만 에러인 경우 - resendAIMessage API 호출 및 SSE 연결
+    if (errorType === 'llm') {
+      const aiMessageId = crypto.randomUUID();
+
+      // 로딩 상태 시작
+      setIsLoading(true);
+
+      // 에러 메시지를 제거하고 새 AI 응답을 추가
+      setMessages((prev) => [
+        ...prev.slice(0, errorIndex),
+        {
+          id: aiMessageId,
+          type: 'ai',
+          message: '',
+          timestamp: new Date(),
+          isStreaming: true,
+        },
+      ]);
+
+      try {
+        const { resendAIMessage } = await import('@/services/api/message');
+        await resendAIMessage({
+          projectId: projectId ?? defaultProjectId!,
+          chattingId: Number(chattingId),
+          content: userMessageToRetry.message,
+          messageUUID: actualMessageUUID,
+        });
+
+        // LLM 재요청은 messageUUID를 반환하지 않으므로 기존 messageUUID 사용
+        // subscribeMessage API 사용 및 SSE 이벤트 리스너 설정 (isResend = true)
+        const eventSource = subscribeMessage(actualMessageUUID);
+        eventSourcesRef.current.set(aiMessageId, eventSource);
+        setupSSEListeners({
+          eventSource,
+          aiMessageId,
+          userMessageId: userMessageToRetry.id,
+          messageUUID: actualMessageUUID,
+          loadingMessageId: undefined,
+          returnedChattingId: chattingId ? Number(chattingId) : undefined,
+          actualProjectId: (projectId ?? defaultProjectId) || undefined,
+          isResend: true, // LLM 재전송 플래그
+          eventSourcesRef,
+          messageUUIDsRef,
+          autoScrollEnabledRef,
+          setMessages,
+          setIsLoading,
+          updateCurrentTitle,
+          addChatToProject,
+          updateChatTitle,
+          defaultProjectId,
+        });
+      } catch (error) {
+        console.error('Failed to retry LLM:', error);
+        setMessages((prev) => {
+          const filtered = prev.filter((m) => m.id !== aiMessageId);
+          return [
+            ...filtered,
+            {
+              id: crypto.randomUUID(),
+              type: 'error',
+              message: 'AI 응답 재요청에 실패했습니다.',
+              timestamp: new Date(),
+              errorType: 'llm' as const,
+            },
+          ];
+        });
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // 둘 다 에러이거나 errorType이 없는 경우(기존 에러) - updateMessage API 호출
     const aiMessageId = crypto.randomUUID();
 
     // 로딩 상태 시작
@@ -555,9 +674,8 @@ export default function Chat() {
     ]);
 
     try {
-      // updateMessage API 사용 (PATCH)
+      // updateMessage API 사용 (PATCH) - 둘 다 재요청
       const { updateMessage } = await import('@/services/api/message');
-      const actualMessageUUID = userMessageToRetry.messageUUID || userMessageToRetry.id;
       const response = await updateMessage({
         projectId: projectId ?? defaultProjectId!,
         chattingId: Number(chattingId),
