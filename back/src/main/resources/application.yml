@@ -51,6 +51,17 @@ spring:
             token-uri: https://project.ssafy.com/ssafy/oauth2/token
             user-info-uri: https://project.ssafy.com/ssafy/resources/userInfo
 
+  # AWS S3
+  cloud:
+    aws:
+      credentials:
+        access-key: ${S3_ACCESS_KEY}
+        secret-key: ${S3_SECRET_KEY}
+      region:
+        static: ap-northeast-2
+      s3:
+        path-style-access: false
+
 #    session:
 #        store-type: redis
 #        redis:
@@ -94,8 +105,8 @@ jwt:
   secret: ${JWT_SECRET}
 
 logging:
-    level:
-        org.hibernate.orm.jdbc.bind: trace
+  level:
+    org.hibernate.orm.jdbc.bind: trace
 #        root: INFO
 #        org.springframework.web: DEBUG
 #        org.springframework.cache: DEBUG
@@ -117,3 +128,7 @@ dependency:
         frontend:
             enabled: true
             log-path: ./logs/fe/app.log
+
+aws:
+  s3:
+    bucket: ${S3_BUCKET_URL}
