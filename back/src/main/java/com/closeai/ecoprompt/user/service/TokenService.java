@@ -1,5 +1,6 @@
 package com.closeai.ecoprompt.user.service;
 
+import a306.dependency_logger_starter.logging.annotation.NoLogging;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.security.cookie.TokenCookieManager;
 import com.closeai.ecoprompt.security.jwt.JwtUtil;
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@NoLogging
 public class TokenService {
 
     private final JwtUtil jwt;
