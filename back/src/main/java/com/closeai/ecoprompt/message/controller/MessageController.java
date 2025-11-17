@@ -17,6 +17,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.closeai.ecoprompt.common.ApiResponse;
 import com.closeai.ecoprompt.message.model.dto.request.SubmitMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.request.UpdateMessageRequest;
+import com.closeai.ecoprompt.message.model.dto.response.JudgeOnlyResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SearchMessageResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SubmitMessageResponse;
 import com.closeai.ecoprompt.message.service.MessageService;
@@ -24,6 +25,7 @@ import com.closeai.ecoprompt.message.service.SseService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequiredArgsConstructor
@@ -53,7 +55,7 @@ public class MessageController implements MessageControllerDocs {
 	public ResponseEntity<ApiResponse<Void>> stopMessage(@PathVariable String messageUUID) {
 
 		sseService.markAsCancelled(messageUUID);
-		
+
 		return ApiResponse.success(null);
 	}
 
@@ -71,5 +73,21 @@ public class MessageController implements MessageControllerDocs {
 
 		List<SearchMessageResponse> response = messageService.searchMessage(keyword);
 		return ApiResponse.success(response);
+	}
+
+	@PatchMapping("/judge")
+	public Mono<ResponseEntity<ApiResponse<JudgeOnlyResponse>>> callJudgePromptModel(
+		@RequestBody @Valid UpdateMessageRequest request) {
+
+		return messageService.updateJudgeResult(request)
+			.map(ApiResponse::success);
+	}
+
+	@PatchMapping("/llm")
+	public ResponseEntity<ApiResponse<Void>> callLlmModel(
+		@RequestBody @Valid UpdateMessageRequest request) {
+
+		messageService.updateLLMResult(request);
+		return ApiResponse.success(null);
 	}
 }

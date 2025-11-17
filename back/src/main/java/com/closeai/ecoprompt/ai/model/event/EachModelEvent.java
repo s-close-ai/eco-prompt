@@ -12,11 +12,13 @@ public class EachModelEvent extends ApplicationEvent {
 	private final String messageUUID;
 	private final MessageSender sender;
 	private final Integer userId;
+	private final boolean isSse;
 
-	public EachModelEvent(Object source, String messageUUID, MessageSender sender, Integer userId) {
+	public EachModelEvent(Object source, String messageUUID, MessageSender sender, Integer userId, boolean isSse) {
 		super(source);
 		this.messageUUID = messageUUID;
 		this.sender = sender;
 		this.userId = userId;
+		this.isSse = isSse;
 	}
 }

@@ -12,7 +12,7 @@ public record SubmitMessageRequest(
 	Long chattingId,
 
 	@Schema(example = "1+1의 결과값을 알려주세요.")
-	@Length(min = 1, max = 15000)
+	@Length(min = 1, max = 25000)
 	String content
 ) {
 
