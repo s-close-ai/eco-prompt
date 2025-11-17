@@ -8,6 +8,8 @@
     rgba(255, 255, 255, 0) 100%
   );
   flex-shrink: 0;
+  z-index: 10;
+  min-height: 120px;
 }
 
 .chat-input-wrapper {
@@ -99,6 +101,7 @@
 @media (max-width: 768px) {
   .chat-input-container {
     padding: 12px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
   .chat-input-wrapper {
     gap: 8px;
@@ -106,6 +109,15 @@
   }
   .chat-input-textarea {
     font-size: 16px;
+  }
+  
+  /* 모바일에서 키보드가 올라올 때 입력창이 키보드 위에 고정 */
+  .bottombar--chat {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
   }
 }
 
@@ -134,5 +146,24 @@
 @media (max-width: 768px) {
   .chat-input-disclaimer {
     font-size: 10px;
+  }
+}
+
+.chat-input-alert {
+  max-width: 48rem;
+  margin: 8px auto 0;
+  padding: 8px 16px;
+  background-color: #fff5f5;
+  border: 1px solid #ffcdd2;
+  border-radius: 8px;
+  color: #d32f2f;
+  font-size: 12px;
+  text-align: center;
+}
+
+@media (min-width: 1023px) {
+  .chat-input-alert {
+    max-width: 56rem;
+    width: 80%;
   }
 }

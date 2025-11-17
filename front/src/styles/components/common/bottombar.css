@@ -1,19 +1,22 @@
 .bottombar {
-  grid-column: 1 / -1;
-}
-.bottombar--chat {
-  position: sticky;
+  position: fixed;
   bottom: 0;
-  background: transparent;
+  left: 0;
+  right: 0;
   z-index: 20;
+}
+
+.bottombar--chat {
+  background: transparent;
+  pointer-events: none;
+}
+
+.bottombar--chat > * {
+  pointer-events: auto;
 }
 
 /* Mobile menu bottombar (non-chat) */
 .bottombar--menu {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
   background-color: #ffffff;
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
   z-index: 1000;
@@ -87,10 +90,15 @@
   display: none;
 }
 
-/* 데스크탑/태블릿 2열 레이아웃일 때 채팅 하단바는 오른쪽 컬럼 */
-.app-shell.has-desktop-sidebar .bottombar--chat {
-  grid-column: 2 / -1;
+/* 데스크탑/태블릿 2열 레이아웃일 때 채팅 하단바는 오른쪽에서 시작 */
+:root[data-mode='desktop'] .bottombar--chat {
+  left: var(--sidebar-width);
 }
-.app-shell.has-tablet-sidebar-open .bottombar--chat {
-  grid-column: 2 / -1;
+
+:root[data-mode='desktop'][data-sidebar='collapsed'] .bottombar--chat {
+  left: var(--sidebar-collapsed-width);
+}
+
+:root[data-mode='tablet'][data-sidebar='open'] .bottombar--chat {
+  left: var(--sidebar-tablet-width);
 }

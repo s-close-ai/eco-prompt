@@ -15,7 +15,7 @@ def get_sampling_params(prompt_type: str) -> SamplingParams:
     if prompt_type == "chosen":
         return SamplingParams(
             max_tokens=2048,
-            temperature=0.5,
+            temperature=0.4,
             top_p=0.95,
             seed=42,
             repetition_penalty=1.01,
@@ -123,7 +123,6 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
         personal_prompt = str(user_info.get("personal_prompt", ""))
 
         system_prompt = (
-            basic_prompt +
             service_prompt + 
             "\n---\n[사용자 지침]\n" + personal_prompt + 
             "\n\n[History]\n" + history + 
@@ -216,7 +215,7 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
             if request_output.finished:
                 return
 
-    if question_type in ["code", "algorithm"]:        
+    if question_type in ["code", "algorithm", "math"]:        
         qwen_chain = (
             RunnableParallel(
                 prompt=make_prompt_qwen,
@@ -276,7 +275,6 @@ def generate_rejected_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tok
         personal_prompt = str(user_info.get("personal_prompt", ""))
 
         system_prompt = (
-            basic_prompt +
             service_prompt + 
             "\n---\n[사용자 지침]\n" + personal_prompt + 
             "\n\n[History]\n" + history + 
@@ -368,7 +366,7 @@ def generate_rejected_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tok
 
         return result
 
-    if question_type in ["code", "algorithm"]:        
+    if question_type in ["code", "algorithm", "math"]:        
         qwen_chain = (
             RunnableParallel(
                 prompt=make_prompt_qwen,

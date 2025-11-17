@@ -1,5 +1,6 @@
 package com.closeai.ecoprompt.ai.service;
 
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -23,6 +24,7 @@ import com.closeai.ecoprompt.ai.model.event.ScoreInfo;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.model.dto.response.GetScoreInfo;
 import com.closeai.ecoprompt.message.model.entity.MessageSender;
+import com.closeai.ecoprompt.message.service.MessageEventHandler;
 import com.closeai.ecoprompt.message.service.SseService;
 import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 
@@ -33,6 +35,7 @@ import reactor.core.publisher.Mono;
 public class AiService {
 
 	private final ApplicationEventPublisher eventPublisher;
+	private final MessageEventHandler messageEventHandler;
 
 	private final WebClient judgePromptClient;
 	private final WebClient llmClient;
@@ -48,7 +51,8 @@ public class AiService {
 		@Qualifier("llm") WebClient llmClient,
 		@Qualifier("judgeLlm") WebClient judgeLlmClient,
 		UserInfoService userInfoService,
-		SseService sseService
+		SseService sseService,
+		MessageEventHandler messageEventHandler
 	) {
 		this.eventPublisher = eventPublisher;
 		this.judgePromptClient = judgePromptClient;
@@ -56,6 +60,52 @@ public class AiService {
 		this.judgeLlmClient = judgeLlmClient;
 		this.userInfoService = userInfoService;
 		this.sseService = sseService;
+		this.messageEventHandler = messageEventHandler;
+	}
+
+	/**
+	 * JudgePrompt AI 모델 하나 호출하는 함수
+	 * */
+	public Mono<InputJudgeResponse> callJudgeModelOnly(String messageUUID, String content, Integer userId,
+		boolean isFirstChatting) {
+		// 1. 이 작업은 SSE를 사용하지 않으므로 'initializeTask'를 호출하지 않습니다.
+
+		InputJudgeRequest request = new InputJudgeRequest(messageUUID, content);
+
+		return runInputJudgeModel(request)
+			.doOnSuccess(judgeResponse -> {
+				// 2. SSE를 사용하지 않는 이벤트(sse=false)를 발행합니다.
+				//    MessageEventHandler가 이 이벤트를 받아 점수 저장은 하지만,
+				//    checkCompletion은 호출하지 않습니다.
+				ScoreInfo scoreInfo = new ScoreInfo(judgeResponse.totalScore(),
+					judgeResponse.clarityScore(), judgeResponse.specificityScore(),
+					judgeResponse.formatScore(), judgeResponse.safetyScore());
+				String summary = isFirstChatting ? judgeResponse.summary() : null;
+
+				eventPublisher.publishEvent(
+					new JudgeModelCompleteEvent(this, messageUUID, userId, summary, scoreInfo, false) // sse = false
+				);
+			})
+			.doOnError(error -> {
+				AppLogger.error("단독 Judge 모델 호출 실패. UUID :  " + messageUUID);
+				// 3. 에러 이벤트도 sse=false로 발행
+				eventPublisher.publishEvent(
+					new EachModelEvent(this, messageUUID, MessageSender.USER, userId, false) // sse = false
+				);
+			});
+	}
+
+	/**
+	 * LLM 모델만 단독으로 호출하는 함수
+	 * */
+
+	@Async
+	public void callLlmModelOnly(String messageUUID, String userInput, Integer userId) {
+
+		messageEventHandler.initializeTask(messageUUID, Set.of("LLM"));
+
+		// 2. LLM 모델 호출 (sse=true 플래그 전달)
+		callLlmModel(messageUUID, userInput, userId);
 	}
 
 	/**
@@ -64,35 +114,22 @@ public class AiService {
 	@Async
 	public void callAiModel(String messageUUID, String content, Integer userId, boolean isFirstChatting) {
 
-		if (sseService.isCancelled(messageUUID)) {
-			AppLogger.info("AI 모델 호출 시작 이전에 이미 취소 되었습니다. UUID : " + messageUUID);
-			return;
-		}
-
-		// AI 모델 호출 이전에 SSE 연결이 완료되었는지 확인
-		// 만약에 호출 이전에 에러 확인 시 2개의 모델 모두 ERROR 처리하기
-		// try {
-		// 	sseService.getWaitStatue(messageUUID).get();
-		// } catch (InterruptedException | ExecutionException e) {
-		// 	AppLogger.error("SSE 연결 대기 중에 에러 발생. UUID : " + messageUUID);
-		// 	eventPublisher.publishEvent(new ModelErrorEvent(this, messageUUID));
-		// 	return;
-		// }
+		messageEventHandler.initializeTask(messageUUID, Set.of("JUDGE", "LLM"));
 
 		// SSE 연결 이후에 사용자가 취소를 한 경우 취소 상태를 저장
 		if (sseService.isCancelled(messageUUID)) {
 			AppLogger.info("AI 모델 호출 시작 이전에 이미 취소 되었습니다. UUID : " + messageUUID);
 			sseService.sendEventToClient(messageUUID, "SSE_COMPLETE", "DONE");
 			eventPublisher.publishEvent(
-				new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER)
+				new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER, userId)
 			);
 			eventPublisher.publishEvent(
-				new ModelCancelledEvent(this, messageUUID, null, MessageSender.AI)
+				new ModelCancelledEvent(this, messageUUID, null, MessageSender.AI, userId)
 			);
 			return;
 		}
 
-		callInputJudgeModel(messageUUID, content, userId, isFirstChatting);
+		callInputJudgeModel(messageUUID, content, userId, isFirstChatting, true);
 		callLlmModel(messageUUID, content, userId);
 	}
 
@@ -107,17 +144,18 @@ public class AiService {
 	 * SSE : 연결 해제
 	 */
 	@Async
-	public void callInputJudgeModel(String messageUUID, String content, Integer userId, boolean isFirstChatting) {
+	public void callInputJudgeModel(String messageUUID, String content, Integer userId, boolean isFirstChatting,
+		boolean sse) {
 
 		InputJudgeRequest request = new InputJudgeRequest(messageUUID, content);
 
 		runInputJudgeModel(request)
 			.doOnSuccess(judgeResponse -> {
 
-				if (sseService.isCancelled(messageUUID)) {
+				if (sse & sseService.isCancelled(messageUUID)) {
 					AppLogger.info("Judge 모델 완료 하였으나, 작업이 취소 되어 이벤트를 발행하지 않습니다.");
 					eventPublisher.publishEvent(
-						new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER)
+						new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER, userId)
 					);
 					return;
 				}
@@ -127,23 +165,28 @@ public class AiService {
 					judgeResponse.formatScore(), judgeResponse.safetyScore());
 				String summary = null;
 
-				sseService.sendEventToClient(messageUUID, "JUDGE_PROMPT", GetScoreInfo.from(scoreInfo));
-				if (isFirstChatting) {
-					summary = judgeResponse.summary();
-					sseService.sendEventToClient(messageUUID, "CHATTING_TITLE", summary);
+				if (sse) {
+					sseService.sendEventToClient(messageUUID, "JUDGE_PROMPT", GetScoreInfo.from(scoreInfo));
+					if (isFirstChatting) {
+						summary = judgeResponse.summary();
+						sseService.sendEventToClient(messageUUID, "CHATTING_TITLE", summary);
+					}
+
+					sseService.sendEventToClient(messageUUID, "JUDGE_END", "DONE");
+				} else {
+					summary = isFirstChatting ? judgeResponse.summary() : null;
 				}
-
-				sseService.sendEventToClient(messageUUID, "JUDGE_END", "DONE");
-
 				eventPublisher.publishEvent(
-					new JudgeModelCompleteEvent(this, messageUUID, userId, summary, scoreInfo)
+					new JudgeModelCompleteEvent(this, messageUUID, userId, summary, scoreInfo, sse)
 				);
 			})
 			.doOnError(error -> {
 				AppLogger.error("답변 Judge 모델 호출 실패. UUID :  " + messageUUID);
-				sseService.sendEventToClient(messageUUID, "JUDGE_ERROR", "ERROR");
+				if (sse) {
+					sseService.sendEventToClient(messageUUID, "JUDGE_ERROR", "ERROR");
+				}
 				eventPublisher.publishEvent(
-					new EachModelEvent(this, messageUUID, MessageSender.USER, userId)
+					new EachModelEvent(this, messageUUID, MessageSender.USER, userId, sse)
 				);
 			})
 			.subscribe();
@@ -200,7 +243,7 @@ public class AiService {
 				AppLogger.error("llm 모델 스트리밍 오류. UUID : " + messageUUID);
 				sseService.sendEventToClient(messageUUID, "LLM_ERROR", "ERROR");
 				eventPublisher.publishEvent(
-					new EachModelEvent(this, messageUUID, MessageSender.AI, userId)
+					new EachModelEvent(this, messageUUID, MessageSender.AI, userId, true)
 				);
 			})
 			.doOnComplete(() -> {
@@ -232,7 +275,7 @@ public class AiService {
 					sseService.sendEventToClient(messageUUID, "SSE_COMPLETE", "DONE");
 					if (!finalAnswer.isEmpty()) {
 						eventPublisher.publishEvent(
-							new ModelCancelledEvent(this, messageUUID, finalAnswer, MessageSender.AI)
+							new ModelCancelledEvent(this, messageUUID, finalAnswer, MessageSender.AI, userId)
 						);
 					}
 				}

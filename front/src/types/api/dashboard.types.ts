@@ -16,7 +16,7 @@ export interface EcoPickResponse {
 
 export interface EcoPickItem {
   name: string;
-  sumOfScore: number;
+  sc_ec_0: number;
   prompt: string;
   detailScore: DetailScoreItem;
 }

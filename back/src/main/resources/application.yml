@@ -1,55 +1,55 @@
 spring:
-    application:
-        name: EcoPrompt
+  application:
+    name: EcoPrompt
 
-    datasource:
-        url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-        username: ${MYSQL_USER}
-        password: ${MYSQL_PASSWORD}
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
 
-    data:
-        mongodb:
-            uri: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DATABASE}?authSource=admin
-        redis:
-            host: ${REDIS_HOST}
-            port: ${REDIS_PORT}
-            password: ${REDIS_PASSWORD}
-            lettuce:
-                pool:
-                    max-active: 8
-                    max-idle: 8
-                    min-idle: 0
+  data:
+    mongodb:
+      uri: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DATABASE}?authSource=admin
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
 
-    jpa:
-        show-sql: true
-        hibernate:
-            ddl-auto: update
-        properties:
-            hibernate:
-                format_sql: true               # 🔹 SQL 문을 보기 좋게 정렬 출력
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true               # 🔹 SQL 문을 보기 좋게 정렬 출력
 
-    profiles:
-        active: ${CUR_PROFILE}
+  profiles:
+    active: ${CUR_PROFILE}
 
-    security:
-      oauth2:
-        client:
-            registration:
-                ssafy:
-                    client-id: ${CLIENT_ID}
-                    client-secret: ${CLIENT_SECRET}
-                    scope:
-                      - email
-                      - name
-                      - edu
-                    redirect-uri: "{baseUrl}/api/v1/users/sign-in"
-                    client-authentication-method: client_secret_post   # 또는 client_secret_basic
-                    authorization-grant-type: authorization_code       # ✅ 필수!
-            provider:
-                ssafy:
-                    authorization-uri: https://project.ssafy.com/oauth/sso-check
-                    token-uri: https://project.ssafy.com/ssafy/oauth2/token
-                    user-info-uri: https://project.ssafy.com/ssafy/resources/userInfo
+  security:
+    oauth2:
+      client:
+        registration:
+          ssafy:
+            client-id: ${CLIENT_ID}
+            client-secret: ${CLIENT_SECRET}
+            scope:
+              - email
+              - name
+              - edu
+            redirect-uri: "{baseUrl}/api/v1/users/sign-in"
+            client-authentication-method: client_secret_post   # 또는 client_secret_basic
+            authorization-grant-type: authorization_code       # ✅ 필수!
+        provider:
+          ssafy:
+            authorization-uri: https://project.ssafy.com/oauth/sso-check
+            token-uri: https://project.ssafy.com/ssafy/oauth2/token
+            user-info-uri: https://project.ssafy.com/ssafy/resources/userInfo
 
 #    session:
 #        store-type: redis
@@ -57,42 +57,41 @@ spring:
 #            namespace: ecoprompt:session
 
 springdoc:
-    override-with-generic-response: false
+  override-with-generic-response: false
 
 server:
-    forward-headers-strategy: framework
+  forward-headers-strategy: framework
 #    servlet:
 #        session:
 #            timeout: 30m
-    error:
-        include-message: always
-        include-binding-errors: always
-        include-stacktrace: ALWAYS  # 로컬/개발에서만
+#    error:
+#        include-message: always
+#        include-binding-errors: always
+#        include-stacktrace: ALWAYS  # 로컬/개발에서만
 
 ssh:
-    remote-jump-host: ${REMOTE_JUMP_HOST} # ssh 연결할 중간 서버 주소
-    ssh-port:         ${SSH_PORT} # ssh 프로토콜 포트
-    user:             ${SSH_USER}  # ssh 연결할 사용자 계정
-    private-key:      ${PRIVATE_KEY} # ssh 연결 시 사용할 개인키 파일 경로
-    database-port:    ${DATABASE_PORT} # 원격서버에 있는 db 포트
-    rds-endpoint:     ${RDS_ENDPOINT}
+  remote-jump-host: ${REMOTE_JUMP_HOST} # ssh 연결할 중간 서버 주소
+  ssh-port: ${SSH_PORT} # ssh 프로토콜 포트
+  user: ${SSH_USER}  # ssh 연결할 사용자 계정
+  private-key: ${PRIVATE_KEY} # ssh 연결 시 사용할 개인키 파일 경로
+  database-port: ${DATABASE_PORT} # 원격서버에 있는 db 포트
+  rds-endpoint: ${RDS_ENDPOINT}
 
 app:
-    ssafy:
-        openapi:
-            base-url: https://project.ssafy.com/ssafy/open-api/v1
-            api-key: ${SSAFY_API_KEY}
+  ssafy:
+    openapi:
+      base-url: https://project.ssafy.com/ssafy/open-api/v1
+      api-key: ${SSAFY_API_KEY}
 
 ai:
-    model:
-        url:
-            judge-prompt: ${JUDGE_PROMPT_URL}
-            llm: ${LLM_URL}
-            judge-llm: ${JUDGE_LLM_URL}
+  model:
+    url:
+      judge-prompt: ${JUDGE_PROMPT_URL}
+      llm: ${LLM_URL}
+      judge-llm: ${JUDGE_LLM_URL}
 
 jwt:
-    secret: ${JWT_SECRET}
-
+  secret: ${JWT_SECRET}
 
 logging:
     level:

@@ -38,8 +38,11 @@ export default function Consent() {
         await toggleSharingPrompt();
       }
       
+      // 로그인 후 첫 접속 플래그 설정 (뒤로가기 방지용)
+      sessionStorage.setItem('first_visit_after_login', 'true');
+      
       // 동의 완료 후 홈으로 이동
-      navigate('/chat');
+      navigate('/chat', { replace: true });
     } catch (error) {
       console.error('동의 업데이트 실패:', error);
       alert('동의 처리 중 오류가 발생했습니다. 다시 시도해주세요.');

@@ -69,7 +69,7 @@ export function MessageList({
           <PromptScore
             key={`score-${msg.id}`}
             scores={msg.score}
-            totalScore={msg.score?.sc_ec_0}
+            sc_ec_0={msg.score?.sc_ec_0}
           />,
         );
       }

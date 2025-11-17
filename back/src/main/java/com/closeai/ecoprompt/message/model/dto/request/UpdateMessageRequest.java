@@ -12,7 +12,7 @@ public record UpdateMessageRequest(
 	Long chattingId,
 
 	@Schema(example = "10+10의 결과값을 알려주세요. 수식 형태로 결과값을 알려주세요!")
-	@Length(min = 1, max = 15000)
+	@Length(min = 1, max = 25000)
 	String content,
 
 	@Schema(example = "550e8400-e29b-41d4-a716-446655440000")

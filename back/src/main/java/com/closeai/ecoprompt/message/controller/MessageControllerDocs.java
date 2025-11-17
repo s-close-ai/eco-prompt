@@ -8,10 +8,12 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.closeai.ecoprompt.common.ApiResponse;
 import com.closeai.ecoprompt.message.model.dto.request.SubmitMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.request.UpdateMessageRequest;
+import com.closeai.ecoprompt.message.model.dto.response.JudgeOnlyResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SearchMessageResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SubmitMessageResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import reactor.core.publisher.Mono;
 
 public interface MessageControllerDocs {
 
@@ -31,4 +33,12 @@ public interface MessageControllerDocs {
 
 	@Operation(summary = "keyword로 사용자 메시지 검색하는 API")
 	ResponseEntity<ApiResponse<List<SearchMessageResponse>>> searchMessage(String keyword);
+
+	@Operation(summary = "Judge 모델만 따로 실행하는 API",
+		description = "Judge Model이 오류가 발생했을 때 해당 메시지의 Judge 모델만 다시 실행")
+	Mono<ResponseEntity<ApiResponse<JudgeOnlyResponse>>> callJudgePromptModel(UpdateMessageRequest request);
+
+	@Operation(summary = "LLM 모델만 따로 실행하는 API",
+		description = "LLM 모델이 오류가 발생했을 때, 해당 메시지의 LLM 모델만 다시 실행")
+	ResponseEntity<ApiResponse<Void>> callLlmModel(UpdateMessageRequest request);
 }
