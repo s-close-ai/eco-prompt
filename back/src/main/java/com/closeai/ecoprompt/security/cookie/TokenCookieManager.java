@@ -1,6 +1,5 @@
 package com.closeai.ecoprompt.security.cookie;
 
-import a306.dependency_logger_starter.logging.annotation.NoLogging;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,7 +8,6 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 
 @Component
-@NoLogging
 public class TokenCookieManager {
 
     public static final String ACCESS_COOKIE  = "ACCESS_TOKEN";

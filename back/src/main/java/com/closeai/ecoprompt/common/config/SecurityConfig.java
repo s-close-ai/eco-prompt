@@ -16,7 +16,6 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -46,16 +45,6 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/v3/api-docs/**"
     };
-
-    /**
-     * Security Filter Chain을 완전히 우회할 경로 설정
-     * 프론트엔드 로그 수집 엔드포인트는 Security를 거치지 않음
-     */
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring()
-                .requestMatchers("/api/logs/frontend");
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -96,9 +85,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/sign-in").permitAll()
                         .requestMatchers("/api/v1/auth/refresh").permitAll()
                         .requestMatchers("/api/v1/auth/sign-out").permitAll()
-
-                        // log lens 관련
-                        .requestMatchers("/api/components/**", "/api/dependencies/**").permitAll()
 
                         // MR 자동 생성 관련
                         .requestMatchers("/api/v1/gitlab/webhook").permitAll()
