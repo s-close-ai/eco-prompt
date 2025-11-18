@@ -90,7 +90,6 @@ ai:
       judge-prompt: ${JUDGE_PROMPT_URL}
       llm: ${LLM_URL}
       judge-llm: ${JUDGE_LLM_URL}
-  mr-analyze-path: /api/v1/ai/prompt-response
 
 jwt:
   secret: ${JWT_SECRET}
