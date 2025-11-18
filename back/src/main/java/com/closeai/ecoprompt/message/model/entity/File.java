@@ -39,4 +39,11 @@ public class File extends BaseEntity {
 
 	@Column(name = "message_uuid", columnDefinition = "VARCHAR(36) comment '8-4-4-4-12'")
 	private String messageUUID;
+
+	@Column(name = "sender_type", nullable = false)
+	private MessageSender senderType;
+
+	public void updateMessageUUID(String messageUUID) {
+		this.messageUUID = messageUUID;
+	}
 }
