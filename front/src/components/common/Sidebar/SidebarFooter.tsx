@@ -43,10 +43,12 @@ export function SidebarFooter() {
         <img src="/icons/dashboard.svg" alt="dashboard" width={18} height={18} />
         <span>대시보드</span>
       </button>
-      <button className="sidebar-explore-btn" onClick={() => handleNavigate('/bookmark')}>
-        <img src="/icons/bookmark.svg" alt="bookmark" width={18} height={18} />
-        <span>북마크</span>
-      </button>
+      {mode !== 'mobile' && (
+        <button className="sidebar-explore-btn" onClick={() => handleNavigate('/mr-generator')}>
+          <img src="/icons/mr_create.svg" alt="mr-generator" width={18} height={18} />
+          <span>MR 자동 생성기</span>
+        </button>
+      )}
       <button className="sidebar-explore-btn" onClick={handleSettingsClick}>
         <img src="/icons/settings.svg" alt="settings" width={18} height={18} />
         <span>설정</span>
