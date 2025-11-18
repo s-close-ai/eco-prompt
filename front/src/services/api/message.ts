@@ -13,13 +13,17 @@ import type {
 /**
  * 사용자 메시지 전송
  * Endpoint: POST  /messages/input
- * @param request - 프로젝트 ID, 채팅방 ID, 메시지 내용
+ * @param request - 프로젝트 ID, 채팅방 ID, 메시지 내용, 업로드된 파일 정보 (선택)
  * @returns 채팅방 ID와 메시지 UUID
  */
 export const submitMessage = async (
   request: MessageInputRequest,
 ): Promise<MessageInputResponse> => {
-  const response = await apiClient.post<MessageInputResponse>('/messages/input', request);
+  // TODO: 백엔드 API가 준비되면 uploadedFiles를 서버로 전송
+  // 현재는 uploadedFiles를 제외하고 전송
+  const { uploadedFiles, ...jsonRequest } = request;
+
+  const response = await apiClient.post<MessageInputResponse>('/messages/input', jsonRequest);
   return response.data;
 };
 

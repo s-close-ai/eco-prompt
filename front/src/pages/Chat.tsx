@@ -171,7 +171,7 @@ export default function Chat() {
   }, []);
 
   const handleSendMessage = useCallback(
-      async (message: string) => {
+      async (message: string, uploadedFiles?: import('@/types/api/file.types').UploadedFileInfo[]) => {
         // 스트리밍 중이면 새로운 메시지 전송 방지
         const isCurrentlyStreaming = messages.some((m) => m.isStreaming);
         if (isCurrentlyStreaming) {
@@ -201,12 +201,21 @@ export default function Chat() {
       // 로딩 상태 시작
       setIsLoading(true);
 
+      // 첨부 파일을 MessageFileAttachment 형식으로 변환
+      const attachments = uploadedFiles?.map(file => ({
+        fileId: file.fileId,
+        filename: file.filename,
+        fileUrl: file.fileUrl,
+        contentType: file.contentType || 'application/octet-stream',
+      }));
+
       const newUserMessage: ChatMessage = {
         id: userMessageId,
         type: 'user',
         message,
         timestamp: new Date(),
         scoreState: { status: 'loading' }, // 즉시 점수 박스 공간 확보
+        attachments,
       };
 
       const loadingMessage: ChatMessage = {
@@ -245,6 +254,11 @@ export default function Chat() {
           projectId: actualProjectId,
           chattingId: currentChatId ? Number(currentChatId) : undefined,
           content: message,
+          uploadedFiles: uploadedFiles?.map(file => ({
+            fileUrl: file.fileUrl,
+            filename: file.filename,
+            fileId: file.fileId,
+          })),
         });
 
         const { chattingId: returnedChattingId, messageUUID } = response.data;
@@ -511,8 +525,8 @@ export default function Chat() {
   // Bottombar의 ChatInput에서 오는 메시지 처리
   useEffect(() => {
     const onChatInputSend = (e: Event) => {
-      const detail = (e as CustomEvent<{ message: string }>).detail;
-      if (detail?.message) handleSendMessage(detail.message);
+      const detail = (e as CustomEvent<{ message: string; uploadedFiles?: import('@/types/api/file.types').UploadedFileInfo[] }>).detail;
+      if (detail?.message) handleSendMessage(detail.message, detail.uploadedFiles);
     };
     window.addEventListener('chat-input-send', onChatInputSend as EventListener);
     return () => window.removeEventListener('chat-input-send', onChatInputSend as EventListener);

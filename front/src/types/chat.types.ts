@@ -1,4 +1,5 @@
 // 채팅 관련 타입 정의
+import type { MessageFileAttachment } from './api/file.types';
 
 export type MessageType = 'user' | 'ai' | 'loading' | 'error';
 
@@ -28,6 +29,7 @@ export interface ChatMessage {
   isStreaming?: boolean;
   messageUUID?: string; // 서버의 실제 messageUUID (수정 시 필요)
   errorType?: 'llm' | 'judge' | 'both'; // 에러 타입 구분
+  attachments?: MessageFileAttachment[]; // 첨부 파일 정보
 }
 
 export interface ChatMessageRequest {

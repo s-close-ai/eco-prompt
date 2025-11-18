@@ -8,8 +8,13 @@ export default function MainChat() {
   // ChatInput에서 메시지를 받아 새 채팅 시작
   const handleChatSend = useCallback(
     (e: Event) => {
-      const detail = (e as CustomEvent<{ message: string }>).detail;
+      const detail = (e as CustomEvent<{ message: string; uploadedFiles?: import('@/types/api/file.types').UploadedFileInfo[] }>).detail;
       if (!detail?.message) return;
+
+      // 파일이 있을 경우 경고 메시지 표시 (추후 파일 업로드 기능 구현 시 제거)
+      if (detail.uploadedFiles && detail.uploadedFiles.length > 0) {
+        console.warn('파일 업로드 기능은 채팅 시작 후 사용 가능합니다.');
+      }
 
       navigate('/chat', {
         state: { isNew: true, message: detail.message },

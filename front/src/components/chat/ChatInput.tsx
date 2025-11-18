@@ -1,14 +1,20 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import '@/styles/components/chat/chat-input.css';
 import { MAX_MESSAGE_LENGTH } from '@/constants/ui';
+import { uploadFiles } from '@/services/api/file';
+import type { UploadedFileInfo } from '@/types/api/file.types';
 
 interface ChatInputProps {
-  onSend: (message: string) => void;
+  onSend: (message: string, uploadedFiles?: UploadedFileInfo[]) => void;
   disabled?: boolean;
   placeholder?: string;
   isLoading?: boolean;
   onStop?: () => void;
 }
+
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'txt', 'csv', 'pdf'];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_COUNT = 3;
 
 export default function ChatInput({
   onSend,
@@ -19,13 +25,102 @@ export default function ChatInput({
 }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFileInfo[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const showAlertMessage = (msg: string) => {
+    setAlertMessage(msg);
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 3000);
+  };
+
+  const getFileExtension = (filename: string): string => {
+    return filename.split('.').pop()?.toLowerCase() || '';
+  };
+
+  const validateFile = (file: File): boolean => {
+    const extension = getFileExtension(file.name);
+
+    if (!ALLOWED_EXTENSIONS.includes(extension)) {
+      showAlertMessage(`허용되지 않는 파일 형식입니다. (허용: ${ALLOWED_EXTENSIONS.join(', ')})`);
+      return false;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      showAlertMessage(`파일 크기는 최대 ${MAX_FILE_SIZE / 1024 / 1024}MB까지 가능합니다.`);
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+
+    if (uploadedFiles.length + files.length > MAX_FILE_COUNT) {
+      showAlertMessage(`최대 ${MAX_FILE_COUNT}개의 파일만 선택할 수 있습니다.`);
+      return;
+    }
+
+    const validFiles = files.filter(validateFile);
+
+    if (validFiles.length === 0) {
+      return;
+    }
+
+    // 파일 업로드 시작
+    setIsUploading(true);
+
+    try {
+      const uploaded = await uploadFiles(validFiles);
+      setUploadedFiles(prev => [...prev, ...uploaded]);
+    } catch (error) {
+      showAlertMessage('파일 업로드에 실패했습니다.');
+      console.error('File upload error:', error);
+    } finally {
+      setIsUploading(false);
+    }
+
+    // input 초기화 (같은 파일 다시 선택 가능하도록)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    const fileToRemove = uploadedFiles[index];
+
+    // Object URL 정리 (메모리 누수 방지)
+    if (fileToRemove.thumbnailUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(fileToRemove.thumbnailUrl);
+    }
+    if (fileToRemove.fileUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(fileToRemove.fileUrl);
+    }
+
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleSend = () => {
-    if (message.trim() && !disabled) {
+    if (message.trim() && !disabled && !isUploading) {
       const trimmed = message.trim();
-      onSend(trimmed);
+      onSend(trimmed, uploadedFiles.length > 0 ? uploadedFiles : undefined);
       setMessage('');
+
+      // Object URL 정리
+      uploadedFiles.forEach(file => {
+        if (file.thumbnailUrl?.startsWith('blob:')) {
+          URL.revokeObjectURL(file.thumbnailUrl);
+        }
+        if (file.fileUrl?.startsWith('blob:')) {
+          URL.revokeObjectURL(file.fileUrl);
+        }
+      });
+
+      setUploadedFiles([]);
     }
   };
 
@@ -39,12 +134,10 @@ export default function ChatInput({
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     if (newValue.length > MAX_MESSAGE_LENGTH) {
-      setShowAlert(true);
-      setTimeout(() => setShowAlert(false), 3000);
+      showAlertMessage(`최대 ${MAX_MESSAGE_LENGTH.toLocaleString()}자까지 입력할 수 있습니다.`);
       return;
     }
     setMessage(newValue);
-    setShowAlert(false);
   };
 
   useEffect(() => {
@@ -104,7 +197,65 @@ export default function ChatInput({
 
   return (
     <div className="chat-input-container">
+      {uploadedFiles.length > 0 && (
+        <div className="chat-input-files-preview-horizontal">
+          {uploadedFiles.map((file, index) => {
+            const isImage = file.contentType?.startsWith('image/');
+            return (
+              <div key={index} className="file-preview-item-horizontal">
+                {isImage && file.thumbnailUrl ? (
+                  <div className="file-preview-thumbnail">
+                    <img src={file.thumbnailUrl} alt={file.filename} />
+                    <button
+                      onClick={() => handleRemoveFile(index)}
+                      className="file-preview-remove-overlay"
+                      title="삭제"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <div className="file-preview-document">
+                    <div className="file-preview-icon-large">
+                      📄
+                    </div>
+                    <div className="file-preview-document-info">
+                      <span className="file-preview-name-truncate">{file.filename}</span>
+                      <span className="file-preview-type">
+                        {file.contentType?.split('/')[1]?.toUpperCase() || 'FILE'}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveFile(index)}
+                      className="file-preview-remove-overlay"
+                      title="삭제"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
       <div className="chat-input-wrapper">
+        <input
+          ref={fileInputRef}
+          type="file"
+          onChange={handleFileSelect}
+          accept=".jpg,.jpeg,.png,.txt,.csv,.pdf"
+          multiple
+          style={{ display: 'none' }}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled || isLoading || isUploading || uploadedFiles.length >= MAX_FILE_COUNT}
+          className="chat-input-file-btn"
+          title="파일 첨부"
+        >
+          <img src="/icons/attachment.svg" alt="파일 첨부" width={20} height={20} />
+        </button>
         <textarea
           ref={textareaRef}
           value={message}
@@ -112,7 +263,7 @@ export default function ChatInput({
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
           placeholder={placeholder}
-          disabled={disabled || isLoading}
+          disabled={disabled || isLoading || isUploading}
           className="chat-input-textarea"
           rows={1}
         />
@@ -123,7 +274,7 @@ export default function ChatInput({
         ) : (
           <button
             onClick={handleSend}
-            disabled={!message.trim() || disabled}
+            disabled={!message.trim() || disabled || isUploading}
             className="chat-input-send-btn"
             title="전송"
           >
@@ -138,7 +289,12 @@ export default function ChatInput({
       </div>
       {showAlert && (
         <div className="chat-input-alert">
-          최대 {MAX_MESSAGE_LENGTH.toLocaleString()}자까지 입력할 수 있습니다.
+          {alertMessage}
+        </div>
+      )}
+      {isUploading && (
+        <div className="chat-input-uploading">
+          파일 업로드 중...
         </div>
       )}
     </div>

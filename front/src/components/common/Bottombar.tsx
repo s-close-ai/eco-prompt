@@ -5,7 +5,7 @@ import ChatInput from '@/components/chat/ChatInput';
 
 type BottombarProps = {
   variant: 'chat' | 'menu';
-  onSendMessage?: (message: string) => void;
+  onSendMessage?: (message: string, uploadedFiles?: import('@/types/api/file.types').UploadedFileInfo[]) => void;
 };
 
 export default function Bottombar({ variant, onSendMessage }: BottombarProps) {

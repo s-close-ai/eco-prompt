@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import '@/styles/components/chat/user-message.css';
 import { MAX_MESSAGE_LENGTH } from '@/constants/ui';
+import type { MessageFileAttachment } from '@/types/api/file.types';
 
 interface UserMessageProps {
   message: string;
   onUpdate: (newMessage: string) => void;
   isLastUserMessage?: boolean;
+  attachments?: MessageFileAttachment[];
 }
 
 export default function UserMessage({
   message,
   onUpdate,
   isLastUserMessage = false,
+  attachments = [],
 }: UserMessageProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedMessage, setEditedMessage] = useState(message);
@@ -88,6 +91,35 @@ export default function UserMessage({
   return (
     <div className="user-message-container">
       <div className="user-message">
+        {/* 첨부 파일 표시 */}
+        {attachments && attachments.length > 0 && (
+          <div className="user-message-attachments">
+            {attachments.map((file, index) => {
+              const isImage = file.contentType?.startsWith('image/');
+              return (
+                <div key={index} className="user-message-attachment">
+                  {isImage ? (
+                    <div className="user-message-image">
+                      <img src={file.fileUrl} alt={file.filename} />
+                    </div>
+                  ) : (
+                    <div className="user-message-file">
+                      <div className="user-message-file-icon">
+                        📄
+                      </div>
+                      <div className="user-message-file-info">
+                        <span className="user-message-file-name">{file.filename}</span>
+                        <span className="user-message-file-type">
+                          {file.contentType?.split('/')[1]?.toUpperCase() || 'FILE'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
         <p className="user-message-text">{message}</p>
       </div>
       <div className="user-message-actions">
