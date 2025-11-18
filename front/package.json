@@ -51,7 +51,6 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
-    "soo1-loglens": "https://www.loglens.co.kr/static/libs/soo1-loglens-0.0.10.tgz",
     "url": "^0.11.4",
     "vite-plugin-svgr": "^4.5.0",
     "zustand": "^5.0.8"

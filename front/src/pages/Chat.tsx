@@ -13,7 +13,6 @@ import { parseMessages } from '@/utils/messageParser';
 import { useChatScroll } from '@/hooks/useChatScroll';
 import { setupSSEListeners } from '@/utils/sseListeners';
 import type { SidebarProjectItem, SidebarChatItem } from '@/types/sidebar.types';
-import { useLogLens } from 'soo1-loglens';
 import '@/styles/pages/chat.css';
 
 export default function Chat() {
@@ -171,8 +170,7 @@ export default function Chat() {
     }
   }, []);
 
-  const handleSendMessage = useLogLens(
-    useCallback(
+  const handleSendMessage = useCallback(
       async (message: string) => {
         // 스트리밍 중이면 새로운 메시지 전송 방지
         const isCurrentlyStreaming = messages.some((m) => m.isStreaming);
@@ -409,26 +407,7 @@ export default function Chat() {
         messages,
         defaultProjectId,
       ],
-    ),
-    {
-      logger: 'Chat.handleSendMessage',
-      includeArgs: true,
-      includeResult: true,
-    },
-    [
-      chattingId,
-      projectId,
-      defaultProjectId,
-      navigate,
-      setCurrentChatting,
-      updateCurrentTitle,
-      addChatToProject,
-      updateChatTitle,
-      moveChatToTop,
-      setIsLoading,
-      messages,
-    ],
-  );
+    );
 
   useEffect(() => {
     return () => {
