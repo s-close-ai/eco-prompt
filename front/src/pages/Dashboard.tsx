@@ -90,6 +90,10 @@ export default function DashboardPage() {
         <div className="dashboard-grid">
           <div className="left-sections">
             <div className="grid-section ranking-section">
+            <div className="section-title-wrapper">
+            <h2 className="section-title">Top 10 Rankings</h2>
+            <Tooltip content="오늘 최고 점수 기준으로 랭킹이 결정됩니다. 동점일 경우 마일리지가 높은 순으로, 그래도 동점이면 프롬프트 수가 적은 순으로 정렬됩니다. 순위는 5분에 한 번 반영됩니다." />
+          </div>
               <Ranking />
             </div>
             <div className="grid-section metrics-section">

@@ -4,6 +4,9 @@
   background-color: transparent;
   max-width: 48rem;
   margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 @media (min-width: 1023px) {
   .chat-loading-container {
@@ -19,7 +22,7 @@
   }
 }
 .chat-loading {
-  width: 100%;
+  width: auto;
   max-width: none;
   background: transparent;
   border: none;
@@ -28,6 +31,7 @@
   flex-direction: row;
   gap: 8px;
   align-items: center;
+  justify-content: center;
 }
 .chat-loading-dots {
   display: flex;
@@ -61,6 +65,8 @@
 }
 .chat-loading-text {
   margin: 0;
-  color: #6c757d;
+  color: #5e9462;
   font-size: 13px;
+  font-weight: 600;
+  text-align: center;
 }

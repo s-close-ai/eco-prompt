@@ -100,7 +100,9 @@ export function setupSSEListeners({
                   timestamp: new Date(),
                   isStreaming: true,
                 }
-              : m,
+              : m.id === userMessageId
+                ? { ...m, scoreState: { status: 'loading' } }
+                : m,
           ),
         );
       }
@@ -153,7 +155,15 @@ export function setupSSEListeners({
       try {
         const scoreData = JSON.parse((event as MessageEvent).data) as PromptScoreType;
         setMessages((prev) =>
-          prev.map((m) => (m.id === userMessageId ? { ...m, score: scoreData } : m)),
+          prev.map((m) =>
+            m.id === userMessageId
+              ? {
+                  ...m,
+                  score: scoreData,
+                  scoreState: { status: 'success', score: scoreData }
+                }
+              : m
+          ),
         );
       } catch (error) {
         console.error('Failed to parse JUDGE_PROMPT:', error);
@@ -238,13 +248,36 @@ export function setupSSEListeners({
 
   // JUDGE_ERROR 이벤트 - 점수 생성 실패
   eventSource.addEventListener('JUDGE_ERROR', withLogLens(
-    () => {
+    (event: Event) => {
       judgeEnded = true; // judge 종료
 
+      // 에러 메시지 추출
+      let errorMessage = '점수 평가에 실패했습니다.';
+      try {
+        const errorData = JSON.parse((event as MessageEvent).data);
+        if (errorData.error || errorData.message) {
+          errorMessage = errorData.error || errorData.message;
+        }
+      } catch {
+        // JSON 파싱 실패 시 기본 메시지 사용
+      }
+
+      // user 메시지의 scoreState를 에러로 업데이트
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === userMessageId
+            ? {
+                ...m,
+                scoreState: { status: 'error', error: errorMessage }
+              }
+            : m
+        ),
+      );
+
       // LLM도 에러가 났는지 확인
-      if (llmEnded) {
-        // 둘 다 에러 - 기존 에러 메시지를 통합 메시지로 업데이트
-        if (hasError && errorMessageId) {
+      if (llmEnded && hasError) {
+        // 둘 다 에러 - 기존 LLM 에러 메시지를 통합 메시지로 업데이트
+        if (errorMessageId) {
           setMessages((prev) =>
             prev.map((m) =>
               m.id === errorMessageId
@@ -252,21 +285,6 @@ export function setupSSEListeners({
                 : m,
             ),
           );
-        } else {
-          // LLM_ERROR가 먼저 왔지만 에러 메시지가 없는 경우 (예외 상황)
-          hasError = true;
-          const newErrorId = crypto.randomUUID();
-          errorMessageId = newErrorId;
-          setMessages((prev) => [
-            ...prev.filter((m) => m.id !== loadingMessageId && m.id !== aiMessageId),
-            {
-              id: newErrorId,
-              type: 'error',
-              message: '응답을 생성하는 중 오류가 발생했습니다.',
-              timestamp: new Date(),
-              errorType: 'both' as const,
-            },
-          ]);
         }
 
         // 둘 다 에러이므로 SSE 종료
@@ -274,32 +292,9 @@ export function setupSSEListeners({
         eventSourcesRef.current.delete(aiMessageId);
         messageUUIDsRef.current.delete(aiMessageId);
         setIsLoading(false);
-      } else if (!hasError) {
-        // 점수만 에러 (LLM은 정상 - 아직 스트리밍 중)
-        hasError = true;
-        const scoreErrorMessageId = crypto.randomUUID();
-        errorMessageId = scoreErrorMessageId;
-
-        setMessages((prev) => {
-          const newMessages: ChatMessage[] = [];
-          for (const msg of prev) {
-            // AI 메시지 바로 앞에 에러 메시지 삽입
-            if (msg.id === aiMessageId) {
-              newMessages.push({
-                id: scoreErrorMessageId,
-                type: 'error' as const,
-                message: '점수 정보를 생성하는 중 오류가 발생했습니다.',
-                timestamp: new Date(),
-                errorType: 'judge' as const,
-              });
-            }
-            newMessages.push(msg);
-          }
-          return newMessages;
-        });
-
-        // LLM 응답은 계속 받으므로 SSE 연결 유지
       }
+      // JUDGE만 에러인 경우: scoreState로만 처리, 별도 에러 메시지 추가하지 않음
+      // LLM은 정상 진행
 
       // 새 채팅인 경우 "NEW CHAT" 제목으로 사이드바 업데이트
       if (returnedChattingId && actualProjectId) {

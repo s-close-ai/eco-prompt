@@ -7,6 +7,18 @@
   overflow-y: auto;
   background: #f5f8f5;
   overscroll-behavior: contain;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+/* 로딩 중 스타일 */
+.ranking-container.ranking-loading {
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #5e9462;
+  text-align: center;
 }
 
 .ranking-header {

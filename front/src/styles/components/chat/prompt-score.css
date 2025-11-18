@@ -107,3 +107,79 @@
   color: #ffffff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
+
+/* 로딩 상태 */
+.prompt-score-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prompt-score-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e0e0e0;
+  border-top-color: #5c8a5f;
+  border-radius: 50%;
+  animation: prompt-score-spin 0.8s linear infinite;
+}
+
+@keyframes prompt-score-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.prompt-score-loading-text {
+  font-size: 13px;
+  color: #5e9462;
+  font-weight: 600;
+  text-align: center;
+  padding: 8px 0;
+  width: 100%;
+  display: block;
+}
+
+/* 에러 상태 */
+.prompt-score-container.prompt-score-error {
+  border-color: #f44336;
+  background-color: #fff5f5;
+}
+
+.prompt-score-error-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  padding: 4px 12px;
+  background-color: #f44336;
+  border-radius: 8px;
+}
+
+.prompt-score-error-message {
+  font-size: 13px;
+  color: #d32f2f;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.prompt-score-retry-button {
+  width: 100%;
+  padding: 8px 16px;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #5c8a5f;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.prompt-score-retry-button:hover {
+  background-color: #4a6f4d;
+}
+
+.prompt-score-retry-button:active {
+  background-color: #3d5a40;
+}

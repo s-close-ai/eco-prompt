@@ -3,6 +3,9 @@ import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
 import '@/styles/components/chat/ai-message.css';
 
 interface AIMessageProps {
@@ -42,7 +45,8 @@ export default function AIMessage({ message, isStreaming }: AIMessageProps) {
       <div className="ai-message">
         <div className="ai-message-text">
           <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
+            remarkPlugins={[remarkGfm, remarkMath]}
+            rehypePlugins={[rehypeKatex]}
             components={{
               code({ className, children, ...props }) {
                 const match = /language-(\w+)/.exec(className || '');
