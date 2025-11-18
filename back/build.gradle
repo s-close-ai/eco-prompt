@@ -22,9 +22,6 @@ configurations {
 
 repositories {
     mavenCentral()
-    maven {
-        url 'https://api.loglens.co.kr/maven-repo'
-    }
 }
 
 dependencies {
@@ -60,9 +57,6 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
-
-    // loglens
-    implementation 'com.loglens:loglens-spring-boot-starter:1.1.5-SNAPSHOT'
 }
 
 tasks.named('test') {

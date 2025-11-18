@@ -105,20 +105,6 @@ logging:
     file:
         name: ./logs/be/app.log
 
-dependency:
-    logger:
-        api-key: b3c5b085-0db0-385c-8984-f11099c0ccb6
-        collector:
-            url: https://api.loglens.co.kr
-        enabled: true
-
-        stacktrace:
-            max-lines: 3
-
-        frontend:
-            enabled: false
-            log-path: ./logs/fe/app.log
-
 gitlab:
   base-url: "https://lab.ssafy.com" # self-hosted면 주소 바꿔주기
   token: ${GITLAB_MR_ACCESS_TOKEN} # Project Access Token / Personal Access Token

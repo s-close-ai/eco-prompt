@@ -1,6 +1,5 @@
 package com.closeai.ecoprompt.security.jwt;
 
-import a306.dependency_logger_starter.logging.annotation.NoLogging;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -15,7 +14,6 @@ import java.util.Date;
 import java.util.UUID;
 
 @Component
-@NoLogging
 public class JwtUtil {
 
     @Value("${jwt.secret}")
