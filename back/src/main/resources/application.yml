@@ -116,7 +116,7 @@ dependency:
             max-lines: 3
 
         frontend:
-            enabled: true
+            enabled: false
             log-path: ./logs/fe/app.log
 
 gitlab:
