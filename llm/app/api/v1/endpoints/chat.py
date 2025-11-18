@@ -18,7 +18,7 @@ router = APIRouter()
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def chat_vllm(request: ChatRequest, llm_engine_1=Depends(get_llm_engine_1), llm_engine_2=Depends(get_llm_engine_2), tokenizer_1=Depends(get_tokenizer_1), tokenizer_2=Depends(get_tokenizer_2), mongo_client=Depends(get_mongodb)):
     """
-    스트림 답변 제공 (동시성 제어 포함)
+    스트림 답변 제공 + 동시성 제어 포함함
     """
     limiter = get_limiter()
 
@@ -50,7 +50,6 @@ async def chat_vllm(request: ChatRequest, llm_engine_1=Depends(get_llm_engine_1)
                 "message_uuid": message_uuid,
                 "question": user_input,
             }
-            print(router_payload)
 
             router_response = await router_chain.ainvoke(router_payload)
             print(f"[ROUTER]\n{router_response}")
@@ -118,7 +117,8 @@ async def chat_vllm(request: ChatRequest, llm_engine_1=Depends(get_llm_engine_1)
 
                         yield f"data: {ChatResponse(sequence_id=sequence_id+1, token='DONE').model_dump_json()}\n\n"
                         print(f"[CHOSEN]\n{chosen_response}")
-                    
+
+                        # 처리해둔 rejected 답변 받아오기
                         rejected_response = await rejected_task
 
                         yield f"data: {ChatResponse(sequence_id=-1, token=rejected_response).model_dump_json()}\n\n"
@@ -136,7 +136,7 @@ async def chat_vllm(request: ChatRequest, llm_engine_1=Depends(get_llm_engine_1)
                 except Exception as e:
                     # 오류 시 스트림 종료
                     print(f"❌ [{message_uuid}] 에러 발생: {type(e).__name__}: {str(e)}")
-                    yield f"data: [ERROR] {type(e).__name__}: {e}\n\n"
+                    yield f"data: {ChatResponse(sequence_id=-999, token=f'ERROR: {type(e).__name__}: {str(e)}')}\n\n"
 
                     # rejected task 취소
                     if rejected_task and not rejected_task.done():
