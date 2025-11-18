@@ -1,5 +1,6 @@
 package com.closeai.ecoprompt.userinfo.service;
 
+import com.closeai.ecoprompt.mr.model.dto.response.MrGeneratorResponse;
 import com.closeai.ecoprompt.user.model.entity.User;
 import com.closeai.ecoprompt.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -22,193 +23,221 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 public class UserInfoService {
 
-	private final UserInfoRepository userInfoRepository;
-	private final UserRepository userRepository;
-	private final ScoreRepository scoreRepository;
+    private final UserInfoRepository userInfoRepository;
+    private final UserRepository userRepository;
+    private final ScoreRepository scoreRepository;
 
-	/**
-	 * 정보 제공 동의 상태 변환 함수
-	 */
-	@Transactional
-	public SharingInformationStatusResponse toggleSharingInformation() {
-		AppLogger.start("정보 제공 동의 상태 변경");
+    /**
+     * 정보 제공 동의 상태 변환 함수
+     */
+    @Transactional
+    public SharingInformationStatusResponse toggleSharingInformation() {
+        AppLogger.start("정보 제공 동의 상태 변경");
 
-		int userId = CustomUtil.getCurrentUserId();
-		UserInfo userInfo = userInfoRepository.findByUser_Id(userId)
-			.orElseThrow(() -> new BusinessException("해당하는 사용자가 없습니다."));
+        int userId = CustomUtil.getCurrentUserId();
+        UserInfo userInfo = userInfoRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new BusinessException("해당하는 사용자가 없습니다."));
 
-		if (userInfo.getSharingInformation().equals("Y")) {
-			AppLogger.info("이미 정보 제공 동의를 했습니다.", userId);
-		} else if (userInfo.getSharingInformation().equals("N")) {
-			userInfo.setSharingInformation("Y");
-			userInfo.updateSharingInformationUpdatedAt();
-			userInfoRepository.save(userInfo);
+        if (userInfo.getSharingInformation().equals("Y")) {
+            AppLogger.info("이미 정보 제공 동의를 했습니다.", userId);
+        } else if (userInfo.getSharingInformation().equals("N")) {
+            userInfo.setSharingInformation("Y");
+            userInfo.updateSharingInformationUpdatedAt();
+            userInfoRepository.save(userInfo);
 
-			AppLogger.info("정보 제공 상태: N -> Y", userId);
-			AppLogger.complete("정보 제공 동의 상태 변경 @" + userInfo.getSharingInformationUpdatedAt());
-		}
+            AppLogger.info("정보 제공 상태: N -> Y", userId);
+            AppLogger.complete("정보 제공 동의 상태 변경 @" + userInfo.getSharingInformationUpdatedAt());
+        }
 
-		return SharingInformationStatusResponse.from(userInfo);
-	}
+        return SharingInformationStatusResponse.from(userInfo);
+    }
 
-	/**
-	 * 정보 제공 동의 상태 조회 함수
-	 */
-	public SharingInformationStatusResponse getSharingInformationStatus() {
-		AppLogger.start("정보 제공 동의 상태 조회");
+    /**
+     * 정보 제공 동의 상태 조회 함수
+     */
+    public SharingInformationStatusResponse getSharingInformationStatus() {
+        AppLogger.start("정보 제공 동의 상태 조회");
 
-		int userId = CustomUtil.getCurrentUserId();
-		return SharingInformationStatusResponse.from(
-			userInfoRepository.findByUser_Id(userId)
-				.orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."))
-		);
-	}
+        int userId = CustomUtil.getCurrentUserId();
+        return SharingInformationStatusResponse.from(
+                userInfoRepository.findByUser_Id(userId)
+                        .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."))
+        );
+    }
 
-	/**
-	 * 사용자 지침 수정 API 함수
-	 * */
-	@Transactional
-	public Void updatePersonalPrompt(UpdatePersonalPromptRequest request) {
+    /**
+     * 사용자 지침 수정 API 함수
+     */
+    @Transactional
+    public Void updatePersonalPrompt(UpdatePersonalPromptRequest request) {
 
-		String personalPrompt = request.personalPrompt();
-		Integer userId = CustomUtil.getCurrentUserId();
+        String personalPrompt = request.personalPrompt();
+        Integer userId = CustomUtil.getCurrentUserId();
 
-		UserInfo userInfo = getUserInfo(userId);
-		userInfo.updatePersonalPrompt(personalPrompt);
+        UserInfo userInfo = getUserInfo(userId);
+        userInfo.updatePersonalPrompt(personalPrompt);
 
-		return null;
-	}
+        return null;
+    }
 
-	/**
-	 *
-	 * */
-	public GetUserInfoResponse getUserPromptInfo() {
+    /**
+     *
+     */
+    public GetUserInfoResponse getUserPromptInfo() {
 
-		Integer userId = CustomUtil.getCurrentUserId();
+        Integer userId = CustomUtil.getCurrentUserId();
 
-		UserInfo userInfo = getUserInfo(userId);
-		return new GetUserInfoResponse(userInfo.getSharingPrompt(),
-			userInfo.getPersonalPrompt());
-	}
+        UserInfo userInfo = getUserInfo(userId);
+        return new GetUserInfoResponse(userInfo.getSharingPrompt(),
+                userInfo.getPersonalPrompt());
+    }
 
-	/**
-	 * 사용자 프롬프트 조회 함수
-	 */
-	public String getPersonalPrompt(Integer userId) {
+    /**
+     * 사용자 프롬프트 조회 함수
+     */
+    public String getPersonalPrompt(Integer userId) {
 
-		UserInfo userInfo = getUserInfo(userId);
+        UserInfo userInfo = getUserInfo(userId);
 
-		return userInfo.getPersonalPrompt() == null ? "" : userInfo.getPersonalPrompt();
-	}
+        return userInfo.getPersonalPrompt() == null ? "" : userInfo.getPersonalPrompt();
+    }
 
-	/**
-	 * 사용자 프롬프트 상태 변경 API 함수
-	 * */
-	@Transactional
-	public Void updateSharingPrompt() {
+    /**
+     * 사용자 프롬프트 상태 변경 API 함수
+     */
+    @Transactional
+    public Void updateSharingPrompt() {
 
-		Integer userId = CustomUtil.getCurrentUserId();
-		UserInfo userInfo = getUserInfo(userId);
+        Integer userId = CustomUtil.getCurrentUserId();
+        UserInfo userInfo = getUserInfo(userId);
 
-		if (userInfo.getSharingPrompt() == 'Y') {
-			userInfo.setSharingPrompt('N');
-		} else if (userInfo.getSharingPrompt() == 'N') {
-			userInfo.setSharingPrompt('Y');
-		}
+        if (userInfo.getSharingPrompt() == 'Y') {
+            userInfo.setSharingPrompt('N');
+        } else if (userInfo.getSharingPrompt() == 'N') {
+            userInfo.setSharingPrompt('Y');
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	/**
-	 * 사용자에 대한 프롬프트 수 증가
-	 */
-	@Transactional
-	public void increasePromptCnt(Integer userId) {
+    /**
+     * 사용자에 대한 프롬프트 수 증가
+     */
+    @Transactional
+    public void increasePromptCnt(Integer userId) {
 
-		UserInfo userInfo = getUserInfo(userId);
-		userInfo.updateTotalPromptCount();
-	}
+        UserInfo userInfo = getUserInfo(userId);
+        userInfo.updateTotalPromptCount();
+    }
 
-	/**
-	 * 사용자의 최고 점수를 수정하는 함수
-	 */
-	@Transactional
-	public void recalculateAndUpdateHighScore(Integer userId, Double oriTotalScore, Double newTotalScore) {
+    /**
+     * 사용자의 최고 점수를 수정하는 함수
+     */
+    @Transactional
+    public void recalculateAndUpdateHighScore(Integer userId, Double oriTotalScore, Double newTotalScore) {
 
-		UserInfo userInfo = getUserInfo(userId);
-		Double curHighScore = userInfo.getHighScore();
+        UserInfo userInfo = getUserInfo(userId);
+        Double curHighScore = userInfo.getHighScore();
 
-		userInfo.updateTotalScore(newTotalScore - oriTotalScore);
+        userInfo.updateTotalScore(newTotalScore - oriTotalScore);
 
-		// 새로운 점수가 현재 최고 점수보다 높은 경우
-		if (newTotalScore > curHighScore) {
-			userInfo.updateHighScore(newTotalScore);
-		} else if (curHighScore.equals(oriTotalScore) && newTotalScore < oriTotalScore) {
-			Double newCalHighScore = scoreRepository.findMaxTotalScoreByUserId(userId).orElse(0.0);
+        // 새로운 점수가 현재 최고 점수보다 높은 경우
+        if (newTotalScore > curHighScore) {
+            userInfo.updateHighScore(newTotalScore);
+        } else if (curHighScore.equals(oriTotalScore) && newTotalScore < oriTotalScore) {
+            Double newCalHighScore = scoreRepository.findMaxTotalScoreByUserId(userId).orElse(0.0);
 
-			userInfo.updateHighScore(newCalHighScore);
-		}
+            userInfo.updateHighScore(newCalHighScore);
+        }
 
-		userInfoRepository.save(userInfo);
-	}
+        userInfoRepository.save(userInfo);
+    }
 
-	/**
-	 * 총 마일리지를 업데이트 하는 함수
-	 */
-	@Transactional
-	public void updateTotalMileage(Integer userId, int oldValue, int newValue) {
+    /**
+     * 총 마일리지를 업데이트 하는 함수
+     */
+    @Transactional
+    public void updateTotalMileage(Integer userId, int oldValue, int newValue) {
 
-		UserInfo userInfo = getUserInfo(userId);
-		int gapValue = newValue - oldValue;
+        UserInfo userInfo = getUserInfo(userId);
+        int gapValue = newValue - oldValue;
 
-		userInfo.updateTotalMileage(gapValue);
-	}
+        userInfo.updateTotalMileage(gapValue);
+    }
 
-	/**
-	 * 점수 평균 계산을 위해 점수 출력 실패 PROMPT CNT 증가
-	 * */
-	@Transactional
-	public void updateFailCnt(Integer userId, int cnt) {
-		UserInfo userInfo = getUserInfo(userId);
-		long newFailCnt = userInfo.getTotalFailCount() + cnt;
+    /**
+     * 점수 평균 계산을 위해 점수 출력 실패 PROMPT CNT 증가
+     */
+    @Transactional
+    public void updateFailCnt(Integer userId, int cnt) {
+        UserInfo userInfo = getUserInfo(userId);
+        long newFailCnt = userInfo.getTotalFailCount() + cnt;
 
-		if (newFailCnt < 0 || newFailCnt > userInfo.getTotalPromptCount()) {
-			AppLogger.warn("failCnt의 숫자가 이상합니다.");
-			newFailCnt = 0L;
-		}
+        if (newFailCnt < 0 || newFailCnt > userInfo.getTotalPromptCount()) {
+            AppLogger.warn("failCnt의 숫자가 이상합니다.");
+            newFailCnt = 0L;
+        }
 
-		userInfo.updateTotalFailCount(newFailCnt);
-		userInfoRepository.save(userInfo);
-	}
+        userInfo.updateTotalFailCount(newFailCnt);
+        userInfoRepository.save(userInfo);
+    }
 
-	private UserInfo getUserInfo(Integer userId) {
-		return userInfoRepository.findByUser_Id(userId)
-			.orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."));
-	}
+    private UserInfo getUserInfo(Integer userId) {
+        return userInfoRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."));
+    }
 
-	/**
-	 * MR 설명 자동 생성을 위한 사용자 secret token 조회
-	 * */
-	public String getWebhookSecretTokenBySsafyEmail(String ssafyEmail) {
-		User user = userRepository.findByEmail(ssafyEmail)
-				.orElseThrow(() -> new BusinessException("해당하는 사용자가 없습니다."));
+    /**
+     * MR 설명 자동 생성을 위한 사용자 secret token 조회
+     * 이때 ssafy email이란? 웹훅의 X-Ssafy-Email에 저장된 이메일
+     */
+    public String getWebhookSecretTokenBySsafyEmail(String ssafyEmail) {
+        User user = userRepository.findByEmail(ssafyEmail)
+                .orElseThrow(() -> new BusinessException("해당하는 사용자가 없습니다."));
 
-		UserInfo userInfo = userInfoRepository.findByUser_Id(user.getId())
-				.orElseThrow(() -> new BusinessException("사용자와 일치하는 정보가 없습니다."));
+        UserInfo userInfo = userInfoRepository.findByUser_Id(user.getId())
+                .orElseThrow(() -> new BusinessException("사용자와 일치하는 정보가 없습니다."));
 
-		return userInfo.getWebhookSecretToken();
-	}
+        return userInfo.getWebhookSecretToken();
+    }
 
-	/**
-	 * MR 설명 자동 생성을 위한 사용자 secret token 조회
-	 * */
-	public String getGitlabApiTokenBySsafyEmail(String ssafyEmail) {
-		User user = userRepository.findByEmail(ssafyEmail)
-				.orElseThrow(() -> new BusinessException("해당하는 사용자가 없습니다."));
+    /**
+     * MR 설명 자동 생성을 위한 사용자 secret token 조회
+     * 이때 ssafy email이란? 웹훅의 X-Ssafy-Email에 저장된 이메일
+     */
+    public String getGitlabApiTokenBySsafyEmail(String ssafyEmail) {
+        User user = userRepository.findByEmail(ssafyEmail)
+                .orElseThrow(() -> new BusinessException("해당하는 사용자가 없습니다."));
 
-		UserInfo userInfo = userInfoRepository.findByUser_Id(user.getId())
-				.orElseThrow(() -> new BusinessException("사용자와 일치하는 정보가 없습니다."));
+        UserInfo userInfo = userInfoRepository.findByUser_Id(user.getId())
+                .orElseThrow(() -> new BusinessException("사용자와 일치하는 정보가 없습니다."));
 
-		return userInfo.getGitlabApiAccessToken();
-	}
+        return userInfo.getGitlabApiAccessToken();
+    }
+
+    /**
+     * MR 설명 자동 생성을 위한 사용자 MR Template 조회
+     * 이때 ssafy email이란? 웹훅의 X-Ssafy-Email에 저장된 이메일
+     */
+    public String getMrTemplateBySsafyEmail(String ssafyEmail) {
+        User user = userRepository.findByEmail(ssafyEmail)
+                .orElseThrow(() -> new BusinessException("해당하는 사용자가 없습니다."));
+
+        UserInfo userInfo = userInfoRepository.findByUser_Id(user.getId())
+                .orElseThrow(() -> new BusinessException("사용자와 일치하는 정보가 없습니다."));
+
+        return userInfo.getMrTemplate();
+    }
+
+    /**
+     * MR 설명 자동 생성을 위한 사용자 MR Template 조회
+     * 이때 ssafy email이란? 웹훅의 X-Ssafy-Email에 저장된 이메일
+     */
+    public MrGeneratorResponse getGeneratorResponse() {
+        int userId = CustomUtil.getCurrentUserId();
+        UserInfo userInfo = userInfoRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."));
+
+        return MrGeneratorResponse.from(userInfo);
+    }
 }

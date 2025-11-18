@@ -3,6 +3,7 @@ package com.closeai.ecoprompt.mr.service;
 import com.closeai.ecoprompt.mr.model.dto.request.GitlabMergeRequestEvent;
 import com.closeai.ecoprompt.mr.model.dto.response.AiMrAnalyzeResponse;
 import com.closeai.ecoprompt.mr.model.dto.response.GitlabMrChangesResponse;
+import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,10 +16,14 @@ public class MergeRequestService {
     private final GitlabApiClient gitlabApiClient;
     private final AiClient aiClient;
 
+    private final UserInfoService userInfoService;
+
     private static final String MARKER_START = "<!-- auto-ai-start -->";
     private static final String MARKER_END = "<!-- auto-ai-end -->";
 
-    public void processMergeRequestEvent(GitlabMergeRequestEvent event, String gitlabApiToken) {
+    public void processMergeRequestEvent(GitlabMergeRequestEvent event, String ssafyEmail) {
+        String gitlabApiToken = userInfoService.getGitlabApiTokenBySsafyEmail(ssafyEmail);
+
         Long projectId = event.getProject().getId();
         Integer mrIid = event.getObject_attributes().getIid();
         String title = event.getObject_attributes().getTitle();
@@ -35,7 +40,8 @@ public class MergeRequestService {
         log.info("Diff text: {}", diffText);
 
         // 3) AI 모델 호출 (MR 설명 + diff 기반 분석/요약/리뷰)
-        String aiOutput = aiClient.analyzeMr(title, originalDescription, diffText);
+        String mrTemplate = userInfoService.getMrTemplateBySsafyEmail(ssafyEmail);
+        String aiOutput = aiClient.analyzeMr(title, originalDescription, diffText, mrTemplate);
 
         AiMrAnalyzeResponse aiResponse = new AiMrAnalyzeResponse();
         aiResponse.setAdditionalSection(aiOutput);

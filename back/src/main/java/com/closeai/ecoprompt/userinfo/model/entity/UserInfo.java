@@ -68,6 +68,9 @@ public class UserInfo extends BaseEntity {
 	@Column(name = "gitlab_api_access_token")
 	private String gitlabApiAccessToken;
 
+	@Column(name = "mr_template", columnDefinition = "TEXT")
+	private String mrTemplate;
+
 	// FK: user_info.user_id -> user.user_id (1:1 가정)
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
