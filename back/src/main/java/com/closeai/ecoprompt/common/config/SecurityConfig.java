@@ -54,7 +54,7 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> web.ignoring()
-                .requestMatchers("/api/logs/frontend", "/api/v1/gitlab/webhook");
+                .requestMatchers("/api/logs/frontend");
     }
 
     @Bean
