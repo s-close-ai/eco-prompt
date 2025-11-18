@@ -12,7 +12,7 @@ from app.services.evaluate import evaluate_model
 
 router = APIRouter()
 
-@router.post("", response_model=TrainResponse, status_code=200)
+@router.post("", response_model=TrainResponse)
 async def train(request: TrainRequest, tokenizer=Depends(get_tokenizer_2)):
     """모델 학습하기"""
 
