@@ -16,7 +16,7 @@ import com.closeai.ecoprompt.ai.model.dto.request.InputJudgeRequest;
 import com.closeai.ecoprompt.ai.model.dto.request.LlmRequest;
 import com.closeai.ecoprompt.ai.model.dto.response.InputJudgeResponse;
 import com.closeai.ecoprompt.ai.model.dto.response.LlmResponse;
-import com.closeai.ecoprompt.ai.model.event.EachModelEvent;
+import com.closeai.ecoprompt.ai.model.event.EachModelErrorEvent;
 import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.ModelCancelledEvent;
@@ -65,7 +65,7 @@ public class AiService {
 
 	/**
 	 * JudgePrompt AI 모델 하나 호출하는 함수
-	 * */
+	 */
 	public Mono<InputJudgeResponse> callJudgeModelOnly(String messageUUID, String content, Integer userId,
 		boolean isFirstChatting) {
 		// 1. 이 작업은 SSE를 사용하지 않으므로 'initializeTask'를 호출하지 않습니다.
@@ -90,14 +90,14 @@ public class AiService {
 				AppLogger.error("단독 Judge 모델 호출 실패. UUID :  " + messageUUID);
 				// 3. 에러 이벤트도 sse=false로 발행
 				eventPublisher.publishEvent(
-					new EachModelEvent(this, messageUUID, MessageSender.USER, userId, false) // sse = false
+					new EachModelErrorEvent(this, messageUUID, MessageSender.USER, userId, false) // sse = false
 				);
 			});
 	}
 
 	/**
 	 * LLM 모델만 단독으로 호출하는 함수
-	 * */
+	 */
 
 	@Async
 	public void callLlmModelOnly(String messageUUID, String userInput, Integer userId) {
@@ -186,7 +186,7 @@ public class AiService {
 					sseService.sendEventToClient(messageUUID, "JUDGE_ERROR", "ERROR");
 				}
 				eventPublisher.publishEvent(
-					new EachModelEvent(this, messageUUID, MessageSender.USER, userId, sse)
+					new EachModelErrorEvent(this, messageUUID, MessageSender.USER, userId, sse)
 				);
 			})
 			.subscribe();
@@ -243,7 +243,7 @@ public class AiService {
 				AppLogger.error("llm 모델 스트리밍 오류. UUID : " + messageUUID);
 				sseService.sendEventToClient(messageUUID, "LLM_ERROR", "ERROR");
 				eventPublisher.publishEvent(
-					new EachModelEvent(this, messageUUID, MessageSender.AI, userId, true)
+					new EachModelErrorEvent(this, messageUUID, MessageSender.AI, userId, true)
 				);
 			})
 			.doOnComplete(() -> {
