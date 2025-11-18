@@ -69,10 +69,10 @@ export function SidebarCollapsed() {
         </button>
         <button
           className="sidebar-icon-btn"
-          aria-label="북마크"
-          onClick={() => handleNavigate('/bookmark')}
+          aria-label="MR 자동 생성기"
+          onClick={() => handleNavigate('/mr-generator')}
         >
-          <img src="/icons/bookmark.svg" alt="bookmark" width={20} height={20} />
+          <img src="/icons/bookmark.svg" alt="mr-generator" width={20} height={20} />
         </button>
         <button
           className="sidebar-icon-btn"

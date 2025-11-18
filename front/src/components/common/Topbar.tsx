@@ -9,8 +9,8 @@ export default function Topbar() {
   const location = useLocation();
   const mode = useDeviceMode();
 
-  // 설정, 대시보드, 북마크 페이지에서는 채팅 아이콘 표시 (단어 포함 체크)
-  const pathsToShowChat = ['settings', 'dashboard', 'bookmark'];
+  // 설정, 대시보드, MR 생성기 페이지에서는 채팅 아이콘 표시 (단어 포함 체크)
+  const pathsToShowChat = ['settings', 'dashboard', 'mr-generator'];
   const showChatIcon =
     pathsToShowChat.some((path) => location.pathname.includes(path)) ||
     location.search.includes('tab');
