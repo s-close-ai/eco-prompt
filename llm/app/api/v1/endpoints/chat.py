@@ -15,7 +15,7 @@ from app.core.config import base_settings
 
 router = APIRouter()
 
-@router.post("/vllm", status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def chat_vllm(request: ChatRequest, llm_engine_1=Depends(get_llm_engine_1), llm_engine_2=Depends(get_llm_engine_2), tokenizer_1=Depends(get_tokenizer_1), tokenizer_2=Depends(get_tokenizer_2), mongo_client=Depends(get_mongodb)):
     """
     스트림 답변 제공 (동시성 제어 포함)
