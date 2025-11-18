@@ -1,6 +1,5 @@
 package com.closeai.ecoprompt.security.oauth;
 
-import a306.dependency_logger_starter.logging.annotation.NoLogging;
 import com.closeai.ecoprompt.bookmark.model.entity.Bookmark;
 import com.closeai.ecoprompt.bookmark.repository.BookmarkRepository;
 import com.closeai.ecoprompt.project.model.entity.Project;
@@ -32,7 +31,6 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-@NoLogging
 public class SsafyOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private final UserRepository userRepository;

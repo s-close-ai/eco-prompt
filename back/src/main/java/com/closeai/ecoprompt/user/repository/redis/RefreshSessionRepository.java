@@ -1,6 +1,5 @@
 package com.closeai.ecoprompt.user.repository.redis;
 
-import a306.dependency_logger_starter.logging.annotation.NoLogging;
 import com.closeai.ecoprompt.user.model.entity.RefreshSession;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +15,6 @@ import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
-@NoLogging
 public class RefreshSessionRepository {
 
     private final StringRedisTemplate srt;
