@@ -27,6 +27,13 @@ git clone https://github.com/EleutherAI/lm-evaluation-harness.git
 cd lm-evaluation-harness
 
 uv pip install -e .
+
+# pdf 생성을 위한 라이브러리 설치
+uv add reportlab
+
+# 글꼴 설치
+# 설치 방법
+sudo apt-get install fonts-nanum fonts-nanum-coding
 ```
 
 

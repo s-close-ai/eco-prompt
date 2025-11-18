@@ -10,6 +10,9 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     git \
+    fonts-nanum \
+    fontconfig \
+    && fc-cache -fv \
     && rm -rf /var/lib/apt/lists/*
 
 RUN git clone https://github.com/EleutherAI/lm-evaluation-harness.git
