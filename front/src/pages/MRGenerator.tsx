@@ -7,7 +7,7 @@ import '@/styles/pages/mr-generator.css';
 
 const WEBHOOK_URL = 'https://ecoprompt.duckdns.org/api/v1/gitlab/webhook';
 const GUIDE_URL =
-  'https://eight-swoop-4a5.notion.site/MR-2af5477005b080b69672c5e7dd4467c1?source=copy_link';
+  'https://elfin-skiff-309.notion.site/Ecoprompt-MR-1-2af7f9a7ee128129859afbe34ccf2c30?source=copy_link';
 
 const DEFAULT_TEMPLATE = `## 🔘Part
 
@@ -203,7 +203,7 @@ export default function MRGenerator() {
           className="mr-generator-guide-link"
         >
           <img src="/icons/help.svg" alt="" aria-hidden width={20} height={20} />
-          사용 설명서
+          사용자 메뉴얼
         </a>
       </div>
 
