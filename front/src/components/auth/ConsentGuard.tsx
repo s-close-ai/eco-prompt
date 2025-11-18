@@ -50,7 +50,7 @@ export default function ConsentGuard({ children }: ConsentGuardProps) {
             fontWeight: 600,
           }}
         >
-          로딩 중...
+          로딩 중
         </div>
       </div>
     );

@@ -6,6 +6,18 @@
   padding: 12px 12px 0 12px;
   overflow: visible;
   position: relative;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+/* 로딩 중/빈 상태 스타일 */
+.eco-pick-container.eco-pick-loading {
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #5e9462;
+  text-align: center;
 }
 
 .eco-pick-carousel {

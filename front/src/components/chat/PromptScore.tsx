@@ -1,4 +1,5 @@
 import '@/styles/components/chat/prompt-score.css';
+import type { ScoreState } from '@/types/chat.types';
 
 interface PromptScoreProps {
   scores?: {
@@ -8,10 +9,58 @@ interface PromptScoreProps {
     sc_ec_4: number; // 안전성
   };
   sc_ec_0?: number;
+  scoreState?: ScoreState;
+  onRetry?: () => void;
 }
 
-export default function PromptScore({ scores, sc_ec_0 }: PromptScoreProps) {
-  // scores가 없거나 totalScore가 없으면 렌더링하지 않음
+export default function PromptScore({ scores, sc_ec_0, scoreState, onRetry }: PromptScoreProps) {
+  // scoreState가 있으면 우선적으로 사용
+  if (scoreState) {
+    if (scoreState.status === 'loading') {
+      return (
+        <div className="prompt-score-wrapper">
+          <div className="prompt-score-container">
+            <div className="prompt-score-header">
+              <span className="prompt-score-title">프롬프트 점수</span>
+              <div className="prompt-score-loading">
+                <div className="prompt-score-spinner"></div>
+              </div>
+            </div>
+            <div className="prompt-score-loading-text">평가 중...</div>
+          </div>
+        </div>
+      );
+    }
+
+    if (scoreState.status === 'error') {
+      return (
+        <div className="prompt-score-wrapper">
+          <div className="prompt-score-container prompt-score-error">
+            <div className="prompt-score-header">
+              <span className="prompt-score-title">프롬프트 점수</span>
+              <span className="prompt-score-error-badge">평가 실패</span>
+            </div>
+            <div className="prompt-score-error-message">
+              {scoreState.error || '점수 평가에 실패했습니다.'}
+            </div>
+            {onRetry && (
+              <button className="prompt-score-retry-button" onClick={onRetry}>
+                다시 평가하기
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // scoreState.status === 'success'인 경우
+    if (scoreState.score) {
+      scores = scoreState.score;
+      sc_ec_0 = scoreState.score.sc_ec_0;
+    }
+  }
+
+  // 기존 로직: scores가 없거나 totalScore가 없으면 렌더링하지 않음
   if (!scores || sc_ec_0 === undefined || sc_ec_0 === null) {
     return null;
   }

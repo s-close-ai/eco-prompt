@@ -13,6 +13,7 @@ interface MessageListProps {
   firstNewMessageId: string | null;
   onEditAndResendMessage: (messageId: string, newMessage: string) => void;
   onRetry: (errorMessageId: string) => void;
+  onScoreRetry?: (userMessageId: string) => void;
 }
 
 /**
@@ -25,6 +26,7 @@ export function MessageList({
   firstNewMessageId,
   onEditAndResendMessage,
   onRetry,
+  onScoreRetry,
 }: MessageListProps) {
   const grouped: Array<{ 
     element: React.JSX.Element; 
@@ -64,7 +66,19 @@ export function MessageList({
           isLastUserMessage={msg.id === lastUserMessageId}
         />,
       ];
-      if (msg.score) {
+
+      // 항상 PromptScore를 렌더링 (scoreState 또는 score가 있을 때)
+      if (msg.scoreState) {
+        // scoreState가 있으면 우선 사용
+        currentGroup.push(
+          <PromptScore
+            key={`score-${msg.id}`}
+            scoreState={msg.scoreState}
+            onRetry={onScoreRetry ? () => onScoreRetry(msg.id) : undefined}
+          />,
+        );
+      } else if (msg.score) {
+        // 기존 방식: score만 있는 경우
         currentGroup.push(
           <PromptScore
             key={`score-${msg.id}`}
