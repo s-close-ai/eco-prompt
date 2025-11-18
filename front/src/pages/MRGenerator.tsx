@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import Button from '@/components/common/Button';
+import { getMRGeneratorSettings, saveMRGeneratorSettings } from '@/services/api/mr-generator';
+import { useToast } from '@/context/ToastContext';
 import '@/styles/pages/mr-generator.css';
 
 const WEBHOOK_URL = 'https://ecoprompt.duckdns.org/api/v1/gitlab/webhook';
@@ -39,68 +41,135 @@ Closes 지라번호-숫자`;
 
 export default function MRGenerator() {
   const mode = useDeviceMode();
-  const [apiToken, setApiToken] = useState('');
-  const [secretToken, setSecretToken] = useState('');
-  const [template, setTemplate] = useState('');
+  const { showToast } = useToast();
+  const [gitlabApiAccessToken, setGitlabApiAccessToken] = useState('');
+  const [webhookSecretToken, setWebhookSecretToken] = useState('');
+  const [mrTemplate, setMrTemplate] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 초기 값 저장 (변경 감지용)
+  const [initialGitlabApiAccessToken, setInitialGitlabApiAccessToken] = useState('');
+  const [initialWebhookSecretToken, setInitialWebhookSecretToken] = useState('');
+  const [initialMrTemplate, setInitialMrTemplate] = useState('');
+
+  // 초기 설정 불러오기
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getMRGeneratorSettings();
+        const apiToken = data.gitlabApiAccessToken || '';
+        const secretToken = data.webhookSecretToken || '';
+        const template = data.mrTemplate || '';
+
+        setGitlabApiAccessToken(apiToken);
+        setWebhookSecretToken(secretToken);
+        setMrTemplate(template);
+
+        // 초기 값 저장
+        setInitialGitlabApiAccessToken(apiToken);
+        setInitialWebhookSecretToken(secretToken);
+        setInitialMrTemplate(template);
+      } catch (error) {
+        console.error('설정 불러오기 실패:', error);
+        // 에러 시 빈 값으로 시작
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   const handleCopyWebhookUrl = async () => {
     try {
       await navigator.clipboard.writeText(WEBHOOK_URL);
-      alert('웹훅 URL이 복사되었습니다.');
+      showToast('웹훅 URL이 복사되었습니다.', 'success');
     } catch (error) {
       console.error('복사 실패:', error);
-      alert('복사에 실패했습니다.');
+      showToast('복사에 실패했습니다.', 'error');
     }
   };
 
   const handleGenerateSecretToken = () => {
     const uuid = crypto.randomUUID();
-    setSecretToken(uuid);
+    setWebhookSecretToken(uuid);
+    showToast('Secret Token이 생성되었습니다.', 'success');
   };
 
   const handleCopySecretToken = async () => {
-    if (!secretToken) {
-      alert('먼저 Secret Token을 생성해주세요.');
+    if (!webhookSecretToken) {
+      showToast('먼저 Secret Token을 생성해주세요.', 'warning');
       return;
     }
     try {
-      await navigator.clipboard.writeText(secretToken);
-      alert('Secret Token이 복사되었습니다.');
+      await navigator.clipboard.writeText(webhookSecretToken);
+      showToast('Secret Token이 복사되었습니다.', 'success');
     } catch (error) {
       console.error('복사 실패:', error);
-      alert('복사에 실패했습니다.');
+      showToast('복사에 실패했습니다.', 'error');
     }
   };
 
   const handleApplyDefaultTemplate = () => {
-    setTemplate(DEFAULT_TEMPLATE);
+    setMrTemplate(DEFAULT_TEMPLATE);
+    showToast('기본 템플릿이 적용되었습니다.', 'success');
   };
 
   const handleSave = async () => {
-    if (!apiToken.trim()) {
-      alert('API 토큰을 입력해주세요.');
+    if (!gitlabApiAccessToken.trim()) {
+      showToast('API 토큰을 입력해주세요.', 'warning');
       return;
     }
 
-    if (!secretToken.trim()) {
-      alert('Secret Token을 입력하거나 생성해주세요.');
+    if (!webhookSecretToken.trim()) {
+      showToast('Secret Token을 입력하거나 생성해주세요.', 'warning');
       return;
     }
 
-    if (!template.trim()) {
-      alert('템플릿을 입력해주세요.');
+    if (!mrTemplate.trim()) {
+      showToast('템플릿을 입력해주세요.', 'warning');
       return;
     }
 
     try {
-      // TODO: 백엔드 API 호출
-      // await saveMRGeneratorSettings({ apiToken, secretToken, template });
-      alert('설정이 저장되었습니다.');
+      await saveMRGeneratorSettings({
+        gitlabApiAccessToken,
+        webhookSecretToken,
+        mrTemplate,
+      });
+      showToast('설정이 저장되었습니다.', 'success');
+
+      // 저장 성공 후 초기값 업데이트 (변경 감지 초기화)
+      setInitialGitlabApiAccessToken(gitlabApiAccessToken);
+      setInitialWebhookSecretToken(webhookSecretToken);
+      setInitialMrTemplate(mrTemplate);
     } catch (error) {
       console.error('저장 실패:', error);
-      alert('설정 저장에 실패했습니다.');
+      showToast('설정 저장에 실패했습니다.', 'error');
     }
   };
+
+  // 변경 사항 확인
+  const hasChanges =
+    gitlabApiAccessToken !== initialGitlabApiAccessToken ||
+    webhookSecretToken !== initialWebhookSecretToken ||
+    mrTemplate !== initialMrTemplate;
+
+  // 로딩 중
+  if (isLoading) {
+    return (
+      <div className="mr-generator-page">
+        <div className="mr-generator-page__header">
+          <div className="mr-generator-page__title">
+            <img src="/icons/mr_create.svg" alt="" aria-hidden width={24} height={24} />
+            <h2>MR 자동 생성기</h2>
+          </div>
+        </div>
+        <div className="mr-generator-loading">로딩 중...</div>
+      </div>
+    );
+  }
 
   // 모바일에서는 접근 불가
   if (mode === 'mobile') {
@@ -149,12 +218,12 @@ export default function MRGenerator() {
             GitLab에서 발급받은 Personal Access Token을 입력하세요.
           </p>
           <input
-            id="api-token"
+            id="gitlabApiAccessToken"
             type="password"
             className="mr-generator-input"
             placeholder="API 토큰을 입력하세요"
-            value={apiToken}
-            onChange={(e) => setApiToken(e.target.value)}
+            value={gitlabApiAccessToken}
+            onChange={(e) => setGitlabApiAccessToken(e.target.value)}
           />
         </section>
 
@@ -201,12 +270,12 @@ export default function MRGenerator() {
           </div>
           <div className="mr-generator-input-group">
             <input
-              id="secret-token"
+              id="webhookSecretToken"
               type="text"
               className="mr-generator-input"
               placeholder="Secret Token을 입력하거나 UUID를 생성하세요"
-              value={secretToken}
-              onChange={(e) => setSecretToken(e.target.value)}
+              value={webhookSecretToken}
+              onChange={(e) => setWebhookSecretToken(e.target.value)}
             />
             <button
               className="mr-generator-copy-btn"
@@ -234,24 +303,24 @@ export default function MRGenerator() {
             </Button>
           </div>
           <textarea
-            id="template"
+            id="mrTemplate"
             className="mr-generator-textarea"
             placeholder="MR 템플릿을 입력하세요"
-            value={template}
+            value={mrTemplate}
             onChange={(e) => {
               if (e.target.value.length <= 500) {
-                setTemplate(e.target.value);
+                setMrTemplate(e.target.value);
               }
             }}
             rows={12}
             maxLength={500}
           />
-          <div className="mr-generator-char-count">{template.length} / 500</div>
+          <div className="mr-generator-char-count">{mrTemplate.length} / 500</div>
         </section>
 
         {/* 저장 버튼 */}
         <div className="mr-generator-actions">
-          <Button variant="primary" size="mr-generator" onClick={handleSave}>
+          <Button variant="primary" size="mr-generator" onClick={handleSave} isDisabled={!hasChanges}>
             저장
           </Button>
         </div>

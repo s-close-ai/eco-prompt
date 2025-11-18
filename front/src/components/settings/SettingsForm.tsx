@@ -4,6 +4,7 @@ import TextArea from '@/components/common/TextArea';
 import Toggle from '@/components/common/Toggle';
 import Tooltip from '@/components/common/Tooltip';
 import { toggleSharingPrompt, setPersonalPrompt } from '@/services/api/user-info';
+import { useToast } from '@/context/ToastContext';
 import '@/styles/components/settings/settings-form.css';
 
 export type SettingsFormData = {
@@ -28,6 +29,7 @@ export default function SettingsForm({
   onAutoSave,
   onClose,
 }: SettingsFormProps) {
+  const { showToast } = useToast();
   const [promptPublic, setPromptPublic] = useState(initialData?.promptPublic ?? false);
   const [personalizedPrompt, setPersonalizedPrompt] = useState(
     initialData?.personalizedPrompt ?? '',
@@ -105,6 +107,7 @@ export default function SettingsForm({
       // API 호출하여 프롬프트 공개 여부 변경
       await toggleSharingPrompt();
       setPromptPublic(value);
+      showToast('프롬프트 공개 여부가 변경되었습니다.', 'success');
       // 토글 변경 시 자동 저장 (페이지 닫지 않음)
       onAutoSave?.({
         privacyConsent,
@@ -113,7 +116,7 @@ export default function SettingsForm({
       });
     } catch (error) {
       // 오류 발생 시 원래 상태로 되돌리기
-      alert('프롬프트 공개 여부 변경에 실패했습니다.');
+      showToast('프롬프트 공개 여부 변경에 실패했습니다.', 'error');
     }
   };
 
@@ -121,13 +124,14 @@ export default function SettingsForm({
     try {
       // API 호출하여 개인화 프롬프트 저장
       await setPersonalPrompt({ personalPrompt: personalizedPrompt.trim() });
+      showToast('설정이 저장되었습니다.', 'success');
       onSubmit?.({
         privacyConsent,
         promptPublic,
         personalizedPrompt: personalizedPrompt.trim(),
       });
     } catch (error) {
-      alert('개인화 프롬프트 저장에 실패했습니다.');
+      showToast('개인화 프롬프트 저장에 실패했습니다.', 'error');
     }
   };
 
