@@ -7,7 +7,7 @@ def parse_router_response(response: str) -> str:
     response_clean = response.lower().strip()
     
     # 가능한 패턴들을 체크
-    valid_types = ["code", "algorithm", "ssafy", "general"]
+    valid_types = ["code", "algorithm", "math", "ssafy", "general"]
     
     # 직접 매칭 시도
     for valid_type in valid_types:
@@ -19,6 +19,8 @@ def parse_router_response(response: str) -> str:
         return "code"
     elif any(keyword in response_clean for keyword in ["알고리즘", "자료구조", "문제해결"]):
         return "algorithm"
+    elif any(keyword in response_clean for keyword in ["수학", "계산", "문제"]):
+        return "math"
     elif any(keyword in response_clean for keyword in ["ssafy", "싸피", "교육", "과정"]):
         return "ssafy"
     else:
