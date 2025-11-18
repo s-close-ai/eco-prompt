@@ -2,6 +2,7 @@ package com.closeai.ecoprompt.message.controller;
 
 import java.util.List;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +21,7 @@ import com.closeai.ecoprompt.message.model.dto.request.UpdateMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.response.JudgeOnlyResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SearchMessageResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SubmitMessageResponse;
+import com.closeai.ecoprompt.message.service.FileService;
 import com.closeai.ecoprompt.message.service.MessageService;
 import com.closeai.ecoprompt.message.service.SseService;
 
@@ -34,8 +36,9 @@ public class MessageController implements MessageControllerDocs {
 
 	private final MessageService messageService;
 	private final SseService sseService;
+	private final FileService fileService;
 
-	@PostMapping("/input")
+	@PostMapping(value = "/input", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ApiResponse<SubmitMessageResponse>> submitMessage(
 		@RequestBody @Valid SubmitMessageRequest request) {
 
