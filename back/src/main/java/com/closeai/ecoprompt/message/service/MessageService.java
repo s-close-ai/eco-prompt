@@ -1,8 +1,11 @@
 package com.closeai.ecoprompt.message.service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,17 +26,21 @@ import com.closeai.ecoprompt.common.exception.BusinessException;
 import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.model.dto.request.SubmitMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.request.UpdateMessageRequest;
+import com.closeai.ecoprompt.message.model.dto.request.UploadFileInfo;
 import com.closeai.ecoprompt.message.model.dto.response.GetMessageResponse;
 import com.closeai.ecoprompt.message.model.dto.response.GetScoreInfo;
 import com.closeai.ecoprompt.message.model.dto.response.JudgeOnlyResponse;
 import com.closeai.ecoprompt.message.model.dto.response.MessageKeywordDto;
 import com.closeai.ecoprompt.message.model.dto.response.SearchMessageResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SubmitMessageResponse;
+import com.closeai.ecoprompt.message.model.entity.FileEvent;
+import com.closeai.ecoprompt.message.model.entity.FileEventStatus;
 import com.closeai.ecoprompt.message.model.entity.Message;
 import com.closeai.ecoprompt.message.model.entity.MessageDocument;
 import com.closeai.ecoprompt.message.model.entity.MessageSender;
 import com.closeai.ecoprompt.message.model.entity.MessageStatus;
 import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
+import com.closeai.ecoprompt.message.repository.mongo.FileEventRepository;
 import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
 import com.closeai.ecoprompt.mileage.service.MileageService;
 import com.closeai.ecoprompt.score.service.ScoreService;
@@ -50,19 +57,23 @@ public class MessageService {
 	private final AiService aiService;
 	private final ChattingService chattingService;
 	private final UserInfoService userInfoService;
-
-	private final MessageJpaRepository messageJpaRepository;
-	private final MessageMongoRepository messageMongoRepository;
-
-	private static final int MESSAGE_PAGE_SIZE = 10;
-	private static final int MESSAGE_SNIPPET_SIZE = 50;
-	private final ChattingRepository chattingRepository;
+	private final FileService fileService;
 	private final ScoreService scoreService;
 	private final MileageService mileageService;
 
+	private final MessageJpaRepository messageJpaRepository;
+	private final MessageMongoRepository messageMongoRepository;
+	private final ChattingRepository chattingRepository;
+	private final FileEventRepository fileEventRepository;
+
+	private final MessageEventHandler messageEventHandler;
+
+	private static final int MESSAGE_PAGE_SIZE = 10;
+	private static final int MESSAGE_SNIPPET_SIZE = 50;
+
 	/**
 	 * 사용자 입력에 대한 API 처리 함수
-	 * */
+	 */
 	@Transactional
 	public SubmitMessageResponse submitMessage(SubmitMessageRequest messageCommand) {
 
@@ -71,6 +82,7 @@ public class MessageService {
 		String content = messageCommand.content();
 		Integer userId = CustomUtil.getCurrentUserId();
 		boolean isFirstChatting = (chattingId == null);
+		List<UploadFileInfo> files = messageCommand.uploadFileInfoList();
 
 		//1. chattingID가 null인 경우 chatting 저장
 		Chatting chatting = chattingService.getOrCreateChatting(chattingId, projectId);
@@ -93,15 +105,24 @@ public class MessageService {
 		//5. 사용자에 대한 프롬프트 수 + 1 증가
 		userInfoService.increasePromptCnt(userId);
 
-		//6. JudgeModel 호출
-		aiService.callAiModel(messageUUID, content, userId, isFirstChatting);
+		//6. 저장된 파일 정보로 ID 값 추출 후 KEY값 가져오기
+		List<String> s3Keys = new ArrayList<>();
+		if (files != null && !files.isEmpty()) {
+			List<Long> fileIdList = files.stream()
+				.map(UploadFileInfo::fileId)
+				.toList();
+
+			s3Keys = fileService.getFileKeyAndUpdateMessageUUID(fileIdList, messageUUID);
+		}
+		//6. 비동기 작업 실행(LLM, JUDGE, OCR)
+		triggerAsyncWorkflows(messageUUID, content, userId, isFirstChatting, s3Keys);
 
 		return new SubmitMessageResponse(chattingId, messageUUID);
 	}
 
 	/**
 	 * 채팅방 내부에 있는 메시지 조회 함수
-	 * */
+	 */
 	public Page<GetMessageResponse> getMessages(Long chattingId, Integer page) {
 
 		AppLogger.start(chattingId + " 채팅방의 " + page + "페이지 조회");
@@ -140,7 +161,7 @@ public class MessageService {
 
 	/**
 	 * 사용자 입력 수정 API 처리 함수
-	 * */
+	 */
 	@Transactional
 	public SubmitMessageResponse updateMessage(UpdateMessageRequest messageCommand) {
 
@@ -178,7 +199,7 @@ public class MessageService {
 
 	/**
 	 * 메시지 키워드 검색 API 함수
-	 * */
+	 */
 	public List<SearchMessageResponse> searchMessage(String keyword) {
 
 		Integer userId = CustomUtil.getCurrentUserId();
@@ -212,7 +233,7 @@ public class MessageService {
 
 	/**
 	 * Judge 메시지 호출 API 함수
-	 * */
+	 */
 	public Mono<JudgeOnlyResponse> updateJudgeResult(UpdateMessageRequest messageCommand) {
 
 		Long chattingId = messageCommand.chattingId();
@@ -244,7 +265,7 @@ public class MessageService {
 
 	/**
 	 * LLM 메시지 호출 API 함수
-	 * */
+	 */
 	public void updateLLMResult(UpdateMessageRequest messageCommand) {
 		Long chattingId = messageCommand.chattingId();
 		String content = messageCommand.content();
@@ -258,7 +279,7 @@ public class MessageService {
 
 	/**
 	 * MongoDB에 저장된 메시지 조회
-	 * */
+	 */
 	private MessageDocument getMessageDocument(String messageUUID, MessageSender sender) {
 		return messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, sender)
 			.orElseThrow(() -> new BusinessException("저장된 메시지가 없습니다."));
@@ -266,7 +287,7 @@ public class MessageService {
 
 	/**
 	 * JPA에서 메시지 조회
-	 * */
+	 */
 	private Message getMessage(String messageUUID, MessageSender sender) {
 		return messageJpaRepository.findByMessageUUIDAndSenderType(messageUUID, sender)
 			.orElseThrow(() -> new BusinessException("저장된 메시지가 없습니다."));
@@ -274,7 +295,7 @@ public class MessageService {
 
 	/**
 	 * 오류 검사 함수
-	 * */
+	 */
 	private void validateMessageStatus(String messageUUID, MessageSender sender) {
 		MessageDocument message = getMessageDocument(messageUUID, sender);
 		if (!message.getStatus().equals(MessageStatus.ERROR)) {
@@ -284,7 +305,7 @@ public class MessageService {
 
 	/**
 	 * MYSQL과 MONGODB에 메시지 저장 함수
-	 * */
+	 */
 	private void saveMessage(String messageUUID, Chatting chatting, MessageSender messageSender, String content,
 		MessageStatus messageStatus, Integer userId) {
 
@@ -310,7 +331,7 @@ public class MessageService {
 
 	/**
 	 * MongoDB 기존의 메시지 값
-	 * */
+	 */
 	private void updateMessageContent(String messageUUID, String content) {
 
 		MessageDocument userDocument = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID,
@@ -341,7 +362,7 @@ public class MessageService {
 
 	/**
 	 * Message Content에서 내용을 자르는 함수
-	 * */
+	 */
 	private String createSnippet(String content, String keyword) {
 
 		if (content == null || keyword == null) {
@@ -380,7 +401,7 @@ public class MessageService {
 
 	/**
 	 * 메시지 검색 우선순위 계산하는 함수
-	 * */
+	 */
 	private Stream<SearchResultWrapper> processAndWrapChatting(
 		Chatting chatting, String lowerKeyword, Map<Long, String> messageContentMap
 	) {
@@ -414,6 +435,39 @@ public class MessageService {
 	}
 
 	private record SearchResultWrapper(SearchMessageResponse response, int priority) {
+	}
+
+	private void triggerAsyncWorkflows(String messageUUID, String content, Integer userId, boolean isFirstChatting,
+		List<String> s3KeyList) {
+
+		// 1. file이 있는지 없는지 확인
+		boolean hasFile = !s3KeyList.isEmpty();
+		Set<String> expectedTask = new HashSet<>(Set.of("JUDGE"));
+
+		if (hasFile) {
+			expectedTask.add("FILE_OCR");
+		} else {
+			expectedTask.add("LLM");
+		}
+
+		messageEventHandler.initializeTask(messageUUID, expectedTask);
+		// 2. AI Model 호출
+		aiService.callInputJudgeModel(messageUUID, content, userId, isFirstChatting, true);
+
+		// 3. Trigger File OCR
+		if (hasFile) {
+			FileEvent ocrJob = FileEvent.builder()
+				.messageUUID(messageUUID)
+				.userId(userId)
+				.status(FileEventStatus.OCR_PENDING)
+				.userInput(content)
+				.s3KeyList(s3KeyList)
+				.build();
+			fileEventRepository.save(ocrJob);
+			AppLogger.info("MongoDB에 FileEvent 등록 완료. messageUUID=" + messageUUID);
+		} else {
+			aiService.callLlmModel(messageUUID, content, userId);
+		}
 	}
 
 }
