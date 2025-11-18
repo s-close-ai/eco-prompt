@@ -208,6 +208,7 @@ export default function Chat() {
         type: 'user',
         message,
         timestamp: new Date(),
+        scoreState: { status: 'loading' }, // 즉시 점수 박스 공간 확보
       };
 
       const loadingMessage: ChatMessage = {
@@ -747,6 +748,63 @@ export default function Chat() {
     }
   };
 
+  const handleScoreRetry = async (userMessageId: string) => {
+    // 스트리밍 중이면 재시도 방지
+    const isCurrentlyStreaming = messages.some((m) => m.isStreaming);
+    if (isCurrentlyStreaming) {
+      return;
+    }
+
+    const userMessage = messages.find((m) => m.id === userMessageId);
+    if (!userMessage) return;
+
+    const actualMessageUUID = userMessage.messageUUID || userMessage.id;
+
+    // scoreState를 loading으로 설정
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === userMessageId
+          ? { ...m, scoreState: { status: 'loading' } }
+          : m
+      ),
+    );
+
+    try {
+      const { judgeMessage } = await import('@/services/api/message');
+      const response = await judgeMessage({
+        projectId: projectId ?? defaultProjectId!,
+        chattingId: Number(chattingId),
+        content: userMessage.message,
+        messageUUID: actualMessageUUID,
+      });
+
+      // 점수 업데이트
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === userMessageId
+            ? {
+                ...m,
+                score: response.data.scoreInfo,
+                scoreState: { status: 'success', score: response.data.scoreInfo }
+              }
+            : m
+        ),
+      );
+    } catch (error) {
+      console.error('Failed to retry score:', error);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === userMessageId
+            ? {
+                ...m,
+                scoreState: { status: 'error', error: '점수 평가에 실패했습니다.' }
+              }
+            : m
+        ),
+      );
+    }
+  };
+
   const handleEditAndResendMessage = async (messageId: string, newMessage: string) => {
     // 스트리밍 중이면 수정 및 재전송 방지
     const isCurrentlyStreaming = messages.some((m) => m.isStreaming);
@@ -870,7 +928,7 @@ export default function Chat() {
           <div className="chat-messages" ref={scrollContainerRef}>
             <div ref={messagesStartRef} />
             {isLoadingMore && (
-              <div style={{ textAlign: 'center', padding: '10px', color: '#999' }}>
+              <div style={{ textAlign: 'center', padding: '10px', color: '#5e9462', fontWeight: 600 }}>
                 이전 메시지 불러오는 중...
               </div>
             )}
@@ -881,6 +939,7 @@ export default function Chat() {
               firstNewMessageId={firstNewMessageIdRef.current}
               onEditAndResendMessage={handleEditAndResendMessage}
               onRetry={handleRetry}
+              onScoreRetry={handleScoreRetry}
             />
             <div ref={messagesEndRef} />
           </div>

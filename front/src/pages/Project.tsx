@@ -298,7 +298,7 @@ export default function Project() {
   }, [handleSendFromProject]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>로딩 중</div>;
   }
 
   if (error) {

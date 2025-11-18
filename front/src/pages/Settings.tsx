@@ -80,7 +80,7 @@ export default function Settings() {
     return (
       <div className="settings-page">
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-          로딩 중...
+          로딩 중
         </div>
       </div>
     );
