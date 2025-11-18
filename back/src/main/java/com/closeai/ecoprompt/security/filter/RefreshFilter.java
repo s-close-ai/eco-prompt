@@ -26,6 +26,12 @@ public class RefreshFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         AppLogger.start("REFRESH TOKEN을 통한 재발급 필터 진입");
 
+        String uri = req.getRequestURI();
+        if (uri.startsWith("/api/v1/gitlab/webhook")) {
+            chain.doFilter(req, res);
+            return;
+        }
+
         if (HttpMethod.POST.matches(req.getMethod())
                 && "/api/v1/auth/refresh".equals(req.getRequestURI())) {
             // roles/email/tokenVersion 이 JWT 내부에 있으면 null 전달 가능
