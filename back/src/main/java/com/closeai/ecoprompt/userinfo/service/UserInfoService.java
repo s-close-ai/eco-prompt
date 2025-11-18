@@ -1,5 +1,6 @@
 package com.closeai.ecoprompt.userinfo.service;
 
+import com.closeai.ecoprompt.mr.model.dto.request.MrGeneratorRequest;
 import com.closeai.ecoprompt.mr.model.dto.response.MrGeneratorResponse;
 import com.closeai.ecoprompt.user.model.entity.User;
 import com.closeai.ecoprompt.user.repository.UserRepository;
@@ -230,13 +231,27 @@ public class UserInfoService {
     }
 
     /**
-     * MR 설명 자동 생성을 위한 사용자 MR Template 조회
-     * 이때 ssafy email이란? 웹훅의 X-Ssafy-Email에 저장된 이메일
+     * MR 자동 생성기 페이지 데이터 조회
      */
     public MrGeneratorResponse getGeneratorResponse() {
         int userId = CustomUtil.getCurrentUserId();
         UserInfo userInfo = userInfoRepository.findByUser_Id(userId)
                 .orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."));
+
+        return MrGeneratorResponse.from(userInfo);
+    }
+
+    /**
+     * MR 자동 생성기 페이지 데이터 삽입
+     */
+    @Transactional
+    public MrGeneratorResponse updateMrAutoGeneratorConfig(MrGeneratorRequest mrGeneratorRequest) {
+        int userId = CustomUtil.getCurrentUserId();
+
+        UserInfo userInfo = userInfoRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new BusinessException("해당하는 사용자가 없습니다."));
+
+        userInfo.updateMrGeneratorConfig(mrGeneratorRequest);
 
         return MrGeneratorResponse.from(userInfo);
     }

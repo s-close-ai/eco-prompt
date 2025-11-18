@@ -9,9 +9,12 @@ public record MrGeneratorResponse(
 ) {
 
     public static MrGeneratorResponse from(UserInfo userInfo) {
+        String webhookSecretToken = userInfo.getWebhookSecretToken();
+        String gitlabApiAccessToken = userInfo.getGitlabApiAccessToken();
+
         return new MrGeneratorResponse(
-                userInfo.getWebhookSecretToken(),
-                userInfo.getGitlabApiAccessToken(),
+                webhookSecretToken == null || webhookSecretToken.isEmpty() ? "" : webhookSecretToken,
+                gitlabApiAccessToken == null || gitlabApiAccessToken.isEmpty() ? "" : "***" ,
                 userInfo.getMrTemplate()
         );
     }
