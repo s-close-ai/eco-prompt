@@ -16,3 +16,4 @@ vllm==0.10.2
 pymongo>=4.15.3
 dnspython>=2.8.0
 bitsandbytes>=0.48.1
+reportlab>=4.4.5
