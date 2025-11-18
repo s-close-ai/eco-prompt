@@ -3,7 +3,6 @@ package com.closeai.ecoprompt.message.model.dto.request;
 import java.util.List;
 
 import org.hibernate.validator.constraints.Length;
-import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Size;
@@ -20,7 +19,7 @@ public record SubmitMessageRequest(
 	String content,
 
 	@Size(max = 3)
-	List<MultipartFile> files
+	List<UploadFileInfo> uploadFileInfoList
 ) {
 
 }
