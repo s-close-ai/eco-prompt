@@ -205,6 +205,9 @@ public class MessageService {
 		// 2. 기존에 있는 chatting의 updatedAt 변경
 		chattingService.updateUpdateAt(chattingId);
 
+		// 3. 생성된 AI 답변 삭제하기
+		fileService.deleteLLMFile(messageUUID);
+
 		// 3. JudgeModel 호출
 		aiService.callAiModel(messageUUID, content, userId, false);
 
@@ -281,13 +284,15 @@ public class MessageService {
 	 * LLM 메시지 호출 API 함수
 	 */
 	public void updateLLMResult(UpdateMessageRequest messageCommand) {
-		Long chattingId = messageCommand.chattingId();
 		String content = messageCommand.content();
 		String messageUUID = messageCommand.messageUUID();
 		Integer userId = CustomUtil.getCurrentUserId();
 
 		// 1. 기존의 메시지 상태가 ERROR 인지 확인
 		validateMessageStatus(messageUUID, MessageSender.AI);
+		// 2. LLM 파일 삭제하기
+		fileService.deleteLLMFile(messageUUID);
+
 		aiService.callLlmModelOnly(messageUUID, content, userId);
 	}
 

@@ -46,4 +46,8 @@ public class File extends BaseEntity {
 	public void updateMessageUUID(String messageUUID) {
 		this.messageUUID = messageUUID;
 	}
+
+	public void delete() {
+		this.isDeleted = 'Y';
+	}
 }

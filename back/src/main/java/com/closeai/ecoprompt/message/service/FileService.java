@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -79,6 +80,9 @@ public class FileService {
 		return new UploadFileResponse(uploadUrl, savedFileName, mysqlSaveFile.getId());
 	}
 
+	/**
+	 * File 테이블의 값을 조회 DTO 변환 함수
+	 * */
 	@Transactional(readOnly = true)
 	public List<FileMessage> convertFilesToDtos(List<File> fileList) {
 
@@ -123,6 +127,21 @@ public class FileService {
 			// 로깅 추가 권장
 			throw new BusinessException("파일 URL 생성 중 오류가 발생했습니다.");
 		}
+	}
+
+	/**
+	 * LLM으로 생성된 파일 삭제하는 함수
+	 * */
+	@Transactional
+	public void deleteLLMFile(String messageUUID) {
+
+		Optional<File> llmFile = fileRepository.getByMessageUUIDAndIsDeleted(messageUUID, 'N');
+
+		if (llmFile.isEmpty())
+			return;
+
+		File aiFile = llmFile.get();
+		aiFile.delete();
 	}
 
 	/**
