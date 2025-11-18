@@ -57,10 +57,10 @@ export default function MRGenerator() {
     const fetchSettings = async () => {
       try {
         setIsLoading(true);
-        const data = await getMRGeneratorSettings();
-        const apiToken = data.gitlabApiAccessToken || '';
-        const secretToken = data.webhookSecretToken || '';
-        const template = data.mrTemplate || '';
+        const response = await getMRGeneratorSettings();
+        const apiToken = response.data.gitlabApiAccessToken || '';
+        const secretToken = response.data.webhookSecretToken || '';
+        const template = response.data.mrTemplate || '';
 
         setGitlabApiAccessToken(apiToken);
         setWebhookSecretToken(secretToken);
@@ -137,7 +137,7 @@ export default function MRGenerator() {
         gitlabApiAccessToken,
         webhookSecretToken,
         mrTemplate,
-      });
+    });
       showToast('설정이 저장되었습니다.', 'success');
 
       // 저장 성공 후 초기값 업데이트 (변경 감지 초기화)
