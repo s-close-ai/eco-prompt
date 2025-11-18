@@ -1,6 +1,7 @@
 package com.closeai.ecoprompt.message.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -27,18 +28,21 @@ import com.closeai.ecoprompt.common.logging.AppLogger;
 import com.closeai.ecoprompt.message.model.dto.request.SubmitMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.request.UpdateMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.request.UploadFileInfo;
+import com.closeai.ecoprompt.message.model.dto.response.FileMessage;
 import com.closeai.ecoprompt.message.model.dto.response.GetMessageResponse;
 import com.closeai.ecoprompt.message.model.dto.response.GetScoreInfo;
 import com.closeai.ecoprompt.message.model.dto.response.JudgeOnlyResponse;
 import com.closeai.ecoprompt.message.model.dto.response.MessageKeywordDto;
 import com.closeai.ecoprompt.message.model.dto.response.SearchMessageResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SubmitMessageResponse;
+import com.closeai.ecoprompt.message.model.entity.File;
 import com.closeai.ecoprompt.message.model.entity.FileEvent;
 import com.closeai.ecoprompt.message.model.entity.FileEventStatus;
 import com.closeai.ecoprompt.message.model.entity.Message;
 import com.closeai.ecoprompt.message.model.entity.MessageDocument;
 import com.closeai.ecoprompt.message.model.entity.MessageSender;
 import com.closeai.ecoprompt.message.model.entity.MessageStatus;
+import com.closeai.ecoprompt.message.repository.FileRepository;
 import com.closeai.ecoprompt.message.repository.MessageJpaRepository;
 import com.closeai.ecoprompt.message.repository.mongo.FileEventRepository;
 import com.closeai.ecoprompt.message.repository.mongo.MessageMongoRepository;
@@ -65,6 +69,7 @@ public class MessageService {
 	private final MessageMongoRepository messageMongoRepository;
 	private final ChattingRepository chattingRepository;
 	private final FileEventRepository fileEventRepository;
+	private final FileRepository fileRepository;
 
 	private final MessageEventHandler messageEventHandler;
 
@@ -152,10 +157,19 @@ public class MessageService {
 		Map<String, MessageDocument> aiMessageMap = aiMessages.stream()
 			.collect(Collectors.toMap(MessageDocument::getMessageUUID, msg -> msg, (msg1, msg2) -> msg1));
 
+		// 5.메시지에 속한 파일들 조회
+		List<File> messageFileList = fileRepository.findByMessageUUIDInAndIsDeletedFalse(messageUUIDs);
+
+		// 6. 파일을 UUID별로 그룹핑
+		Map<String, List<File>> filesByUuid = messageFileList.stream()
+			.collect(Collectors.groupingBy(File::getMessageUUID));
+
 		// 5. 사용자 메시지 정렬 기준으로 AI 답변을 가져와서 반환
 		return userMessagesPage.map(userMessage -> {
-			MessageDocument aiMessage = aiMessageMap.get(userMessage.getMessageUUID());
-			return GetMessageResponse.of(userMessage, aiMessage);
+			String messageUUID = userMessage.getMessageUUID();
+			MessageDocument aiMessage = aiMessageMap.get(messageUUID);
+
+			return createMessageResponse(userMessage, aiMessage, filesByUuid);
 		});
 	}
 
@@ -468,6 +482,40 @@ public class MessageService {
 		} else {
 			aiService.callLlmModel(messageUUID, content, userId);
 		}
+	}
+
+	private GetMessageResponse createMessageResponse(MessageDocument userMessage,
+		MessageDocument aiMessage, Map<String, List<File>> filesByUuid) {
+
+		String messageUUID = userMessage.getMessageUUID();
+
+		//1. messageUUID 기준으로 해당하는 파일들 가져오기
+		List<File> fileList = filesByUuid.getOrDefault(messageUUID, Collections.emptyList());
+
+		//2. 파일이 없다면 빈 결과 반환
+		if (fileList.isEmpty()) {
+			return GetMessageResponse.of(userMessage, aiMessage, Collections.emptyList(), null);
+		}
+
+		//3. 보낸 타입에 따라 List에 따로 분리 저장
+		List<File> userFileList = new ArrayList<>();
+		List<File> aiFileList = new ArrayList<>();
+
+		for (File file : fileList) {
+			if (file.getSenderType().equals(MessageSender.USER)) {
+				userFileList.add(file);
+			} else if (file.getSenderType().equals(MessageSender.AI)) {
+				aiFileList.add(file);
+			}
+		}
+
+		//4. 각 파일의 key URL을 생성
+		List<FileMessage> userFileMessageList = fileService.convertFilesToDtos(userFileList);
+		List<FileMessage> aiDto = fileService.convertFilesToDtos(aiFileList);
+
+		FileMessage aiFileMessage = aiDto.isEmpty() ? null : aiDto.get(0);
+
+		return GetMessageResponse.of(userMessage, aiMessage, userFileMessageList, aiFileMessage);
 	}
 
 }
