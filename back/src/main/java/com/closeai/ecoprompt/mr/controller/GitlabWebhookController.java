@@ -2,9 +2,9 @@ package com.closeai.ecoprompt.mr.controller;
 
 import com.closeai.ecoprompt.mr.model.dto.request.GitlabMergeRequestEvent;
 import com.closeai.ecoprompt.mr.service.MergeRequestService;
+import com.closeai.ecoprompt.userinfo.service.UserInfoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,17 +16,22 @@ import org.springframework.web.bind.annotation.*;
 public class GitlabWebhookController {
 
     private final MergeRequestService mergeRequestService;
+    private final UserInfoService userInfoService;
 
-    @Value("${gitlab.webhook-secret}")
-    private String webhookSecret;
+//    @Value("${gitlab.webhook-secret}")
+//    private String webhookSecret;
 
     @PostMapping("/webhook")
     public ResponseEntity<String> handleWebhook(
             @RequestHeader(value = "X-Gitlab-Token", required = false) String token,
+            @RequestHeader(value = "X-Ssafy-Email", required = false) String ssafyEmail,
             @RequestBody GitlabMergeRequestEvent event
     ) {
+
+        String webhookSecretTokenBySsafyEmail = userInfoService.getWebhookSecretTokenBySsafyEmail(ssafyEmail);
+
         // 1) 토큰 검증
-        if (token == null || !token.equals(webhookSecret)) {
+        if (token == null || !token.equals(webhookSecretTokenBySsafyEmail)) {
             log.warn("Invalid webhook token");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
         }
@@ -42,7 +47,8 @@ public class GitlabWebhookController {
         }
 
         try {
-            mergeRequestService.processMergeRequestEvent(event);
+            String gitlabApiToken = userInfoService.getGitlabApiTokenBySsafyEmail(ssafyEmail);
+            mergeRequestService.processMergeRequestEvent(event, gitlabApiToken);
         } catch (Exception e) {
             log.error("Error processing MR event", e);
             // Webhook은 일단 200 주는 게 깔끔 (GitLab에서 재시도 줄이려면)

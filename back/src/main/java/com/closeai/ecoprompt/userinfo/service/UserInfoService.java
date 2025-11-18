@@ -1,5 +1,7 @@
 package com.closeai.ecoprompt.userinfo.service;
 
+import com.closeai.ecoprompt.user.model.entity.User;
+import com.closeai.ecoprompt.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class UserInfoService {
 
 	private final UserInfoRepository userInfoRepository;
+	private final UserRepository userRepository;
 	private final ScoreRepository scoreRepository;
 
 	/**
@@ -181,5 +184,31 @@ public class UserInfoService {
 	private UserInfo getUserInfo(Integer userId) {
 		return userInfoRepository.findByUser_Id(userId)
 			.orElseThrow(() -> new BusinessException("해당하는 유저가 없습니다."));
+	}
+
+	/**
+	 * MR 설명 자동 생성을 위한 사용자 secret token 조회
+	 * */
+	public String getWebhookSecretTokenBySsafyEmail(String ssafyEmail) {
+		User user = userRepository.findByEmail(ssafyEmail)
+				.orElseThrow(() -> new BusinessException("해당하는 사용자가 없습니다."));
+
+		UserInfo userInfo = userInfoRepository.findByUser_Id(user.getId())
+				.orElseThrow(() -> new BusinessException("사용자와 일치하는 정보가 없습니다."));
+
+		return userInfo.getWebhookSecretToken();
+	}
+
+	/**
+	 * MR 설명 자동 생성을 위한 사용자 secret token 조회
+	 * */
+	public String getGitlabApiTokenBySsafyEmail(String ssafyEmail) {
+		User user = userRepository.findByEmail(ssafyEmail)
+				.orElseThrow(() -> new BusinessException("해당하는 사용자가 없습니다."));
+
+		UserInfo userInfo = userInfoRepository.findByUser_Id(user.getId())
+				.orElseThrow(() -> new BusinessException("사용자와 일치하는 정보가 없습니다."));
+
+		return userInfo.getGitlabApiAccessToken();
 	}
 }

@@ -18,7 +18,7 @@ public class MergeRequestService {
     private static final String MARKER_START = "<!-- auto-ai-start -->";
     private static final String MARKER_END = "<!-- auto-ai-end -->";
 
-    public void processMergeRequestEvent(GitlabMergeRequestEvent event) {
+    public void processMergeRequestEvent(GitlabMergeRequestEvent event, String gitlabApiToken) {
         Long projectId = event.getProject().getId();
         Integer mrIid = event.getObject_attributes().getIid();
         String title = event.getObject_attributes().getTitle();
@@ -44,7 +44,7 @@ public class MergeRequestService {
         String newDescription = buildNewDescription(originalDescription, aiResponse);
 
         // 5) GitLab MR 업데이트
-        gitlabApiClient.updateMrDescription(projectId, mrIid, newDescription);
+        gitlabApiClient.updateMrDescription(projectId, mrIid, newDescription, gitlabApiToken);
 
         log.info("MR description updated: project={}, iid={}", projectId, mrIid);
     }

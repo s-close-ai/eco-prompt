@@ -58,12 +58,10 @@ public class WebClientConfig {
      */
     @Bean
     public WebClient gitlabWebClient(
-            @Value("${gitlab.base-url}") String baseUrl,
-            @Value("${gitlab.token}") String token
+            @Value("${gitlab.base-url}") String baseUrl
     ) {
         return WebClient.builder()
                 .baseUrl(baseUrl)
-                .defaultHeader("PRIVATE-TOKEN", token)
                 .build();
     }
 

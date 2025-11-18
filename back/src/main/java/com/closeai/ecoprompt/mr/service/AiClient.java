@@ -4,6 +4,7 @@ import com.closeai.ecoprompt.ai.model.dto.request.LlmRequest;
 import com.closeai.ecoprompt.ai.model.dto.response.LlmResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -18,8 +19,8 @@ public class AiClient {
 
     private final WebClient aiWebClient;
 
-//    @Value("${ai.mr-analyze-path}")
-    private String mrAnalyzePath = "/api/v1/ai/prompt-response";
+    @Value("${ai.mr-analyze-path}")
+    private String mrAnalyzePath;
 
     public String analyzeMr(String title, String description, String diffText) {
 
