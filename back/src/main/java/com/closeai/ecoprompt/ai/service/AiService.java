@@ -1,8 +1,10 @@
 package com.closeai.ecoprompt.ai.service;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,6 +17,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.closeai.ecoprompt.ai.model.dto.request.InputJudgeRequest;
 import com.closeai.ecoprompt.ai.model.dto.request.LlmRequest;
 import com.closeai.ecoprompt.ai.model.dto.response.InputJudgeResponse;
+import com.closeai.ecoprompt.ai.model.dto.response.LLMFileResponse;
 import com.closeai.ecoprompt.ai.model.dto.response.LlmResponse;
 import com.closeai.ecoprompt.ai.model.event.EachModelErrorEvent;
 import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
@@ -121,10 +124,10 @@ public class AiService {
 			AppLogger.info("AI 모델 호출 시작 이전에 이미 취소 되었습니다. UUID : " + messageUUID);
 			sseService.sendEventToClient(messageUUID, "SSE_COMPLETE", "DONE");
 			eventPublisher.publishEvent(
-				new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER, userId)
+				new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER, userId, null)
 			);
 			eventPublisher.publishEvent(
-				new ModelCancelledEvent(this, messageUUID, null, MessageSender.AI, userId)
+				new ModelCancelledEvent(this, messageUUID, null, MessageSender.AI, userId, null)
 			);
 			return;
 		}
@@ -155,7 +158,7 @@ public class AiService {
 				if (sse & sseService.isCancelled(messageUUID)) {
 					AppLogger.info("Judge 모델 완료 하였으나, 작업이 취소 되어 이벤트를 발행하지 않습니다.");
 					eventPublisher.publishEvent(
-						new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER, userId)
+						new ModelCancelledEvent(this, messageUUID, null, MessageSender.USER, userId, null)
 					);
 					return;
 				}
@@ -211,8 +214,9 @@ public class AiService {
 
 		StringBuilder answer = new StringBuilder();
 		StringBuilder trainingAnswer = new StringBuilder();
+		AtomicReference<LLMFileResponse> llmFileResponse = new AtomicReference<>();
 
-		ConcurrentSkipListMap<Integer, String> buffer = new ConcurrentSkipListMap<>();    // seqId를 기준으로 정렬
+		ConcurrentSkipListMap<Integer, Object> buffer = new ConcurrentSkipListMap<>();    // seqId를 기준으로 정렬
 		final AtomicInteger nextExpectedSeqId = new AtomicInteger(0);   // 시작 seqId는 0
 
 		runLlmModel(request)
@@ -224,15 +228,37 @@ public class AiService {
 
 					while (buffer.containsKey(nextExpectedSeqId.get())) {
 						int currentSeqId = nextExpectedSeqId.get();
-						String token = buffer.remove(currentSeqId);
+						Object tokenObject = buffer.remove(currentSeqId);
 
-						if (currentSeqId == 0 && token.equals("START")) {
+						if (currentSeqId == 0 && tokenObject.equals("START")) {
 							sseService.sendEventToClient(messageUUID, "LLM_START", llmResponse);
-						} else if (token.equals("DONE")) {
+						} else if (tokenObject.equals("DONE")) {
 
 						} else if (currentSeqId > 0) {
-							sseService.sendEventToClient(messageUUID, "LLM_TOKEN", llmResponse);
-							answer.append(token);
+							// 토큰 타입에 따라서 FILE인지 일반 응답인지 판단
+							// 일반 텍스트인 경우
+							if (tokenObject instanceof String) {
+								String token = tokenObject.toString();
+								sseService.sendEventToClient(messageUUID, "LLM_TOKEN", llmResponse);
+								answer.append(token);
+							}
+							// 파일이 들어왔을 때
+							else {
+								Map<String, String> fileData = (Map<String, String>)tokenObject;
+
+								if ("FILE".equals(fileData.get("type"))) {
+									String originalFileName = fileData.get("originalFileName");
+									String savedFileName = fileData.get("savedFileName");
+									String getUrl = fileData.get("getUrl");
+
+									// FE 보내는 데이터
+									String markdownLink = String.format("[%s](%s)", originalFileName, getUrl);
+									// FE에게 이벤트 전송
+									sseService.sendEventToClient(messageUUID, "FILE", markdownLink);
+
+									llmFileResponse.set(new LLMFileResponse(originalFileName, savedFileName, getUrl));
+								}
+							}
 						}
 
 						nextExpectedSeqId.incrementAndGet();
@@ -249,7 +275,7 @@ public class AiService {
 			.doOnComplete(() -> {
 
 				if (buffer.containsKey(-1)) {
-					String trainingToken = buffer.remove(-1);
+					String trainingToken = buffer.remove(-1).toString();
 					trainingAnswer.append(trainingToken);
 				}
 
@@ -267,7 +293,8 @@ public class AiService {
 					sseService.sendEventToClient(messageUUID, "LLM_END", "DONE");
 
 					eventPublisher.publishEvent(
-						new LlmModelCompleteEvent(this, messageUUID, finalAnswer, finalTrainingAnswer)
+						new LlmModelCompleteEvent(this, messageUUID, finalAnswer, finalTrainingAnswer,
+							llmFileResponse.get())
 					);
 				} else {
 					AppLogger.info("사용자에 의해서 답변이 중지되었습니다. UUID : " + messageUUID);
@@ -275,7 +302,8 @@ public class AiService {
 					sseService.sendEventToClient(messageUUID, "SSE_COMPLETE", "DONE");
 					if (!finalAnswer.isEmpty()) {
 						eventPublisher.publishEvent(
-							new ModelCancelledEvent(this, messageUUID, finalAnswer, MessageSender.AI, userId)
+							new ModelCancelledEvent(this, messageUUID, finalAnswer, MessageSender.AI, userId,
+								llmFileResponse.get())
 						);
 					}
 				}

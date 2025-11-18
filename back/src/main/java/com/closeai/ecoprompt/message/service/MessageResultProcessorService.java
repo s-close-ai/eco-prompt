@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.closeai.ecoprompt.ai.model.dto.response.LLMFileResponse;
 import com.closeai.ecoprompt.ai.model.event.EachModelErrorEvent;
 import com.closeai.ecoprompt.ai.model.event.JudgeModelCompleteEvent;
 import com.closeai.ecoprompt.ai.model.event.LlmModelCompleteEvent;
@@ -33,8 +34,8 @@ public class MessageResultProcessorService {
 	private final ScoreService scoreService;
 	private final ChattingService chattingService;
 	private final MileageService mileageService;
-	private final SseService sseService;
 	private final UserInfoService userInfoService;
+	private final FileService fileService;
 
 	private final MessageJpaRepository messageJpaRepository;
 	private final MessageMongoRepository messageMongoRepository;
@@ -81,6 +82,7 @@ public class MessageResultProcessorService {
 		String messageUUID = event.getMessageUUID();
 		MessageDocument aiMessage = getMessageDocument(messageUUID, MessageSender.AI);
 
+		LLMFileResponse llmFileResponse = event.getLlmFileResponse();
 		String llmAnswer = event.getLlmAnswer();
 		String trainingAnswer = event.getTrainingAnswer();
 
@@ -88,6 +90,11 @@ public class MessageResultProcessorService {
 		updateMongoMessage(aiMessage, llmAnswer, null, MessageStatus.COMPLETED);
 		// 2. 학습에 도움이 되는 답변을 MongoDB에 저장
 		saveTrainingMessage(messageUUID, trainingAnswer, aiMessage.getChattingId());
+		// 3. 파일 정보가 있는 경우 파일 저장
+		if (llmFileResponse != null) {
+			fileService.saveFileDB(messageUUID, llmFileResponse.originalFileName(), llmFileResponse.savedFileName(),
+				"application/pdf", MessageSender.AI);
+		}
 	}
 
 	/**
@@ -121,6 +128,12 @@ public class MessageResultProcessorService {
 		if (sender.equals(MessageSender.AI)) {
 			MessageDocument trainingDocument = getMessageDocument(messageUUID, MessageSender.TRAINING);
 			updateMongoMessage(trainingDocument, null, null, MessageStatus.CANCELLED);
+			LLMFileResponse llmFileResponse = event.getLlmFileResponse();
+			// 3. 파일 정보가 있는 경우 파일 저장
+			if (llmFileResponse != null) {
+				fileService.saveFileDB(messageUUID, llmFileResponse.originalFileName(), llmFileResponse.savedFileName(),
+					"application/pdf", MessageSender.AI);
+			}
 		}
 	}
 
