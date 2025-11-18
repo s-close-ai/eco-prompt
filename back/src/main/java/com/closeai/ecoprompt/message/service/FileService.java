@@ -75,7 +75,7 @@ public class FileService {
 		String uploadUrl = presignedRequest.url().toString();
 
 		// 4. DB에 FILE 저장
-		File mysqlSaveFile = saveFileDB(originalFileName, savedFileName, fileType, MessageSender.USER);
+		File mysqlSaveFile = saveFileDB(null, originalFileName, savedFileName, fileType, MessageSender.USER);
 
 		return new UploadFileResponse(uploadUrl, savedFileName, mysqlSaveFile.getId());
 	}
@@ -148,7 +148,8 @@ public class FileService {
 	 * DB에 파일 저장하는 함수
 	 * */
 	@Transactional
-	public File saveFileDB(String originalFileName, String saveFileName, String fileType, MessageSender sender) {
+	public File saveFileDB(String messageUUID, String originalFileName, String saveFileName, String fileType,
+		MessageSender sender) {
 
 		File mysqlSaveFile = File.builder()
 			.originalFileName(originalFileName)
@@ -156,6 +157,10 @@ public class FileService {
 			.saveFileName(saveFileName)
 			.senderType(sender)
 			.build();
+
+		if (messageUUID != null) {
+			mysqlSaveFile.setMessageUUID(messageUUID);
+		}
 
 		return fileRepository.save(mysqlSaveFile);
 	}
