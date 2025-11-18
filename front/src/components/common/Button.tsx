@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes, PropsWithChildren } from 'react';
 import '@/styles/components/common/button.css';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost';
-type ButtonSize = 'sm' | 'md' | 'lg' | 'mobile';
+type ButtonSize = 'sm' | 'md' | 'lg' | 'mobile' | 'mr-generator';
 
 export type ButtonProps = {
   variant?: ButtonVariant;

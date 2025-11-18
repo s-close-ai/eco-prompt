@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import useDeviceMode from '@/hooks/useDeviceMode';
 import Button from '@/components/common/Button';
 import '@/styles/pages/mr-generator.css';
@@ -42,7 +42,6 @@ export default function MRGenerator() {
   const [apiToken, setApiToken] = useState('');
   const [secretToken, setSecretToken] = useState('');
   const [template, setTemplate] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleCopyWebhookUrl = async () => {
     try {
@@ -102,20 +101,6 @@ export default function MRGenerator() {
       alert('설정 저장에 실패했습니다.');
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="mr-generator-page">
-        <div className="mr-generator-page__header">
-          <div className="mr-generator-page__title">
-            <img src="/icons/mr_create.svg" alt="" aria-hidden width={24} height={24} />
-            <h2>MR 자동 생성기</h2>
-          </div>
-        </div>
-        <div className="mr-generator-loading">로딩 중...</div>
-      </div>
-    );
-  }
 
   // 모바일에서는 접근 불가
   if (mode === 'mobile') {
@@ -266,7 +251,7 @@ export default function MRGenerator() {
 
         {/* 저장 버튼 */}
         <div className="mr-generator-actions">
-          <Button variant="primary" size="md" onClick={handleSave}>
+          <Button variant="primary" size="mr-generator" onClick={handleSave}>
             저장
           </Button>
         </div>
