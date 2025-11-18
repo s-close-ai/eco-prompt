@@ -111,21 +111,6 @@
   flex: 1;
 }
 
-/* 북마크 생성 모달 특별 스타일 */
-.ep-sheet.bookmark-create-overlay-sheet .ep-sheet__panel[data-variant='modal'] {
-  max-width: 500px;
-  width: 100%;
-}
-
-.ep-sheet__content:has(.bookmark-create-form) {
-  padding: 0;
-  overflow: hidden;
-}
-
-.ep-sheet__content .bookmark-create-form {
-  height: 100%;
-}
-
 /* 설정 모달 특별 스타일 */
 .ep-sheet.settings-overlay-sheet .ep-sheet__panel[data-variant='modal'] {
   max-width: 600px;

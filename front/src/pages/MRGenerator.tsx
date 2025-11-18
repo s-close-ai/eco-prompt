@@ -86,7 +86,7 @@ export default function MRGenerator() {
       <div className="mr-generator-page">
         <div className="mr-generator-page__header">
           <div className="mr-generator-page__title">
-            <img src="/icons/bookmark.svg" alt="" aria-hidden width={24} height={24} />
+            <img src="/icons/mr_create.svg" alt="" aria-hidden width={24} height={24} />
             <h2>MR 자동 생성기</h2>
           </div>
         </div>
@@ -101,7 +101,7 @@ export default function MRGenerator() {
       <div className="mr-generator-page">
         <div className="mr-generator-page__header">
           <div className="mr-generator-page__title">
-            <img src="/icons/bookmark.svg" alt="" aria-hidden width={24} height={24} />
+            <img src="/icons/mr_create.svg" alt="" aria-hidden width={24} height={24} />
             <h2>MR 자동 생성기</h2>
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function MRGenerator() {
     <div className="mr-generator-page">
       <div className="mr-generator-page__header">
         <div className="mr-generator-page__title">
-          <img src="/icons/bookmark.svg" alt="" aria-hidden width={24} height={24} />
+          <img src="/icons/mr_create.svg" alt="" aria-hidden width={24} height={24} />
           <h2>MR 자동 생성기</h2>
         </div>
         <a

@@ -45,7 +45,7 @@ export function SidebarFooter() {
       </button>
       {mode !== 'mobile' && (
         <button className="sidebar-explore-btn" onClick={() => handleNavigate('/mr-generator')}>
-          <img src="/icons/bookmark.svg" alt="mr-generator" width={18} height={18} />
+          <img src="/icons/mr_create.svg" alt="mr-generator" width={18} height={18} />
           <span>MR 자동 생성기</span>
         </button>
       )}

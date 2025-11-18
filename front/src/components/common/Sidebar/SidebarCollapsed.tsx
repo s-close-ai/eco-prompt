@@ -72,7 +72,7 @@ export function SidebarCollapsed() {
           aria-label="MR 자동 생성기"
           onClick={() => handleNavigate('/mr-generator')}
         >
-          <img src="/icons/bookmark.svg" alt="mr-generator" width={20} height={20} />
+          <img src="/icons/mr_create.svg" alt="mr-generator" width={20} height={20} />
         </button>
         <button
           className="sidebar-icon-btn"
