@@ -100,6 +100,9 @@ public class SecurityConfig {
                         // log lens 관련
                         .requestMatchers("/api/components/**", "/api/dependencies/**").permitAll()
 
+                        // MR 자동 생성 관련
+                        .requestMatchers("/api/v1/gitlab/webhook").permitAll()
+
                         // 나머지는 인증 필요
                         .anyRequest().authenticated()
                 )

@@ -61,6 +61,7 @@ springdoc:
 
 server:
   forward-headers-strategy: framework
+#  port: 9080
 #    servlet:
 #        session:
 #            timeout: 30m
@@ -117,3 +118,8 @@ dependency:
         frontend:
             enabled: true
             log-path: ./logs/fe/app.log
+
+gitlab:
+  base-url: "https://lab.ssafy.com" # self-hosted면 주소 바꿔주기
+  token: ${GITLAB_MR_ACCESS_TOKEN} # Project Access Token / Personal Access Token
+  webhook-secret: ${WEBHOOK_SECRET}

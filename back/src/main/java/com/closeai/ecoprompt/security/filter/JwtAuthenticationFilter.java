@@ -43,7 +43,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 || uri.startsWith("/api/v1/auth/sign-out")
                 || uri.startsWith("/oauth2/")
                 || uri.startsWith("/swagger-ui/")
-                || uri.startsWith("/v3/api-docs")) {
+                || uri.startsWith("/v3/api-docs")
+                || uri.startsWith("/api/v1/gitlab/webhook")
+        ) {
             chain.doFilter(req, res);
             return;
         }
