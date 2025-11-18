@@ -18,9 +18,11 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.closeai.ecoprompt.common.ApiResponse;
 import com.closeai.ecoprompt.message.model.dto.request.SubmitMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.request.UpdateMessageRequest;
+import com.closeai.ecoprompt.message.model.dto.request.UploadFileRequest;
 import com.closeai.ecoprompt.message.model.dto.response.JudgeOnlyResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SearchMessageResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SubmitMessageResponse;
+import com.closeai.ecoprompt.message.model.dto.response.UploadFileResponse;
 import com.closeai.ecoprompt.message.service.FileService;
 import com.closeai.ecoprompt.message.service.MessageService;
 import com.closeai.ecoprompt.message.service.SseService;
@@ -37,6 +39,12 @@ public class MessageController implements MessageControllerDocs {
 	private final MessageService messageService;
 	private final SseService sseService;
 	private final FileService fileService;
+
+	@PostMapping(value = "/file-upload")
+	public ResponseEntity<ApiResponse<UploadFileResponse>> makePresignedUrl(UploadFileRequest request) {
+
+		return ApiResponse.success(fileService.makePresignedURL(request));
+	}
 
 	@PostMapping(value = "/input", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ApiResponse<SubmitMessageResponse>> submitMessage(
