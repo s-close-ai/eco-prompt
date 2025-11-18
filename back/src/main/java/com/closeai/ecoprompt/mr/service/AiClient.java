@@ -18,10 +18,10 @@ public class AiClient {
 
     private final WebClient aiWebClient;
 
-    public String analyzeMr(String title, String description, String diffText) {
+    public String analyzeMr(String title, String description, String diffText, String mrTemplate) {
 
         // 1) MR → Prompt 변환
-        String prompt = MrPromptBuilder.buildMrPrompt(title, description, diffText);
+        String prompt = MrPromptBuilder.buildMrPrompt(title, description, diffText, mrTemplate);
         log.info("prompt: {}", prompt);
 
         // 2) AI 서버가 요구하는 형태로 Request DTO 구성

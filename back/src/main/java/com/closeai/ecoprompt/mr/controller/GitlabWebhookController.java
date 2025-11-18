@@ -18,19 +18,14 @@ public class GitlabWebhookController {
     private final MergeRequestService mergeRequestService;
     private final UserInfoService userInfoService;
 
-//    @Value("${gitlab.webhook-secret}")
-//    private String webhookSecret;
-
     @PostMapping("/webhook")
     public ResponseEntity<String> handleWebhook(
             @RequestHeader(value = "X-Gitlab-Token", required = false) String token,
             @RequestHeader(value = "X-Ssafy-Email", required = false) String ssafyEmail,
             @RequestBody GitlabMergeRequestEvent event
     ) {
-
-        String webhookSecretTokenBySsafyEmail = userInfoService.getWebhookSecretTokenBySsafyEmail(ssafyEmail);
-
         // 1) 토큰 검증
+        String webhookSecretTokenBySsafyEmail = userInfoService.getWebhookSecretTokenBySsafyEmail(ssafyEmail);
         if (token == null || !token.equals(webhookSecretTokenBySsafyEmail)) {
             log.warn("Invalid webhook token");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
@@ -47,8 +42,7 @@ public class GitlabWebhookController {
         }
 
         try {
-            String gitlabApiToken = userInfoService.getGitlabApiTokenBySsafyEmail(ssafyEmail);
-            mergeRequestService.processMergeRequestEvent(event, gitlabApiToken);
+            mergeRequestService.processMergeRequestEvent(event, ssafyEmail);
         } catch (Exception e) {
             log.error("Error processing MR event", e);
             // Webhook은 일단 200 주는 게 깔끔 (GitLab에서 재시도 줄이려면)
