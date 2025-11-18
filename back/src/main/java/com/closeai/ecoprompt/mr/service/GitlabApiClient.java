@@ -20,10 +20,11 @@ public class GitlabApiClient {
                 .block();
     }
 
-    public void updateMrDescription(Long projectId, Integer mrIid, String newDescription) {
+    public void updateMrDescription(Long projectId, Integer mrIid, String newDescription, String gitlabApiToken) {
         gitlabWebClient.put()
                 .uri("/api/v4/projects/{projectId}/merge_requests/{iid}",
                         projectId, mrIid)
+                .header("PRIVATE-TOKEN", gitlabApiToken)
                 .bodyValue(new org.springframework.util.LinkedMultiValueMap<String, String>() {{
                     add("description", newDescription);
                 }})

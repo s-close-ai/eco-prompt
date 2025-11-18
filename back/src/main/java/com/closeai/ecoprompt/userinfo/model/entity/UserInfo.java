@@ -62,6 +62,12 @@ public class UserInfo extends BaseEntity {
 	@Column(name = "total_fail_count", nullable = false)
 	private Long totalFailCount = 0L;
 
+	@Column(name = "webhook_secret_token")
+	private String webhookSecretToken;
+
+	@Column(name = "gitlab_api_access_token")
+	private String gitlabApiAccessToken;
+
 	// FK: user_info.user_id -> user.user_id (1:1 가정)
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
