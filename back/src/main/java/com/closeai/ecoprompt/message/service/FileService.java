@@ -14,14 +14,17 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.closeai.ecoprompt.common.exception.BusinessException;
 import com.closeai.ecoprompt.message.model.dto.request.UploadFileRequest;
+import com.closeai.ecoprompt.message.model.dto.response.FileMessage;
 import com.closeai.ecoprompt.message.model.dto.response.UploadFileResponse;
 import com.closeai.ecoprompt.message.model.entity.File;
 import com.closeai.ecoprompt.message.model.entity.MessageSender;
 import com.closeai.ecoprompt.message.repository.FileRepository;
 
 import lombok.RequiredArgsConstructor;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
@@ -38,7 +41,8 @@ public class FileService {
 	private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
 	private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "pdf", "csv", "txt");
 
-	private static final String S3_USER_INPUT_DIR_PREFIX = "2ofsvz/user_input/";
+	private static final String S3_USER_INPUT_DIR_PREFIX = "2ofsvz/user_inputs/";
+	private static final String S3_LLM_INPUT_DIR_PREFIX = "2ofsvz/llm_results/";
 
 	/**
 	 * FE가 파일을 저장할 presignedURL 생성하는 함수 및 초기 FILE 저장
@@ -73,6 +77,52 @@ public class FileService {
 		File mysqlSaveFile = saveFileDB(originalFileName, savedFileName, fileType, MessageSender.USER);
 
 		return new UploadFileResponse(uploadUrl, savedFileName, mysqlSaveFile.getId());
+	}
+
+	@Transactional(readOnly = true)
+	public List<FileMessage> convertFilesToDtos(List<File> fileList) {
+
+		if (fileList == null || fileList.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		return fileList.stream().map(file -> {
+			// 1. SenderType에 따라 경로(Prefix) 분기 처리
+			String prefix = (file.getSenderType() == MessageSender.USER)
+				? S3_USER_INPUT_DIR_PREFIX
+				: S3_LLM_INPUT_DIR_PREFIX; // AI 경로 상수 사용
+
+			// 2. 전체 Key 생성
+			String fullKey = prefix + file.getSaveFileName();
+
+			// 3. Presigned URL 발급 (Get)
+			String downloadUrl = generatePresignedGetUrl(fullKey);
+
+			// 4. DTO 변환
+			return FileMessage.of(file.getId(), file.getOriginalFileName(), downloadUrl);
+		}).toList();
+	}
+
+	/**
+	 * 파일 KEY 값을 이용해서 FILE_URL 생성하는 함수
+	 * */
+	private String generatePresignedGetUrl(String key) {
+		try {
+			GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+				.bucket(bucketName)
+				.key(key)
+				.build();
+
+			GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
+				.signatureDuration(Duration.ofMinutes(60)) // 60분 유효
+				.getObjectRequest(getObjectRequest)
+				.build();
+
+			return s3Presigner.presignGetObject(getObjectPresignRequest).url().toString();
+		} catch (Exception e) {
+			// 로깅 추가 권장
+			throw new BusinessException("파일 URL 생성 중 오류가 발생했습니다.");
+		}
 	}
 
 	/**
