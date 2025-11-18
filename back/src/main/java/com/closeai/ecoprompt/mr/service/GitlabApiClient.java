@@ -11,10 +11,11 @@ public class GitlabApiClient {
 
     private final WebClient gitlabWebClient;
 
-    public GitlabMrChangesResponse getMrChanges(Long projectId, Integer mrIid) {
+    public GitlabMrChangesResponse getMrChanges(Long projectId, Integer mrIid, String gitlabApiToken) {
         return gitlabWebClient.get()
                 .uri("/api/v4/projects/{projectId}/merge_requests/{iid}/changes",
                         projectId, mrIid)
+                .header("PRIVATE-TOKEN", gitlabApiToken)
                 .retrieve()
                 .bodyToMono(GitlabMrChangesResponse.class)
                 .block();

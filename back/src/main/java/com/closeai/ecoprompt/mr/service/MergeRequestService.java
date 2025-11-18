@@ -28,7 +28,7 @@ public class MergeRequestService {
 
         // 1) MR diff/changes 조회
         GitlabMrChangesResponse mrChanges =
-                gitlabApiClient.getMrChanges(projectId, mrIid);
+                gitlabApiClient.getMrChanges(projectId, mrIid, gitlabApiToken);
 
         // 2) diff 문자열로 합치기
         String diffText = DiffUtils.buildUnifiedDiffText(mrChanges);
