@@ -107,13 +107,13 @@ jwt:
 logging:
   level:
     org.hibernate.orm.jdbc.bind: trace
+  file:
+    name: ./logs/be/app.log
 #        root: INFO
 #        org.springframework.web: DEBUG
 #        org.springframework.cache: DEBUG
 #        org.springframework.data.redis: DEBUG
 #        com.closeai: DEBUG
-    file:
-        name: ./logs/be/app.log
 
 gitlab:
   base-url: "https://lab.ssafy.com" # self-hosted면 주소 바꿔주기
