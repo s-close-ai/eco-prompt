@@ -439,7 +439,7 @@ export default function Bookmark() {
             <h2>북마크</h2>
           </div>
         </div>
-        <div style={{ textAlign: 'center', padding: '40px' }}>로딩 중...</div>
+        <div style={{ textAlign: 'center', padding: '40px' }}>로딩 중</div>
       </div>
     );
   }

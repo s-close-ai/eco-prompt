@@ -37,42 +37,34 @@ export function parseMessages(apiMessages: APIMessage[]): ChatMessage[] {
 
     // User Message
     if (msg.userMessage && msg.userMessage.content) {
+      const scoreInfo = msg.scoreMessage?.scoreInfo
+        ? {
+            sc_ec_1: msg.scoreMessage.scoreInfo.sc_ec_1,
+            sc_ec_2: msg.scoreMessage.scoreInfo.sc_ec_2,
+            sc_ec_3: msg.scoreMessage.scoreInfo.sc_ec_3,
+            sc_ec_4: msg.scoreMessage.scoreInfo.sc_ec_4,
+            sc_ec_0: msg.scoreMessage.scoreInfo.sc_ec_0,
+          }
+        : undefined;
+
       loadedMessages.push({
         id: msg.userMessage.messageUUID,
         type: 'user',
         message: msg.userMessage.content,
         timestamp: new Date(),
         messageUUID: msg.userMessage.messageUUID, // 서버의 messageUUID 저장
-        score: msg.scoreMessage?.scoreInfo
-          ? {
-              sc_ec_1: msg.scoreMessage.scoreInfo.sc_ec_1,
-              sc_ec_2: msg.scoreMessage.scoreInfo.sc_ec_2,
-              sc_ec_3: msg.scoreMessage.scoreInfo.sc_ec_3,
-              sc_ec_4: msg.scoreMessage.scoreInfo.sc_ec_4,
-              sc_ec_0: msg.scoreMessage.scoreInfo.sc_ec_0,
-            }
-          : undefined,
+        score: scoreInfo,
+        // scoreState 설정: 점수가 있으면 success, 점수 에러면 error
+        scoreState: hasScoreError
+          ? { status: 'error', error: '점수 평가에 실패했습니다.' }
+          : scoreInfo
+            ? { status: 'success', score: scoreInfo }
+            : undefined,
       });
     }
 
-    // 에러 처리: 점수만 에러면 AI 응답 위에, LLM만 에러면 점수 아래에, 둘 다 에러면 하나의 통합 메시지
-    if (hasScoreError && hasAIContent && msg.aiMessage) {
-      // 점수만 에러 (AI는 정상) → 점수 위치에 에러 (AI 메시지 위에)
-      loadedMessages.push({
-        id: crypto.randomUUID(),
-        type: 'error',
-        message: '점수 정보를 생성하는 중 오류가 발생했습니다.',
-        timestamp: new Date(),
-        errorType: 'judge' as const,
-      });
-      // 정상 AI 메시지 추가
-      loadedMessages.push({
-        id: crypto.randomUUID(),
-        type: 'ai',
-        message: msg.aiMessage.content!,
-        timestamp: new Date(),
-      });
-    } else if (hasAIError && hasScoreError) {
+    // AI 메시지 처리 (점수 에러는 이미 user 메시지의 scoreState로 처리됨)
+    if (hasAIError && hasScoreError) {
       // 둘 다 에러 → 하나의 통합 에러 메시지
       loadedMessages.push({
         id: crypto.randomUUID(),
@@ -82,7 +74,7 @@ export function parseMessages(apiMessages: APIMessage[]): ChatMessage[] {
         errorType: 'both' as const,
       });
     } else if (hasAIError) {
-      // LLM만 에러 (점수는 정상) → 점수 아래에 에러
+      // LLM만 에러 (점수는 정상 또는 에러) → AI 응답 에러
       loadedMessages.push({
         id: crypto.randomUUID(),
         type: 'error',
@@ -91,7 +83,7 @@ export function parseMessages(apiMessages: APIMessage[]): ChatMessage[] {
         errorType: 'llm' as const,
       });
     } else if (hasAIContent && msg.aiMessage) {
-      // 정상 AI 메시지 (점수도 정상)
+      // 정상 AI 메시지 (점수가 에러여도 AI는 정상이면 표시)
       loadedMessages.push({
         id: crypto.randomUUID(),
         type: 'ai',

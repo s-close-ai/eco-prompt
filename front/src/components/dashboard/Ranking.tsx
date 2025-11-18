@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { getTodayRankings, getSpecificDateRankings } from '@/services/api/ranking';
 import type { RankingItem } from '@/types/api/ranking.types';
 import useDeviceMode from '@/hooks/useDeviceMode';
-import Tooltip from '@/components/common/Tooltip';
 import '@/styles/components/dashboard/ranking.css';
 import newIcon from '/icons/new.svg';
 
@@ -114,17 +113,13 @@ export default function Ranking() {
   };
 
   if (initialLoading) {
-    return <div className="ranking-container">Loading...</div>;
+    return <div className="ranking-container ranking-loading">로딩 중...</div>;
   }
 
   return (
     <div className="ranking-container" ref={containerRef}>
       <div className="ranking-header">
         <div className="ranking-header-left">
-          <div className="ranking-title-wrapper">
-            <h2 className="ranking-title">Top 10 Rankings</h2>
-            <Tooltip content="오늘 최고 점수 기준으로 랭킹이 결정됩니다. 동점일 경우 마일리지가 높은 순으로, 그래도 동점이면 프롬프트 수가 적은 순으로 정렬됩니다. 순위는 5분에 한 번 반영됩니다." />
-          </div>
           <div className="date-selector">
             {dateList.map((date) => {
               const dateNumber = getDateNumber(date);

@@ -196,7 +196,7 @@ export default function EcoPick({ onSwipeLeft, onSwipeRight }: EcoPickProps) {
   );
 
   if (loading) {
-    return <div className="eco-pick-container">Loading...</div>;
+    return <div className="eco-pick-container eco-pick-loading">로딩 중...</div>;
   }
 
   if (!prompts.length) {
