@@ -392,7 +392,7 @@
 
 .carousel-button-bottom:disabled {
   opacity: 0.3;
-  cursor: not-allowed;
+  cursor: default;
 }
 
 .carousel-button-bottom svg {
