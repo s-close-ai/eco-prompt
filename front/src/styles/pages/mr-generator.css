@@ -138,6 +138,12 @@
   margin-top: 4px;
 }
 
+.mr-generator-button-group {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
 .mr-generator-input-group {
   display: flex;
   gap: 8px;
