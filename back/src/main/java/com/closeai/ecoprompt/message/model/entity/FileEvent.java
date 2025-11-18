@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import com.closeai.ecoprompt.common.entity.MongoBaseEntity;
 
@@ -19,10 +20,20 @@ public class FileEvent extends MongoBaseEntity {
 	@Id
 	private ObjectId id;
 	private String messageUUID;
-	private String status;
+	private FileEventStatus status;
+
+	@Field("user_id")
 	private Integer userId;
+
+	@Field("user_input")
 	private String userInput;
+
+	@Field("s3Key_list")
 	private List<String> s3KeyList;
+
+	@Field("final_prompt")
 	private String finalPrompt;
+
+	@Field("error_message")
 	private String errorMessage;
 }
