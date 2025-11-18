@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.closeai.ecoprompt.common.CustomUtil;
 import com.closeai.ecoprompt.common.entity.BaseEntity;
+import com.closeai.ecoprompt.mr.model.dto.request.MrGeneratorRequest;
 import com.closeai.ecoprompt.user.model.entity.User;
 
 import jakarta.persistence.Column;
@@ -68,6 +69,9 @@ public class UserInfo extends BaseEntity {
 	@Column(name = "gitlab_api_access_token")
 	private String gitlabApiAccessToken;
 
+	@Column(name = "mr_template", columnDefinition = "TEXT")
+	private String mrTemplate;
+
 	// FK: user_info.user_id -> user.user_id (1:1 가정)
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
@@ -91,6 +95,12 @@ public class UserInfo extends BaseEntity {
 			0.0,
 			user
 		);
+	}
+
+	public void updateMrGeneratorConfig(MrGeneratorRequest mrGeneratorRequest) {
+		this.webhookSecretToken = mrGeneratorRequest.webhookSecretToken();
+		this.gitlabApiAccessToken = mrGeneratorRequest.gitlabApiAccessToken();
+		this.mrTemplate = mrGeneratorRequest.mrTemplate();
 	}
 
 	public void updateSharingInformationUpdatedAt() {
