@@ -1,0 +1,164 @@
+.toast-container {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 300px;
+  max-width: 500px;
+  padding: 16px 20px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+  animation: toast-slide-in 0.3s ease-out;
+}
+
+.toast--exit {
+  animation: toast-slide-out 0.3s ease-out forwards;
+}
+
+.toast__icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.toast__message {
+  flex: 1;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+.toast__close {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  font-size: 16px;
+  padding: 0;
+}
+
+.toast__close:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Success */
+.toast--success {
+  border-left: 4px solid #16a34a;
+}
+
+.toast--success .toast__icon {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+/* Error */
+.toast--error {
+  border-left: 4px solid #dc2626;
+}
+
+.toast--error .toast__icon {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Warning */
+.toast--warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.toast--warning .toast__icon {
+  background: #fef3c7;
+  color: #f59e0b;
+}
+
+/* Info */
+.toast--info {
+  border-left: 4px solid #3b82f6;
+}
+
+.toast--info .toast__icon {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+/* Animations */
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* 모바일 스타일 */
+@media (max-width: 768px) {
+  .toast-container {
+    top: auto;
+    bottom: calc(var(--footer-height, 60px) + 20px);
+    right: 16px;
+    left: 16px;
+  }
+
+  .toast {
+    min-width: auto;
+    max-width: 100%;
+    padding: 14px 16px;
+  }
+
+  .toast__message {
+    font-size: 13px;
+  }
+}
+
+/* 태블릿 스타일 */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .toast-container {
+    top: 70px;
+    right: 16px;
+  }
+
+  .toast {
+    min-width: 280px;
+  }
+}
