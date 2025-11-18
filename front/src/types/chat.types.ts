@@ -10,12 +10,21 @@ export interface PromptScore {
   sc_ec_0: number; // 총점 (최대 100점)
 }
 
+export type ScoreStatus = 'loading' | 'success' | 'error';
+
+export interface ScoreState {
+  status: ScoreStatus;
+  score?: PromptScore;
+  error?: string;
+}
+
 export interface ChatMessage {
   id: string;
   type: MessageType;
   message: string;
   timestamp: Date;
   score?: PromptScore;
+  scoreState?: ScoreState; // 점수 평가 상태 추적
   isStreaming?: boolean;
   messageUUID?: string; // 서버의 실제 messageUUID (수정 시 필요)
   errorType?: 'llm' | 'judge' | 'both'; // 에러 타입 구분
