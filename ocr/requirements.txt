@@ -1,0 +1,16 @@
+asyncio==4.0.0
+boto3==1.40.76
+botocore==1.40.76
+dnspython==2.8.0
+dotenv==0.9.9
+jmespath==1.0.1
+packaging==25.0
+pillow==12.0.0
+pymongo==4.15.4
+PyMuPDF==1.26.6
+pytesseract==0.3.13
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.1
+s3transfer==0.14.0
+six==1.17.0
+urllib3==2.5.0
