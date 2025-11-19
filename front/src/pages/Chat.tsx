@@ -250,16 +250,23 @@ export default function Chat() {
       isUserAtBottomRef.current = false;
 
       try {
+        // 파일 업로드 정보 로깅 (디버깅용)
+        const fileInfoList = uploadedFiles?.map(file => ({
+          fileUrl: file.fileUrl,
+          originalFileName: file.filename,
+          fileId: file.fileId,
+        }));
+
+        if (fileInfoList && fileInfoList.length > 0) {
+          console.log('📎 Uploading files to chat:', fileInfoList);
+        }
+
         // submitMessage API 사용 (chattingId는 optional)
         const response = await submitMessage({
           projectId: actualProjectId,
           chattingId: currentChatId ? Number(currentChatId) : undefined,
           content: message,
-          uploadFileInfoList: uploadedFiles?.map(file => ({
-            fileUrl: file.fileUrl,
-            originalFileName: file.filename,
-            fileId: file.fileId,
-          })),
+          uploadFileInfoList: fileInfoList,
         });
 
         const { chattingId: returnedChattingId, messageUUID } = response.data;
@@ -517,11 +524,12 @@ export default function Chat() {
   // 초기 메시지 전송 (프로젝트에서 새 채팅 시작 시)
   useEffect(() => {
     const initialMessage = locationState?.message;
+    const uploadedFiles = locationState?.uploadedFiles;
     if (initialMessage && !initialMessageSent.current && !chattingId) {
       initialMessageSent.current = true;
-      handleSendMessage(initialMessage);
+      handleSendMessage(initialMessage, uploadedFiles);
     }
-  }, [locationState?.message, chattingId, handleSendMessage]);
+  }, [locationState?.message, locationState?.uploadedFiles, chattingId, handleSendMessage]);
 
   // Bottombar의 ChatInput에서 오는 메시지 처리
   useEffect(() => {

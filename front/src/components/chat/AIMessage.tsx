@@ -8,6 +8,7 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import '@/styles/components/chat/ai-message.css';
 import type { MessageFileAttachment } from '@/types/api/file.types';
+import CsvPreviewModal from '@/components/common/CsvPreviewModal';
 
 interface AIMessageProps {
   message: string;
@@ -27,6 +28,7 @@ const getFileColor = (filename: string): string => {
 
 export default function AIMessage({ message, isStreaming, attachments = [] }: AIMessageProps) {
   const [copied, setCopied] = useState(false);
+  const [csvPreview, setCsvPreview] = useState<{ url: string; name: string } | null>(null);
 
   const handleCopy = async () => {
     try {
@@ -46,6 +48,21 @@ export default function AIMessage({ message, isStreaming, attachments = [] }: AI
     }
   };
 
+  const handleFileClick = (e: React.MouseEvent<HTMLAnchorElement>, url: string, filename: string) => {
+    e.preventDefault();
+
+    // CSV 파일인지 확인
+    const isCsv = filename.toLowerCase().endsWith('.csv');
+
+    if (isCsv) {
+      // CSV 미리보기 모달 열기
+      setCsvPreview({ url, name: filename });
+    } else {
+      // 다른 파일은 새 탭에서 열기
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   // 메시지가 비어있고 스트리밍 중도 아니면 렌더링하지 않음
   if (message === '' && !isStreaming && attachments.length === 0) {
     return null;
@@ -57,7 +74,7 @@ export default function AIMessage({ message, isStreaming, attachments = [] }: AI
         <div className="ai-message-text">
           <ReactMarkdown
             remarkPlugins={[remarkGfm, remarkMath]}
-            rehypePlugins={[rehypeKatex]}
+            rehypePlugins={[[rehypeKatex, { strict: false }]]}
             components={{
               code({ className, children, ...props }) {
                 const match = /language-(\w+)/.exec(className || '');
@@ -114,17 +131,15 @@ export default function AIMessage({ message, isStreaming, attachments = [] }: AI
           </ReactMarkdown>
         </div>
 
-        {/* 파일 다운로드 섹션 */}
+        {/* 파일 첨부 섹션 */}
         {attachments && attachments.length > 0 && (
           <div className="ai-message-file-download-section">
             {attachments.map((file, index) => (
               <a
                 key={index}
                 href={file.fileUrl}
-                download={file.originalFileName}
+                onClick={(e) => handleFileClick(e, file.fileUrl, file.originalFileName)}
                 className="ai-message-download-link"
-                target="_blank"
-                rel="noopener noreferrer"
               >
                 <div
                   className="ai-message-download-icon"
@@ -138,7 +153,7 @@ export default function AIMessage({ message, isStreaming, attachments = [] }: AI
                 </div>
                 <div className="ai-message-download-info">
                 <span className="ai-message-download-name">{file.originalFileName}</span>
-                <span className="ai-message-download-hint">클릭하여 다운로드</span>
+                <span className="ai-message-download-hint">클릭하여 확인</span>
                 </div>
               </a>
             ))}
@@ -153,6 +168,16 @@ export default function AIMessage({ message, isStreaming, attachments = [] }: AI
           </button>
         )}
       </div>
+
+      {/* CSV 미리보기 모달 */}
+      {csvPreview && (
+        <CsvPreviewModal
+          open={!!csvPreview}
+          onClose={() => setCsvPreview(null)}
+          fileUrl={csvPreview.url}
+          fileName={csvPreview.name}
+        />
+      )}
     </div>
   );
 }

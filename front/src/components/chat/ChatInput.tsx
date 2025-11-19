@@ -73,6 +73,8 @@ export default function ChatInput({
   };
 
   const handleFiles = (files: File[]) => {
+    console.log('📁 handleFiles called with:', files);
+
     if (selectedFiles.length + files.length > MAX_FILE_COUNT) {
       showToast(`최대 ${MAX_FILE_COUNT}개의 파일만 선택할 수 있습니다.`, 'error');
       return;
@@ -80,16 +82,23 @@ export default function ChatInput({
 
     const validFiles = files.filter(validateFile);
 
+    console.log('✅ Valid files:', validFiles);
+
     if (validFiles.length === 0) {
       return;
     }
 
     // 파일을 선택만 하고 업로드는 하지 않음
-    setSelectedFiles(prev => [...prev, ...validFiles]);
+    setSelectedFiles(prev => {
+      const newFiles = [...prev, ...validFiles];
+      console.log('📎 Selected files updated:', newFiles);
+      return newFiles;
+    });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
+    console.log('🖱️ File input changed, files selected:', files);
     handleFiles(files);
 
     // input 초기화 (같은 파일 다시 선택 가능하도록)
@@ -103,10 +112,15 @@ export default function ChatInput({
   };
 
   const handleSend = async () => {
-    if (!message.trim() && selectedFiles.length === 0) return;
-    if (disabled || isUploading) return;
-
     const trimmed = message.trim();
+
+    // 메시지가 반드시 있어야 함 (파일만으로는 전송 불가)
+    if (!trimmed) {
+      showToast('메시지를 입력해주세요.', 'error');
+      return;
+    }
+
+    if (disabled || isUploading) return;
 
     // 파일이 있으면 먼저 업로드
     if (selectedFiles.length > 0) {
@@ -126,6 +140,8 @@ export default function ChatInput({
         });
 
         const uploaded = await Promise.all(uploadPromises);
+
+        console.log('✅ Files uploaded successfully:', uploaded);
 
         // 업로드 완료 후 메시지 전송
         onSend(trimmed, uploaded);
@@ -161,12 +177,51 @@ export default function ChatInput({
     setMessage(newValue);
   };
 
+  // 이미지 붙여넣기 핸들러
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    console.log('📋 Paste event detected, clipboard items:', items.length);
+
+    const imageFiles: File[] = [];
+
+    // 클립보드 아이템에서 이미지 파일 추출
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      console.log(`   Item ${i}: type=${item.type}, kind=${item.kind}`);
+
+      // 이미지 타입인지 확인
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          console.log('   ✅ Image file found:', file.name, file.type, file.size);
+          imageFiles.push(file);
+        }
+      }
+    }
+
+    // 이미지 파일이 있으면 처리
+    if (imageFiles.length > 0) {
+      e.preventDefault(); // 기본 붙여넣기 동작 방지
+      console.log('🖼️ Processing pasted images:', imageFiles);
+      handleFiles(imageFiles);
+    } else {
+      console.log('❌ No image files found in clipboard');
+    }
+  };
+
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
   }, [message]);
+
+  // selectedFiles 변경 감지 (디버깅용)
+  useEffect(() => {
+    console.log('🔄 Selected files changed:', selectedFiles.length, selectedFiles);
+  }, [selectedFiles]);
 
   // 모바일 키보드가 올라올 때 스크롤을 맨 아래로 이동
   const handleFocus = () => {
@@ -382,6 +437,7 @@ export default function ChatInput({
           value={message}
           onChange={handleInput}
           onKeyDown={handleKeyDown}
+          onPaste={handlePaste}
           onFocus={handleFocus}
           placeholder={placeholder}
           disabled={disabled || isLoading || isUploading}
@@ -395,7 +451,7 @@ export default function ChatInput({
         ) : (
           <button
             onClick={handleSend}
-            disabled={!message.trim() && selectedFiles.length === 0 || disabled || isUploading}
+            disabled={!message.trim() || disabled || isUploading}
             className="chat-input-send-btn"
             title="전송"
           >
