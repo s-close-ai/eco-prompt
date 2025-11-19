@@ -249,7 +249,7 @@ public class AiService {
 								if ("FILE".equals(fileData.get("type"))) {
 									String originalFileName = fileData.get("originalFileName");
 									String savedFileName = fileData.get("savedFileName");
-									String getUrl = fileData.get("getUrl");
+									String getUrl = fileData.get("url");
 
 									// FE 보내는 데이터
 									String markdownLink = String.format("[%s](%s)", originalFileName, getUrl);

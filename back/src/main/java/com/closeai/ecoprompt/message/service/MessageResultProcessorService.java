@@ -189,8 +189,8 @@ public class MessageResultProcessorService {
 	}
 
 	private MessageDocument getMessageDocument(String messageUUID, MessageSender sender) {
-		return messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, sender)
-			.orElseThrow(() -> new BusinessException("메시지를 찾을 수 없습니다."));
+		Optional<MessageDocument> message = messageMongoRepository.findByMessageUUIDAndSenderType(messageUUID, sender);
+		return message.orElse(null);
 	}
 
 	private Message getMessage(String messageUUID, MessageSender sender) {
