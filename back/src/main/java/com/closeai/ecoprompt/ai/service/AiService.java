@@ -235,17 +235,21 @@ public class AiService {
 						} else if (currentSeqId > 0) {
 
 							if (currentSeqId == 1) {
-								sseService.sendEventToClient(messageUUID, "LLM_START", llmResponse);
+								sseService.sendEventToClient(messageUUID, "LLM_START", "START");
 							}
 							// 토큰 타입에 따라서 FILE인지 일반 응답인지 판단
 							// 일반 텍스트인 경우
 							if (tokenObject instanceof String) {
 								String token = tokenObject.toString();
-								sseService.sendEventToClient(messageUUID, "LLM_TOKEN", llmResponse);
-								answer.append(token);
+								if (token.equals("TOOL_CALL")) {
+									sseService.sendEventToClient(messageUUID, "TOOL_CALL", llmResponse);
+								} else {
+									sseService.sendEventToClient(messageUUID, "LLM_TOKEN", llmResponse);
+									answer.append(token);
+								}
 							}
 							// 파일이 들어왔을 때
-							else {
+							else if (tokenObject instanceof Map) {
 								Map<String, String> fileData = (Map<String, String>)tokenObject;
 
 								if ("FILE".equals(fileData.get("type"))) {

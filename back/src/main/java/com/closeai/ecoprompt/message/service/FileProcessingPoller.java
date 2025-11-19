@@ -49,6 +49,8 @@ public class FileProcessingPoller {
 			}
 
 			AppLogger.info("파일 처리 완료. LLM 호출 시작. messageUUID: " + job.getMessageUUID());
+			// 2-1. LLM의 작업 추가
+			messageEventHandler.addExpectedTask(messageUUID, "LLM");
 			// 2-2. OCR 작업 완료 처리
 			messageEventHandler.checkCompletion(messageUUID, "FILE_OCR");
 			// 2-3. LLM 모델 호출
@@ -63,7 +65,7 @@ public class FileProcessingPoller {
 
 		Query query = new Query(where("status").is(FileEventStatus.ERROR));
 		Update update = new Update().set("status", FileEventStatus.ERROR);
-		FileEvent job = mongoTemplate.findAndModify(query, update, FileEvent.class, "fileEvent");
+		FileEvent job = mongoTemplate.findAndModify(query, update, FileEvent.class, "file_events");
 
 		if (job != null) {
 			String messageUUID = job.getMessageUUID();
