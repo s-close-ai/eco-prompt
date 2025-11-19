@@ -7,14 +7,14 @@ import com.closeai.ecoprompt.message.model.entity.MessageSender;
 import lombok.Getter;
 
 @Getter
-public class EachModelEvent extends ApplicationEvent {
+public class EachModelErrorEvent extends ApplicationEvent {
 
 	private final String messageUUID;
 	private final MessageSender sender;
 	private final Integer userId;
 	private final boolean isSse;
 
-	public EachModelEvent(Object source, String messageUUID, MessageSender sender, Integer userId, boolean isSse) {
+	public EachModelErrorEvent(Object source, String messageUUID, MessageSender sender, Integer userId, boolean isSse) {
 		super(source);
 		this.messageUUID = messageUUID;
 		this.sender = sender;
