@@ -7,16 +7,21 @@ import type {
 
 /**
  * Presigned URL 요청
- * TODO: 백엔드 API 엔드포인트 확인 필요
- * Endpoint: POST /files/presigned (예상)
+ * Endpoint: POST /messages/file-upload
+ * Query parameters: originalFileName, contentType
  */
 export const getPresignedUrl = async (
   request: FilePresignedUrlRequest,
 ): Promise<FilePresignedUrlResponse> => {
-  // TODO: 실제 API 엔드포인트로 변경 필요
   const response = await apiClient.post<FilePresignedUrlResponse>(
-    '/files/presigned',
-    request,
+    '/messages/file-upload',
+    null,
+    {
+      params: {
+        originalFileName: request.originalFileName,
+        contentType: request.contentType,
+      },
+    },
   );
   return response.data;
 };
@@ -25,14 +30,24 @@ export const getPresignedUrl = async (
  * S3에 파일 업로드
  * presigned URL을 사용하여 직접 S3에 업로드
  */
-export const uploadToS3 = async (uploadUrl: string, file: File): Promise<void> => {
-  await fetch(uploadUrl, {
+export const uploadToS3 = async (
+  uploadUrl: string,
+  file: File,
+  contentType: string
+): Promise<void> => {
+  const response = await fetch(uploadUrl, {
     method: 'PUT',
     body: file,
     headers: {
-      'Content-Type': file.type,
+      'Content-Type': contentType,
     },
   });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('S3 업로드 실패:', response.status, errorText);
+    throw new Error(`S3 업로드 실패: ${response.status}`);
+  }
 };
 
 /**
@@ -43,38 +58,33 @@ export const uploadToS3 = async (uploadUrl: string, file: File): Promise<void> =
  */
 export const uploadFile = async (file: File): Promise<UploadedFileInfo> => {
   try {
+    // Content-Type 정규화 (빈 값이면 기본값 사용)
+    const contentType = file.type || 'application/octet-stream';
+
+    // 이미지인 경우 로컬 미리보기용 Blob URL 생성 (CORS 문제 회피)
+    const localBlobUrl = contentType.startsWith('image/') ? URL.createObjectURL(file) : undefined;
+
     // Step 1: Presigned URL 요청
-    // TODO: API 준비되면 주석 해제
-    /*
     const presignedResponse = await getPresignedUrl({
-      filename: file.name,
-      contentType: file.type,
+      originalFileName: file.name,
+      contentType: contentType,
     });
 
-    const { uploadUrl, fileUrl } = presignedResponse.data.urls;
-    const { fileId } = presignedResponse.data;
+    const { uploadUrl, fileId } = presignedResponse.data;
 
-    // Step 2: S3에 업로드
-    await uploadToS3(uploadUrl, file);
+    // Step 2: S3에 업로드 (presigned URL 생성 시 사용한 동일한 contentType 사용)
+    await uploadToS3(uploadUrl, file, contentType);
 
-    // Step 3: 업로드된 파일 정보 반환
+    // Step 3: S3 URL 생성 (uploadUrl에서 query string 제거)
+    const s3Url = uploadUrl.split('?')[0];
+
+    // Step 4: 업로드된 파일 정보 반환
     return {
-      fileUrl,
+      fileUrl: s3Url,
       filename: file.name,
       fileId,
-      contentType: file.type,
-    };
-    */
-
-    // TODO: 임시 구현 - API 준비되면 삭제
-    // 로컬에서 파일을 미리보기용 URL로 변환
-    const objectUrl = URL.createObjectURL(file);
-    return {
-      fileUrl: objectUrl,
-      filename: file.name,
-      fileId: Date.now(), // 임시 ID
-      contentType: file.type,
-      thumbnailUrl: file.type.startsWith('image/') ? objectUrl : undefined,
+      contentType: contentType,
+      thumbnailUrl: localBlobUrl, // 로컬 Blob URL 사용 (미리보기용)
     };
   } catch (error) {
     console.error('파일 업로드 실패:', error);

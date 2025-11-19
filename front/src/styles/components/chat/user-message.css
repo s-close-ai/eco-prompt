@@ -176,23 +176,38 @@
   margin-top: 8px;
 }
 
-/* 첨부 파일 스타일 */
-.user-message-attachments {
+/* 첨부 파일 섹션 - 메시지 박스 밖에 위치 */
+.user-message-attachments-section {
   display: flex;
   flex-direction: column;
   gap: 12px;
   margin-bottom: 12px;
+  max-width: 80%;
 }
 
 .user-message-attachment {
   width: 100%;
 }
 
+/* 이미지 링크 */
+.user-message-image-link {
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 /* 이미지 첨부 파일 */
 .user-message-image {
-  max-width: 400px;
+  max-width: 300px;
   border-radius: 12px;
   overflow: hidden;
+  border: 1px solid #e0e0e0;
+  background-color: #f9f9f9;
+  transition: opacity 0.2s;
+}
+
+.user-message-image-link:hover .user-message-image {
+  opacity: 0.9;
 }
 
 .user-message-image img {
@@ -211,6 +226,13 @@
   border-radius: 12px;
   padding: 12px;
   max-width: 300px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.2s;
+}
+
+.user-message-file:hover {
+  background-color: rgba(240, 240, 240, 0.9);
 }
 
 .user-message-file-icon {

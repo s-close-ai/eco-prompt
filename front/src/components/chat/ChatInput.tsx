@@ -3,6 +3,7 @@ import '@/styles/components/chat/chat-input.css';
 import { MAX_MESSAGE_LENGTH } from '@/constants/ui';
 import { uploadFiles } from '@/services/api/file';
 import type { UploadedFileInfo } from '@/types/api/file.types';
+import { useToast } from '@/context/ToastContext';
 
 interface ChatInputProps {
   onSend: (message: string, uploadedFiles?: UploadedFileInfo[]) => void;
@@ -24,18 +25,11 @@ export default function ChatInput({
   onStop,
 }: ChatInputProps) {
   const [message, setMessage] = useState('');
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFileInfo[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const showAlertMessage = (msg: string) => {
-    setAlertMessage(msg);
-    setShowAlert(true);
-    setTimeout(() => setShowAlert(false), 3000);
-  };
+  const { showToast } = useToast();
 
   const getFileExtension = (filename: string): string => {
     return filename.split('.').pop()?.toLowerCase() || '';
@@ -45,12 +39,12 @@ export default function ChatInput({
     const extension = getFileExtension(file.name);
 
     if (!ALLOWED_EXTENSIONS.includes(extension)) {
-      showAlertMessage(`허용되지 않는 파일 형식입니다. (허용: ${ALLOWED_EXTENSIONS.join(', ')})`);
+      showToast(`허용되지 않는 파일 형식입니다. (허용: ${ALLOWED_EXTENSIONS.join(', ')})`, 'error');
       return false;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      showAlertMessage(`파일 크기는 최대 ${MAX_FILE_SIZE / 1024 / 1024}MB까지 가능합니다.`);
+      showToast(`파일 크기는 최대 ${MAX_FILE_SIZE / 1024 / 1024}MB까지 가능합니다.`, 'error');
       return false;
     }
 
@@ -61,7 +55,7 @@ export default function ChatInput({
     const files = Array.from(e.target.files || []);
 
     if (uploadedFiles.length + files.length > MAX_FILE_COUNT) {
-      showAlertMessage(`최대 ${MAX_FILE_COUNT}개의 파일만 선택할 수 있습니다.`);
+      showToast(`최대 ${MAX_FILE_COUNT}개의 파일만 선택할 수 있습니다.`, 'error');
       return;
     }
 
@@ -77,8 +71,9 @@ export default function ChatInput({
     try {
       const uploaded = await uploadFiles(validFiles);
       setUploadedFiles(prev => [...prev, ...uploaded]);
+      showToast('파일 업로드가 완료되었습니다.', 'success');
     } catch (error) {
-      showAlertMessage('파일 업로드에 실패했습니다.');
+      showToast('파일 업로드에 실패했습니다.', 'error');
       console.error('File upload error:', error);
     } finally {
       setIsUploading(false);
@@ -134,7 +129,7 @@ export default function ChatInput({
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     if (newValue.length > MAX_MESSAGE_LENGTH) {
-      showAlertMessage(`최대 ${MAX_MESSAGE_LENGTH.toLocaleString()}자까지 입력할 수 있습니다.`);
+      showToast(`최대 ${MAX_MESSAGE_LENGTH.toLocaleString()}자까지 입력할 수 있습니다.`, 'error');
       return;
     }
     setMessage(newValue);
@@ -200,12 +195,25 @@ export default function ChatInput({
       {uploadedFiles.length > 0 && (
         <div className="chat-input-files-preview-horizontal">
           {uploadedFiles.map((file, index) => {
-            const isImage = file.contentType?.startsWith('image/');
+            // contentType 또는 파일명으로 이미지 여부 판단
+            const isImage = file.contentType?.startsWith('image/') ||
+                           file.filename?.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp|bmp)$/);
+            // 이미지면 fileUrl 또는 thumbnailUrl 사용
+            const imageUrl = file.thumbnailUrl || file.fileUrl;
+
             return (
               <div key={index} className="file-preview-item-horizontal">
-                {isImage && file.thumbnailUrl ? (
+                {isImage ? (
                   <div className="file-preview-thumbnail">
-                    <img src={file.thumbnailUrl} alt={file.filename} />
+                    <img
+                      src={imageUrl}
+                      alt={file.filename}
+                      onError={(e) => {
+                        console.error('이미지 로드 실패:', imageUrl, file);
+                        // 이미지 로드 실패 시 부모 요소를 문서 카드로 대체
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
                     <button
                       onClick={() => handleRemoveFile(index)}
                       className="file-preview-remove-overlay"
@@ -287,16 +295,6 @@ export default function ChatInput({
           Eco Prompt는 실수를 할 수 있고, 공유될 수 있습니다. 중요한 정보는 확인하세요.
         </p>
       </div>
-      {showAlert && (
-        <div className="chat-input-alert">
-          {alertMessage}
-        </div>
-      )}
-      {isUploading && (
-        <div className="chat-input-uploading">
-          파일 업로드 중...
-        </div>
-      )}
     </div>
   );
 }

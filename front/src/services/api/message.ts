@@ -19,11 +19,7 @@ import type {
 export const submitMessage = async (
   request: MessageInputRequest,
 ): Promise<MessageInputResponse> => {
-  // TODO: 백엔드 API가 준비되면 uploadedFiles를 서버로 전송
-  // 현재는 uploadedFiles를 제외하고 전송
-  const { uploadedFiles, ...jsonRequest } = request;
-
-  const response = await apiClient.post<MessageInputResponse>('/messages/input', jsonRequest);
+  const response = await apiClient.post<MessageInputResponse>('/messages/input', request);
   return response.data;
 };
 

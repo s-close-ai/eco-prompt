@@ -7,14 +7,16 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import '@/styles/components/chat/ai-message.css';
+import type { MessageFileAttachment } from '@/types/api/file.types';
 
 interface AIMessageProps {
   message: string;
   timestamp?: Date;
   isStreaming?: boolean;
+  attachments?: MessageFileAttachment[];
 }
 
-export default function AIMessage({ message, isStreaming }: AIMessageProps) {
+export default function AIMessage({ message, isStreaming, attachments = [] }: AIMessageProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -43,6 +45,34 @@ export default function AIMessage({ message, isStreaming }: AIMessageProps) {
   return (
     <div className="ai-message-container">
       <div className="ai-message">
+        {/* 파일 다운로드 섹션 */}
+        {attachments && attachments.length > 0 && (
+          <div className="ai-message-file-download-section">
+            {attachments.map((file, index) => (
+              <a
+                key={index}
+                href={file.fileUrl}
+                download={file.originalFileName}
+                className="ai-message-download-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div className="ai-message-download-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                </div>
+                <div className="ai-message-download-info">
+                  <span className="ai-message-download-name">{file.originalFileName}</span>
+                  <span className="ai-message-download-hint">클릭하여 다운로드</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+
         <div className="ai-message-text">
           <ReactMarkdown
             remarkPlugins={[remarkGfm, remarkMath]}

@@ -204,7 +204,7 @@ export default function Chat() {
       // 첨부 파일을 MessageFileAttachment 형식으로 변환
       const attachments = uploadedFiles?.map(file => ({
         fileId: file.fileId,
-        filename: file.filename,
+        originalFileName: file.filename,
         fileUrl: file.fileUrl,
         contentType: file.contentType || 'application/octet-stream',
       }));
@@ -254,9 +254,9 @@ export default function Chat() {
           projectId: actualProjectId,
           chattingId: currentChatId ? Number(currentChatId) : undefined,
           content: message,
-          uploadedFiles: uploadedFiles?.map(file => ({
+          uploadFileInfoList: uploadedFiles?.map(file => ({
             fileUrl: file.fileUrl,
-            filename: file.filename,
+            originalFileName: file.filename,
             fileId: file.fileId,
           })),
         });

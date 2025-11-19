@@ -4,9 +4,9 @@ export interface MessageInputRequest {
   projectId: number;
   chattingId?: number;
   content: string;
-  uploadedFiles?: Array<{
+  uploadFileInfoList?: Array<{
     fileUrl: string;
-    filename: string;
+    originalFileName: string;
     fileId: number;
   }>;
 }

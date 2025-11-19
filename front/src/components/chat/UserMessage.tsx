@@ -90,36 +90,54 @@ export default function UserMessage({
 
   return (
     <div className="user-message-container">
-      <div className="user-message">
-        {/* 첨부 파일 표시 */}
-        {attachments && attachments.length > 0 && (
-          <div className="user-message-attachments">
-            {attachments.map((file, index) => {
-              const isImage = file.contentType?.startsWith('image/');
-              return (
-                <div key={index} className="user-message-attachment">
-                  {isImage ? (
+      {/* 첨부 파일 섹션 */}
+      {attachments && attachments.length > 0 && (
+        <div className="user-message-attachments-section">
+          {attachments.map((file, index) => {
+            // contentType 또는 파일명으로 이미지 여부 판단
+            const isImage = file.contentType?.startsWith('image/') ||
+                           file.originalFileName?.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp|bmp)$/);
+            return (
+              <div key={index} className="user-message-attachment">
+                {isImage ? (
+                  <a
+                    href={file.fileUrl}
+                    download={file.originalFileName}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="user-message-image-link"
+                  >
                     <div className="user-message-image">
-                      <img src={file.fileUrl} alt={file.filename} />
+                      <img src={file.fileUrl} alt={file.originalFileName} />
                     </div>
-                  ) : (
-                    <div className="user-message-file">
-                      <div className="user-message-file-icon">
-                        📄
-                      </div>
-                      <div className="user-message-file-info">
-                        <span className="user-message-file-name">{file.filename}</span>
-                        <span className="user-message-file-type">
-                          {file.contentType?.split('/')[1]?.toUpperCase() || 'FILE'}
-                        </span>
-                      </div>
+                  </a>
+                ) : (
+                  <a
+                    href={file.fileUrl}
+                    download={file.originalFileName}
+                    className="user-message-file"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <div className="user-message-file-icon">
+                      📄
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+                    <div className="user-message-file-info">
+                      <span className="user-message-file-name">{file.originalFileName}</span>
+                      <span className="user-message-file-type">
+                        {file.contentType?.split('/')[1]?.toUpperCase() || 'FILE'}
+                      </span>
+                    </div>
+                  </a>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* 메시지 섹션 */}
+      <div className="user-message">
         <p className="user-message-text">{message}</p>
       </div>
       <div className="user-message-actions">
