@@ -231,10 +231,12 @@ public class AiService {
 						Object tokenObject = buffer.remove(currentSeqId);
 
 						if (currentSeqId == 0 && tokenObject.equals("START")) {
-							sseService.sendEventToClient(messageUUID, "LLM_START", llmResponse);
 						} else if (tokenObject.equals("DONE")) {
-
 						} else if (currentSeqId > 0) {
+
+							if (currentSeqId == 1) {
+								sseService.sendEventToClient(messageUUID, "LLM_START", llmResponse);
+							}
 							// 토큰 타입에 따라서 FILE인지 일반 응답인지 판단
 							// 일반 텍스트인 경우
 							if (tokenObject instanceof String) {
