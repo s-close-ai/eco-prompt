@@ -90,7 +90,7 @@ public class AiClient {
             }
 
             String jsonPart = raw.substring(jsonStart, jsonEnd + 1);
-            log.debug("jsonPart: {}", jsonPart);
+            log.info("jsonPart: {}", jsonPart);
 
             // {"name": "...", "arguments": {...}} 구조를 Map으로 파싱
             Map<String, Object> root = objectMapper.readValue(
@@ -106,6 +106,7 @@ public class AiClient {
 
             @SuppressWarnings("unchecked")
             Map<String, Object> args = (Map<String, Object>) argsObj;
+            log.info("[AI] args: {}", args);
 
             Object content = args.get("content");
             if (content == null) {
