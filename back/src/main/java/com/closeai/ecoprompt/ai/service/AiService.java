@@ -241,13 +241,15 @@ public class AiService {
 							// 일반 텍스트인 경우
 							if (tokenObject instanceof String) {
 								String token = tokenObject.toString();
-								if (!token.equals("TOOL_CALL")) {
+								if (token.equals("TOOL_CALL")) {
+									sseService.sendEventToClient(messageUUID, "TOOL_CALL", llmResponse);
+								} else {
 									sseService.sendEventToClient(messageUUID, "LLM_TOKEN", llmResponse);
 									answer.append(token);
 								}
 							}
 							// 파일이 들어왔을 때
-							else {
+							else if (tokenObject instanceof Map) {
 								Map<String, String> fileData = (Map<String, String>)tokenObject;
 
 								if ("FILE".equals(fileData.get("type"))) {
