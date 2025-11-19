@@ -1,13 +1,9 @@
-from datetime import datetime
-from dotenv import load_dotenv
 from langchain_core.runnables import RunnableLambda, RunnableParallel
 from vllm.sampling_params import RequestOutputKind
 from vllm import SamplingParams
 
 from app.models.prompt_template import routing_prompt, basic_prompt, tool_usage_instruction
 from app.services.pdf_tools import get_tool_definitions, parse_midm_tool_call, parse_qwen_tool_call, execute_tool
-
-load_dotenv()
 
 
 def get_sampling_params(prompt_type: str, question_type: str) -> SamplingParams:
