@@ -37,7 +37,7 @@ public class FileProcessingPoller {
 		Query query = new Query(where("status").is(FileEventStatus.COMPLETED));
 		Update update = new Update().set("status", FileEventStatus.LLM_PENDING);
 
-		FileEvent job = mongoTemplate.findAndModify(query, update, FileEvent.class, "fileEvent");
+		FileEvent job = mongoTemplate.findAndModify(query, update, FileEvent.class, "file_events");
 
 		// 2. 작업에 성공했을 때 LLM 호출
 		if (job != null) {
