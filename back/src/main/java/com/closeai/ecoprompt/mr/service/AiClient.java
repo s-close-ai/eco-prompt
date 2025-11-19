@@ -19,19 +19,16 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AiClient {
 
-	private final WebClient aiWebClient;
+    private final WebClient aiWebClient;
 
-	public String analyzeMr(String title, String description, String diffText, String mrTemplate) {
+    public String analyzeMr(String title, String description, String diffText, String mrTemplate) {
 
-		// 1) MR → Prompt 변환
-		String prompt = MrPromptBuilder.buildMrPrompt(title, description, diffText, mrTemplate);
-		log.info("prompt: {}", prompt);
+        String prompt = MrPromptBuilder.buildMrPrompt(title, description, diffText, mrTemplate);
+        log.info("prompt: {}", prompt);
 
-		// 2) AI 서버가 요구하는 형태로 Request DTO 구성
-		LlmRequest request = new LlmRequest("한글로 답해줘", prompt, UUID.randomUUID().toString());
-		
+        LlmRequest request = new LlmRequest("한글로 답해줘", prompt, UUID.randomUUID().toString());
+
         try {
-            // 3) WebClient 호출
             String mrAnalyzePath = "/api/v1/ai/prompt-response";
 
             return aiWebClient.post()
@@ -47,20 +44,28 @@ public class AiClient {
                                     !"START".equals(res.token()) &&
                                     !"DONE".equals(res.token())
                     )
-					.map(res -> {
-						Object tokenObj = res.token();
-						if (tokenObj instanceof String) {
-							return tokenObj.toString();
-						} else if (tokenObj instanceof Map) {
-							return "";
-						}
-						return tokenObj.toString();
-					})
+                    .map(res -> {
+                        Object tokenObj = res.token();
+
+                        // 툴콜 응답인 경우: {"name": "...", "arguments": { "title": "...", "content": "..." }}
+                        if (tokenObj instanceof Map<?, ?> map) {
+                            Object argsObj = map.get("arguments");
+                            if (argsObj instanceof Map<?, ?> args) {
+                                Object content = args.get("content");
+                                if (content != null) {
+                                    return content.toString();
+                                }
+                            }
+                            return "";
+                        }
+
+                        // 문자열 토큰은(“네 알겠습니다~” 같은) MR 템플릿에는 필요 없으니 무시
+                        return "";
+                    })
                     .collect(Collectors.joining())
                     .block();
 
         } catch (Exception e) {
-            // 🔥 WebClient 예외 발생 → 기존 mrTemplate 반환
             log.error("[AI ERROR] MR 분석 중 오류 발생. 원본 템플릿을 반환합니다.", e);
             return mrTemplate;
         }
