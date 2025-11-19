@@ -34,8 +34,19 @@ public class MessageEventHandler {
 	 * messageUUID 기준으로 완료해야 될 작업을 초기화하는 함수
 	 * */
 	public void initializeTask(String messageUUID, Set<String> modelsToExpect) {
-		expectedModels.put(messageUUID, modelsToExpect);
+		Set<String> concurrentExpected = ConcurrentHashMap.newKeySet();
+		if (modelsToExpect != null) {
+			concurrentExpected.addAll(modelsToExpect);
+		}
+		expectedModels.put(messageUUID, concurrentExpected);
 		completionStatus.put(messageUUID, Collections.synchronizedSet(new HashSet<>()));
+	}
+
+	/**
+	 * 현재 작업이 유효한지 판단
+	 * */
+	public boolean isTaskActive(String messageUUID) {
+		return completionStatus.containsKey(messageUUID);
 	}
 
 	/**
