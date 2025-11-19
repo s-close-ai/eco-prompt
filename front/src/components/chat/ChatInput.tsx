@@ -48,6 +48,7 @@ export default function ChatInput({
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFileInfo[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [isDragging, setIsDragging] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useToast();
@@ -72,9 +73,7 @@ export default function ChatInput({
     return true;
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-
+  const handleFiles = (files: File[]) => {
     if (selectedFiles.length + files.length > MAX_FILE_COUNT) {
       showToast(`최대 ${MAX_FILE_COUNT}개의 파일만 선택할 수 있습니다.`, 'error');
       return;
@@ -88,6 +87,11 @@ export default function ChatInput({
 
     // 파일을 선택만 하고 업로드는 하지 않음
     setSelectedFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    handleFiles(files);
 
     // input 초기화 (같은 파일 다시 선택 가능하도록)
     if (fileInputRef.current) {
@@ -234,8 +238,55 @@ export default function ChatInput({
     };
   }, [filePreviews]);
 
+  // Drag and drop handlers
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Check if the leave target is outside the main container
+    if (e.currentTarget.contains(e.relatedTarget as Node)) {
+        return;
+    }
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const files = Array.from(e.dataTransfer.files);
+      handleFiles(files);
+      e.dataTransfer.clearData();
+    }
+  };
+
   return (
-    <div className="chat-input-container">
+    <div
+      className={`chat-input-container ${isDragging ? 'drag-over' : ''}`}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div className="drag-drop-overlay">
+          <p>파일을 여기에 드롭하세요</p>
+        </div>
+      )}
       {/* 선택된 파일 미리보기 */}
       {filePreviews.length > 0 && (
         <div className="chat-input-files-preview-horizontal">
@@ -347,7 +398,7 @@ export default function ChatInput({
         ) : (
           <button
             onClick={handleSend}
-            disabled={!message.trim() || disabled || isUploading}
+            disabled={!message.trim() && selectedFiles.length === 0 || disabled || isUploading}
             className="chat-input-send-btn"
             title="전송"
           >

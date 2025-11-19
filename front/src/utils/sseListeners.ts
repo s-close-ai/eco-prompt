@@ -171,27 +171,49 @@ export function setupSSEListeners({
     }
   });
 
-  // FILE 이벤트 - AI가 생성한 파일 정보
+  // FILE 이벤트 - AI가 생성한 파일 정보 (마크다운 링크 형식)
   eventSource.addEventListener('FILE', (event: Event) => {
     try {
-      const fileData = JSON.parse((event as MessageEvent).data);
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === aiMessageId
-            ? {
-                ...m,
-                attachments: [{
-                  fileId: fileData.fileId,
-                  fileUrl: fileData.fileUrl,
-                  originalFileName: fileData.originalFileName,
-                  contentType: fileData.contentType,
-                }]
-              }
-            : m
-        ),
-      );
+      const eventData = (event as MessageEvent).data as string;
+      
+      // 마크다운 링크 파싱: [fileName](fileUrl)
+      const match = /\[(.*?)\]\((.*?)\)/.exec(eventData);
+
+      if (match && match.length === 3) {
+        const originalFileName = match[1];
+        const fileUrl = match[2];
+
+        // 파일 확장자로 contentType 유추
+        const fileExtension = originalFileName.split('.').pop()?.toLowerCase();
+        let contentType = 'application/octet-stream';
+        if (fileExtension === 'pdf') {
+          contentType = 'application/pdf';
+        } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension || '')) {
+          contentType = `image/${fileExtension}`;
+        }
+        
+        const newAttachment = {
+          fileId: Date.now() + Math.random(), // 임시 고유 ID
+          fileUrl,
+          originalFileName,
+          contentType,
+        };
+
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === aiMessageId
+              ? {
+                  ...m,
+                  attachments: [...(m.attachments || []), newAttachment],
+                }
+              : m
+          ),
+        );
+      } else {
+        console.error('FILE 이벤트 데이터 파싱 실패 (마크다운 링크 형식이 아님):', eventData);
+      }
     } catch (error) {
-      console.error('Failed to parse FILE:', error);
+      console.error('FILE 이벤트 처리 실패:', error);
     }
   });
 
@@ -221,7 +243,6 @@ export function setupSSEListeners({
   });
 
   // LLM_ERROR 이벤트 - LLM 응답 생성 실패
-  // 결과: LLM 응답 X, 점수는 JUDGE 이벤트 대기
   eventSource.addEventListener('LLM_ERROR', () => {
     llmEnded = true; // LLM이 에러로 종료됨
     autoScrollEnabledRef.current = false;
@@ -231,11 +252,11 @@ export function setupSSEListeners({
       const filtered = prev.filter((m) => m.id !== loadingMessageId && m.id !== aiMessageId);
 
       // 이미 JUDGE_ERROR로 에러 메시지가 추가된 경우 - 둘 다 에러
-      if (hasError && errorMessageId) {
+      if (judgeEnded) {
         // 기존 에러 메시지를 통합 메시지로 업데이트
         return filtered.map((m) =>
-          m.id === errorMessageId
-            ? { ...m, message: '응답을 생성하는 중 오류가 발생했습니다.', errorType: 'both' as const }
+          m.id === userMessageId
+            ? { ...m, scoreState: { status: 'error', error: '점수 평가 실패' } } // JUDGE_ERROR가 메시지를 안 만들수도 있으니 scoreState를 에러로
             : m,
         );
       }
@@ -257,7 +278,8 @@ export function setupSSEListeners({
       ];
     });
 
-    // SSE 연결은 유지 (JUDGE 이벤트 대기)
+    // 다른 스트림이 끝났는지 확인하고 SSE 연결 종료
+    checkAndCloseSSE();
   });
 
   // JUDGE_ERROR 이벤트 - 점수 생성 실패
@@ -288,7 +310,7 @@ export function setupSSEListeners({
       );
 
       // LLM도 에러가 났는지 확인
-      if (llmEnded && hasError) {
+      if (llmEnded) {
         // 둘 다 에러 - 기존 LLM 에러 메시지를 통합 메시지로 업데이트
         if (errorMessageId) {
           setMessages((prev) =>
@@ -299,16 +321,8 @@ export function setupSSEListeners({
             ),
           );
         }
-
-        // 둘 다 에러이므로 SSE 종료
-        eventSource.close();
-        eventSourcesRef.current.delete(aiMessageId);
-        messageUUIDsRef.current.delete(aiMessageId);
-        setIsLoading(false);
       }
-      // JUDGE만 에러인 경우: scoreState로만 처리, 별도 에러 메시지 추가하지 않음
-      // LLM은 정상 진행
-
+      
       // 새 채팅인 경우 "NEW CHAT" 제목으로 사이드바 업데이트
       if (returnedChattingId && actualProjectId) {
         const newTitle = 'NEW CHAT';
@@ -350,8 +364,9 @@ export function setupSSEListeners({
           }
         }
       }
-      // LLM 응답은 계속 받으므로 SSE 연결 유지
-      judgeEnded = true; // 점수 평가 실패로 judge 종료
+      
+      // 다른 스트림이 끝났는지 확인하고 SSE 연결 종료
+      checkAndCloseSSE();
   });
 
   // SSE_COMPLETE 이벤트

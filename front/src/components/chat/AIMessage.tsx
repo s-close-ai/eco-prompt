@@ -47,44 +47,13 @@ export default function AIMessage({ message, isStreaming, attachments = [] }: AI
   };
 
   // 메시지가 비어있고 스트리밍 중도 아니면 렌더링하지 않음
-  if (message === '' && !isStreaming) {
+  if (message === '' && !isStreaming && attachments.length === 0) {
     return null;
   }
 
   return (
     <div className="ai-message-container">
       <div className="ai-message">
-        {/* 파일 다운로드 섹션 */}
-        {attachments && attachments.length > 0 && (
-          <div className="ai-message-file-download-section">
-            {attachments.map((file, index) => (
-              <a
-                key={index}
-                href={file.fileUrl}
-                download={file.originalFileName}
-                className="ai-message-download-link"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <div
-                  className="ai-message-download-icon"
-                  style={{ backgroundColor: getFileColor(file.originalFileName) }}
-                >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-                </svg>
-                </div>
-                <div className="ai-message-download-info">
-                <span className="ai-message-download-name">{file.originalFileName}</span>
-                <span className="ai-message-download-hint">클릭하여 다운로드</span>
-                </div>
-              </a>
-            ))}
-          </div>
-        )}
-
         <div className="ai-message-text">
           <ReactMarkdown
             remarkPlugins={[remarkGfm, remarkMath]}
@@ -144,6 +113,38 @@ export default function AIMessage({ message, isStreaming, attachments = [] }: AI
             {message}
           </ReactMarkdown>
         </div>
+
+        {/* 파일 다운로드 섹션 */}
+        {attachments && attachments.length > 0 && (
+          <div className="ai-message-file-download-section">
+            {attachments.map((file, index) => (
+              <a
+                key={index}
+                href={file.fileUrl}
+                download={file.originalFileName}
+                className="ai-message-download-link"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <div
+                  className="ai-message-download-icon"
+                  style={{ backgroundColor: getFileColor(file.originalFileName) }}
+                >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                </div>
+                <div className="ai-message-download-info">
+                <span className="ai-message-download-name">{file.originalFileName}</span>
+                <span className="ai-message-download-hint">클릭하여 다운로드</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
+
         {isStreaming && <span className="streaming-cursor">▍</span>}
         {!isStreaming && message && (
           <button onClick={handleCopy} className="ai-message-copy-btn" title="복사">
