@@ -47,11 +47,17 @@ public class AiClient {
                     .map(res -> {
                         Object tokenObj = res.token();
 
+                        log.info("token: {}", tokenObj);
+
                         // 툴콜 응답인 경우: {"name": "...", "arguments": { "title": "...", "content": "..." }}
                         if (tokenObj instanceof Map<?, ?> map) {
                             Object argsObj = map.get("arguments");
+                            log.info("args: {}", argsObj);
+
                             if (argsObj instanceof Map<?, ?> args) {
                                 Object content = args.get("content");
+                                log.info("content: {}", content);
+
                                 if (content != null) {
                                     return content.toString();
                                 }
