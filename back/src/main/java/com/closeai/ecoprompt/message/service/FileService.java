@@ -11,7 +11,6 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.closeai.ecoprompt.common.exception.BusinessException;
 import com.closeai.ecoprompt.message.model.dto.request.UploadFileRequest;
@@ -190,24 +189,6 @@ public class FileService {
 		}
 
 		return s3Keys;
-	}
-
-	public void validateFile(MultipartFile file) {
-		// 빈 파일 검사
-		if (file.isEmpty()) {
-			throw new BusinessException("업로드할 파일이 없습니다.");
-		}
-		// 파일 크기 검사
-		if (file.getSize() > MAX_FILE_SIZE) {
-			throw new BusinessException("파일 크기가 너무 큽니다.");
-		}
-		// 확장자 검사
-		String originalFileName = file.getOriginalFilename();
-		String fileExtension = getFileExtension(originalFileName);
-
-		if (fileExtension.isEmpty() || !ALLOWED_EXTENSIONS.contains(fileExtension.toLowerCase())) {
-			throw new BusinessException("허용되지 않는 파일 확장자입니다. (허용: jpg, jpeg, png, pdf, csv, txt)");
-		}
 	}
 
 	// 파일 확장자를 추출하는 헬퍼 메서드

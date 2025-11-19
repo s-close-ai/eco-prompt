@@ -120,7 +120,7 @@ public class MessageService {
 			s3Keys = fileService.getFileKeyAndUpdateMessageUUID(fileIdList, messageUUID);
 		}
 		//6. 비동기 작업 실행(LLM, JUDGE, OCR)
-		triggerAsyncWorkflows(messageUUID, content, userId, isFirstChatting, s3Keys);
+		triggerAsyncWorkflows(messageUUID, content, userId, isFirstChatting, s3Keys, true);
 
 		return new SubmitMessageResponse(chattingId, messageUUID);
 	}
@@ -208,8 +208,18 @@ public class MessageService {
 		// 3. 생성된 AI 답변 삭제하기
 		fileService.deleteLLMFile(messageUUID);
 
-		// 3. JudgeModel 호출
-		aiService.callAiModel(messageUUID, content, userId, false);
+		// 4. 저장된 파일 정보 가져오기
+		List<String> s3Keys = new ArrayList<>();
+		List<File> files = fileRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER);
+		if (files != null && !files.isEmpty()) {
+			List<Long> fileIdList = files.stream()
+				.map(File::getId)
+				.toList();
+
+			s3Keys = fileService.getFileKeyAndUpdateMessageUUID(fileIdList, messageUUID);
+		}
+		//5. 비동기 작업 실행(LLM, JUDGE, OCR)
+		triggerAsyncWorkflows(messageUUID, content, userId, false, s3Keys, true);
 
 		return new SubmitMessageResponse(chattingId, messageUUID);
 	}
@@ -252,8 +262,6 @@ public class MessageService {
 	 * Judge 메시지 호출 API 함수
 	 */
 	public Mono<JudgeOnlyResponse> updateJudgeResult(UpdateMessageRequest messageCommand) {
-
-		Long chattingId = messageCommand.chattingId();
 		String content = messageCommand.content();
 		String messageUUID = messageCommand.messageUUID();
 		Integer userId = CustomUtil.getCurrentUserId();
@@ -293,6 +301,17 @@ public class MessageService {
 		// 2. LLM 파일 삭제하기
 		fileService.deleteLLMFile(messageUUID);
 
+		// 3. 기존 메시지에 첨부한 파일이 있는지 조회
+		List<String> s3Keys = new ArrayList<>();
+		List<File> files = fileRepository.findByMessageUUIDAndSenderType(messageUUID, MessageSender.USER);
+		if (files != null && !files.isEmpty()) {
+			List<Long> fileIdList = files.stream()
+				.map(File::getId)
+				.toList();
+
+			s3Keys = fileService.getFileKeyAndUpdateMessageUUID(fileIdList, messageUUID);
+		}
+		triggerAsyncWorkflows(messageUUID, content, userId, false, s3Keys, false);
 		aiService.callLlmModelOnly(messageUUID, content, userId);
 	}
 
@@ -457,12 +476,16 @@ public class MessageService {
 	}
 
 	private void triggerAsyncWorkflows(String messageUUID, String content, Integer userId, boolean isFirstChatting,
-		List<String> s3KeyList) {
+		List<String> s3KeyList, boolean includeJudge) {
 
 		// 1. file이 있는지 없는지 확인
 		boolean hasFile = !s3KeyList.isEmpty();
-		Set<String> expectedTask = new HashSet<>(Set.of("JUDGE"));
-
+		Set<String> expectedTask = new HashSet<>();
+		// 1-2. Judge 실행 여부에 따라 Task 추가
+		if (includeJudge) {
+			expectedTask.add("JUDGE");
+		}
+		// 1-3. 파일 유무에 따라 OCR 또는 LLM Task 추가
 		if (hasFile) {
 			expectedTask.add("FILE_OCR");
 		} else {
@@ -470,8 +493,11 @@ public class MessageService {
 		}
 
 		messageEventHandler.initializeTask(messageUUID, expectedTask);
-		// 2. AI Model 호출
-		aiService.callInputJudgeModel(messageUUID, content, userId, isFirstChatting, true);
+		// 2. AI 모델 호출
+		if (includeJudge) {
+			// 2-1. judge 모델 true인 경우에만 호출
+			aiService.callInputJudgeModel(messageUUID, content, userId, isFirstChatting, true);
+		}
 
 		// 3. Trigger File OCR
 		if (hasFile) {

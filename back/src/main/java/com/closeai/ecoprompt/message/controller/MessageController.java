@@ -2,7 +2,6 @@ package com.closeai.ecoprompt.message.controller;
 
 import java.util.List;
 
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,7 +45,7 @@ public class MessageController implements MessageControllerDocs {
 		return ApiResponse.success(fileService.makePresignedURL(request));
 	}
 
-	@PostMapping(value = "/input", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PostMapping(value = "/input")
 	public ResponseEntity<ApiResponse<SubmitMessageResponse>> submitMessage(
 		@RequestBody @Valid SubmitMessageRequest request) {
 
