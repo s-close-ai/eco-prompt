@@ -53,18 +53,6 @@ export default function Bottombar({ variant, onSendMessage }: BottombarProps) {
           <img src="/icons/dashboard.svg" alt="dashboard" />
         </button>
         <button
-          aria-label="mr_create"
-          className="icon-button"
-          onClick={() => {
-            const targetPath = '/mr_create';
-            if (location.pathname !== targetPath) {
-              navigate(targetPath);
-            }
-          }}
-        >
-          <img src="/icons/mr_create.svg" alt="mr_create" />
-        </button>
-        <button
           aria-label="settings"
           className="icon-button"
           onClick={() => {

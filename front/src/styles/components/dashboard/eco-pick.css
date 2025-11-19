@@ -493,3 +493,14 @@
     opacity: 0;
   }
 }
+
+/* 모바일에서만 content 높이 조정 */
+@media (max-width: 767px) {
+  .eco-pick-content {
+    height: auto;
+    max-height: 100%;
+    flex: 1;
+    min-height: 0;
+    flex-shrink: 1;
+  }
+}
