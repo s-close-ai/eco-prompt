@@ -2,7 +2,7 @@ from langchain_core.runnables import RunnableLambda, RunnableParallel
 from vllm.sampling_params import RequestOutputKind
 from vllm import SamplingParams
 
-from app.models.prompt_template import routing_prompt, basic_prompt, tool_usage_instruction
+from app.models.prompt_template import routing_prompt, basic_prompt
 from app.services.pdf_tools import get_tool_definitions, parse_midm_tool_call, parse_qwen_tool_call, execute_tool
 
 
@@ -126,8 +126,7 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
         personal_prompt = str(user_info.get("personal_prompt", ""))
 
         system_prompt = (
-            tool_usage_instruction + 
-            "\n\n" + service_prompt + 
+            service_prompt + 
             "\n---\n[사용자 지침]\n" + personal_prompt + 
             "\n\n[History]\n" + history + 
             "\n"
@@ -162,8 +161,7 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
         personal_prompt = str(user_info.get("personal_prompt", ""))
 
         system_prompt = (
-            tool_usage_instruction + 
-            "\n\n" + basic_prompt +
+            basic_prompt +
             "\n\n" + service_prompt + 
             "\n---\n[사용자 지침]\n" + personal_prompt + 
             "\n\n[History]\n" + history + 
@@ -264,7 +262,7 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
 
         full_response = ""
         sent_length = 0    # 이미 전송한 길이 추적하기
-        in_tool_call = False    # tool_call 태그 내부인지 추적하기
+        tool_used = False
 
         async for request_output in result_generator:
             for completion in request_output.outputs:
@@ -273,45 +271,20 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
                 if new_text:
                     full_response += new_text
                     
-                    # 전송할 텍스트 처리
-                    current_pos = sent_length
-
-                    while current_pos < len(full_response):
-                        if not in_tool_call:
-                            # tool_call 시작 태그 찾기
-                            tool_start = full_response.find("<tool_call>", current_pos)
-
-                            if tool_start == -1:
-                                # tool_call이 없으면 나머지 전부 전송하기
-                                to_send = full_response[current_pos:]
-                                if to_send:
+                    # <tool_call> 태그가 시작되었다면 더이상 전송하지 않기
+                    if tool_used == False:
+                        for char in ["<t", "<to", "<too", "<tool", "<tool_", "<tool_c"]:
+                            if char in new_text:
+                                tool_used = True
+                                yield "TOOL_CALL"
+                                sent_length = len(full_response) - len(new_text)    # 전송된 길이
+                                to_send = full_response[sent_length:]
+                                print(to_send)
+                                if to_send not in ["<t", "<to", "<too", "<tool", "<tool_", "<tool_c"]:
                                     yield to_send
-                                current_pos = len(full_response)
-
-                            else:
-                                # tool_call 이전까지만 전송
-                                if tool_start > current_pos:
-                                    to_send = full_response[current_pos:tool_start]
-                                    if to_send:
-                                        yield to_send
-
-                                in_tool_call = True
-                                current_pos = tool_start
-
-                        else:
-                            # tool_call 종료 태그 찾기
-                            tool_end = full_response.find("</tool_call>", current_pos)
-
-                            if tool_end == -1:
-                                # 아직 종료 태그가 나오지 않았다면 댁;
                                 break
-
-                            else:
-                                # tool_call 종료 태그 이후부터 다시 전송 시작
-                                in_tool_call = False
-                                current_pos = tool_end + len("</tool_call>")
-                    
-                    sent_length = current_pos
+                        else:
+                            yield new_text
 
                     
             if request_output.finished:
