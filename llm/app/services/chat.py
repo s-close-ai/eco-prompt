@@ -116,7 +116,6 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
                 "service_prompt": str
                 "question" : str,
                 "history": str,
-                "context": str,
                 "personal_prompt": str
             }
         """
@@ -124,7 +123,6 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
         service_prompt = str(user_info.get("service_prompt", ""))
         question = str(user_info.get("question", ""))
         history = str(user_info.get("history", ""))
-        context = str(user_info.get("context", ""))
         personal_prompt = str(user_info.get("personal_prompt", ""))
 
         system_prompt = (
@@ -132,7 +130,6 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
             "\n\n" + service_prompt + 
             "\n---\n[사용자 지침]\n" + personal_prompt + 
             "\n\n[History]\n" + history + 
-            "\n\n[Context]\n" + context +
             "\n"
         )
 
@@ -155,7 +152,6 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
                 "service_prompt": str
                 "question" : str,
                 "history": str,
-                "context": str,
                 "personal_prompt": str
             }
         """
@@ -163,7 +159,6 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
         service_prompt = str(user_info.get("service_prompt", ""))
         question = str(user_info.get("question", ""))
         history = str(user_info.get("history", ""))
-        context = str(user_info.get("context", ""))
         personal_prompt = str(user_info.get("personal_prompt", ""))
 
         system_prompt = (
@@ -172,7 +167,6 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
             "\n\n" + service_prompt + 
             "\n---\n[사용자 지침]\n" + personal_prompt + 
             "\n\n[History]\n" + history + 
-            "\n\n[Context]\n" + context +
             "\n"
         )
 
@@ -378,7 +372,6 @@ def generate_rejected_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tok
                 "service_prompt": str
                 "question" : str,
                 "history": str,
-                "context": str,
                 "personal_prompt": str
             }
         """
@@ -386,14 +379,12 @@ def generate_rejected_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tok
         service_prompt = str(user_info.get("service_prompt", ""))
         question = str(user_info.get("question", ""))
         history = str(user_info.get("history", ""))
-        context = str(user_info.get("context", ""))
         personal_prompt = str(user_info.get("personal_prompt", ""))
 
         system_prompt = (
             service_prompt + 
             "\n---\n[사용자 지침]\n" + personal_prompt + 
             "\n\n[History]\n" + history + 
-            "\n\n[Context]\n" + context +
             "\n"
         )
 
@@ -415,7 +406,6 @@ def generate_rejected_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tok
                 "service_prompt": str
                 "question" : str,
                 "history": str,
-                "context": str,
                 "personal_prompt": str
             }
         """
@@ -423,7 +413,6 @@ def generate_rejected_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tok
         service_prompt = str(user_info.get("service_prompt", ""))
         question = str(user_info.get("question", ""))
         history = str(user_info.get("history", ""))
-        context = str(user_info.get("context", ""))
         personal_prompt = str(user_info.get("personal_prompt", ""))
 
         system_prompt = (
@@ -431,7 +420,6 @@ def generate_rejected_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tok
             service_prompt + 
             "\n---\n[사용자 지침]\n" + personal_prompt + 
             "\n\n[History]\n" + history + 
-            "\n\n[Context]\n" + context +
             "\n"
         )
 
