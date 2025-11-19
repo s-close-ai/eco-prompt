@@ -27,23 +27,32 @@ public class AiClient {
         // 2) AI 서버가 요구하는 형태로 Request DTO 구성
         LlmRequest request = new LlmRequest("한글로 답해줘", prompt, UUID.randomUUID().toString());
 
-        // 2) SSE 스트림을 최종 문자열로 합쳐서 반환
-        String mrAnalyzePath = "/api/v1/ai/prompt-response";
-        return aiWebClient.post()
-                .uri(mrAnalyzePath)
-                .accept(MediaType.TEXT_EVENT_STREAM)
-                .bodyValue(request)
-                .retrieve()
-                .bodyToFlux(LlmResponse.class)
-                .takeUntil(res -> "DONE".equals(res.token()))
-                .filter(res ->
-                        res.sequenceId() != null &&
-                                res.sequenceId() >= 0 &&
-                                !"START".equals(res.token()) &&
-                                !"DONE".equals(res.token())
-                )
-                .map(LlmResponse::token)
-                .collect(Collectors.joining())
-                .block();
+
+        try {
+            // 3) WebClient 호출
+            String mrAnalyzePath = "/api/v1/ai/prompt-response";
+
+            return aiWebClient.post()
+                    .uri(mrAnalyzePath)
+                    .accept(MediaType.TEXT_EVENT_STREAM)
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToFlux(LlmResponse.class)
+                    .takeUntil(res -> "DONE".equals(res.token()))
+                    .filter(res ->
+                            res.sequenceId() != null &&
+                                    res.sequenceId() >= 0 &&
+                                    !"START".equals(res.token()) &&
+                                    !"DONE".equals(res.token())
+                    )
+                    .map(LlmResponse::token)
+                    .collect(Collectors.joining())
+                    .block();
+
+        } catch (Exception e) {
+            // 🔥 WebClient 예외 발생 → 기존 mrTemplate 반환
+            log.error("[AI ERROR] MR 분석 중 오류 발생. 원본 템플릿을 반환합니다.", e);
+            return mrTemplate;
+        }
     }
 }
