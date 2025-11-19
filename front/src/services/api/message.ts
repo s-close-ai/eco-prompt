@@ -13,7 +13,7 @@ import type {
 /**
  * 사용자 메시지 전송
  * Endpoint: POST  /messages/input
- * @param request - 프로젝트 ID, 채팅방 ID, 메시지 내용
+ * @param request - 프로젝트 ID, 채팅방 ID, 메시지 내용, 업로드된 파일 정보 (선택)
  * @returns 채팅방 ID와 메시지 UUID
  */
 export const submitMessage = async (

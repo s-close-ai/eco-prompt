@@ -4,6 +4,11 @@ export interface MessageInputRequest {
   projectId: number;
   chattingId?: number;
   content: string;
+  uploadFileInfoList?: Array<{
+    fileUrl: string;
+    originalFileName: string;
+    fileId: number;
+  }>;
 }
 
 export interface MessageInputResponse {

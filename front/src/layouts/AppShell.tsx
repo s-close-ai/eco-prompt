@@ -29,14 +29,14 @@ function ShellBody() {
   const [settingsData, setSettingsData] = useState<SettingsFormData | null>(null);
   const [isLoadingSettings, setIsLoadingSettings] = useState(false);
 
-  const handleSendMessage = (message: string) => {
+  const handleSendMessage = (message: string, uploadedFiles?: import('@/types/api/file.types').UploadedFileInfo[]) => {
     // Chat 페이지일 때는 전역 이벤트 발생 (MainChat에서 리스닝)
     // Chat 페이지가 아닐 때만 전역 이벤트 발생
     if (!isChat) {
-      window.dispatchEvent(new CustomEvent('chat-send', { detail: { message } }));
+      window.dispatchEvent(new CustomEvent('chat-send', { detail: { message, uploadedFiles } }));
     } else {
       // Chat 페이지일 때는 chat-input-send 이벤트 발생
-      window.dispatchEvent(new CustomEvent('chat-input-send', { detail: { message } }));
+      window.dispatchEvent(new CustomEvent('chat-input-send', { detail: { message, uploadedFiles } }));
     }
   };
 

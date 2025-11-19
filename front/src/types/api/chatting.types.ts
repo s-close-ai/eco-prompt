@@ -24,10 +24,18 @@ export interface ChattingMessagesResponse {
   };
 }
 
+export interface FileInfo {
+  fileId: number;
+  originalFileName: string;
+  fileUrl: string;
+}
+
 export interface ChatMessage {
   userMessage: UserMessage;
   scoreMessage: ScoreMessage;
   aiMessage: AiMessage;
+  userFileList?: FileInfo[];
+  aiFile?: FileInfo;
 }
 
 export interface UserMessage {
