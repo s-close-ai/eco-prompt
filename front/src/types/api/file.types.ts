@@ -33,6 +33,7 @@ export interface MessageFileAttachment {
   fileUrl: string; // S3 URL
   originalFileName: string; // 원본 파일명
   contentType?: string;
+  thumbnailUrl?: string; // 이미지 미리보기용 (로컬 Blob URL)
 }
 
 // 메시지 전송 시 사용하는 파일 정보

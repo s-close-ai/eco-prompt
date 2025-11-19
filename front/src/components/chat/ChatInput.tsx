@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, useMemo, type KeyboardEvent } from 'react';
 import '@/styles/components/chat/chat-input.css';
 import { MAX_MESSAGE_LENGTH } from '@/constants/ui';
-import { uploadFiles } from '@/services/api/file';
+import { uploadFile } from '@/services/api/file';
 import type { UploadedFileInfo } from '@/types/api/file.types';
 import { useToast } from '@/context/ToastContext';
 
@@ -17,6 +17,25 @@ const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'txt', 'csv', 'pdf'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILE_COUNT = 3;
 
+// 파일 타입별 색상
+const getFileColor = (filename: string): string => {
+  const ext = filename.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'pdf':
+      return '#EF4444'; // 빨강
+    case 'txt':
+      return '#3B82F6'; // 파랑
+    case 'csv':
+      return '#10B981'; // 초록
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+      return '#8B5CF6'; // 보라
+    default:
+      return '#6B7280'; // 회색
+  }
+};
+
 export default function ChatInput({
   onSend,
   disabled = false,
@@ -25,8 +44,10 @@ export default function ChatInput({
   onStop,
 }: ChatInputProps) {
   const [message, setMessage] = useState('');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]); // 선택된 파일들 (아직 업로드 안됨)
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFileInfo[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useToast();
@@ -51,10 +72,10 @@ export default function ChatInput({
     return true;
   };
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
 
-    if (uploadedFiles.length + files.length > MAX_FILE_COUNT) {
+    if (selectedFiles.length + files.length > MAX_FILE_COUNT) {
       showToast(`최대 ${MAX_FILE_COUNT}개의 파일만 선택할 수 있습니다.`, 'error');
       return;
     }
@@ -65,19 +86,8 @@ export default function ChatInput({
       return;
     }
 
-    // 파일 업로드 시작
-    setIsUploading(true);
-
-    try {
-      const uploaded = await uploadFiles(validFiles);
-      setUploadedFiles(prev => [...prev, ...uploaded]);
-      showToast('파일 업로드가 완료되었습니다.', 'success');
-    } catch (error) {
-      showToast('파일 업로드에 실패했습니다.', 'error');
-      console.error('File upload error:', error);
-    } finally {
-      setIsUploading(false);
-    }
+    // 파일을 선택만 하고 업로드는 하지 않음
+    setSelectedFiles(prev => [...prev, ...validFiles]);
 
     // input 초기화 (같은 파일 다시 선택 가능하도록)
     if (fileInputRef.current) {
@@ -86,36 +96,51 @@ export default function ChatInput({
   };
 
   const handleRemoveFile = (index: number) => {
-    const fileToRemove = uploadedFiles[index];
-
-    // Object URL 정리 (메모리 누수 방지)
-    if (fileToRemove.thumbnailUrl?.startsWith('blob:')) {
-      URL.revokeObjectURL(fileToRemove.thumbnailUrl);
-    }
-    if (fileToRemove.fileUrl?.startsWith('blob:')) {
-      URL.revokeObjectURL(fileToRemove.fileUrl);
-    }
-
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSend = () => {
-    if (message.trim() && !disabled && !isUploading) {
-      const trimmed = message.trim();
-      onSend(trimmed, uploadedFiles.length > 0 ? uploadedFiles : undefined);
+  const handleSend = async () => {
+    if (!message.trim() && selectedFiles.length === 0) return;
+    if (disabled || isUploading) return;
+
+    const trimmed = message.trim();
+
+    // 파일이 있으면 먼저 업로드
+    if (selectedFiles.length > 0) {
+      setIsUploading(true);
+      setUploadProgress({});
+
+      try {
+        // 각 파일별로 업로드 진행
+        const uploadPromises = selectedFiles.map(async (file) => {
+          const fileKey = file.name;
+          return uploadFile(file, (progress) => {
+            setUploadProgress(prev => ({
+              ...prev,
+              [fileKey]: progress,
+            }));
+          });
+        });
+
+        const uploaded = await Promise.all(uploadPromises);
+        setUploadedFiles(uploaded);
+
+        // 업로드 완료 후 메시지 전송
+        onSend(trimmed, uploaded);
+        setMessage('');
+        setSelectedFiles([]);
+        setUploadedFiles([]);
+      } catch (error) {
+        showToast('파일 업로드에 실패했습니다.', 'error');
+        console.error('File upload error:', error);
+      } finally {
+        setIsUploading(false);
+        setUploadProgress({});
+      }
+    } else {
+      // 파일 없이 메시지만 전송
+      onSend(trimmed, undefined);
       setMessage('');
-
-      // Object URL 정리
-      uploadedFiles.forEach(file => {
-        if (file.thumbnailUrl?.startsWith('blob:')) {
-          URL.revokeObjectURL(file.thumbnailUrl);
-        }
-        if (file.fileUrl?.startsWith('blob:')) {
-          URL.revokeObjectURL(file.fileUrl);
-        }
-      });
-
-      setUploadedFiles([]);
     }
   };
 
@@ -161,10 +186,10 @@ export default function ChatInput({
   // 키보드가 올라올 때 viewport 변화 감지 및 스크롤 처리
   useEffect(() => {
     let initialHeight = window.visualViewport?.height || window.innerHeight;
-    
+
     const handleViewportChange = () => {
       const currentHeight = window.visualViewport?.height || window.innerHeight;
-      
+
       // 키보드가 올라왔을 때 (높이가 줄어들었을 때)
       if (currentHeight < initialHeight) {
         requestAnimationFrame(() => {
@@ -177,7 +202,7 @@ export default function ChatInput({
           }
         });
       }
-      
+
       initialHeight = currentHeight;
     };
 
@@ -190,56 +215,96 @@ export default function ChatInput({
     }
   }, []);
 
+  // 선택된 파일들의 Blob URL 생성 및 관리
+  const filePreviews = useMemo(() => {
+    return selectedFiles.map(file => ({
+      file,
+      previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined
+    }));
+  }, [selectedFiles]);
+
+  // Blob URL 정리
+  useEffect(() => {
+    return () => {
+      filePreviews.forEach(({ previewUrl }) => {
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl);
+        }
+      });
+    };
+  }, [filePreviews]);
+
   return (
     <div className="chat-input-container">
-      {uploadedFiles.length > 0 && (
+      {/* 선택된 파일 미리보기 */}
+      {filePreviews.length > 0 && (
         <div className="chat-input-files-preview-horizontal">
-          {uploadedFiles.map((file, index) => {
-            // contentType 또는 파일명으로 이미지 여부 판단
-            const isImage = file.contentType?.startsWith('image/') ||
-                           file.filename?.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp|bmp)$/);
-            // 이미지면 fileUrl 또는 thumbnailUrl 사용
-            const imageUrl = file.thumbnailUrl || file.fileUrl;
+          {filePreviews.map(({ file, previewUrl }, index) => {
+            // 이미지 여부 판단
+            const isImage = file.type.startsWith('image/') ||
+                           file.name.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp|bmp)$/);
+
+            // 업로드 진행률
+            const progress = uploadProgress[file.name];
+            const isFileUploading = progress !== undefined;
 
             return (
               <div key={index} className="file-preview-item-horizontal">
                 {isImage ? (
                   <div className="file-preview-thumbnail">
-                    <img
-                      src={imageUrl}
-                      alt={file.filename}
-                      onError={(e) => {
-                        console.error('이미지 로드 실패:', imageUrl, file);
-                        // 이미지 로드 실패 시 부모 요소를 문서 카드로 대체
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                    <button
-                      onClick={() => handleRemoveFile(index)}
-                      className="file-preview-remove-overlay"
-                      title="삭제"
-                    >
-                      ✕
-                    </button>
+                    {previewUrl && (
+                      <img
+                        src={previewUrl}
+                        alt={file.name}
+                      />
+                    )}
+                    {/* 업로드 중일 때 프로그레스 오버레이 */}
+                    {isFileUploading && (
+                      <div className="file-upload-overlay">
+                        <div className="file-upload-progress-circle">
+                          <span>{progress}%</span>
+                        </div>
+                      </div>
+                    )}
+                    {!isFileUploading && (
+                      <button
+                        onClick={() => handleRemoveFile(index)}
+                        className="file-preview-remove-overlay"
+                        title="삭제"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="file-preview-document">
-                    <div className="file-preview-icon-large">
+                    <div
+                      className="file-preview-icon-large"
+                      style={{ backgroundColor: getFileColor(file.name) }}
+                    >
                       📄
                     </div>
                     <div className="file-preview-document-info">
-                      <span className="file-preview-name-truncate">{file.filename}</span>
+                      <span className="file-preview-name-truncate">{file.name}</span>
                       <span className="file-preview-type">
-                        {file.contentType?.split('/')[1]?.toUpperCase() || 'FILE'}
+                        {file.type.split('/')[1]?.toUpperCase() || getFileExtension(file.name).toUpperCase()}
                       </span>
                     </div>
-                    <button
-                      onClick={() => handleRemoveFile(index)}
-                      className="file-preview-remove-overlay"
-                      title="삭제"
-                    >
-                      ✕
-                    </button>
+                    {/* 업로드 중일 때 프로그레스 오버레이 */}
+                    {isFileUploading && (
+                      <div className="file-upload-overlay">
+                        <div className="file-upload-spinner"></div>
+                      </div>
+                    )}
+                    {!isFileUploading && (
+                      <button
+                        onClick={() => handleRemoveFile(index)}
+                        className="file-preview-remove-overlay"
+                        title="삭제"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -258,7 +323,7 @@ export default function ChatInput({
         />
         <button
           onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || isLoading || isUploading || uploadedFiles.length >= MAX_FILE_COUNT}
+          disabled={disabled || isLoading || isUploading || selectedFiles.length >= MAX_FILE_COUNT}
           className="chat-input-file-btn"
           title="파일 첨부"
         >

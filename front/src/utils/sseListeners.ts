@@ -63,6 +63,7 @@ export function setupSSEListeners({
   messageUUIDsRef.current.set(aiMessageId, messageUUID);
 
   let isFirstChunk = true;
+  let llmStarted = false; // LLM이 시작되었는지 추적
   let llmEnded = false;
   let judgeEnded = false;
   let hasError = false; // 에러 메시지가 이미 추가되었는지 추적
@@ -70,6 +71,12 @@ export function setupSSEListeners({
 
   // 두 이벤트가 모두 완료되면 SSE 연결 끊기
   const checkAndCloseSSE = () => {
+    // LLM이 시작되지 않았고 Judge만 끝난 경우 (파일 업로드 시 점수가 먼저 오는 경우)
+    if (!llmStarted && judgeEnded) {
+      // Judge만 완료, LLM 대기
+      return;
+    }
+
     if (llmEnded && judgeEnded) {
       eventSource.close();
       eventSourcesRef.current.delete(aiMessageId);
@@ -84,6 +91,7 @@ export function setupSSEListeners({
 
   // LLM_START 이벤트
   eventSource.addEventListener('LLM_START', () => {
+    llmStarted = true; // LLM 시작됨
     autoScrollEnabledRef.current = true;
 
     if (loadingMessageId) {
@@ -98,7 +106,7 @@ export function setupSSEListeners({
                 timestamp: new Date(),
                 isStreaming: true,
               }
-            : m.id === userMessageId
+            : m.id === userMessageId && !m.scoreState
               ? { ...m, scoreState: { status: 'loading' } }
               : m,
         ),
@@ -114,6 +122,7 @@ export function setupSSEListeners({
 
       if (isFirstChunk && loadingMessageId) {
         // 첫 번째 토큰: 로딩 메시지를 AI 메시지로 교체 (LLM_START가 안 온 경우 대비)
+        llmStarted = true; // LLM 시작됨
         isFirstChunk = false;
         autoScrollEnabledRef.current = true;
         setMessages((prev) =>
@@ -159,6 +168,30 @@ export function setupSSEListeners({
       );
     } catch (error) {
       console.error('Failed to parse JUDGE_PROMPT:', error);
+    }
+  });
+
+  // FILE 이벤트 - AI가 생성한 파일 정보
+  eventSource.addEventListener('FILE', (event: Event) => {
+    try {
+      const fileData = JSON.parse((event as MessageEvent).data);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === aiMessageId
+            ? {
+                ...m,
+                attachments: [{
+                  fileId: fileData.fileId,
+                  fileUrl: fileData.fileUrl,
+                  originalFileName: fileData.originalFileName,
+                  contentType: fileData.contentType,
+                }]
+              }
+            : m
+        ),
+      );
+    } catch (error) {
+      console.error('Failed to parse FILE:', error);
     }
   });
 

@@ -207,6 +207,7 @@ export default function Chat() {
         originalFileName: file.filename,
         fileUrl: file.fileUrl,
         contentType: file.contentType || 'application/octet-stream',
+        thumbnailUrl: file.thumbnailUrl, // 이미지 미리보기용 Blob URL
       }));
 
       const newUserMessage: ChatMessage = {

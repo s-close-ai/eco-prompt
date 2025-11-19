@@ -16,6 +16,15 @@ interface AIMessageProps {
   attachments?: MessageFileAttachment[];
 }
 
+// 파일 타입별 색상 (PDF만 처리)
+const getFileColor = (filename: string): string => {
+  const ext = filename.split('.').pop()?.toLowerCase();
+  if (ext === 'pdf') {
+    return '#3B82F6'; // 파랑
+  }
+  return '#3B82F6'; // 회색
+};
+
 export default function AIMessage({ message, isStreaming, attachments = [] }: AIMessageProps) {
   const [copied, setCopied] = useState(false);
 
@@ -57,16 +66,19 @@ export default function AIMessage({ message, isStreaming, attachments = [] }: AI
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <div className="ai-message-download-icon">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
+                <div
+                  className="ai-message-download-icon"
+                  style={{ backgroundColor: getFileColor(file.originalFileName) }}
+                >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
                 </div>
                 <div className="ai-message-download-info">
-                  <span className="ai-message-download-name">{file.originalFileName}</span>
-                  <span className="ai-message-download-hint">클릭하여 다운로드</span>
+                <span className="ai-message-download-name">{file.originalFileName}</span>
+                <span className="ai-message-download-hint">클릭하여 다운로드</span>
                 </div>
               </a>
             ))}

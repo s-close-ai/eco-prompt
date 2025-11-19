@@ -33,21 +33,39 @@ export const getPresignedUrl = async (
 export const uploadToS3 = async (
   uploadUrl: string,
   file: File,
-  contentType: string
+  contentType: string,
+  onProgress?: (progress: number) => void
 ): Promise<void> => {
-  const response = await fetch(uploadUrl, {
-    method: 'PUT',
-    body: file,
-    headers: {
-      'Content-Type': contentType,
-    },
-  });
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('S3 업로드 실패:', response.status, errorText);
-    throw new Error(`S3 업로드 실패: ${response.status}`);
-  }
+    // 진행률 이벤트
+    xhr.upload.addEventListener('progress', (e) => {
+      if (e.lengthComputable && onProgress) {
+        const progress = Math.round((e.loaded / e.total) * 100);
+        onProgress(progress);
+      }
+    });
+
+    // 완료 이벤트
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        console.error('S3 업로드 실패:', xhr.status, xhr.responseText);
+        reject(new Error(`S3 업로드 실패: ${xhr.status}`));
+      }
+    });
+
+    // 에러 이벤트
+    xhr.addEventListener('error', () => {
+      reject(new Error('네트워크 오류로 업로드 실패'));
+    });
+
+    xhr.open('PUT', uploadUrl);
+    xhr.setRequestHeader('Content-Type', contentType);
+    xhr.send(file);
+  });
 };
 
 /**
@@ -56,10 +74,18 @@ export const uploadToS3 = async (
  * 2. S3에 업로드
  * 3. 업로드된 파일 정보 반환
  */
-export const uploadFile = async (file: File): Promise<UploadedFileInfo> => {
+export const uploadFile = async (
+  file: File,
+  onProgress?: (progress: number) => void
+): Promise<UploadedFileInfo> => {
   try {
     // Content-Type 정규화 (빈 값이면 기본값 사용)
-    const contentType = file.type || 'application/octet-stream';
+    let contentType = file.type || 'application/octet-stream';
+
+    // txt 파일인 경우 UTF-8 인코딩 명시
+    if (contentType === 'text/plain' || file.name.toLowerCase().endsWith('.txt')) {
+      contentType = 'text/plain; charset=utf-8';
+    }
 
     // 이미지인 경우 로컬 미리보기용 Blob URL 생성 (CORS 문제 회피)
     const localBlobUrl = contentType.startsWith('image/') ? URL.createObjectURL(file) : undefined;
@@ -73,18 +99,18 @@ export const uploadFile = async (file: File): Promise<UploadedFileInfo> => {
     const { uploadUrl, fileId } = presignedResponse.data;
 
     // Step 2: S3에 업로드 (presigned URL 생성 시 사용한 동일한 contentType 사용)
-    await uploadToS3(uploadUrl, file, contentType);
+    await uploadToS3(uploadUrl, file, contentType, onProgress);
 
-    // Step 3: S3 URL 생성 (uploadUrl에서 query string 제거)
-    const s3Url = uploadUrl.split('?')[0];
+    // Step 3: 모든 파일에 대해 로컬 Blob URL 생성 (즉시 확인 가능하도록)
+    const localPreviewUrl = URL.createObjectURL(file);
 
     // Step 4: 업로드된 파일 정보 반환
     return {
-      fileUrl: s3Url,
+      fileUrl: uploadUrl, // presigned URL 사용 (즉시 다운로드/확인 가능)
       filename: file.name,
       fileId,
       contentType: contentType,
-      thumbnailUrl: localBlobUrl, // 로컬 Blob URL 사용 (미리보기용)
+      thumbnailUrl: localPreviewUrl, // 모든 파일의 로컬 미리보기용 Blob URL
     };
   } catch (error) {
     console.error('파일 업로드 실패:', error);

@@ -10,6 +10,25 @@ interface UserMessageProps {
   attachments?: MessageFileAttachment[];
 }
 
+// 파일 타입별 색상
+const getFileColor = (filename: string): string => {
+  const ext = filename.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'pdf':
+      return '#EF4444'; // 빨강
+    case 'txt':
+      return '#3B82F6'; // 파랑
+    case 'csv':
+      return '#10B981'; // 초록
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+      return '#8B5CF6'; // 보라
+    default:
+      return '#6B7280'; // 회색
+  }
+};
+
 export default function UserMessage({
   message,
   onUpdate,
@@ -97,29 +116,37 @@ export default function UserMessage({
             // contentType 또는 파일명으로 이미지 여부 판단
             const isImage = file.contentType?.startsWith('image/') ||
                            file.originalFileName?.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp|bmp)$/);
+            // 이미지는 thumbnailUrl(로컬 Blob) 우선, 없으면 fileUrl 사용
+            const imageUrl = file.thumbnailUrl || file.fileUrl;
+            // 다운로드는 thumbnailUrl 우선 (방금 업로드한 파일은 Blob URL 또는 presigned URL)
+            const downloadUrl = file.thumbnailUrl || file.fileUrl;
+
             return (
               <div key={index} className="user-message-attachment">
                 {isImage ? (
                   <a
-                    href={file.fileUrl}
+                    href={downloadUrl}
                     download={file.originalFileName}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="user-message-image-link"
                   >
                     <div className="user-message-image">
-                      <img src={file.fileUrl} alt={file.originalFileName} />
+                      <img src={imageUrl} alt={file.originalFileName} />
                     </div>
                   </a>
                 ) : (
                   <a
-                    href={file.fileUrl}
+                    href={downloadUrl}
                     download={file.originalFileName}
                     className="user-message-file"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <div className="user-message-file-icon">
+                    <div
+                      className="user-message-file-icon"
+                      style={{ backgroundColor: getFileColor(file.originalFileName) }}
+                    >
                       📄
                     </div>
                     <div className="user-message-file-info">
