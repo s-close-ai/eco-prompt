@@ -48,37 +48,60 @@ public class RankingService {
     public TodayRankingResponse getTodayTop10WithChange() {
         AppLogger.start("오늘의 실시간 랭킹 조회");
 
-        // 1) 현재 시간 KST
-        LocalDateTime nowKst = LocalDateTime.now(KST);
+//        // 1) 현재 시간 KST
+//        LocalDateTime nowKst = LocalDateTime.now(KST);
+//
+//        // 2) 오늘 KST 00:00
+//        LocalDateTime startOfDayKst = nowKst.toLocalDate().atStartOfDay();
+//
+//        // 3) KST → UTC 변환
+//        LocalDateTime startUtc = startOfDayKst.atZone(KST).withZoneSameInstant(UTC).toLocalDateTime();
+//        LocalDateTime nowUtc    = nowKst.atZone(KST).withZoneSameInstant(UTC).toLocalDateTime();
+//
+//        // 4) DB 포맷으로 변환
+//        String startStr = startUtc.format(CREATED_FMT);
+//        String nowStr   = nowUtc.format(CREATED_FMT);
+//
+//        // 5) 오늘 Top10 조회
+//        List<DailyRankingProjection> today =
+//                messageJpaRepository.findTodayTop10WithName(startStr, nowStr);
+//
+//        // ============================
+//        // 어제 스냅샷 조회도 KST 기준
+//        // ============================
+//
+//        LocalDate yesterdayKst = nowKst.toLocalDate().minusDays(1);
+//
+//        // 어제 KST 00:00을 UTC 로 변환
+//        LocalDateTime yesterdayKstMidnight = yesterdayKst.atStartOfDay();
+//        LocalDateTime yesterdayUtcMidnight =
+//                yesterdayKstMidnight.atZone(KST).withZoneSameInstant(UTC).toLocalDateTime();
+//
+//        // SNAPSHOT_FMT yyyy-MM-dd
+//        String yesterdayBatch = yesterdayUtcMidnight.toLocalDate().format(SNAPSHOT_FMT);
 
-        // 2) 오늘 KST 00:00
-        LocalDateTime startOfDayKst = nowKst.toLocalDate().atStartOfDay();
+        // 1) 현재 시간 (KST/UTC 구분 없이 시스템 현재시간 그대로 사용)
+        LocalDateTime now = LocalDateTime.now();
 
-        // 3) KST → UTC 변환
-        LocalDateTime startUtc = startOfDayKst.atZone(KST).withZoneSameInstant(UTC).toLocalDateTime();
-        LocalDateTime nowUtc    = nowKst.atZone(KST).withZoneSameInstant(UTC).toLocalDateTime();
+        // 2) 오늘 00:00
+        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
 
-        // 4) DB 포맷으로 변환
-        String startStr = startUtc.format(CREATED_FMT);
-        String nowStr   = nowUtc.format(CREATED_FMT);
+        // 3) DB에서 요구하는 포맷으로 변환
+        String startStr = startOfDay.format(CREATED_FMT);
+        String nowStr   = now.format(CREATED_FMT);
 
-        // 5) 오늘 Top10 조회
+        // 4) 오늘 Top10 조회
         List<DailyRankingProjection> today =
                 messageJpaRepository.findTodayTop10WithName(startStr, nowStr);
 
-        // ============================
-        // 어제 스냅샷 조회도 KST 기준
-        // ============================
+        // ============================================
+        // 어제 스냅샷 조회도 동일 — 변환 없이 그대로
+        // ============================================
 
-        LocalDate yesterdayKst = nowKst.toLocalDate().minusDays(1);
+        LocalDate yesterday = now.toLocalDate().minusDays(1);
 
-        // 어제 KST 00:00을 UTC 로 변환
-        LocalDateTime yesterdayKstMidnight = yesterdayKst.atStartOfDay();
-        LocalDateTime yesterdayUtcMidnight =
-                yesterdayKstMidnight.atZone(KST).withZoneSameInstant(UTC).toLocalDateTime();
-
-        // SNAPSHOT_FMT yyyy-MM-dd
-        String yesterdayBatch = yesterdayUtcMidnight.toLocalDate().format(SNAPSHOT_FMT);
+        // 어제 00:00 그대로 사용
+        String yesterdayBatch = yesterday.format(SNAPSHOT_FMT);
 
         List<Ranking> ySnapshot = rankingRepository.findSnapshotByBatchSchedule(yesterdayBatch);
 
