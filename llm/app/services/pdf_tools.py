@@ -152,7 +152,7 @@ def create_pdf_document(
             elif line.strip().startswith('- ') or line.strip().startswith('* '):
                 text = line.strip()[2:].strip()
                 # 볼드 처리
-                text = text.replace('**', '<b>').replace('**', '</b>')
+                text = convert_markdown_bold(text)
                 story.append(Paragraph(f"• {text}", styles['KoreanList']))
             
             # 번호 리스트
