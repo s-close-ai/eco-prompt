@@ -45,7 +45,6 @@ export default function ChatInput({
 }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]); // 선택된 파일들 (아직 업로드 안됨)
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFileInfo[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
   const [isDragging, setIsDragging] = useState(false);
@@ -127,13 +126,11 @@ export default function ChatInput({
         });
 
         const uploaded = await Promise.all(uploadPromises);
-        setUploadedFiles(uploaded);
 
         // 업로드 완료 후 메시지 전송
         onSend(trimmed, uploaded);
         setMessage('');
         setSelectedFiles([]);
-        setUploadedFiles([]);
       } catch (error) {
         showToast('파일 업로드에 실패했습니다.', 'error');
         console.error('File upload error:', error);

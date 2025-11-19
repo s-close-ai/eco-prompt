@@ -87,9 +87,6 @@ export const uploadFile = async (
       contentType = 'text/plain; charset=utf-8';
     }
 
-    // 이미지인 경우 로컬 미리보기용 Blob URL 생성 (CORS 문제 회피)
-    const localBlobUrl = contentType.startsWith('image/') ? URL.createObjectURL(file) : undefined;
-
     // Step 1: Presigned URL 요청
     const presignedResponse = await getPresignedUrl({
       originalFileName: file.name,

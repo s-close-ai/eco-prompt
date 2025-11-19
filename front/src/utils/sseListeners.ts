@@ -66,7 +66,6 @@ export function setupSSEListeners({
   let llmStarted = false; // LLM이 시작되었는지 추적
   let llmEnded = false;
   let judgeEnded = false;
-  let hasError = false; // 에러 메시지가 이미 추가되었는지 추적
   let errorMessageId: string | null = null; // 추가된 에러 메시지의 ID 추적
 
   // 두 이벤트가 모두 완료되면 SSE 연결 끊기
@@ -262,7 +261,6 @@ export function setupSSEListeners({
       }
 
       // 아직 에러 메시지가 없는 경우 새로 추가 (LLM만 에러, JUDGE는 대기 중)
-      hasError = true;
       const newErrorId = crypto.randomUUID();
       errorMessageId = newErrorId;
 
