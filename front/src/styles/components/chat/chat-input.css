@@ -17,7 +17,7 @@
   margin: 0 auto 12px;
   display: flex;
   align-items: flex-end;
-  gap: 10px;
+  gap: 8px;
   background-color: #f6f6f6;
   border: 1px solid #ececec;
   border-radius: 24px;
@@ -98,6 +98,173 @@
   cursor: not-allowed;
 }
 
+.chat-input-file-btn {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: #5f5f5f;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.chat-input-file-btn:hover:not(:disabled) {
+  background-color: #e8e8e8;
+}
+
+.chat-input-file-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.chat-input-file-btn:disabled {
+  color: #d0d0d0;
+  cursor: not-allowed;
+}
+
+/* 가로 나열 파일 미리보기 */
+.chat-input-files-preview-horizontal {
+  max-width: 48rem;
+  margin: 0 auto 12px;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 4px;
+}
+
+.file-preview-item-horizontal {
+  flex-shrink: 0;
+}
+
+/* 이미지 썸네일 - 정사각형 */
+.file-preview-thumbnail {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f6f6f6;
+  border: 1px solid #ececec;
+  flex-shrink: 0;
+}
+
+.file-preview-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.file-preview-remove-overlay {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.file-preview-remove-overlay:hover {
+  background-color: rgba(211, 47, 47, 0.9);
+}
+
+/* 문서 파일 카드 - 높이 통일 */
+.file-preview-document {
+  position: relative;
+  width: 160px;
+  height: 80px;
+  background-color: #f6f6f6;
+  border: 1px solid #ececec;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.file-preview-icon-large {
+  flex-shrink: 0;
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: white;
+  /* 배경색은 인라인 스타일로 파일 타입별 지정 */
+}
+
+.file-preview-document-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.file-preview-name-truncate {
+  font-size: 11px;
+  color: #1e1e1e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.file-preview-type {
+  font-size: 9px;
+  color: #9e9e9e;
+  text-transform: uppercase;
+}
+
+/* 업로드 프로그레스 오버레이 (GPT 스타일) */
+.file-upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  backdrop-filter: blur(2px);
+}
+
+/* 스피너 애니메이션 */
+.file-upload-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #5c8a5f;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 768px) {
   .chat-input-container {
     padding: 12px;
@@ -142,10 +309,30 @@
     width: 80%;
     margin: 8px auto 0;
   }
+  .chat-input-files-preview-horizontal {
+    max-width: 56rem;
+    width: 80%;
+  }
 }
 @media (max-width: 768px) {
   .chat-input-disclaimer {
     font-size: 10px;
+  }
+  .chat-input-files-preview-horizontal {
+    max-width: 100%;
+  }
+  .file-preview-thumbnail {
+    width: 70px;
+    height: 70px;
+  }
+  .file-preview-document {
+    width: 140px;
+    height: 70px;
+  }
+  .file-preview-icon-large {
+    width: 35px;
+    height: 35px;
+    font-size: 20px;
   }
 }
 
@@ -166,4 +353,30 @@
     max-width: 56rem;
     width: 80%;
   }
+}
+
+/* Drag and drop overlay */
+.chat-input-container.drag-over {
+  border: 2px dashed #3b82f6;
+  position: relative;
+}
+
+.drag-drop-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 12px; /* Corresponds to chat-input-container border-radius */
+}
+
+.drag-drop-overlay p {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3b82f6;
 }

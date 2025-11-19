@@ -232,3 +232,75 @@
     transform: translateY(-4px);
   }
 }
+
+/* AI 파일 다운로드 섹션 */
+.ai-message-file-download-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+/* 다운로드 링크 */
+.ai-message-download-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px;
+  width: 14.5rem;
+  height: 60px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.ai-message-download-link:hover {
+  background-color: rgba(240, 240, 240, 0.9);
+}
+
+.ai-message-download-icon {
+  flex-shrink: 0;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: white;
+  /* 배경색은 인라인 스타일로 파일 타입별 지정 */
+}
+
+.ai-message-download-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.ai-message-download-name {
+  font-size: 11px;
+  color: #007bff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.ai-message-download-hint {
+  font-size: 9px;
+  color: #9e9e9e;
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .ai-message-download-link {
+    max-width: 100%;
+  }
+}

@@ -64,6 +64,7 @@ export function MessageList({
           message={msg.message}
           onUpdate={(newMessage) => onEditAndResendMessage(msg.id, newMessage)}
           isLastUserMessage={msg.id === lastUserMessageId}
+          attachments={msg.attachments}
         />,
       ];
 
@@ -97,6 +98,7 @@ export function MessageList({
           message={msg.message}
           timestamp={msg.timestamp}
           isStreaming={msg.isStreaming}
+          attachments={msg.attachments}
         />,
       );
     } else if (msg.type === 'loading') {

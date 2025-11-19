@@ -1,5 +1,11 @@
 import type { ChatMessage } from '@/types/chat.types';
 
+interface FileInfo {
+  fileId: number;
+  originalFileName: string;
+  fileUrl: string;
+}
+
 interface APIMessage {
   userMessage?: {
     content: string;
@@ -19,6 +25,8 @@ interface APIMessage {
       sc_ec_4: number;
     };
   };
+  userFileList?: FileInfo[];
+  aiFile?: FileInfo;
 }
 
 /**
@@ -47,6 +55,13 @@ export function parseMessages(apiMessages: APIMessage[]): ChatMessage[] {
           }
         : undefined;
 
+      // 파일 정보 변환 (userFileList 사용)
+      const attachments = msg.userFileList?.map(file => ({
+        fileId: file.fileId,
+        fileUrl: file.fileUrl,
+        originalFileName: file.originalFileName,
+      }));
+
       loadedMessages.push({
         id: msg.userMessage.messageUUID,
         type: 'user',
@@ -60,6 +75,7 @@ export function parseMessages(apiMessages: APIMessage[]): ChatMessage[] {
           : scoreInfo
             ? { status: 'success', score: scoreInfo }
             : undefined,
+        attachments, // 첨부 파일 추가
       });
     }
 
@@ -84,11 +100,19 @@ export function parseMessages(apiMessages: APIMessage[]): ChatMessage[] {
       });
     } else if (hasAIContent && msg.aiMessage) {
       // 정상 AI 메시지 (점수가 에러여도 AI는 정상이면 표시)
+      // AI 파일 정보 변환
+      const aiAttachment = msg.aiFile ? {
+        fileId: msg.aiFile.fileId,
+        fileUrl: msg.aiFile.fileUrl,
+        originalFileName: msg.aiFile.originalFileName,
+      } : undefined;
+
       loadedMessages.push({
         id: crypto.randomUUID(),
         type: 'ai',
         message: msg.aiMessage.content!,
         timestamp: new Date(),
+        attachments: aiAttachment ? [aiAttachment] : undefined,
       });
     }
   });

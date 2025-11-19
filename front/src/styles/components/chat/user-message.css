@@ -175,3 +175,126 @@
   padding: 8px;
   margin-top: 8px;
 }
+
+/* 첨부 파일 섹션 - 메시지 박스 밖에 위치 */
+.user-message-attachments-section {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 12px;
+  max-width: 48rem;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 1023px) {
+  .user-message-attachments-section {
+    max-width: 56rem;
+    width: 80%;
+  }
+}
+
+.user-message-attachment {
+  flex-shrink: 0;
+}
+
+/* 이미지 링크 - 입력창 크기 맞춤 */
+.user-message-image-link {
+  display: block;
+  text-decoration: none;
+  cursor: pointer;
+  width: 160px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 이미지 첨부 파일 */
+.user-message-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+  background-color: #f9f9f9;
+  transition: opacity 0.2s;
+}
+
+.user-message-image-link:hover .user-message-image {
+  opacity: 0.9;
+}
+
+.user-message-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/* 문서 첨부 파일 - 가로 길이 통일 */
+.user-message-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px;
+  width: 14.5rem;
+  height: 60px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.user-message-file:hover {
+  background-color: rgba(240, 240, 240, 0.9);
+}
+
+.user-message-file-icon {
+  flex-shrink: 0;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: white;
+  /* 배경색은 인라인 스타일로 파일 타입별 지정 */
+}
+
+.user-message-file-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.user-message-file-name {
+  font-size: 11px;
+  color: #1e1e1e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.user-message-file-type {
+  font-size: 9px;
+  color: #9e9e9e;
+  text-transform: uppercase;
+}
+
+@media (max-width: 768px) {
+  .user-message-image {
+    max-width: 100%;
+  }
+
+  .user-message-file {
+    max-width: 100%;
+  }
+}
