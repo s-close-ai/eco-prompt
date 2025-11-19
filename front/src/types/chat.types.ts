@@ -27,6 +27,7 @@ export interface ChatMessage {
   score?: PromptScore;
   scoreState?: ScoreState; // 점수 평가 상태 추적
   isStreaming?: boolean;
+  isGeneratingFile?: boolean; // 파일 생성 중 여부
   messageUUID?: string; // 서버의 실제 messageUUID (수정 시 필요)
   errorType?: 'llm' | 'judge' | 'both'; // 에러 타입 구분
   attachments?: MessageFileAttachment[]; // 첨부 파일 정보

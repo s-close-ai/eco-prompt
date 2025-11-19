@@ -98,6 +98,7 @@ export function MessageList({
           message={msg.message}
           timestamp={msg.timestamp}
           isStreaming={msg.isStreaming}
+          isGeneratingFile={msg.isGeneratingFile}
           attachments={msg.attachments}
         />,
       );

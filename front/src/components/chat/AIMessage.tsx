@@ -14,6 +14,7 @@ interface AIMessageProps {
   message: string;
   timestamp?: Date;
   isStreaming?: boolean;
+  isGeneratingFile?: boolean;
   attachments?: MessageFileAttachment[];
 }
 
@@ -26,7 +27,7 @@ const getFileColor = (filename: string): string => {
   return '#3B82F6'; // 회색
 };
 
-export default function AIMessage({ message, isStreaming, attachments = [] }: AIMessageProps) {
+export default function AIMessage({ message, isStreaming, isGeneratingFile, attachments = [] }: AIMessageProps) {
   const [copied, setCopied] = useState(false);
   const [csvPreview, setCsvPreview] = useState<{ url: string; name: string } | null>(null);
 
@@ -160,7 +161,19 @@ export default function AIMessage({ message, isStreaming, attachments = [] }: AI
           </div>
         )}
 
-        {isStreaming && <span className="streaming-cursor">▍</span>}
+        {/* 파일 생성 중 로딩 */}
+        {isGeneratingFile && (
+          <div className="ai-message-file-loading">
+            <div className="ai-message-file-loading-dots">
+              <span className="ai-message-file-loading-dot"></span>
+              <span className="ai-message-file-loading-dot"></span>
+              <span className="ai-message-file-loading-dot"></span>
+            </div>
+            <span className="ai-message-file-loading-text">파일 생성 중...</span>
+          </div>
+        )}
+        {/* 스트리밍 커서 (파일 생성 중이 아닐 때만 표시) */}
+        {isStreaming && !isGeneratingFile && <span className="streaming-cursor">▍</span>}
         {!isStreaming && message && (
           <button onClick={handleCopy} className="ai-message-copy-btn" title="복사">
             <img src="/icons/copy.svg" alt="복사" />
