@@ -10,7 +10,7 @@ class FileEventsRepository:
 
     async def find_and_start_job(self):
         return await self.collection.find_one_and_update(
-            {"status":"PENDING"},
+            {"status":"OCR_PENDING"},
             {"$set": {"status": "PROCESSING", "updatedAt": datetime.now()}}
         )
     
