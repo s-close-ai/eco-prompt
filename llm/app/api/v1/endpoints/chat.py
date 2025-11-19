@@ -64,7 +64,6 @@ async def chat_vllm(request: ChatRequest, llm_engine_1=Depends(get_llm_engine_1)
                 "personal_prompt": personal_prompt,
                 "question": user_input,
                 "history": chat_history,
-                "context": ""    # 벡터 DB 연결해봐야 함.
             }
 
             rejected_chain = generate_rejected_response_vllm(llm_engine_1=llm_engine_1, llm_engine_2=llm_engine_2, tokenizer_1=tokenizer_1, tokenizer_2=tokenizer_2, prompt_type="rejected", question_type=question_type)
@@ -74,7 +73,6 @@ async def chat_vllm(request: ChatRequest, llm_engine_1=Depends(get_llm_engine_1)
                 "personal_prompt": personal_prompt,
                 "question": user_input,
                 "history": chat_history,
-                "context": ""    # 벡터 DB 연결해봐야 함.
             }
             
                     
