@@ -2,7 +2,7 @@ from langchain_core.runnables import RunnableLambda, RunnableParallel
 from vllm.sampling_params import RequestOutputKind
 from vllm import SamplingParams
 
-from app.models.prompt_template import routing_prompt, basic_prompt, tool_usage_instruction
+from app.models.prompt_template import routing_prompt, basic_prompt
 from app.services.pdf_tools import get_tool_definitions, parse_midm_tool_call, parse_qwen_tool_call, execute_tool
 
 
@@ -126,8 +126,7 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
         personal_prompt = str(user_info.get("personal_prompt", ""))
 
         system_prompt = (
-            tool_usage_instruction + 
-            "\n\n" + service_prompt + 
+            service_prompt + 
             "\n---\n[사용자 지침]\n" + personal_prompt + 
             "\n\n[History]\n" + history + 
             "\n"
@@ -162,8 +161,7 @@ def stream_chosen_response_vllm(llm_engine_1, llm_engine_2, tokenizer_1, tokeniz
         personal_prompt = str(user_info.get("personal_prompt", ""))
 
         system_prompt = (
-            tool_usage_instruction + 
-            "\n\n" + basic_prompt +
+            basic_prompt +
             "\n\n" + service_prompt + 
             "\n---\n[사용자 지침]\n" + personal_prompt + 
             "\n\n[History]\n" + history + 
