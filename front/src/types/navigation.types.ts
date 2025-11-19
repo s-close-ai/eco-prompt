@@ -9,4 +9,5 @@ export interface ChatLocationState {
   projectId?: number;
   isNew?: boolean;
   message?: string;
+  uploadedFiles?: import('@/types/api/file.types').UploadedFileInfo[];
 }

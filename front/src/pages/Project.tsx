@@ -275,9 +275,9 @@ export default function Project() {
 
   // 프로젝트 화면에서 새 채팅 시작
   const handleSendFromProject = useCallback(
-    (message: string) => {
+    (message: string, uploadedFiles?: import('@/types/api/file.types').UploadedFileInfo[]) => {
       navigate('/chat', {
-        state: { projectId, isNew: true, message },
+        state: { projectId, isNew: true, message, uploadedFiles },
       });
     },
     [navigate, projectId],
@@ -286,12 +286,12 @@ export default function Project() {
   // 전역 ChatInput(바텀바)에서 보낸 메시지를 프로젝트 화면에서 새 채팅으로 연결
   useEffect(() => {
     const onChatSend = (e: Event) => {
-      const detail = (e as CustomEvent<{ message: string }>).detail;
+      const detail = (e as CustomEvent<{ message: string; uploadedFiles?: import('@/types/api/file.types').UploadedFileInfo[] }>).detail;
       if (!detail?.message) return;
 
       e.stopImmediatePropagation();
 
-      handleSendFromProject(detail.message);
+      handleSendFromProject(detail.message, detail.uploadedFiles);
     };
     window.addEventListener('chat-send', onChatSend as EventListener);
     return () => window.removeEventListener('chat-send', onChatSend as EventListener);
