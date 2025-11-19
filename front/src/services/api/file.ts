@@ -93,7 +93,7 @@ export const uploadFile = async (
       contentType: contentType,
     });
 
-    const { uploadUrl, fileId, savedFileName } = presignedResponse.data;
+    const { uploadUrl, fileId } = presignedResponse.data;
 
     // Step 2: S3에 업로드 (presigned URL 생성 시 사용한 동일한 contentType 사용)
     await uploadToS3(uploadUrl, file, contentType, onProgress);
