@@ -304,3 +304,52 @@
     max-width: 100%;
   }
 }
+
+/* 파일 생성 중 로딩 */
+.ai-message-file-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.ai-message-file-loading-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ai-message-file-loading-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #5c8a5f;
+  animation: file-loading-bounce 1.4s infinite ease-in-out both;
+}
+
+.ai-message-file-loading-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.ai-message-file-loading-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes file-loading-bounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.ai-message-file-loading-text {
+  color: #5e9462;
+  font-size: 13px;
+  font-weight: 600;
+}

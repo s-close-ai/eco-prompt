@@ -32,6 +32,8 @@ interface SetupSSEListenersParams {
  * 처리하는 이벤트:
  * - LLM_START: LLM 응답 시작
  * - LLM_TOKEN: LLM 토큰 스트리밍
+ * - TOOL_CALL: 파일 생성 시작
+ * - FILE: AI가 생성한 파일 정보
  * - LLM_END: LLM 응답 완료
  * - LLM_ERROR: LLM 응답 에러
  * - JUDGE_PROMPT: 점수 평가 완료
@@ -150,6 +152,17 @@ export function setupSSEListeners({
     }
   });
 
+  // TOOL_CALL 이벤트 - 파일 생성 시작
+  eventSource.addEventListener('TOOL_CALL', () => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === aiMessageId
+          ? { ...m, isGeneratingFile: true }
+          : m
+      ),
+    );
+  });
+
   // JUDGE_PROMPT 이벤트 - 점수 정보 수신 (정상)
   eventSource.addEventListener('JUDGE_PROMPT', (event: Event) => {
     try {
@@ -174,7 +187,7 @@ export function setupSSEListeners({
   eventSource.addEventListener('FILE', (event: Event) => {
     try {
       const eventData = (event as MessageEvent).data as string;
-      
+
       // 마크다운 링크 파싱: [fileName](fileUrl)
       const match = /\[(.*?)\]\((.*?)\)/.exec(eventData);
 
@@ -190,7 +203,7 @@ export function setupSSEListeners({
         } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension || '')) {
           contentType = `image/${fileExtension}`;
         }
-        
+
         const newAttachment = {
           fileId: Date.now() + Math.random(), // 임시 고유 ID
           fileUrl,
@@ -204,6 +217,7 @@ export function setupSSEListeners({
               ? {
                   ...m,
                   attachments: [...(m.attachments || []), newAttachment],
+                  isGeneratingFile: false, // 파일 생성 완료
                 }
               : m
           ),
