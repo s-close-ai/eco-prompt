@@ -43,11 +43,18 @@ public class FileProcessingPoller {
 		if (job != null) {
 			String messageUUID = job.getMessageUUID();
 
+			if (!messageEventHandler.isTaskActive(messageUUID)) {
+				AppLogger.warn("이미 종료된 작업입니다.");
+				return;
+			}
+
 			AppLogger.info("파일 처리 완료. LLM 호출 시작. messageUUID: " + job.getMessageUUID());
 			// 2-2. OCR 작업 완료 처리
 			messageEventHandler.checkCompletion(messageUUID, "FILE_OCR");
 			// 2-3. LLM 모델 호출
-			aiService.callLlmModel(messageUUID, job.getFinalPrompt(), job.getUserId());
+			if (messageEventHandler.isTaskActive(messageUUID)) {
+				aiService.callLlmModel(messageUUID, job.getFinalPrompt(), job.getUserId());
+			}
 		}
 	}
 

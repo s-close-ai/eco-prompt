@@ -43,6 +43,13 @@ public class MessageEventHandler {
 	}
 
 	/**
+	 * 현재 작업이 유효한지 판단
+	 * */
+	public boolean isTaskActive(String messageUUID) {
+		return completionStatus.containsKey(messageUUID);
+	}
+
+	/**
 	 * messageUUID 기준으로 작업을 추가하기 위한 함수
 	 * */
 	public void addExpectedTask(String messageUUID, String modelType) {
