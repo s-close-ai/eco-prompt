@@ -312,7 +312,6 @@ public class MessageService {
 			s3Keys = fileService.getFileKeyAndUpdateMessageUUID(fileIdList, messageUUID);
 		}
 		triggerAsyncWorkflows(messageUUID, content, userId, false, s3Keys, false);
-		aiService.callLlmModelOnly(messageUUID, content, userId);
 	}
 
 	/**
@@ -488,10 +487,9 @@ public class MessageService {
 		// 1-3. 파일 유무에 따라 OCR 또는 LLM Task 추가
 		if (hasFile) {
 			expectedTask.add("FILE_OCR");
-		} else {
-			expectedTask.add("LLM");
 		}
 
+		expectedTask.add("LLM");
 		messageEventHandler.initializeTask(messageUUID, expectedTask);
 		// 2. AI 모델 호출
 		if (includeJudge) {
