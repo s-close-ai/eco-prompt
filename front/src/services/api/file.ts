@@ -98,12 +98,15 @@ export const uploadFile = async (
     // Step 2: S3에 업로드 (presigned URL 생성 시 사용한 동일한 contentType 사용)
     await uploadToS3(uploadUrl, file, contentType, onProgress);
 
-    // Step 3: 모든 파일에 대해 로컬 Blob URL 생성 (즉시 확인 가능하도록)
+    // Step 3: 최종 파일 URL 생성 (presigned URL에서 query string 제거)
+    const finalFileUrl = uploadUrl.split('?')[0];
+
+    // Step 4: 모든 파일에 대해 로컬 Blob URL 생성 (즉시 확인 가능하도록)
     const localPreviewUrl = URL.createObjectURL(file);
 
-    // Step 4: 업로드된 파일 정보 반환
+    // Step 5: 업로드된 파일 정보 반환
     return {
-      fileUrl: uploadUrl, // presigned URL 사용 (즉시 다운로드/확인 가능)
+      fileUrl: finalFileUrl, // 최종 URL 반환
       filename: file.name,
       fileId,
       contentType: contentType,

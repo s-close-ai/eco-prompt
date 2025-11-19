@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import '@/styles/components/chat/user-message.css';
 import { MAX_MESSAGE_LENGTH } from '@/constants/ui';
 import type { MessageFileAttachment } from '@/types/api/file.types';
+import CsvPreviewModal from '@/components/common/CsvPreviewModal';
 
 interface UserMessageProps {
   message: string;
@@ -40,6 +41,7 @@ export default function UserMessage({
   const [copied, setCopied] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [csvPreview, setCsvPreview] = useState<{ url: string; name: string } | null>(null);
 
   const handleCopy = async () => {
     try {
@@ -48,6 +50,21 @@ export default function UserMessage({
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy text:', err);
+    }
+  };
+
+  const handleFileClick = (e: React.MouseEvent<HTMLAnchorElement>, url: string, filename: string) => {
+    e.preventDefault();
+
+    // CSV 파일인지 확인
+    const isCsv = filename.toLowerCase().endsWith('.csv');
+
+    if (isCsv) {
+      // CSV 미리보기 모달 열기
+      setCsvPreview({ url, name: filename });
+    } else {
+      // 다른 파일은 새 탭에서 열기
+      window.open(url, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -126,9 +143,7 @@ export default function UserMessage({
                 {isImage ? (
                   <a
                     href={downloadUrl}
-                    download={file.originalFileName}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    onClick={(e) => handleFileClick(e, downloadUrl, file.originalFileName)}
                     className="user-message-image-link"
                   >
                     <div className="user-message-image">
@@ -138,10 +153,8 @@ export default function UserMessage({
                 ) : (
                   <a
                     href={downloadUrl}
-                    download={file.originalFileName}
+                    onClick={(e) => handleFileClick(e, downloadUrl, file.originalFileName)}
                     className="user-message-file"
-                    target="_blank"
-                    rel="noopener noreferrer"
                   >
                     <div
                       className="user-message-file-icon"
@@ -178,6 +191,16 @@ export default function UserMessage({
           {copied && <span className="user-message-copied">복사됨!</span>}
         </button>
       </div>
+
+      {/* CSV 미리보기 모달 */}
+      {csvPreview && (
+        <CsvPreviewModal
+          open={!!csvPreview}
+          onClose={() => setCsvPreview(null)}
+          fileUrl={csvPreview.url}
+          fileName={csvPreview.name}
+        />
+      )}
     </div>
   );
 }
