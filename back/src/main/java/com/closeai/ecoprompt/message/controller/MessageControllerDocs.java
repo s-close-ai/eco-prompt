@@ -8,15 +8,20 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.closeai.ecoprompt.common.ApiResponse;
 import com.closeai.ecoprompt.message.model.dto.request.SubmitMessageRequest;
 import com.closeai.ecoprompt.message.model.dto.request.UpdateMessageRequest;
+import com.closeai.ecoprompt.message.model.dto.request.UploadFileRequest;
 import com.closeai.ecoprompt.message.model.dto.response.JudgeOnlyResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SearchMessageResponse;
 import com.closeai.ecoprompt.message.model.dto.response.SubmitMessageResponse;
+import com.closeai.ecoprompt.message.model.dto.response.UploadFileResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import reactor.core.publisher.Mono;
 
 public interface MessageControllerDocs {
 
+	@Operation(summary = "FILE S3 저장 presignedURL 생성 API")
+	ResponseEntity<ApiResponse<UploadFileResponse>> makePresignedUrl(UploadFileRequest request);
+	
 	@Operation(summary = "사용자 입력 후 메시지 UUID 값 전달 API",
 		description = "사용자 입력 후, 채팅방 ID값과, SSE 구독을 위한 메시지 UUID 값 전달")
 	ResponseEntity<ApiResponse<SubmitMessageResponse>> submitMessage(SubmitMessageRequest request);
