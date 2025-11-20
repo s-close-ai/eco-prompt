@@ -11,6 +11,7 @@ import com.closeai.ecoprompt.ranking.model.entity.Ranking;
 import com.closeai.ecoprompt.ranking.model.entity.RankingChange;
 import com.closeai.ecoprompt.ranking.repository.RankingRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class RankingService {
 
@@ -80,17 +82,24 @@ public class RankingService {
 //        // SNAPSHOT_FMT yyyy-MM-dd
 //        String yesterdayBatch = yesterdayUtcMidnight.toLocalDate().format(SNAPSHOT_FMT);
 
-        // 1) 현재 시간 (KST/UTC 구분 없이 시스템 현재시간 그대로 사용)
-        LocalDateTime now = LocalDateTime.now();
 
-        // 2) 오늘 00:00
-        LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
+        // 1) 현재 시간 (KST 기준)
+        ZonedDateTime nowKst = ZonedDateTime.now(KST);
 
-        // 3) DB에서 요구하는 포맷으로 변환
-        String startStr = startOfDay.format(CREATED_FMT);
-        String nowStr   = now.format(CREATED_FMT);
+        // 2) 오늘 00:00 (KST 기준)
+        ZonedDateTime startOfDayKst = nowKst.toLocalDate().atStartOfDay(KST);
 
-        // 4) 오늘 Top10 조회
+        // 3) KST → UTC 변환
+        ZonedDateTime startUtc = startOfDayKst.withZoneSameInstant(UTC);
+        ZonedDateTime nowUtc   = nowKst.withZoneSameInstant(UTC);
+
+        // 4) DB(created_at)에서 사용하는 포맷으로 변환
+        String startStr = startUtc.toLocalDateTime().format(CREATED_FMT);
+        String nowStr   = nowUtc.toLocalDateTime().format(CREATED_FMT);
+
+        log.info("KST today[00:00~now] => UTC[{} ~ {}]", startStr, nowStr);
+
+        // 5) 오늘 Top10 조회 (UTC 문자열 구간)
         List<DailyRankingProjection> today =
                 messageJpaRepository.findTodayTop10WithName(startStr, nowStr);
 
@@ -98,10 +107,11 @@ public class RankingService {
         // 어제 스냅샷 조회도 동일 — 변환 없이 그대로
         // ============================================
 
-        LocalDate yesterday = now.toLocalDate().minusDays(1);
+        LocalDate yesterday = nowKst.toLocalDate().minusDays(1);
 
         // 어제 00:00 그대로 사용
         String yesterdayBatch = yesterday.format(SNAPSHOT_FMT);
+        log.info("yesterday Batch: {}", yesterdayBatch);
 
         List<Ranking> ySnapshot = rankingRepository.findSnapshotByBatchSchedule(yesterdayBatch);
 
