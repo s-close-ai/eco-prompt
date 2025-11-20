@@ -4,6 +4,7 @@ import { ContextMenu } from './ContextMenu';
 import { MenuItem } from '@/components/common/MenuItem';
 import { deleteProject } from '@/services/api/project';
 import { useProjectStore } from '@/store/projectStore';
+import { useConfirm } from '@/context/ConfirmContext';
 
 interface ProjectMenuProps {
   projectId: number;
@@ -24,6 +25,7 @@ export function ProjectMenu({ projectId, position, menuProps }: ProjectMenuProps
   const navigate = useNavigate();
   const location = useLocation();
   const { removeProject, setEditingProjectId } = useProjectStore();
+  const confirm = useConfirm();
 
   const handleRename = useCallback(() => {
     // 인라인 편집 모드 활성화 (메뉴 닫기 전에 먼저 실행)
@@ -34,10 +36,18 @@ export function ProjectMenu({ projectId, position, menuProps }: ProjectMenuProps
     }, 0);
   }, [projectId, menuProps, setEditingProjectId]);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback(async () => {
     menuProps.onClose?.();
 
-    if (!confirm('프로젝트를 삭제하시겠습니까? 내부의 모든 채팅도 함께 삭제됩니다.')) {
+    const confirmed = await confirm({
+      title: '프로젝트 삭제',
+      message: `프로젝트를 삭제하시겠습니까? \n내부의 모든 채팅도 함께 삭제됩니다.`,
+      confirmText: '삭제',
+      cancelText: '취소',
+      variant: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -54,7 +64,7 @@ export function ProjectMenu({ projectId, position, menuProps }: ProjectMenuProps
     deleteProject(projectId).catch((error) => {
       console.error('프로젝트 삭제 API 실패:', error);
     });
-  }, [projectId, menuProps, removeProject, navigate, location]);
+  }, [projectId, menuProps, removeProject, navigate, location, confirm]);
 
   return (
     <ContextMenu position={position} menuProps={menuProps}>

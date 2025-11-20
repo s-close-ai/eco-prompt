@@ -2,7 +2,9 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { AppShellProvider, useAppShell } from '../context/AppShellContext';
 import { ToastProvider } from '@/context/ToastContext';
+import { ConfirmProvider } from '@/context/ConfirmContext';
 import Toast from '@/components/common/Toast';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
 import Topbar from '../components/common/Topbar';
 import { Sidebar } from '@/components/common/Sidebar/Sidebar';
 import Bottombar from '../components/common/Bottombar';
@@ -158,6 +160,7 @@ function ShellBody() {
         )}
         <SearchModal />
         <Toast />
+        <ConfirmDialog />
       </div>
       {bottomVariant ? (
         <Bottombar variant={bottomVariant} onSendMessage={handleSendMessage} />
@@ -170,7 +173,9 @@ export function AppShell() {
   return (
     <AppShellProvider>
       <ToastProvider>
-        <ShellBody />
+        <ConfirmProvider>
+          <ShellBody />
+        </ConfirmProvider>
       </ToastProvider>
     </AppShellProvider>
   );
