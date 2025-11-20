@@ -55,6 +55,8 @@ public class AiClient {
                     .collect(Collectors.joining())
                     .block();
 
+            log.info("raw: {}", raw);
+
             // 2) tool_call 텍스트에서 JSON만 잘라내기
             String content = extractContentFromToolCall(raw);
             if (content == null || content.isBlank()) {
