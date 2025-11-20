@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import Button from '@/components/common/Button';
 import TextField from '@/components/common/TextField';
+import { useToast } from '@/context/ToastContext';
 import '@/styles/components/project/project-create.css';
 import type { ProjectCreateRequest } from '@/types/api/project.types';
 
@@ -12,6 +13,7 @@ type ProjectCreateFormProps = {
 export default function ProjectCreateForm({ onSubmit, onClose }: ProjectCreateFormProps) {
   const [name, setName] = useState('');
   const lastClickTimeRef = useRef<number>(0);
+  const { showToast } = useToast();
 
   const handleCreate = () => {
     const trimmed = name.trim();
@@ -37,7 +39,7 @@ export default function ProjectCreateForm({ onSubmit, onClose }: ProjectCreateFo
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     if (value.length > 100) {
-      alert('최대 100자까지 입력 가능합니다.');
+      showToast('최대 100자까지 입력 가능합니다.', 'warning');
       return;
     }
     setName(value);
