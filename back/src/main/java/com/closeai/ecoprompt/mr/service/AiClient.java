@@ -50,7 +50,6 @@ public class AiClient {
                     )
                     .map(res -> {
                         Object tokenObj = res.token();
-                        log.info("token: {}", tokenObj.toString());
                         return tokenObj != null ? tokenObj.toString() : "";
                     })
                     .collect(Collectors.joining())
