@@ -6,6 +6,30 @@ interface FileInfo {
   fileUrl: string;
 }
 
+/**
+ * 파일명에서 contentType 추론
+ */
+function getContentTypeFromFileName(fileName: string): string {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  switch (ext) {
+    case 'pdf':
+      return 'application/pdf';
+    case 'csv':
+      return 'text/csv';
+    case 'txt':
+      return 'text/plain';
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'gif':
+      return 'image/gif';
+    default:
+      return 'application/octet-stream';
+  }
+}
+
 interface APIMessage {
   userMessage?: {
     content: string;
@@ -98,19 +122,20 @@ export function parseMessages(apiMessages: APIMessage[]): ChatMessage[] {
         timestamp: new Date(),
         errorType: 'llm' as const,
       });
-    } else if (hasAIContent && msg.aiMessage) {
-      // 정상 AI 메시지 (점수가 에러여도 AI는 정상이면 표시)
+    } else if (hasAIContent || msg.aiFile) {
+      // 정상 AI 메시지 또는 AI 파일이 있는 경우
       // AI 파일 정보 변환
       const aiAttachment = msg.aiFile ? {
         fileId: msg.aiFile.fileId,
         fileUrl: msg.aiFile.fileUrl,
         originalFileName: msg.aiFile.originalFileName,
+        contentType: getContentTypeFromFileName(msg.aiFile.originalFileName),
       } : undefined;
 
       loadedMessages.push({
         id: crypto.randomUUID(),
         type: 'ai',
-        message: msg.aiMessage.content!,
+        message: msg.aiMessage?.content || '',
         timestamp: new Date(),
         attachments: aiAttachment ? [aiAttachment] : undefined,
       });
