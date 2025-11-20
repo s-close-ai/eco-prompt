@@ -353,3 +353,53 @@
   font-size: 13px;
   font-weight: 600;
 }
+
+/* 파일 생성 실패 */
+.ai-message-file-failed {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f0f7ff;
+  border-radius: 8px;
+  min-width: 200px;
+}
+
+.ai-message-file-failed-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #3B82F6;
+  color: white;
+  flex-shrink: 0;
+}
+
+.ai-message-file-failed-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ai-message-file-failed-text {
+  color: #1e40af;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ai-message-file-retry-btn {
+  color: #3B82F6;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ai-message-file-retry-btn:hover {
+  text-decoration: underline;
+}

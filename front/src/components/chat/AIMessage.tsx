@@ -15,7 +15,9 @@ interface AIMessageProps {
   timestamp?: Date;
   isStreaming?: boolean;
   isGeneratingFile?: boolean;
+  fileGenerationFailed?: boolean;
   attachments?: MessageFileAttachment[];
+  onFileRetry?: () => void;
 }
 
 // 파일 타입별 색상 (PDF만 처리)
@@ -27,7 +29,7 @@ const getFileColor = (filename: string): string => {
   return '#3B82F6'; // 회색
 };
 
-export default function AIMessage({ message, isStreaming, isGeneratingFile, attachments = [] }: AIMessageProps) {
+export default function AIMessage({ message, isStreaming, isGeneratingFile, fileGenerationFailed, attachments = [], onFileRetry }: AIMessageProps) {
   const [copied, setCopied] = useState(false);
   const [csvPreview, setCsvPreview] = useState<{ url: string; name: string } | null>(null);
 
@@ -170,6 +172,27 @@ export default function AIMessage({ message, isStreaming, isGeneratingFile, atta
               <span className="ai-message-file-loading-dot"></span>
             </div>
             <span className="ai-message-file-loading-text">파일 생성 중...</span>
+          </div>
+        )}
+
+        {/* 파일 생성 실패 */}
+        {fileGenerationFailed && (
+          <div className="ai-message-file-failed">
+            <div className="ai-message-file-failed-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <div className="ai-message-file-failed-info">
+              <span className="ai-message-file-failed-text">파일 생성에 실패했습니다</span>
+              {onFileRetry && (
+                <button className="ai-message-file-retry-btn" onClick={onFileRetry}>
+                  다시 시도
+                </button>
+              )}
+            </div>
           </div>
         )}
         {/* 스트리밍 커서 (파일 생성 중이 아닐 때만 표시) */}

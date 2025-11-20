@@ -807,6 +807,94 @@ export default function Chat() {
     }
   };
 
+  // 파일 생성 재시도
+  const handleFileRetry = async (aiMessageId: string) => {
+    // 스트리밍 중이면 재시도 방지
+    const isCurrentlyStreaming = messages.some((m) => m.isStreaming);
+    if (isCurrentlyStreaming) {
+      return;
+    }
+
+    // AI 메시지의 인덱스 찾기
+    const aiMessageIndex = messages.findIndex((m) => m.id === aiMessageId);
+    if (aiMessageIndex === -1) return;
+
+    // AI 메시지 이전의 user 메시지 찾기
+    let userMessage = null;
+    for (let i = aiMessageIndex - 1; i >= 0; i--) {
+      if (messages[i].type === 'user') {
+        userMessage = messages[i];
+        break;
+      }
+    }
+    if (!userMessage) return;
+
+    const actualMessageUUID = userMessage.messageUUID || userMessage.id;
+    const newAiMessageId = crypto.randomUUID();
+
+    // 로딩 상태 시작
+    setIsLoading(true);
+
+    // 기존 AI 메시지를 새 스트리밍 메시지로 교체
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === aiMessageId
+          ? {
+              id: newAiMessageId,
+              type: 'ai' as const,
+              message: '',
+              timestamp: new Date(),
+              isStreaming: true,
+              fileGenerationFailed: false,
+            }
+          : m
+      )
+    );
+
+    try {
+      const { resendAIMessage } = await import('@/services/api/message');
+      await resendAIMessage({
+        projectId: projectId ?? defaultProjectId!,
+        chattingId: Number(chattingId),
+        content: userMessage.message,
+        messageUUID: actualMessageUUID,
+      });
+
+      // SSE 구독
+      const eventSource = subscribeMessage(actualMessageUUID);
+      eventSourcesRef.current.set(newAiMessageId, eventSource);
+      setupSSEListeners({
+        eventSource,
+        aiMessageId: newAiMessageId,
+        userMessageId: userMessage.id,
+        messageUUID: actualMessageUUID,
+        loadingMessageId: undefined,
+        returnedChattingId: chattingId ? Number(chattingId) : undefined,
+        actualProjectId: (projectId ?? defaultProjectId) || undefined,
+        isResend: true,
+        eventSourcesRef,
+        messageUUIDsRef,
+        autoScrollEnabledRef,
+        setMessages,
+        setIsLoading,
+        updateCurrentTitle,
+        addChatToProject,
+        updateChatTitle,
+        defaultProjectId,
+      });
+    } catch (error) {
+      console.error('Failed to retry file generation:', error);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === newAiMessageId
+            ? { ...m, isStreaming: false, fileGenerationFailed: true }
+            : m
+        )
+      );
+      setIsLoading(false);
+    }
+  };
+
   const handleEditAndResendMessage = async (messageId: string, newMessage: string) => {
     // 스트리밍 중이면 수정 및 재전송 방지
     const isCurrentlyStreaming = messages.some((m) => m.isStreaming);
@@ -942,6 +1030,7 @@ export default function Chat() {
               onEditAndResendMessage={handleEditAndResendMessage}
               onRetry={handleRetry}
               onScoreRetry={handleScoreRetry}
+              onFileRetry={handleFileRetry}
             />
             <div ref={messagesEndRef} />
           </div>
