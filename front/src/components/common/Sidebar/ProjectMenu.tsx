@@ -41,7 +41,7 @@ export function ProjectMenu({ projectId, position, menuProps }: ProjectMenuProps
 
     const confirmed = await confirm({
       title: '프로젝트 삭제',
-      message: '프로젝트를 삭제하시겠습니까? 내부의 모든 채팅도 함께 삭제됩니다.',
+      message: `프로젝트를 삭제하시겠습니까? \n내부의 모든 채팅도 함께 삭제됩니다.`,
       confirmText: '삭제',
       cancelText: '취소',
       variant: 'danger',
