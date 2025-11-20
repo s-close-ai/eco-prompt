@@ -227,9 +227,8 @@ def get_tool_definitions():
             "function": {
                 "name": "save_as_pdf",
                 "description": (
-                    "사용자가 PDF 생성을 요청할 때만 PDF를 생성합니다. "
-                    "사용자가 PDF로 생성하기를 원하는 내용을 만들 수 있습니다. "
-                    "사용자가 “PDF로 저장해줘”, “PDF로 정리해줘”, “PDF로 만들어줘” 처럼 **명시적으로 PDF 저장/생성/정리를 언급할 때만** 이 툴을 실행합니다. "
+                    "사용자가 PDF 생성 및 작성성을 요청할 때만 PDF를 생성합니다. "
+                    "사용자가 “PDF로 저장해줘”, “PDF로 정리해줘”, “PDF로 만들어줘”, “PDF로 생성해줘” 처럼 **명시적으로 PDF 저장/생성/정리를 언급할 때만** 이 툴을 실행합니다. "
                 ),
                 "parameters": {
                     "type": "object",
