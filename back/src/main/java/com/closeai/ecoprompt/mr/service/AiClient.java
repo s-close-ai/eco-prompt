@@ -58,7 +58,7 @@ public class AiClient {
             log.info("raw: {}", raw);
 
             // 2) tool_call 텍스트에서 JSON만 잘라내기
-            String content = extractContentFromToolCall(raw);
+            String content = raw;
             if (content == null || content.isBlank()) {
                 log.warn("[AI] content 추출 실패, 원본 템플릿 반환");
                 return mrTemplate;
