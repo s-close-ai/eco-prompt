@@ -111,6 +111,7 @@ public class RankingService {
 
         // 어제 00:00 그대로 사용
         String yesterdayBatch = yesterday.format(SNAPSHOT_FMT);
+        log.info("yesterday Batch: {}", yesterdayBatch);
 
         List<Ranking> ySnapshot = rankingRepository.findSnapshotByBatchSchedule(yesterdayBatch);
 
