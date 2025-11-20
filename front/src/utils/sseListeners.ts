@@ -69,6 +69,8 @@ export function setupSSEListeners({
   let llmEnded = false;
   let judgeEnded = false;
   let errorMessageId: string | null = null; // 추가된 에러 메시지의 ID 추적
+  let toolCallReceived = false; // TOOL_CALL 이벤트 수신 여부
+  let fileReceived = false; // FILE 이벤트 수신 여부
 
   // 두 이벤트가 모두 완료되면 SSE 연결 끊기
   const checkAndCloseSSE = () => {
@@ -154,6 +156,7 @@ export function setupSSEListeners({
 
   // TOOL_CALL 이벤트 - 파일 생성 시작
   eventSource.addEventListener('TOOL_CALL', () => {
+    toolCallReceived = true;
     setMessages((prev) =>
       prev.map((m) =>
         m.id === aiMessageId
@@ -186,6 +189,7 @@ export function setupSSEListeners({
   // FILE 이벤트 - AI가 생성한 파일 정보 (마크다운 링크 형식)
   eventSource.addEventListener('FILE', (event: Event) => {
     try {
+      fileReceived = true;
       const eventData = (event as MessageEvent).data as string;
 
       // 마크다운 링크 파싱: [fileName](fileUrl)
@@ -202,6 +206,8 @@ export function setupSSEListeners({
           contentType = 'application/pdf';
         } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension || '')) {
           contentType = `image/${fileExtension}`;
+        } else if (fileExtension === 'csv') {
+          contentType = 'text/csv';
         }
 
         const newAttachment = {
@@ -233,6 +239,17 @@ export function setupSSEListeners({
   // LLM_END 이벤트 - LLM 스트리밍 완료
   eventSource.addEventListener('LLM_END', () => {
     llmEnded = true;
+
+    // TOOL_CALL이 왔지만 FILE이 안 온 경우 → 파일 생성 실패
+    if (toolCallReceived && !fileReceived) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === aiMessageId
+            ? { ...m, isGeneratingFile: false, fileGenerationFailed: true }
+            : m
+        ),
+      );
+    }
 
     // LLM 재전송인 경우 LLM_END에서 SSE 종료
     if (isResend) {

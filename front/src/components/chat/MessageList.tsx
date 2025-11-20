@@ -14,6 +14,7 @@ interface MessageListProps {
   onEditAndResendMessage: (messageId: string, newMessage: string) => void;
   onRetry: (errorMessageId: string) => void;
   onScoreRetry?: (userMessageId: string) => void;
+  onFileRetry?: (aiMessageId: string) => void;
 }
 
 /**
@@ -27,6 +28,7 @@ export function MessageList({
   onEditAndResendMessage,
   onRetry,
   onScoreRetry,
+  onFileRetry,
 }: MessageListProps) {
   const grouped: Array<{ 
     element: React.JSX.Element; 
@@ -99,7 +101,9 @@ export function MessageList({
           timestamp={msg.timestamp}
           isStreaming={msg.isStreaming}
           isGeneratingFile={msg.isGeneratingFile}
+          fileGenerationFailed={msg.fileGenerationFailed}
           attachments={msg.attachments}
+          onFileRetry={onFileRetry ? () => onFileRetry(msg.id) : undefined}
         />,
       );
     } else if (msg.type === 'loading') {
