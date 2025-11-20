@@ -9,6 +9,8 @@ import { deleteChatting, updateChattingProject } from '@/services/api/chatting';
 import type { ProjectResponse } from '@/types/api/project.types';
 import { useProjectStore } from '@/store/projectStore';
 import { MenuItem } from '@/components/common/MenuItem';
+import { useToast } from '@/context/ToastContext';
+import { useConfirm } from '@/context/ConfirmContext';
 
 export default function Project() {
   const location = useLocation();
@@ -20,6 +22,8 @@ export default function Project() {
     removeChat,
     moveChatToProject,
   } = useProjectStore();
+  const { showToast } = useToast();
+  const confirm = useConfirm();
 
   const locationState = location.state as ProjectLocationState | undefined;
   const projectId = locationState?.projectId ?? NaN;
@@ -149,7 +153,7 @@ export default function Project() {
 
   const handleSaveTitle = useCallback(async () => {
     if (!editedTitle.trim()) {
-      alert('프로젝트 이름을 입력해주세요.');
+      showToast('프로젝트 이름을 입력해주세요.', 'warning');
       return;
     }
 
@@ -162,14 +166,14 @@ export default function Project() {
     updateProject(projectId, { title: editedTitle }).catch((error) => {
       console.error('프로젝트 이름 변경 API 실패:', error);
     });
-  }, [editedTitle, projectId, updateProjectTitle]);
+  }, [editedTitle, projectId, updateProjectTitle, showToast]);
 
   const handleCancelEdit = useCallback(() => {
     setIsEditingTitle(false);
     setEditedTitle('');
   }, []);
 
-  const handleDeleteProject = useCallback(() => {
+  const handleDeleteProject = useCallback(async () => {
     setMenuOpen(false);
 
     const chatCount = project?.chattingResponses?.length ?? 0;
@@ -178,7 +182,15 @@ export default function Project() {
         ? '프로젝트 삭제 시 내부 채팅 목록도 삭제됩니다. 정말 삭제하시겠습니까?'
         : '정말 삭제하시겠습니까?';
 
-    if (!confirm(confirmMessage)) {
+    const confirmed = await confirm({
+      title: '프로젝트 삭제',
+      message: confirmMessage,
+      confirmText: '삭제',
+      cancelText: '취소',
+      variant: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -190,7 +202,7 @@ export default function Project() {
     deleteProject(projectId).catch((error) => {
       console.error('프로젝트 삭제 API 실패:', error);
     });
-  }, [navigate, projectId, project, removeProject]);
+  }, [navigate, projectId, project, removeProject, confirm]);
 
   // 채팅 카드 클릭 핸들러
   const handleChatClick = useCallback(
@@ -220,7 +232,7 @@ export default function Project() {
 
   // 채팅 메뉴 액션
   const handleChatMenuAction = useCallback(
-    (chatId: number, action: 'rename' | 'delete' | 'moveToProject', targetProjectId?: number) => {
+    async (chatId: number, action: 'rename' | 'delete' | 'moveToProject', targetProjectId?: number) => {
       // 메뉴 닫기
       setOpenChatMenus((prev) => {
         const newSet = new Set(prev);
@@ -233,7 +245,15 @@ export default function Project() {
         // 프로젝트 페이지에서는 각 ChatCard가 자체적으로 편집 모드 관리
         // onMenuAction prop으로 전달되어 ChatCard 내부에서 처리됨
       } else if (action === 'delete') {
-        if (confirm('채팅을 삭제하시겠습니까?')) {
+        const confirmed = await confirm({
+          title: '채팅 삭제',
+          message: '채팅을 삭제하시겠습니까?',
+          confirmText: '삭제',
+          cancelText: '취소',
+          variant: 'danger',
+        });
+
+        if (confirmed) {
           // 로컬 상태 즉시 업데이트
           removeChat(chatId);
           // 로컬 project state도 즉시 업데이트
@@ -270,7 +290,7 @@ export default function Project() {
         });
       }
     },
-    [removeChat, moveChatToProject],
+    [removeChat, moveChatToProject, confirm],
   );
 
   // 프로젝트 화면에서 새 채팅 시작

@@ -3,6 +3,7 @@ import { ContextMenu } from './ContextMenu';
 import { updateChattingProject, deleteChatting } from '@/services/api/chatting';
 import { useProjectStore } from '@/store/projectStore';
 import { ICON_SIZE } from '@/constants/ui';
+import { useConfirm } from '@/context/ConfirmContext';
 
 interface ChatMenuProps {
   chattingId: number;
@@ -39,6 +40,7 @@ export function ChatMenu({
   } = useProjectStore();
   const [showProjectMoveMenu, setShowProjectMoveMenu] = useState(false);
   const submenuRef = useRef<HTMLDivElement>(null);
+  const confirm = useConfirm();
 
   // 서브메뉴 위치 조정
   useEffect(() => {
@@ -97,10 +99,18 @@ export function ChatMenu({
     setShowProjectMoveMenu(!showProjectMoveMenu);
   };
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback(async () => {
     menuProps.onClose?.();
 
-    if (!confirm('채팅을 삭제하시겠습니까?')) {
+    const confirmed = await confirm({
+      title: '채팅 삭제',
+      message: '채팅을 삭제하시겠습니까?',
+      confirmText: '삭제',
+      cancelText: '취소',
+      variant: 'danger',
+    });
+
+    if (!confirmed) {
       return;
     }
 
@@ -112,7 +122,7 @@ export function ChatMenu({
     deleteChatting(chattingId).catch((error) => {
       console.error('채팅 삭제 API 실패:', error);
     });
-  }, [chattingId, menuProps, onDelete, removeChat]);
+  }, [chattingId, menuProps, onDelete, removeChat, confirm]);
 
   // 프로젝트 목록: currentProjectId가 기본 프로젝트이면 "일반 채팅" 제외하고 다른 프로젝트들만
   // currentProjectId가 기본 프로젝트가 아니면 "일반 채팅" 포함하고 자기 프로젝트만 제외

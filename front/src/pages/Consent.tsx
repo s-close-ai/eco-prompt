@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import { toggleSharingInformation, logout } from '@/services/api/auth';
 import { toggleSharingPrompt } from '@/services/api/user-info';
+import { useToast } from '@/context/ToastContext';
+import { useConfirm } from '@/context/ConfirmContext';
 import '@/styles/pages/consent.css';
 
 export default function Consent() {
@@ -12,6 +14,8 @@ export default function Consent() {
   const [optionalConsent, setOptionalConsent] = useState(false); // 프롬프트 제공 동의 (선택)
   const [showRequiredDetail, setShowRequiredDetail] = useState(false);
   const [showOptionalDetail, setShowOptionalDetail] = useState(false);
+  const { showToast } = useToast();
+  const confirm = useConfirm();
 
   // 모두 선택하기
   const handleSelectAll = () => {
@@ -24,7 +28,7 @@ export default function Consent() {
 
   const handleSubmit = async () => {
     if (!requiredConsent) {
-      alert('필수 항목에 동의해주세요.');
+      showToast('필수 항목에 동의해주세요.', 'warning');
       return;
     }
 
@@ -32,29 +36,33 @@ export default function Consent() {
     try {
       // 필수: 정보 제공 동의
       await toggleSharingInformation();
-      
+
       // 선택: 프롬프트 공유 동의
       if (optionalConsent) {
         await toggleSharingPrompt();
       }
-      
+
       // 로그인 후 첫 접속 플래그 설정 (뒤로가기 방지용)
       sessionStorage.setItem('first_visit_after_login', 'true');
-      
+
       // 동의 완료 후 홈으로 이동
       navigate('/chat', { replace: true });
     } catch (error) {
       console.error('동의 업데이트 실패:', error);
-      alert('동의 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+      showToast('동의 처리 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCancel = async () => {
-    const confirmed = confirm(
-      '필수 항목에 동의하지 않으면 서비스를 이용할 수 없습니다.\n정말 취소하시겠습니까?',
-    );
+    const confirmed = await confirm({
+      title: '동의 취소',
+      message: '필수 항목에 동의하지 않으면 서비스를 이용할 수 없습니다.\n정말 취소하시겠습니까?',
+      confirmText: '취소하기',
+      cancelText: '돌아가기',
+      variant: 'warning',
+    });
 
     if (confirmed) {
       setIsLoading(true);
@@ -64,7 +72,7 @@ export default function Consent() {
         navigate('/');
       } catch (error) {
         console.error('로그아웃 실패:', error);
-        alert('로그아웃 중 오류가 발생했습니다. 다시 시도해주세요.');
+        showToast('로그아웃 중 오류가 발생했습니다. 다시 시도해주세요.', 'error');
       } finally {
         setIsLoading(false);
       }
