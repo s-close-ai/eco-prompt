@@ -116,7 +116,7 @@ logging:
 #        com.closeai: DEBUG
 
 gitlab:
-  base-url: "https://lab.ssafy.com" # self-hosted면 주소 바꿔주기
+  base-url: ${SSAFY_GITLAB} # self-hosted면 주소 바꿔주기
   token: ${GITLAB_MR_ACCESS_TOKEN} # Project Access Token / Personal Access Token
   webhook-secret: ${WEBHOOK_SECRET}
 
